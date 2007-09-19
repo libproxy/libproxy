@@ -1,6 +1,8 @@
 #!/bin/bash
 
-libtoolize -c -f
+libtoolize -c -f --automake
+aclocal
+#autoheader
+automake --foreign -a -c -f
 autoconf -f
-automake -a -c -f
 ./configure $@
