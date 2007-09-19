@@ -5,4 +5,3 @@ aclocal
 #autoheader
 automake --foreign -a -c -f
 autoconf -f
-./configure $@
