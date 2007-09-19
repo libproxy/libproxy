@@ -16,12 +16,12 @@ PXConfig *get_config_cb(PXProxyFactory *self)
 	return config;
 }
 
-void on_proxyfactory_instantiate(PXProxyFactory *self)
+bool on_proxyfactory_instantiate(PXProxyFactory *self)
 {
-	px_proxy_factory_config_add(self, PX_CONFIG_BACKEND_ENVVAR, get_config_cb);
+	return px_proxy_factory_config_set(self, PX_CONFIG_BACKEND_ENVVAR, get_config_cb);
 }
 
 void on_proxyfactory_destantiate(PXProxyFactory *self)
 {
-	px_proxy_factory_config_del(self, PX_CONFIG_BACKEND_ENVVAR);
+	px_proxy_factory_config_set(self, PX_CONFIG_BACKEND_ENVVAR, NULL);
 }
