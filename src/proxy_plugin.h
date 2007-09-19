@@ -22,7 +22,6 @@ typedef void     *(*PXProxyFactoryPtrCallback)      (PXProxyFactory *self);
 typedef char     *(*PXPACRunnerCallback)            (PXProxyFactory *self, const char *pac, const char *url, const char *hostname);
 
 bool              px_proxy_factory_config_set       (PXProxyFactory *self, PXConfigBackend config, PXProxyFactoryPtrCallback callback);
-void              px_proxy_factory_config_changed   (PXProxyFactory *self);
 PXConfigBackend   px_proxy_factory_config_get_active(PXProxyFactory *self);
 void              px_proxy_factory_wpad_restart     (PXProxyFactory *self);
 void              px_proxy_factory_on_get_proxy_add (PXProxyFactory *self, PXProxyFactoryVoidCallback callback);
