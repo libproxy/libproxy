@@ -1,4 +1,21 @@
-#include "proxy_plugin.h"
+/*******************************************************************************
+ * libproxy - A library for proxy configuration
+ * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ ******************************************************************************/
 
 #include <stdlib.h>
 #include <assert.h>
@@ -9,42 +26,24 @@
 #include <dlfcn.h>
 #include <math.h>
 
-#ifdef WIN32
-#  define PROXY_IMPORT __declspec(dllimport)
-#  define PROXY_EXPORT __declspec(dllexport)
-#else
-#  define PROXY_IMPORT __attribute__((visibility("default")))
-#  define PROXY_EXPORT __attribute__((visibility("default")))
-#endif
+#include "misc.h"
+#include "proxy_factory.h"
 
 #define PLUGIN_DIR "/usr/lib/proxy/" VERSION "/plugins"
 
-struct _PXProxyFactory {
-	PXConfigBackend             mask;
+struct _pxProxyFactory {
+	pxConfigBackend             mask;
 	void                      **plugins;
 	PXProxyFactoryPtrCallback  *configs;
 	PXProxyFactoryVoidCallback *on_get_proxy;
 	PXPACRunnerCallback         pac_runner;
 };
 
-static void *proxy_malloc (size_t size)
+pxProxyFactory *
+px_proxy_factory_new (pxConfigBackend config)
 {
-	void *tmp = malloc(size);
-	assert(tmp != NULL);
-	memset(tmp, 0, size);
-	return tmp;
-}
-
-static void proxy_free (void *mem)
-{
-	if (!mem) return;
-	free(mem);
-}
-
-PROXY_EXPORT PXProxyFactory *px_proxy_factory_new (PXConfigBackend config)
-{
-	PXProxyFactory *self = proxy_malloc(sizeof(PXProxyFactory));
-	self->configs        = proxy_malloc(sizeof(PXProxyFactoryPtrCallback) * (((int) log2(PX_CONFIG_BACKEND__LAST)) + 1));
+	pxProxyFactory *self = px_malloc0(sizeof(pxProxyFactory));
+	self->configs        = px_malloc0(sizeof(PXProxyFactoryPtrCallback) * (((int) log2(PX_CONFIG_BACKEND__LAST)) + 1));
 	self->mask           = config;
 	unsigned int i;
 	
@@ -58,18 +57,18 @@ PROXY_EXPORT PXProxyFactory *px_proxy_factory_new (PXConfigBackend config)
 	
 	// Count the number of plugins
 	for (i=0 ; readdir(plugindir) ; i++);
-	self->plugins = (void **) proxy_malloc(sizeof(void *) * (i + 1));
+	self->plugins = (void **) px_malloc0(sizeof(void *) * (i + 1));
 	rewinddir(plugindir);
 	
 	// For each plugin...
 	struct dirent *ent;
-	for (i=0 ; ent = readdir(plugindir) ; i++)
+	for (i=0 ; (ent = readdir(plugindir)) ; i++)
 	{
 		// Load the plugin
-		char *tmp = proxy_malloc(strlen(PLUGIN_DIR) + strlen(ent->d_name) + 2);
+		char *tmp = px_malloc0(strlen(PLUGIN_DIR) + strlen(ent->d_name) + 2);
 		sprintf(tmp, PLUGIN_DIR "/%s", ent->d_name);
 		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
-		proxy_free(tmp);
+		px_free(tmp);
 		if (!(self->plugins[i]))
 		{
 			i--;
@@ -78,11 +77,11 @@ PROXY_EXPORT PXProxyFactory *px_proxy_factory_new (PXConfigBackend config)
 		
 		// Call the instantiation hook
 		PXProxyFactoryBoolCallback instantiate;
-		instantiate = dlsym(self->plugins[i], "on_proxyfactory_instantiate");
+		instantiate = dlsym(self->plugins[i], "on_proxy_factory_instantiate");
 		if (instantiate && !instantiate(self))
 		{
-			dlclose(self->plugins[i--]);
-			self->plugins[i] == NULL;
+			dlclose(self->plugins[i]);
+			self->plugins[i--] = NULL;
 			continue;
 		}
 	}
@@ -98,15 +97,17 @@ PROXY_EXPORT PXProxyFactory *px_proxy_factory_new (PXConfigBackend config)
 	return self;
 }
 
-PROXY_EXPORT bool px_proxy_factory_config_set (PXProxyFactory *self, PXConfigBackend config, PXProxyFactoryPtrCallback callback)
+bool
+px_proxy_factory_config_set (pxProxyFactory *self, pxConfigBackend config, PXProxyFactoryPtrCallback callback)
 {
-	if (config ^ self->mask != config || self->mask == PX_CONFIG_BACKEND_AUTO) return false;
+	if ((config ^ self->mask) != config || self->mask == PX_CONFIG_BACKEND_AUTO) return false;
 	if (self->configs[((int) log2(config))] && callback && self->configs[((int) log2(config))] != callback) return false;
 	self->configs[((int) log2(config))] = callback;
 	return true;
 }
 
-PROXY_EXPORT PXConfigBackend px_proxy_factory_config_get_active (PXProxyFactory *self)
+pxConfigBackend
+px_proxy_factory_config_get_active (pxProxyFactory *self)
 {
 	// Find the first provided config
 	for (unsigned int i=0 ; i <= ((int) log2(PX_CONFIG_BACKEND__LAST)) ; i++)
@@ -117,12 +118,14 @@ PROXY_EXPORT PXConfigBackend px_proxy_factory_config_get_active (PXProxyFactory 
 	return PX_CONFIG_BACKEND_NONE;
 }
 
-PROXY_EXPORT char *px_proxy_factory_get_proxy (PXProxyFactory *self, char *url)
+char *
+px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 {
 	return NULL;
 }
 
-PROXY_EXPORT void px_proxy_factory_on_get_proxy_add (PXProxyFactory *self, PXProxyFactoryVoidCallback callback)
+void
+px_proxy_factory_on_get_proxy_add (pxProxyFactory *self, PXProxyFactoryVoidCallback callback)
 {
 	unsigned int length = 0;
 	PXProxyFactoryVoidCallback *tmp = NULL;
@@ -138,7 +141,7 @@ PROXY_EXPORT void px_proxy_factory_on_get_proxy_add (PXProxyFactory *self, PXPro
 				return;
 	
 	// Allocate enough space for the old + new callbacks
-	self->on_get_proxy = proxy_malloc(sizeof(PXProxyFactoryVoidCallback) * (length + 2));
+	self->on_get_proxy = px_malloc0(sizeof(PXProxyFactoryVoidCallback) * (length + 2));
 	
 	// Copy old callbacks into new memory (if any)
 	if (tmp)
@@ -148,10 +151,11 @@ PROXY_EXPORT void px_proxy_factory_on_get_proxy_add (PXProxyFactory *self, PXPro
 	self->on_get_proxy[length] = callback;
 	
 	// Free old memory (if any)
-	proxy_free(tmp);
+	px_free(tmp);
 }
 
-PROXY_EXPORT void px_proxy_factory_on_get_proxy_del (PXProxyFactory *self, PXProxyFactoryVoidCallback callback)
+void
+px_proxy_factory_on_get_proxy_del (pxProxyFactory *self, PXProxyFactoryVoidCallback callback)
 {
 	unsigned int length = 0, count = 0;
 	PXProxyFactoryVoidCallback *tmp = NULL;
@@ -167,7 +171,7 @@ PROXY_EXPORT void px_proxy_factory_on_get_proxy_del (PXProxyFactory *self, PXPro
 	tmp = self->on_get_proxy;
 	
 	// Allocate new array
-	self->on_get_proxy = proxy_malloc(sizeof(PXProxyFactoryVoidCallback) * (length - count + 1));
+	self->on_get_proxy = px_malloc0(sizeof(PXProxyFactoryVoidCallback) * (length - count + 1));
 	
 	// Copy in new values
 	int i,j;
@@ -176,17 +180,19 @@ PROXY_EXPORT void px_proxy_factory_on_get_proxy_del (PXProxyFactory *self, PXPro
 			self->on_get_proxy[j++] = tmp[i];
 	
 	// Free old memory
-	proxy_free(tmp);
+	px_free(tmp);
 }
 
-PROXY_EXPORT bool px_proxy_factory_pac_runner_set (PXProxyFactory *self, PXPACRunnerCallback callback)
+bool
+px_proxy_factory_pac_runner_set (pxProxyFactory *self, PXPACRunnerCallback callback)
 {
 	if (self->pac_runner && callback && self->pac_runner != callback) return false;
 	self->pac_runner = callback;
 	return true;
 }
 
-PROXY_EXPORT void px_proxy_factory_free (PXProxyFactory *self)
+void
+px_proxy_factory_free (pxProxyFactory *self)
 {
 	unsigned int i;
 	
@@ -199,7 +205,7 @@ PROXY_EXPORT void px_proxy_factory_free (PXProxyFactory *self)
 		{
 			// Call the destantiation hook
 			PXProxyFactoryVoidCallback destantiate;
-			destantiate = dlsym(self->plugins[i], "on_proxyfactory_destantiate");
+			destantiate = dlsym(self->plugins[i], "on_proxy_factory_destantiate");
 			if (destantiate)
 				destantiate(self);
 			
@@ -207,12 +213,12 @@ PROXY_EXPORT void px_proxy_factory_free (PXProxyFactory *self)
 			dlclose(self->plugins[i]);
 			self->plugins[i] = NULL;
 		}
-		proxy_free(self->plugins);
+		px_free(self->plugins);
 	}
 	
 	// Free everything else
-	if (self->configs)      proxy_free(self->configs);
-	if (self->on_get_proxy) proxy_free(self->on_get_proxy);
-	proxy_free(self);
+	if (self->configs)      px_free(self->configs);
+	if (self->on_get_proxy) px_free(self->on_get_proxy);
+	px_free(self);
 }
 

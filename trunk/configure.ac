@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT([libproxy],[0.1],[nathaniel@natemccallum.com])
-AC_CONFIG_SRCDIR([src/proxy_factory.c])
+AC_CONFIG_SRCDIR([src/lib/proxy_factory.c])
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
@@ -30,5 +30,5 @@ CFLAGS="-std=c99 $CFLAGS"
 AC_FUNC_MALLOC
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/lib/Makefile src/plugins/Makefile src/bin/Makefile])
 AC_OUTPUT
