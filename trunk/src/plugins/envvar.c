@@ -4,11 +4,11 @@
 #include <misc.h>
 #include <proxy_factory.h>
 
-PXConfig *get_config_cb(pxProxyFactory *self)
+pxConfig *get_config_cb(pxProxyFactory *self)
 {
 	char *proxy = getenv("http_proxy");
 	if (!proxy)  return NULL;
-	PXConfig *config = malloc(sizeof(PXConfig));
+	pxConfig *config = malloc(sizeof(pxConfig));
 	if (!config) return NULL;
 	config->url = px_strdup(proxy);
 	if (!config->url) { free(config); return NULL; }
@@ -19,10 +19,10 @@ PXConfig *get_config_cb(pxProxyFactory *self)
 
 bool on_proxy_factory_instantiate(pxProxyFactory *self)
 {
-	return px_proxy_factory_config_set(self, PX_CONFIG_BACKEND_ENVVAR, get_config_cb);
+	return px_proxy_factory_config_add(self, "envvar", PX_CONFIG_CATEGORY_NONE, get_config_cb);
 }
 
 void on_proxy_factory_destantiate(pxProxyFactory *self)
 {
-	px_proxy_factory_config_set(self, PX_CONFIG_BACKEND_ENVVAR, NULL);
+	px_proxy_factory_config_del(self, "envvar");
 }

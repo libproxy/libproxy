@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "misc.h"
 
@@ -190,10 +191,50 @@ px_readline(int fd)
  * @return A newly allocated copy of string without all the leading whitespace
  */
 char *
-px_lstrip(char *string)
+px_strlstrip(char *string)
 {
 	for (int i=0 ; string[i] ; i++)
-		if (string[i] != ' ' && string [i] != '\t')
+		if (!isspace(string[i]))
 			return px_strdup(string + i);
 	return px_strdup("");
 }
+
+/**
+ * Trims off all the trailing whitespace characters
+ * @string The string to strip
+ * @return A newly allocated copy of string without all the trailing whitespace
+ */
+char *
+px_strrstrip(char *string)
+{
+	char *tmp = string = px_strdup(string);
+	
+	for (int i=0 ; string[i] ; i++)
+		if (!isspace(string[i]))
+			tmp = string + i;
+	*tmp = '\0';
+	return string;
+}
+
+/**
+ * Trims off all the leading and trailing whitespace characters
+ * @string The string to strip
+ * @return A newly allocated copy of string without all the leading and trailing whitespace
+ */
+char *
+px_strstrip(char *string)
+{
+	char *tmp = px_strrstrip(string);
+	string    = px_strlstrip(tmp);
+	px_free(tmp);
+	return string;
+}
+
+
+
+
+
+
+
+
+
