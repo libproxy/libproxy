@@ -23,6 +23,17 @@
 #include <stdbool.h>
 
 #include "proxy.h"
+#include "pac.h"
+
+enum _pxConfigCategory {
+	PX_CONFIG_CATEGORY_AUTO    = 0,
+	PX_CONFIG_CATEGORY_NONE    = 0,
+	PX_CONFIG_CATEGORY_SYSTEM  = 1,
+	PX_CONFIG_CATEGORY_SESSION = 2,
+	PX_CONFIG_CATEGORY_USER    = 3,
+	PX_CONFIG_CATEGORY__LAST   = PX_CONFIG_CATEGORY_USER
+};
+typedef enum  _pxConfigCategory pxConfigCategory;
 
 // URLs look like this:
 //   http://host:port
@@ -31,24 +42,23 @@
 //   wpad://
 //   direct://
 // TODO: ignore syntax TBD
-struct _PXConfig {
+struct _pxConfig {
 	char *url;
 	char *ignore;
 };
-typedef struct _PXConfig PXConfig;
+typedef struct _pxConfig pxConfig;
 
-typedef void      (*PXProxyFactoryVoidCallback)     (pxProxyFactory *self);
-typedef bool      (*PXProxyFactoryBoolCallback)     (pxProxyFactory *self);
-typedef void     *(*PXProxyFactoryPtrCallback)      (pxProxyFactory *self);
+typedef void     (*pxProxyFactoryVoidCallback)    (pxProxyFactory *self);
+typedef bool     (*pxProxyFactoryBoolCallback)    (pxProxyFactory *self);
+typedef void    *(*pxProxyFactoryPtrCallback)     (pxProxyFactory *self);
+typedef char    *(*pxPACRunnerCallback)           (pxProxyFactory *self, const pxPAC *pac, const char *url, const char *hostname);
 
-typedef char     *(*PXPACRunnerCallback)            (pxProxyFactory *self, const char *pac, const char *url, const char *hostname);
-
-bool              px_proxy_factory_config_set       (pxProxyFactory *self, pxConfigBackend config, PXProxyFactoryPtrCallback callback);
-pxConfigBackend   px_proxy_factory_config_get_active(pxProxyFactory *self);
-void              px_proxy_factory_wpad_restart     (pxProxyFactory *self);
-void              px_proxy_factory_on_get_proxy_add (pxProxyFactory *self, PXProxyFactoryVoidCallback callback);
-void              px_proxy_factory_on_get_proxy_del (pxProxyFactory *self, PXProxyFactoryVoidCallback callback);
-bool              px_proxy_factory_pac_runner_set   (pxProxyFactory *self, PXPACRunnerCallback callback);
+bool             px_proxy_factory_config_add      (pxProxyFactory *self, char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback);
+bool             px_proxy_factory_config_del      (pxProxyFactory *self, char *name);
+void             px_proxy_factory_wpad_restart    (pxProxyFactory *self);
+bool             px_proxy_factory_on_get_proxy_add(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
+bool             px_proxy_factory_on_get_proxy_del(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
+bool             px_proxy_factory_pac_runner_set  (pxProxyFactory *self, pxPACRunnerCallback callback);
 
 #endif /*PROXY_FACTORY_H_*/
 

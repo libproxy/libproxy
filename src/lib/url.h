@@ -82,4 +82,9 @@ pxURL *px_url_new(const char *url);
  */
 const char *px_url_to_string(pxURL *self);
 
+/**
+ * @return true if the URLs are the same, else false
+ */
+bool px_url_equals(pxURL *self, const pxURL *other);
+
 #endif /*URL_H_*/

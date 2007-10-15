@@ -84,6 +84,20 @@ char *px_readline(int fd);
  * @string The string to strip
  * @return A newly allocated copy of string without all the leading whitespace
  */
-char *px_lstrip(char *string);
+char *px_strlstrip(char *string);
+
+/**
+ * Trims off all the trailing whitespace characters
+ * @string The string to strip
+ * @return A newly allocated copy of string without all the trailing whitespace
+ */
+char *px_strrstrip(char *string);
+
+/**
+ * Trims off all the leading and trailing whitespace characters
+ * @string The string to strip
+ * @return A newly allocated copy of string without all the leading and trailing whitespace
+ */
+char *px_strstrip(char *string);
 
 #endif /*MISC_H_*/

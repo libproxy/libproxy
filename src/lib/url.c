@@ -255,3 +255,12 @@ px_url_to_string(pxURL *self)
 	if (!self) return NULL;
 	return self->url;
 }
+
+/**
+ * @return true if the URLs are the same, else false
+ */
+bool
+px_url_equals(pxURL *self, const pxURL *other)
+{
+	return !strcmp(px_url_to_string(self), px_url_to_string(other));
+}

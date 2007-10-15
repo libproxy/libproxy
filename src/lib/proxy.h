@@ -20,23 +20,10 @@
 #ifndef PROXY_H_
 #define PROXY_H_
 
-enum _pxConfigBackend {
-	PX_CONFIG_BACKEND_AUTO    = 0,
-	PX_CONFIG_BACKEND_NONE    = 0,
-	PX_CONFIG_BACKEND_WIN32   = (1 << 0),
-	PX_CONFIG_BACKEND_KCONFIG = (1 << 1),
-	PX_CONFIG_BACKEND_GCONF   = (1 << 2),
-	PX_CONFIG_BACKEND_USER    = (1 << 3),
-	PX_CONFIG_BACKEND_SYSTEM  = (1 << 4),
-	PX_CONFIG_BACKEND_ENVVAR  = (1 << 5),
-	PX_CONFIG_BACKEND__LAST   = PX_CONFIG_BACKEND_ENVVAR
-};
-
 typedef struct _pxProxyFactory  pxProxyFactory;
-typedef enum   _pxConfigBackend pxConfigBackend;
 
-pxProxyFactory *px_proxy_factory_new      (pxConfigBackend config);
-char           *px_proxy_factory_get_proxy(pxProxyFactory *self, char *url);
-void            px_proxy_factory_free     (pxProxyFactory *self);
+pxProxyFactory  *px_proxy_factory_new      ();
+char           **px_proxy_factory_get_proxy(pxProxyFactory *self, char *url);
+void             px_proxy_factory_free     (pxProxyFactory *self);
 
 #endif /*PROXY_H_*/

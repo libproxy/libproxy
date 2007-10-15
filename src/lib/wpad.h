@@ -21,6 +21,9 @@
 #define WPAD_H_
 
 #include "pac.h"
+#include "dhcp.h"
+#include "dns.h"
+#include "slp.h"
 
 /**
  * WPAD object. All fields are private.
