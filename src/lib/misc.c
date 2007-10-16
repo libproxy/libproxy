@@ -99,8 +99,10 @@ px_strjoin(const char **strv, const char *delimiter)
 	// Do the join
 	char *str = px_malloc0(length);
 	for (int i=0 ; strv[i]; i++)
-		sprintf(str, "%s%s%s", str, strv[i], delimiter);
-	str[strlen(str) - strlen(delimiter)] = 0;
+	{
+		strcat(str, strv[i]);
+		if (strv[i+1]) strcat(str, delimiter);
+	}
 	return str;
 }
 
