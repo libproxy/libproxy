@@ -82,6 +82,13 @@ _format_pac_response(char *response)
 	return chain;
 }
 
+/**
+ * Creates a new pxProxyFactory instance.  This instance
+ * and all its methods are NOT thread safe, so please take
+ * care in their use.
+ * 
+ * @return A new pxProxyFactory instance or NULL on error
+ */
 pxProxyFactory *
 px_proxy_factory_new ()
 {
@@ -193,6 +200,19 @@ px_proxy_factory_config_del(pxProxyFactory *self, char *name)
 	return i != j ? true : false;
 }
 
+/**
+ * Get which proxies to use for the specified URL.
+ * 
+ * A NULL-terminated array of proxy strings is returned.
+ * If the first proxy fails, the second should be tried, etc...
+ * 
+ * The format of the returned proxy strings are as follows:
+ *   - http://proxy:port
+ *   - socks://proxy:port
+ *   - direct://
+ * @url The URL we are trying to reach
+ * @return A NULL-terminated array of proxy strings to use
+ */
 char **
 px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 {
@@ -431,6 +451,25 @@ px_proxy_factory_pac_runner_set (pxProxyFactory *self, pxPACRunnerCallback callb
 	return true;
 }
 
+void
+px_proxy_factory_network_changed(pxProxyFactory *self)
+{
+	if (self->wpad)
+	{
+		px_wpad_free(self->wpad);
+		self->wpad = NULL;
+	}
+	
+	if (self->pac)
+	{
+		px_pac_free(self->pac);
+		self->pac = NULL;
+	}
+}
+
+/**
+ * Frees the pxProxyFactory instance when no longer used.
+ */
 void
 px_proxy_factory_free (pxProxyFactory *self)
 {

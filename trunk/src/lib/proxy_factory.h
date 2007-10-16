@@ -55,7 +55,7 @@ typedef char    *(*pxPACRunnerCallback)           (pxProxyFactory *self, pxPAC *
 
 bool             px_proxy_factory_config_add      (pxProxyFactory *self, char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback);
 bool             px_proxy_factory_config_del      (pxProxyFactory *self, char *name);
-void             px_proxy_factory_wpad_restart    (pxProxyFactory *self);
+void             px_proxy_factory_network_changed (pxProxyFactory *self);
 bool             px_proxy_factory_on_get_proxy_add(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
 bool             px_proxy_factory_on_get_proxy_del(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
 bool             px_proxy_factory_pac_runner_set  (pxProxyFactory *self, pxPACRunnerCallback callback);

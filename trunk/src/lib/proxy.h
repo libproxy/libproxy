@@ -22,8 +22,33 @@
 
 typedef struct _pxProxyFactory  pxProxyFactory;
 
+/**
+ * Creates a new pxProxyFactory instance.  This instance
+ * and all its methods are NOT thread safe, so please take
+ * care in their use.
+ * 
+ * @return A new pxProxyFactory instance or NULL on error
+ */
 pxProxyFactory  *px_proxy_factory_new      ();
+
+/**
+ * Get which proxies to use for the specified URL.
+ * 
+ * A NULL-terminated array of proxy strings is returned.
+ * If the first proxy fails, the second should be tried, etc...
+ * 
+ * The format of the returned proxy strings are as follows:
+ *   - http://proxy:port
+ *   - socks://proxy:port
+ *   - direct://
+ * @url The URL we are trying to reach
+ * @return A NULL-terminated array of proxy strings to use
+ */
 char           **px_proxy_factory_get_proxy(pxProxyFactory *self, char *url);
+
+/**
+ * Frees the pxProxyFactory instance when no longer used.
+ */
 void             px_proxy_factory_free     (pxProxyFactory *self);
 
 #endif /*PROXY_H_*/
