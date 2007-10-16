@@ -31,7 +31,6 @@
 #include "wpad.h"
 
 #define DEFAULT_CONFIG_ORDER "USER,SESSION,SYSTEM"
-#define PLUGIN_DIR "/usr/lib/proxy/" VERSION "/plugins"
 
 struct _pxProxyFactoryConfig {
 	pxConfigCategory           category;
@@ -90,7 +89,7 @@ px_proxy_factory_new ()
 	unsigned int i;
 	
 	// Open the plugin dir
-	DIR *plugindir = opendir(PLUGIN_DIR);
+	DIR *plugindir = opendir(PLUGINDIR);
 	if (!plugindir) return self;
 	
 	// Count the number of plugins
@@ -103,8 +102,8 @@ px_proxy_factory_new ()
 	for (i=0 ; (ent = readdir(plugindir)) ; i++)
 	{
 		// Load the plugin
-		char *tmp = px_malloc0(strlen(PLUGIN_DIR) + strlen(ent->d_name) + 2);
-		sprintf(tmp, PLUGIN_DIR "/%s", ent->d_name);
+		char *tmp = px_malloc0(strlen(PLUGINDIR) + strlen(ent->d_name) + 2);
+		sprintf(tmp, PLUGINDIR "/%s", ent->d_name);
 		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
 		px_free(tmp);
 		if (!(self->plugins[i]))
@@ -351,8 +350,8 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
 	
-	// If we have a manual config (http://..., socks://... or direct://)
-	else
+	// If we have a manual config (http://..., socks://...)
+	else if (!strncmp(config->url, "http://", 7) || !strncmp(config->url, "socks://", 8))
 	{
 		if (self->wpad) { px_wpad_free(self->wpad); self->wpad = NULL; }
 		if (self->pac)  { px_pac_free(self->pac);   self->pac = NULL; }

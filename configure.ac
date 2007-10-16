@@ -15,6 +15,17 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
+AC_ARG_WITH([mozjs],
+            [AS_HELP_STRING([--with-mozjs],
+              [build mozilla javascript PAC runner plugin @<:@default=check@:>@])],
+            [],
+            [PKG_CHECK_EXISTS(firefox-js, with_mozjs=yes, with_mozjs=no)])
+if test "$with_mozjs" = yes; then
+    PKG_CHECK_MODULES(MOZJS, firefox-js)
+	AC_SUBST(MOZJS_CFLAGS)
+	AC_SUBST(MOZJS_LIBS)
+fi
+AM_CONDITIONAL(WITH_MOZJS, [test x$with_mozjs = xyes])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -24,7 +35,9 @@ AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_TYPE_SIZE_T
-CFLAGS="-std=c99 $CFLAGS"
+PLUGINDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/plugins
+AC_SUBST(PLUGINDIR)
+CFLAGS="-std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\""
 
 # Checks for library functions.
 AC_FUNC_MALLOC

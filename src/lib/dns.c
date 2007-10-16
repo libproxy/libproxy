@@ -104,11 +104,12 @@ get_urls(const char *domain)
 		count++;
 	
 	// Allocate our URL array
-	pxURL **urls = px_malloc0(sizeof(pxURL *) * count);
+	pxURL **urls = px_malloc0(sizeof(pxURL *) * ++count);
 	
 	// Create the URLs
+	urls[0] = px_url_new("http://wpad/wpad.dat");
 	char *url  = px_malloc0(strlen("http://wpad./wpad.dat") + strlen(domain) + 1);
-	for (int i=0, j=0 ; domainv[i] ; i++) {
+	for (int i=0, j=1 ; domainv[i] ; i++) {
 		// Check the domain against the blacklist
 		char *tmp = px_strjoin((const char **) (domainv + i), ".");
 		for (int k=0; tld[k] ; k++)

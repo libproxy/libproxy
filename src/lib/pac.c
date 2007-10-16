@@ -149,10 +149,11 @@ px_pac_reload(pxPAC *self)
 	
 	// Get content
 	if (!content_length || !correct_mime_type) goto error;
-	px_free(line);
+	px_free(line); line = NULL;
 	px_free(self->cache);
 	self->cache = px_malloc0(content_length+1);
-	if (recv(sock, self->cache, content_length, 0) != content_length) goto error;
+	for (int recvd=0 ; recvd != content_length ; )
+		recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
 	
 	// Clean up
 	close(sock);
