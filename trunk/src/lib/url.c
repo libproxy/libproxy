@@ -134,7 +134,7 @@ static int
 px_url_get_default_port(pxURL *self)
 {
 	struct servent *serv;
-	if ((serv = getservbyname(self->scheme, NULL))) return ntohl(serv->s_port);
+	if ((serv = getservbyname(self->scheme, NULL))) return ntohs(serv->s_port);
 	return 0;
 }
 

@@ -91,11 +91,7 @@ px_proxy_factory_new ()
 	
 	// Open the plugin dir
 	DIR *plugindir = opendir(PLUGIN_DIR);
-	if (!plugindir)
-	{
-		px_proxy_factory_free(self);
-		return NULL;
-	}
+	if (!plugindir) return self;
 	
 	// Count the number of plugins
 	for (i=0 ; readdir(plugindir) ; i++);
@@ -211,7 +207,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	if (!realurl)                 goto do_return;
 	
 	// Call the events
-	for (int i=0 ; self->on_get_proxy[i] ; i++)
+	for (int i=0 ; self->on_get_proxy && self->on_get_proxy[i] ; i++)
 		self->on_get_proxy[i](self);
 	
 	// Get the configuration order
@@ -223,7 +219,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		strcat(tmp, ",");
 	}
 	else
-		order = px_malloc0(strlen(DEFAULT_CONFIG_ORDER) + 1);
+		tmp = px_malloc0(strlen(DEFAULT_CONFIG_ORDER) + 1);
 	strcat(tmp, DEFAULT_CONFIG_ORDER);
 	order = px_strsplit(tmp, ",");
 	px_free(tmp);
@@ -242,7 +238,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		else
 			category = PX_CONFIG_CATEGORY_NONE;
 		
-		for (int j=0 ; self->configs[j] && !config ; j++)
+		for (int j=0 ; self->configs && self->configs[j] && !config ; j++)
 		{
 			if (category != PX_CONFIG_CATEGORY_NONE && self->configs[j]->category == category)
 				config = self->configs[j]->callback(self);
@@ -253,7 +249,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	px_strfreev(order);
 	
 	// No config was found via search order, call all plugins
-	for (int i=0 ; self->configs[i] && !config ; i++)
+	for (int i=0 ; self->configs && self->configs[i] && !config ; i++)
 		config = self->configs[i]->callback(self);
 	
 	// No plugin returned a valid config, fall back to 'wpad://'
@@ -302,7 +298,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		if (self->pac_runner)
 		{
 			px_strfreev(response);
-			response = _format_pac_response(self->pac_runner(self, self->pac, url, px_url_get_host(realurl)));
+			response = _format_pac_response(self->pac_runner(self, self->pac, realurl));
 		}
 		
 		// No PAC runner found, fall back to direct
@@ -349,7 +345,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		if (self->pac_runner)
 		{
 			px_strfreev(response);
-			response = _format_pac_response(self->pac_runner(self, self->pac, url, px_url_get_host(realurl)));
+			response = _format_pac_response(self->pac_runner(self, self->pac, realurl));
 		}
 		else
 			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");

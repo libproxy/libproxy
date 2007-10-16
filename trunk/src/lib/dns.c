@@ -79,13 +79,16 @@ get_domain_name()
 		
 	// Lookup the hostname
 	struct hostent *host_info = gethostbyname(tmp);
-	px_free(tmp); tmp = NULL;
-	if (!host_info) return NULL;
+	if (host_info)
+	{
+		px_free(tmp);
+		tmp = px_strdup(host_info->h_name);
+	}
 	
 	// Get domain portion
-	if (!strchr(host_info->h_name, '.')) return NULL;
-	if (!strcmp(".", strchr(host_info->h_name, '.'))) return NULL;
-	return px_strdup(strchr(host_info->h_name, '.') + 1);
+	if (!strchr(tmp, '.')) return NULL;
+	if (!strcmp(".", strchr(tmp, '.'))) return NULL;
+	return px_strdup(strchr(tmp, '.') + 1);
 }
 
 static pxURL **

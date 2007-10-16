@@ -51,7 +51,7 @@ typedef struct _pxConfig pxConfig;
 typedef void     (*pxProxyFactoryVoidCallback)    (pxProxyFactory *self);
 typedef bool     (*pxProxyFactoryBoolCallback)    (pxProxyFactory *self);
 typedef void    *(*pxProxyFactoryPtrCallback)     (pxProxyFactory *self);
-typedef char    *(*pxPACRunnerCallback)           (pxProxyFactory *self, const pxPAC *pac, const char *url, const char *hostname);
+typedef char    *(*pxPACRunnerCallback)           (pxProxyFactory *self, const pxPAC *pac, const pxURL *url);
 
 bool             px_proxy_factory_config_add      (pxProxyFactory *self, char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback);
 bool             px_proxy_factory_config_del      (pxProxyFactory *self, char *name);
