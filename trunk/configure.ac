@@ -26,17 +26,22 @@ fi
 AM_CONDITIONAL(WITH_MOZJS, [test x$with_mozjs = xyes])
 
 # GConf
-AC_ARG_WITH([gconf],
-            [AS_HELP_STRING([--with-gconf],
+AC_ARG_WITH([gnome],
+            [AS_HELP_STRING([--with-gnome],
               [build GConf configuration plugin @<:@default=auto@:>@])],
             [],
-            [PKG_CHECK_EXISTS(gconf-2.0, with_gconf=yes, with_gconf=no)])
-if test x$with_gconf = xyes; then
+            [PKG_CHECK_EXISTS(gconf-2.0, have_gconf=yes, with_gnome=no) ;
+             PKG_CHECK_EXISTS(gdk-2.0, have_gdk=yes, with_gnome=no)])
+test x$have_gconf = xyes && test x$have_gdk = xyes && with_gnome=yes
+if test x$with_gnome = xyes; then
 	PKG_CHECK_MODULES(GCONF, gconf-2.0)
+	PKG_CHECK_MODULES(GDK, gdk-2.0)
 	AC_SUBST(GCONF_CFLAGS)
 	AC_SUBST(GCONF_LIBS)
+	AC_SUBST(GDK_CFLAGS)
+	AC_SUBST(GDK_LIBS)
 fi
-AM_CONDITIONAL(WITH_GCONF, [test x$with_gconf = xyes])
+AM_CONDITIONAL(WITH_GNOME, [test x$with_gnome = xyes])
 
 ### Checks for header files.
 AC_HEADER_STDC
@@ -56,3 +61,13 @@ AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile src/Makefile src/lib/Makefile src/plugins/Makefile src/bin/Makefile])
 AC_OUTPUT
+
+### Print build summary
+echo
+echo "------------------------------------------------------"
+echo -e "\tBuilding..."
+echo -e "\t\tenvvar\tyes"
+echo -e "\t\tmozjs\t$with_mozjs"
+echo -e "\t\tgnome\t$with_gnome"
+echo "------------------------------------------------------"
+
