@@ -156,7 +156,7 @@ px_proxy_factory_config_add(pxProxyFactory *self, char *name, pxConfigCategory c
 	
 	// Allocate new array, copy old values into it and free old array
 	tmp = px_malloc0(sizeof(pxProxyFactoryConfig *) * (count + 2));
-	memcpy(tmp, self->configs, count);
+	memcpy(tmp, self->configs, sizeof(pxProxyFactoryConfig *) * count);
 	px_free(self->configs);
 	self->configs = tmp;
 	
@@ -404,7 +404,7 @@ px_proxy_factory_on_get_proxy_add (pxProxyFactory *self, pxProxyFactoryVoidCallb
 	
 	// Allocate new array, copy old values into it and free old array
 	tmp = px_malloc0(sizeof(pxProxyFactoryVoidCallback) * (count + 2));
-	memcpy(tmp, self->on_get_proxy, count);
+	memcpy(tmp, self->on_get_proxy, sizeof(pxProxyFactoryVoidCallback) * count);
 	px_free(self->on_get_proxy);
 	self->on_get_proxy = tmp;
 	
