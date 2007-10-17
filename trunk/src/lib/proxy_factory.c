@@ -177,6 +177,7 @@ px_proxy_factory_config_del(pxProxyFactory *self, char *name)
 	// Verify some basic stuff
 	if (!self)                      return false;
 	if (!name || !strcmp(name, "")) return false;
+	if (!self->configs)             return false;
 	
 	// Remove and shift all configs down (if found)
 	for (i=0,j=0 ; self->configs[j]; i++,j++)
@@ -420,8 +421,9 @@ px_proxy_factory_on_get_proxy_del (pxProxyFactory *self, pxProxyFactoryVoidCallb
 	int i,j;
 	
 	// Verify some basic stuff
-	if (!self)     return false;
-	if (!callback) return false;
+	if (!self)               return false;
+	if (!callback)           return false;
+	if (!self->on_get_proxy) return false;
 	
 	// Remove and shift all callbacks down (if found)
 	for (i=0,j=0 ; self->on_get_proxy[j]; i++,j++)
