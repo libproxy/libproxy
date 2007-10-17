@@ -5,8 +5,8 @@ plugin_LTLIBRARIES  = envvar.la
 if WITH_MOZJS
 plugin_LTLIBRARIES += mozjs.la
 endif
-if WITH_GCONF
-plugin_LTLIBRARIES += gconf.la
+if WITH_GNOME
+plugin_LTLIBRARIES += gnome.la
 endif
 
 # Environmental Variable Config Plugin
@@ -23,10 +23,10 @@ mozjs_la_LDFLAGS        = -module -avoid-version @MOZJS_LIBS@
 nodist_mozjs_la_SOURCES = pacutils.h
 
 # GConf/GNOME Config Plugin
-gconf_la_SOURCES        = gconf.c ../lib/proxy_plugin.h
-gconf_la_CFLAGS         = -I../lib @GCONF_CFLAGS@
-gconf_la_LIBADD         = ../lib/libproxy.la
-gconf_la_LDFLAGS        = -module -avoid-version @GCONF_LIBS@
+gnome_la_SOURCES        = gnome.c ../lib/proxy_plugin.h
+gnome_la_CFLAGS         = -I../lib @GCONF_CFLAGS@ @GDK_CFLAGS@
+gnome_la_LIBADD         = ../lib/libproxy.la
+gnome_la_LDFLAGS        = -module -avoid-version @GCONF_LIBS@ @GDK_LIBS@
 
 BUILT_SOURCES = pacutils.h
 CLEANFILES = pacutils.h
