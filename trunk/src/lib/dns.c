@@ -104,7 +104,7 @@ get_urls(const char *domain)
 		count++;
 	
 	// Allocate our URL array
-	pxURL **urls = px_malloc0(sizeof(pxURL *) * ++count);
+	pxURL **urls = px_malloc0(sizeof(pxURL *) * (count + 2));
 	
 	// Create the URLs
 	urls[0] = px_url_new("http://wpad/wpad.dat");
