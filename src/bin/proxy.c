@@ -19,10 +19,39 @@
 
 #include <stdio.h>
 
+// External libproxy API
 #include <proxy.h>
+
+// Internal libproxy API
+#include <proxy_factory.h>
+#include <misc.h>
+
+#define STDIN fileno(stdin)
 
 int
 main(int argc, char **argv)
 {
-	puts("Hello World!");
+	pxProxyFactory *pf = px_proxy_factory_new();
+	if (!pf)
+	{
+		fprintf(stderr, "An unknown error occurred!\n");
+		return 1;
+	}
+	
+	for (char *line = NULL ; line = px_readline(STDIN) ; px_free(line))
+	{
+		char **proxy = px_proxy_factory_get_proxy(pf, line);
+		for (int i = 0 ; proxy[i] ; i++)
+		{
+			printf(proxy[i]);
+			if (proxy[i+1])
+				printf(" ");
+			else
+				printf("\n");
+		}
+		px_strfreev(proxy);
+	}
+	
+	px_proxy_factory_free(pf);
+	return 0;
 }
