@@ -36,6 +36,7 @@ pxProxyFactory  *px_proxy_factory_new      ();
  * 
  * A NULL-terminated array of proxy strings is returned.
  * If the first proxy fails, the second should be tried, etc...
+ * Don't forget to free the strings/array when you are done.
  * 
  * The format of the returned proxy strings are as follows:
  *   - http://proxy:port

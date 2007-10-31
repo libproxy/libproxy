@@ -1,0 +1,5 @@
+Wed Oct 31 13:09:10 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
+	* === Released 0.1 ===
+	* AUTHORS: Added authors
+	* README: basic readme info
+        * src/lib/proxy.h: add missing doc line
