@@ -73,22 +73,24 @@ static char *
 get_domain_name()
 {
 	// Get the hostname
-	char *tmp = px_malloc0(128);
-	for (int i = 0 ; gethostname(tmp, (i + 1) * 128) && errno == ENAMETOOLONG ; )
-		tmp = px_malloc0((++i + 1) * 128);
+	char *hostname = px_malloc0(128);
+	for (int i = 0 ; gethostname(hostname, (i + 1) * 128) && errno == ENAMETOOLONG ; )
+		hostname = px_malloc0((++i + 1) * 128);
 		
 	// Lookup the hostname
-	struct hostent *host_info = gethostbyname(tmp);
+	struct hostent *host_info = gethostbyname(hostname);
 	if (host_info)
 	{
-		px_free(tmp);
-		tmp = px_strdup(host_info->h_name);
+		px_free(hostname);
+		hostname = px_strdup(host_info->h_name);
 	}
 	
 	// Get domain portion
-	if (!strchr(tmp, '.')) return NULL;
-	if (!strcmp(".", strchr(tmp, '.'))) return NULL;
-	return px_strdup(strchr(tmp, '.') + 1);
+	if (!strchr(hostname, '.')) return NULL;
+	if (!strcmp(".", strchr(hostname, '.'))) return NULL;
+	char *tmp = px_strdup(strchr(hostname, '.') + 1);
+	px_free(hostname);
+	return tmp;
 }
 
 static pxURL **
@@ -123,6 +125,7 @@ get_urls(const char *domain)
 		if (urls[j]) j++;
 	}
 	px_free(url);
+	px_strfreev(domainv);
 	
 	return urls;
 }
