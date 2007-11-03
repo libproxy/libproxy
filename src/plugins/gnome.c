@@ -120,7 +120,8 @@ gconf_on_get_proxy(pxProxyFactory *self)
 	gdk_display_close(gdk_screen_get_display(screen));
 	
 	// Make sure this config is registered
-	px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, gconf_config_cb);
+	px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, 
+								(pxProxyFactoryPtrCallback) gconf_config_cb);
 	return;
 	
 	// We aren't in a gnome session, so make sure this is config is NOT registered

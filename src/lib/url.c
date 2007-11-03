@@ -256,5 +256,5 @@ px_url_to_string(pxURL *self)
 bool
 px_url_equals(pxURL *self, const pxURL *other)
 {
-	return !strcmp(px_url_to_string(self), px_url_to_string(other));
+	return !strcmp(px_url_to_string(self), px_url_to_string((pxURL*) other));
 }

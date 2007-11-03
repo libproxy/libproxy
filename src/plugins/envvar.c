@@ -38,7 +38,8 @@ pxConfig *get_config_cb(pxProxyFactory *self)
 
 bool on_proxy_factory_instantiate(pxProxyFactory *self)
 {
-	return px_proxy_factory_config_add(self, "envvar", PX_CONFIG_CATEGORY_NONE, get_config_cb);
+	return px_proxy_factory_config_add(self, "envvar", PX_CONFIG_CATEGORY_NONE, 
+										(pxProxyFactoryPtrCallback) get_config_cb);
 }
 
 void on_proxy_factory_destantiate(pxProxyFactory *self)
