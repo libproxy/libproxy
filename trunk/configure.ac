@@ -15,7 +15,7 @@ AC_PROG_MAKE_SET
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
-              [build mozilla javascript PAC runner plugin @<:@default=auto@:>@])],
+              [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
             [],
             [PKG_CHECK_EXISTS(firefox-js, with_mozjs=yes, with_mozjs=no)])
 if test x$with_mozjs = xyes; then
@@ -28,7 +28,7 @@ AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 # GConf
 AC_ARG_WITH([gnome],
             [AS_HELP_STRING([--with-gnome],
-              [build GConf configuration plugin @<:@default=auto@:>@])],
+              [build GConf configuration plugin @<:@automatic@:>@])],
             [],
             [PKG_CHECK_EXISTS(gconf-2.0, have_gconf=yes, with_gnome=no) ;
              PKG_CHECK_EXISTS(gdk-2.0, have_gdk=yes, with_gnome=no)])
@@ -47,7 +47,7 @@ AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 # Python
 AC_ARG_WITH([python],
             [AS_HELP_STRING([--with-python],
-              [build Python bindings @<:@default=auto@:>@])],
+              [build Python bindings @<:@automatic@:>@])],
             [AM_PATH_PYTHON([2.5], with_python=yes)],
             [AM_PATH_PYTHON([2.5], with_python=yes, with_python=no)])
 AM_CONDITIONAL([WITH_PYTHON], [test x$with_python = xyes])
@@ -70,7 +70,7 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 PLUGINDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/plugins
 AC_SUBST(PLUGINDIR)
-CFLAGS="-std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\""
+CFLAGS="-std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$SYSCONFDIR\\\" -D_POSIX_C_SOURCE=1"
 
 ### Checks for library functions.
 AC_FUNC_MALLOC

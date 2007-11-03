@@ -51,6 +51,14 @@ char *px_strndup(const char *s, size_t n);
 char *px_strdup(const char *s);
 
 /**
+ * Concatenates two or more strings into a newly allocated string
+ * @s The first string to concatenate.
+ * @... Subsequent strings.  The last argument must be NULL.
+ * @return Newly allocated string
+ */
+char *px_strcat(const char *s, ...);
+
+/**
  * Joins NULL terminated array of strings into one string separated by delimiter
  * @strv NULL terminated array of string to join
  * @delimiter The string to use in between each string in the array

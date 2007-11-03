@@ -23,6 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "misc.h"
 
@@ -76,6 +77,34 @@ px_strdup(const char *s)
 {
 	if (!s) return NULL;
 	return px_strndup(s, strlen(s));
+}
+
+/**
+ * Concatenates two or more strings into a newly allocated string
+ * @s The first string to concatenate.
+ * @... Subsequent strings.  The last argument must be NULL.
+ * @return Newly allocated string
+ */
+char *
+px_strcat(const char *s, ...)
+{
+	va_list args;
+	
+	// Count the number of characters to concatentate
+	va_start(args, s);
+	int count = strlen(s);
+	for (char *tmp = NULL ; (tmp = va_arg(args, char *)) ; count += strlen(tmp));
+	va_end(args);
+	
+	// Build our output string
+	char *output = px_malloc0(count + 1);
+	strcat(output, s);
+	va_start(args, s);
+	for (char *tmp = NULL ; (tmp = va_arg(args, char *)) ; )
+		strcat(output, tmp);
+	va_end(args);
+	
+	return output;
 }
 
 /**
