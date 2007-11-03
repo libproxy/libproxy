@@ -11,7 +11,7 @@ AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
-### Checks for libraries.
+### Checks for libraries for plugins.
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
@@ -23,7 +23,7 @@ if test x$with_mozjs = xyes; then
 	AC_SUBST(MOZJS_CFLAGS)
 	AC_SUBST(MOZJS_LIBS)
 fi
-AM_CONDITIONAL(WITH_MOZJS, [test x$with_mozjs = xyes])
+AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 
 # GConf
 AC_ARG_WITH([gnome],
@@ -41,7 +41,24 @@ if test x$with_gnome = xyes; then
 	AC_SUBST(GDK_CFLAGS)
 	AC_SUBST(GDK_LIBS)
 fi
-AM_CONDITIONAL(WITH_GNOME, [test x$with_gnome = xyes])
+AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
+
+### Check for binding requirements
+# Python
+AC_ARG_WITH([python],
+            [AS_HELP_STRING([--with-python],
+              [build Python bindings @<:@default=auto@:>@])],
+            [AM_PATH_PYTHON([2.5], with_python=yes)],
+            [AM_PATH_PYTHON([2.5], with_python=yes, with_python=no)])
+AM_CONDITIONAL([WITH_PYTHON], [test x$with_python = xyes])
+
+# Java
+with_java=no
+AM_CONDITIONAL([WITH_JAVA], [test x$with_java = xyes])
+
+# .NET
+with_dotnet=no
+AM_CONDITIONAL([WITH_DOTNET], [test x$with_dotnet = xyes])
 
 ### Checks for header files.
 AC_HEADER_STDC
@@ -59,15 +76,23 @@ CFLAGS="-std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\""
 AC_FUNC_MALLOC
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
-AC_CONFIG_FILES([Makefile src/Makefile src/lib/Makefile src/plugins/Makefile src/bin/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/lib/Makefile src/plugins/Makefile 
+                 src/bin/Makefile src/bindings/Makefile src/bindings/python/Makefile
+                 src/bindings/java/Makefile src/bindings/dotnet/Makefile])
 AC_OUTPUT
 
 ### Print build summary
 echo
 echo "------------------------------------------------------"
-echo -e "\tBuilding..."
-echo -e "\t\tenvvar\tyes"
-echo -e "\t\tmozjs\t$with_mozjs"
-echo -e "\t\tgnome\t$with_gnome"
+echo -e "\tPlugins to build..."
+echo -e "\t\tenvvar\t\tyes"
+echo -e "\t\tmozjs\t\t$with_mozjs"
+echo -e "\t\tgnome\t\t$with_gnome"
+echo
+echo -e "\tBindings to build..."
+echo -e "\t\tpython\t\t$with_python"
+echo -e "\t\tjava\t\t$with_java"
+echo -e "\t\tdotnet\t\t$with_dotnet"
 echo "------------------------------------------------------"
+echo
 
