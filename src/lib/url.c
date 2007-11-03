@@ -80,7 +80,6 @@ px_url_is_valid(const char *url)
 int
 px_url_open(pxURL *self, const char **headers)
 {
-	char *request_template = "GET %s HTTP/1.1\r\nHost: %s\r\n%s\r\n\r\n"; 
 	char *request = NULL;
 	char *joined_headers = NULL;
 	int sock = -1;
@@ -104,14 +103,9 @@ px_url_open(pxURL *self, const char **headers)
 		joined_headers = px_strdup("");
 
 	// Create request header
-	request = px_malloc0(strlen(px_url_get_path(self)) + 
-							strlen(px_url_get_host(self)) +
-							strlen(joined_headers) +
-							strlen(request_template));
-	sprintf(request, request_template, 
-			px_url_get_path(self), 
-			px_url_get_host(self),
-			joined_headers);
+	request = px_strcat("GET ", px_url_get_path(self), 
+						" HTTP/1.1\r\nHost: ", px_url_get_host(self),
+						"\r\n", joined_headers, "\r\n\r\n");
 	px_free(joined_headers);
 			
 	// Send HTTP request

@@ -65,14 +65,12 @@ _format_pac_response(char *response)
 		
 		if (!strncmp(tmp, "PROXY", 5) || !strncmp(tmp, "SOCKS", 5))
 		{
-			char *tmpa = px_strstrip(tmp + 5);
-			chain[i] = px_malloc0(strlen(tmpa) + 9);
+			char *hostport = px_strstrip(tmp + 5);
 			if (!strncmp(tmp, "PROXY", 5))
-				strcpy(chain[i], "http://");
+				chain[i] = px_strcat("http://", hostport, NULL);
 			else
-				strcpy(chain[i], "socks://");
-			strcat(chain[i], tmpa);
-			px_free(tmpa);
+				chain[i] = px_strcat("socks://", hostport, NULL);
+			px_free(hostport);
 		}
 		else
 			chain[i] = px_strdup("direct://");
@@ -110,8 +108,7 @@ px_proxy_factory_new ()
 	for (i=0 ; (ent = readdir(plugindir)) ; i++)
 	{
 		// Load the plugin
-		char *tmp = px_malloc0(strlen(PLUGINDIR) + strlen(ent->d_name) + 2);
-		sprintf(tmp, PLUGINDIR "/%s", ent->d_name);
+		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name);
 		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
 		px_free(tmp);
 		if (!(self->plugins[i]))
@@ -221,6 +218,8 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	pxURL    *realurl  = px_url_new(url);
 	pxConfig *config   = NULL;
 	char    **response = px_strsplit("direct://", ";");
+	char     *tmp = NULL, *order = NULL, **orderv = NULL;
+	FILE     *file = NULL;
 	
 	// Verify some basic stuff
 	if (!self)                    goto do_return;
@@ -231,30 +230,74 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	for (int i=0 ; self->on_get_proxy && self->on_get_proxy[i] ; i++)
 		self->on_get_proxy[i](self);
 	
-	// Get the configuration order
-	char *tmp = NULL, **order = NULL;
-	if (getenv("PX_CONFIG_ORDER"))
-	{
-		tmp = px_malloc0(strlen(getenv("PX_CONFIG_ORDER")) + strlen(DEFAULT_CONFIG_ORDER) + 2);
-		strcpy(tmp, getenv("PX_CONFIG_ORDER"));
-		strcat(tmp, ",");
-	}
-	else
-		tmp = px_malloc0(strlen(DEFAULT_CONFIG_ORDER) + 1);
-	strcat(tmp, DEFAULT_CONFIG_ORDER);
-	order = px_strsplit(tmp, ",");
+	// Open the config file
+	tmp  = px_strcat(SYSCONFDIR, "/", "proxy.conf");
+	file = fopen(tmp, "r");
 	px_free(tmp);
 	
+	// If we have a config file, read its info
+	if (file)
+	{
+		for (char *line = NULL ; (line = px_readline(fileno(file))) ; px_free(line))
+		{
+			// Strip whitespace
+			tmp = px_strstrip(line);
+			px_free(line);
+			line = tmp;
+			
+			// Check for comment
+			if (*line == '#') continue;
+			
+			// Build the string
+			if (order)
+			{
+				tmp = px_strcat(order, ",", line, NULL);
+				px_free(order);
+				order = tmp;
+			}
+			else
+				order = px_strdup(line);
+		}
+		fclose(file);
+	}
+	
+	// Read the environmental info
+	if (getenv("PX_CONFIG_ORDER"))
+	{
+		if (order)
+		{
+			tmp = px_strcat(order, ",", getenv("PX_CONFIG_ORDER"), NULL);
+			px_free(order);
+			order = tmp;
+		}
+		else
+			order = px_strdup(getenv("PX_CONFIG_ORDER"));
+	}
+	
+	// Finally add the default config
+	if (order)
+	{
+		tmp = px_strcat(order, ",", DEFAULT_CONFIG_ORDER, NULL);
+		px_free(order);
+		order = tmp;
+	}
+	else
+		order = px_strdup(DEFAULT_CONFIG_ORDER);
+	
+	// Create the config plugin order vector
+	orderv = px_strsplit(order, ",");
+	px_free(order);
+	
 	// Get the config by searching the config order
-	for (int i=0 ; order[i] && !config ; i++)
+	for (int i=0 ; orderv[i] && !config ; i++)
 	{
 		// Get the category (if applicable)
 		pxConfigCategory category;
-		if (!strcmp(order[i], "USER"))
+		if (!strcmp(orderv[i], "USER"))
 			category = PX_CONFIG_CATEGORY_USER;
-		else if (!strcmp(order[i], "SESSION"))
+		else if (!strcmp(orderv[i], "SESSION"))
 			category = PX_CONFIG_CATEGORY_SESSION;
-		else if (!strcmp(order[i], "SYSTEM"))
+		else if (!strcmp(orderv[i], "SYSTEM"))
 			category = PX_CONFIG_CATEGORY_SYSTEM;
 		else
 			category = PX_CONFIG_CATEGORY_NONE;
@@ -263,11 +306,11 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		{
 			if (category != PX_CONFIG_CATEGORY_NONE && self->configs[j]->category == category)
 				config = self->configs[j]->callback(self);
-			else if (category == PX_CONFIG_CATEGORY_NONE && !strcmp(self->configs[j]->name, order[i]))
+			else if (category == PX_CONFIG_CATEGORY_NONE && !strcmp(self->configs[j]->name, orderv[i]))
 				config = self->configs[j]->callback(self);
 		}
 	}
-	px_strfreev(order);
+	px_strfreev(orderv);
 	
 	// No config was found via search order, call all plugins
 	for (int i=0 ; self->configs && self->configs[i] && !config ; i++)
