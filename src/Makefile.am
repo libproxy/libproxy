@@ -1,1 +1,1 @@
-SUBDIRS = lib plugins bin
+SUBDIRS = lib plugins bin bindings
