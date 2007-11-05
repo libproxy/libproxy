@@ -43,6 +43,19 @@ if test x$with_gnome = xyes; then
 fi
 AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 
+# NetworkManager
+AC_ARG_WITH([networkmanager],
+            [AS_HELP_STRING([--with-networkmanager],
+              [build NetworkManager plugin @<:@automatic@:>@])],
+            [],
+            [PKG_CHECK_EXISTS(NetworkManager, with_networkmanager=yes, with_networkmanager=no)])
+if test x$with_networkmanager = xyes; then
+	PKG_CHECK_MODULES(NETWORKMANAGER, NetworkManager)
+	AC_SUBST(NETWORKMANAGER_CFLAGS)
+	AC_SUBST(NETWORKMANAGER_LIBS)
+fi
+AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
+
 ### Check for binding requirements
 # Python
 AC_ARG_WITH([python],
@@ -85,14 +98,15 @@ AC_OUTPUT
 echo
 echo "------------------------------------------------------"
 echo -e "\tPlugins to build..."
-echo -e "\t\tenvvar\t\tyes"
-echo -e "\t\tmozjs\t\t$with_mozjs"
-echo -e "\t\tgnome\t\t$with_gnome"
+echo -e "\t\tenvvar\t\t\tyes"
+echo -e "\t\tmozjs\t\t\t$with_mozjs"
+echo -e "\t\tgnome\t\t\t$with_gnome"
+echo -e "\t\tnetworkmanager\t$with_networkmanager"
 echo
 echo -e "\tBindings to build..."
-echo -e "\t\tpython\t\t$with_python"
-echo -e "\t\tjava\t\t$with_java"
-echo -e "\t\tdotnet\t\t$with_dotnet"
+echo -e "\t\tpython\t\t\t$with_python"
+echo -e "\t\tjava\t\t\t$with_java"
+echo -e "\t\tdotnet\t\t\t$with_dotnet"
 echo "------------------------------------------------------"
 echo
 
