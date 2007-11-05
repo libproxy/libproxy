@@ -39,9 +39,16 @@ struct _pxProxyFactoryConfig {
 };
 typedef struct _pxProxyFactoryConfig pxProxyFactoryConfig;
 
+struct _pxKeyVal {
+	char *key;
+	void *value;
+};
+typedef struct _pxKeyVal pxKeyVal;
+
 struct _pxProxyFactory {
 	void                      **plugins;
 	pxProxyFactoryConfig      **configs;
+	pxKeyVal                  **misc;
 	pxProxyFactoryVoidCallback *on_get_proxy;
 	pxPACRunnerCallback         pac_runner;
 	pxPAC                      *pac;
@@ -197,6 +204,88 @@ px_proxy_factory_config_del(pxProxyFactory *self, char *name)
 	}
 	
 	return i != j ? true : false;
+}
+
+bool
+px_proxy_factory_misc_set(pxProxyFactory *self, char *key, void *value)
+{
+	int count;
+	pxKeyVal **tmp;
+	
+	// Verify some basic stuff
+	if (!self)                                return false;
+	if (!key || !strcmp(key, ""))             return false;
+	
+	// Allocate an empty config array if there is none
+	if (!self->misc) self->misc = px_malloc0(sizeof(pxKeyVal *));
+	
+	// Count the number of values
+	for (count=0 ; self->misc[count] ; count++);
+	
+	// Unset value
+	if (!value)
+	{
+		// Remove the keyval, shifting downward
+		for (int i=0 ; self->misc[i] ; i++)
+		{
+			// If the previous key was unset, shift downward
+			if (i > 0 && !self->misc[i-1])
+			{
+				self->misc[i-1] = self->misc[i];
+				self->misc[i] = NULL;
+			}
+			
+			// If the key is found, remove it
+			if (!strcmp(key, self->misc[i]->key))
+			{
+				px_free(self->misc[i]->key);
+				px_free(self->misc[i]);
+				self->misc[i] = NULL;
+				count--;
+			}
+		}
+		
+		// Resize array
+		tmp = px_malloc0(sizeof(pxKeyVal *) * count + 1);
+		memcpy(tmp, self->misc, sizeof(pxKeyVal *) * count);
+		px_free(self->misc);
+		self->misc = tmp;
+		return true;
+	}
+	
+	// Attempt to update the value within the array
+	for (int i=0 ; self->misc[i] ; i++)
+		if (!strcmp(key, self->misc[i]->key))
+		{
+			self->misc[i]->value = value;
+			return true;
+		}
+	
+	// The key was not found in the array, so add it
+	tmp = px_malloc0(sizeof(pxKeyVal *) * count + 2);
+	memcpy(tmp, self->misc, sizeof(pxKeyVal *) * count);
+	tmp[count]        = px_malloc0(sizeof(pxKeyVal));
+	tmp[count]->key   = px_strdup(key);
+	tmp[count]->value = value;
+	px_free(self->misc);
+	self->misc = tmp;
+	return true;
+}
+
+void *
+px_proxy_factory_misc_get(pxProxyFactory *self, char *key)
+{
+	// Verify some basic stuff
+	if (!self)                    return NULL;
+	if (!key || !strcmp(key, "")) return NULL;
+	if (!self->misc)              return NULL;
+	
+	// Find the value listed
+	for (int i=0 ; self->misc[i] ; i++)
+		if (!strcmp(key, self->misc[i]->key))
+			return self->misc[i]->value;
+	
+	return NULL;
 }
 
 /**
@@ -571,4 +660,3 @@ px_proxy_factory_free (pxProxyFactory *self)
 	if (self->wpad) px_wpad_free(self->wpad);
 	px_free(self);
 }
-
