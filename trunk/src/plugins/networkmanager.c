@@ -48,7 +48,7 @@ nm_on_get_proxy(pxProxyFactory *self)
 		
 		// If connection was successful, set it up
 		dbus_connection_set_exit_on_disconnect(conn, false);
-		dbus_bus_add_match(conn, "type=signal,interface=" NM_DBUS_INTERFACE ",member=StateChange", NULL);
+		dbus_bus_add_match(conn, "type='signal',interface='" NM_DBUS_INTERFACE "',member='StateChange'", NULL);
 		dbus_connection_flush(conn);
 		px_proxy_factory_misc_set(self, "networkmanager", conn);
 	}
@@ -56,21 +56,28 @@ nm_on_get_proxy(pxProxyFactory *self)
 	// We are guaranteed a connection,
 	// so check for incoming messages
 	bool changed = false;
-	for (DBusMessage *msg=NULL ; 
-	     dbus_connection_read_write(conn, 0) && (msg = dbus_connection_pop_message(conn)) ; 
-	     dbus_message_unref(msg))
+	while (true)
 	{
+		DBusMessage *msg = NULL;
 		uint32_t state;
+		
+		// Pull messages off the queue
+		dbus_connection_read_write(conn, 0);
+		if (!(msg = dbus_connection_pop_message(conn)))
+			break;
 		
 		// If a message is the right type and value,
 		// we'll reset the network
 		if (dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &state, DBUS_TYPE_INVALID))
 			if (state == NM_STATE_CONNECTED)
 				changed = true;
+		
+		dbus_message_unref(msg);
 	}
 	
 	// Reset the network if ready
-	if (changed) px_proxy_factory_network_changed(self);
+	if (changed) 
+		px_proxy_factory_network_changed(self);
 }
 
 bool
