@@ -99,6 +99,7 @@ echo
 echo "------------------------------------------------------"
 echo -e "\tPlugins to build..."
 echo -e "\t\tenvvar\t\t\tyes"
+echo -e "\t\tfile\t\t\tyes"
 echo -e "\t\tmozjs\t\t\t$with_mozjs"
 echo -e "\t\tgnome\t\t\t$with_gnome"
 echo -e "\t\tnetworkmanager\t\t$with_networkmanager"
