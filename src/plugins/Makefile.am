@@ -1,7 +1,7 @@
 plugindir           = @PLUGINDIR@
 
 # Which modules to build
-plugin_LTLIBRARIES  = envvar.la
+plugin_LTLIBRARIES  = envvar.la file.la
 if WITH_MOZJS
 plugin_LTLIBRARIES += mozjs.la
 endif
@@ -17,6 +17,12 @@ envvar_la_SOURCES         = envvar.c
 envvar_la_CFLAGS          = -I../lib
 envvar_la_LIBADD          = ../lib/libproxy.la
 envvar_la_LDFLAGS         = -module -avoid-version
+
+# File Config Plugin
+file_la_SOURCES           = file.c
+file_la_CFLAGS            = -I../lib
+file_la_LIBADD            = ../lib/libproxy.la
+file_la_LDFLAGS           = -module -avoid-version
 
 # Mozilla (Spidermonkey) based PAC runner
 mozjs_la_SOURCES          = mozjs.c
