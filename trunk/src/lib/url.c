@@ -105,7 +105,7 @@ px_url_open(pxURL *self, const char **headers)
 	// Create request header
 	request = px_strcat("GET ", px_url_get_path(self), 
 						" HTTP/1.1\r\nHost: ", px_url_get_host(self),
-						"\r\n", joined_headers, "\r\n\r\n");
+						"\r\n", joined_headers, "\r\n\r\n", NULL);
 	px_free(joined_headers);
 			
 	// Send HTTP request
