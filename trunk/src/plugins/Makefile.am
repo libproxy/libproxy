@@ -33,9 +33,9 @@ nodist_mozjs_la_SOURCES   = pacutils.h
 
 # GConf/GNOME Config Plugin
 gnome_la_SOURCES          = gnome.c
-gnome_la_CFLAGS           = -I../lib @GCONF_CFLAGS@ @GDK_CFLAGS@
+gnome_la_CFLAGS           = -I../lib @GCONF_CFLAGS@
 gnome_la_LIBADD           = ../lib/libproxy.la
-gnome_la_LDFLAGS          = -module -avoid-version @GCONF_LIBS@ @GDK_LIBS@
+gnome_la_LDFLAGS          = -module -avoid-version @GCONF_LIBS@
 
 # NetworkManager Plugin
 networkmanager_la_SOURCES = networkmanager.c
