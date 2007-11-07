@@ -108,7 +108,7 @@ gconf_on_get_proxy(pxProxyFactory *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
 	// Otherwise, make sure this plugin is NOT registered.
-	if (!system("xlsclients 2>/dev/null | grep '[\t ]gnome-session$'"))
+	if (!system("xlsclients 2>/dev/null | grep -q '[\t ]gnome-session$'"))
 		px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, 
 									(pxProxyFactoryPtrCallback) gconf_config_cb);
 	else
@@ -138,5 +138,8 @@ on_proxy_factory_destantiate(pxProxyFactory *self)
 	
 	// Close the GConf connection, if present
 	if (px_proxy_factory_misc_get(self, "gnome"))
+	{
 		g_object_unref(px_proxy_factory_misc_get(self, "gnome"));
+		px_proxy_factory_misc_set(self, "gnome", NULL);
+	}
 }
