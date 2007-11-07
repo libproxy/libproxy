@@ -30,16 +30,11 @@ AC_ARG_WITH([gnome],
             [AS_HELP_STRING([--with-gnome],
               [build GConf configuration plugin @<:@automatic@:>@])],
             [],
-            [PKG_CHECK_EXISTS(gconf-2.0, have_gconf=yes, with_gnome=no) ;
-             PKG_CHECK_EXISTS(gdk-2.0, have_gdk=yes, with_gnome=no)])
-test x$have_gconf = xyes && test x$have_gdk = xyes && with_gnome=yes
+            [PKG_CHECK_EXISTS(gconf-2.0, with_gnome=yes, with_gnome=no)])
 if test x$with_gnome = xyes; then
 	PKG_CHECK_MODULES(GCONF, gconf-2.0)
-	PKG_CHECK_MODULES(GDK, gdk-2.0)
 	AC_SUBST(GCONF_CFLAGS)
 	AC_SUBST(GCONF_LIBS)
-	AC_SUBST(GDK_CFLAGS)
-	AC_SUBST(GDK_LIBS)
 fi
 AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 

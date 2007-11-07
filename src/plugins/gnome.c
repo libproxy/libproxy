@@ -23,16 +23,21 @@
 #include <misc.h>
 #include <proxy_factory.h>
 
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 #include <gconf/gconf-client.h>
 
 pxConfig *
 gconf_config_cb(pxProxyFactory *self)
 {
-	// This is bound to be poor performing, ideally we should share a gconf client
-	GConfClient *client = gconf_client_get_default();
-	if (!client) return NULL;
+	// Get the GConf client
+	GConfClient *client = px_proxy_factory_misc_get(self, "gnome");
+	if (!client)
+	{
+		// Create a new instance if not found
+		client = gconf_client_get_default();
+		if (!client) return NULL;
+		px_proxy_factory_misc_set(self, "gnome", client);
+	}
+	g_object_ref(client);
 	
 	// Get the mode
 	char *mode = gconf_client_get_string(client, "/system/proxy/mode", NULL);
@@ -101,34 +106,15 @@ gconf_config_cb(pxProxyFactory *self)
 void
 gconf_on_get_proxy(pxProxyFactory *self)
 {
-	int argc = 0;
-	GdkScreen *screen = NULL;
-	const char *wm = NULL;
-	
-	// Connect to X
-	if (!gdk_init_check(&argc, NULL))  goto not_gnome_session;
-	
-	// Get the default screen
-	screen = gdk_screen_get_default();
-	if (!screen)                       goto not_gnome_session;
-	
-	// Get the window manager of that screen
-	wm = gdk_x11_screen_get_window_manager_name(screen);
-	if (!wm || strcmp(wm, "Metacity")) goto not_gnome_session;
-	
-	// Close the connection to X, so we don't crash if disconnected
-	gdk_display_close(gdk_screen_get_display(screen));
-	
-	// Make sure this config is registered
-	px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, 
-								(pxProxyFactoryPtrCallback) gconf_config_cb);
-	return;
-	
-	// We aren't in a gnome session, so make sure this is config is NOT registered
-	not_gnome_session:
-		if (screen)
-			gdk_display_close(gdk_screen_get_display(screen));
+	// If we are running in GNOME, then make sure this plugin is registered.
+	// Otherwise, make sure this plugin is NOT registered.
+	if (!system("xlsclients 2>/dev/null | grep '[\t ]gnome-session$'"))
+		px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, 
+									(pxProxyFactoryPtrCallback) gconf_config_cb);
+	else
 		px_proxy_factory_config_del(self, "gnome");
+	
+	return;
 }
 
 bool
@@ -149,4 +135,8 @@ on_proxy_factory_destantiate(pxProxyFactory *self)
 {
 	px_proxy_factory_on_get_proxy_del(self, gconf_on_get_proxy);
 	px_proxy_factory_config_del(self, "gnome");
+	
+	// Close the GConf connection, if present
+	if (px_proxy_factory_misc_get(self, "gnome"))
+		g_object_unref(px_proxy_factory_misc_get(self, "gnome"));
 }
