@@ -53,10 +53,10 @@ typedef bool     (*pxProxyFactoryBoolCallback)    (pxProxyFactory *self);
 typedef void    *(*pxProxyFactoryPtrCallback)     (pxProxyFactory *self);
 typedef char    *(*pxPACRunnerCallback)           (pxProxyFactory *self, pxPAC *pac, pxURL *url);
 
-bool             px_proxy_factory_config_add      (pxProxyFactory *self, char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback);
-bool             px_proxy_factory_config_del      (pxProxyFactory *self, char *name);
-bool             px_proxy_factory_misc_set        (pxProxyFactory *self, char *key, void *value);
-void            *px_proxy_factory_misc_get        (pxProxyFactory *self, char *key);
+bool             px_proxy_factory_config_add      (pxProxyFactory *self, const char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback);
+bool             px_proxy_factory_config_del      (pxProxyFactory *self, const char *name);
+bool             px_proxy_factory_misc_set        (pxProxyFactory *self, const char *key, const void *value);
+void            *px_proxy_factory_misc_get        (pxProxyFactory *self, const char *key);
 void             px_proxy_factory_network_changed (pxProxyFactory *self);
 bool             px_proxy_factory_on_get_proxy_add(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
 bool             px_proxy_factory_on_get_proxy_del(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);

@@ -115,7 +115,7 @@ px_proxy_factory_new ()
 	for (i=0 ; (ent = readdir(plugindir)) ; i++)
 	{
 		// Load the plugin
-		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name);
+		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name, NULL);
 		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
 		px_free(tmp);
 		if (!(self->plugins[i]))
@@ -140,7 +140,7 @@ px_proxy_factory_new ()
 }
 
 bool
-px_proxy_factory_config_add(pxProxyFactory *self, char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback)
+px_proxy_factory_config_add(pxProxyFactory *self, const char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback)
 {
 	int count;
 	pxProxyFactoryConfig **tmp;
@@ -175,7 +175,7 @@ px_proxy_factory_config_add(pxProxyFactory *self, char *name, pxConfigCategory c
 }
 
 bool
-px_proxy_factory_config_del(pxProxyFactory *self, char *name)
+px_proxy_factory_config_del(pxProxyFactory *self, const char *name)
 {
 	int i,j;
 	
@@ -207,7 +207,7 @@ px_proxy_factory_config_del(pxProxyFactory *self, char *name)
 }
 
 bool
-px_proxy_factory_misc_set(pxProxyFactory *self, char *key, void *value)
+px_proxy_factory_misc_set(pxProxyFactory *self, const char *key, const void *value)
 {
 	int count;
 	pxKeyVal **tmp;
@@ -226,15 +226,8 @@ px_proxy_factory_misc_set(pxProxyFactory *self, char *key, void *value)
 	if (!value)
 	{
 		// Remove the keyval, shifting downward
-		for (int i=0 ; self->misc[i] ; i++)
+		for (int i=0,j=0 ; self->misc[i] ; i++, j++)
 		{
-			// If the previous key was unset, shift downward
-			if (i > 0 && !self->misc[i-1])
-			{
-				self->misc[i-1] = self->misc[i];
-				self->misc[i] = NULL;
-			}
-			
 			// If the key is found, remove it
 			if (!strcmp(key, self->misc[i]->key))
 			{
@@ -242,11 +235,16 @@ px_proxy_factory_misc_set(pxProxyFactory *self, char *key, void *value)
 				px_free(self->misc[i]);
 				self->misc[i] = NULL;
 				count--;
+				j--;
 			}
+			
+			// Shift down
+			if (i > 0 && j > 0)
+				self->misc[j] = self->misc[i];
 		}
 		
 		// Resize array
-		tmp = px_malloc0(sizeof(pxKeyVal *) * count + 1);
+		tmp = px_malloc0(sizeof(pxKeyVal *) * (count + 1));
 		memcpy(tmp, self->misc, sizeof(pxKeyVal *) * count);
 		px_free(self->misc);
 		self->misc = tmp;
@@ -255,25 +253,27 @@ px_proxy_factory_misc_set(pxProxyFactory *self, char *key, void *value)
 	
 	// Attempt to update the value within the array
 	for (int i=0 ; self->misc[i] ; i++)
+	{
 		if (!strcmp(key, self->misc[i]->key))
 		{
-			self->misc[i]->value = value;
+			self->misc[i]->value = (void *) value;
 			return true;
 		}
+	}
 	
 	// The key was not found in the array, so add it
-	tmp = px_malloc0(sizeof(pxKeyVal *) * count + 2);
+	tmp = px_malloc0(sizeof(pxKeyVal *) * (count + 2));
 	memcpy(tmp, self->misc, sizeof(pxKeyVal *) * count);
 	tmp[count]        = px_malloc0(sizeof(pxKeyVal));
 	tmp[count]->key   = px_strdup(key);
-	tmp[count]->value = value;
+	tmp[count]->value = (void *) value;
 	px_free(self->misc);
 	self->misc = tmp;
 	return true;
 }
 
 void *
-px_proxy_factory_misc_get(pxProxyFactory *self, char *key)
+px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
 {
 	// Verify some basic stuff
 	if (!self)                    return NULL;
@@ -653,6 +653,17 @@ px_proxy_factory_free (pxProxyFactory *self)
 			self->plugins[i] = NULL;
 		}
 		px_free(self->plugins);
+	}
+	
+	// Free misc
+	if (self->misc)
+	{
+		for (i=0 ; self->misc[i] ; i++)
+		{
+			px_free(self->misc[i]->key);
+			px_free(self->misc[i]);
+		}
+		px_free(self->misc);
 	}
 	
 	// Free everything else
