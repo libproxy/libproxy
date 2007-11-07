@@ -320,7 +320,7 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 		self->on_get_proxy[i](self);
 	
 	// Open the config file
-	tmp  = px_strcat(SYSCONFDIR, "/", "proxy.conf");
+	tmp  = px_strcat(SYSCONFDIR, "/", "proxy.conf", NULL);
 	file = fopen(tmp, "r");
 	px_free(tmp);
 	
