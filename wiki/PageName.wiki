@@ -1,0 +1,5 @@
+#summary Ignore feature support matrix
+
+|| Config source / Ignore feature || IP || Domain || Domain endswith || Domain match || CIDR || Netmask || URL globs ||
+|| GNOME || Y || Y || || || Y || Y || N ||
+|| Firefox || N || N || Y || N || Y || N || ||
