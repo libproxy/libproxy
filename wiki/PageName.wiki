@@ -1,5 +1,7 @@
 #summary Ignore feature support matrix
 
-|| Config source / Ignore feature || IPv4 || IPv6 || domain.com || *.domain.com || sub.domain.com || CIDR || Netmask || URL globs ||
-|| GNOME || Y || Y || Y || || || Y || Y || N ||
-|| Firefox || Y || Y || N || Y || N || Y || N || ||
+|| Config source / Ignore feature || IP || domain.com || `*`.domain.com || sub.domain.com || CIDR || Netmask || URL globs ||
+|| GNOME || Y || Y || || || Y || Y || N ||
+|| KDE || 
+|| Firefox || Y || N || Y || N || Y || N || N ||
+|| Env || Y || Y || N || N || N || N || N ||
