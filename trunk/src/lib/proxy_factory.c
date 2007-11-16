@@ -88,6 +88,24 @@ _format_pac_response(char *response)
 	return chain;
 }
 
+static int
+_ignore (pxURL *url, char *ignore)
+{
+	// Look at envvar ignores (man wget), gnome, kde, firefox, mac osx, windows
+	// Want to support:
+	//	IP 			-- 192.168.4.27 (glob?) including IPv6
+	//  Netmask 	-- 192.168.4.0/24 OR 255.255.255.0
+	//  hostname:	-- xyz.cypress.com	- exact match
+	//				-- .cypress.com 	- ends with
+	//				-- *.cypress.com	- glob
+	//	URL			-- http://www.google.com/bunnies/ - basically a starts with
+	//				-- http://www.google.com/bunnies* - globs, would match /bunnies_happy 
+	// If one of these formats are supported by NONE of the configuration sources, we should drop it to avoid complexity 
+	
+	return 0;
+}
+
+
 /**
  * Creates a new pxProxyFactory instance.  This instance
  * and all its methods are NOT thread safe, so please take
@@ -440,6 +458,9 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	}
 	
 	// TODO: Ignores
+	
+	if(_ignore(realurl, config->ignore))
+		goto do_return;
 	
 	// If we have a wpad config
 	if (!strcmp(config->url, "wpad://"))
