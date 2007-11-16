@@ -4,4 +4,4 @@
 || GNOME || Y || N || Y || Y || Y || Y || N || N ||
 || KDE || 
 || Firefox || Y || N || Y || Y || Y || N || N || N ||
-|| Env || Y || N || N || Y || N || N || N || N ||
+|| Env || Y || N || N || Y || N || N || N || Y ||
