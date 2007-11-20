@@ -49,7 +49,7 @@ pxConfig *get_config_from_file(pxProxyFactory *self, char *misc, char *filename)
 
 pxConfig *system_get_config_cb(pxProxyFactory *self)
 {
-	return get_config_from_file(self, "file_system", "/etc/proxy.conf");
+	return get_config_from_file(self, "file_system", SYSCONFDIR "/proxy.conf");
 }
 
 pxConfig *user_get_config_cb(pxProxyFactory *self)
