@@ -96,6 +96,15 @@ get_domain_name()
 static pxURL **
 get_urls(const char *domain)
 {
+	pxURL **urls;
+	
+	if (!domain)
+	{
+		urls = px_malloc0(sizeof(pxURL *) * 2);
+		urls[0] = px_url_new("http://wpad/wpad.dat");
+		return urls;
+	}
+	
 	// Split up the domain
 	char **domainv = px_strsplit(domain, ".");
 	if (!domainv) return NULL;
@@ -106,7 +115,7 @@ get_urls(const char *domain)
 		count++;
 	
 	// Allocate our URL array
-	pxURL **urls = px_malloc0(sizeof(pxURL *) * (count + 2));
+	urls = px_malloc0(sizeof(pxURL *) * (count + 2));
 	
 	// Create the URLs
 	urls[0] = px_url_new("http://wpad/wpad.dat");
@@ -160,6 +169,8 @@ px_dns_new_full(const char *domain)
 pxPAC *
 px_dns_next(pxDNS *self)
 {
+	if (!self) return NULL;
+	
 	if (!self->urls) {
 		char *domain;
 		
@@ -171,7 +182,6 @@ px_dns_next(pxDNS *self)
 			domain = px_strdup(self->domain);
 		else 
 			domain = get_domain_name();
-		if (!domain) return NULL;
 
 		// Get the URLs
 		self->urls = get_urls(domain);
