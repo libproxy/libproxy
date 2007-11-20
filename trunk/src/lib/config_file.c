@@ -200,7 +200,9 @@ px_config_file_get_value(pxConfigFile *self, char *section, char *key)
 void
 px_config_file_free(pxConfigFile *self)
 {
-	for (int i=0 ; self->sections[i] ; i++)
+	if (!self) return;
+	
+	for (int i=0 ; self->sections && self->sections[i] ; i++)
 	{
 		px_free(self->sections[i]->name);
 		px_strfreev(self->sections[i]->keys);
