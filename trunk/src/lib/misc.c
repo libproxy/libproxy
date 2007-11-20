@@ -80,6 +80,26 @@ px_strdup(const char *s)
 }
 
 /**
+ * Duplicates a string vector
+ * @sv String vector to duplicate
+ * @return Newly allocated string vector (free w/ px_strfreev())
+ */
+char **
+px_strdupv(const char **sv)
+{
+	int count;
+	
+	if (!sv) return NULL;
+	for (count=0 ; sv[count] ; count++); 
+	
+	char **output = px_malloc0(sizeof(char *) * ++count);
+	for (int i=0 ; sv[i] ; i++)
+		output[i] = px_strdup(sv[i]);
+		
+	return output;
+}
+
+/**
  * Concatenates two or more strings into a newly allocated string
  * @s The first string to concatenate.
  * @... Subsequent strings.  The last argument must be NULL.
@@ -200,13 +220,14 @@ px_readline(int fd)
 		char c;
 		
 		// Receive a single character, check for newline or EOF
-		if (read(fd, &c, 1) != 1 || c == '\n') break;
+		if (read(fd, &c, 1) != 1) return buffer;
+		if (c == '\n')            return buffer ? buffer : px_strdup("");
 
 		// Allocate new buffer if we need
 		if (i % 1024 == 1)
 		{
 			char *tmp = buffer;
-			buffer = px_malloc0(1024+i);
+			buffer = px_malloc0(1024 * i + 1);
 			if (tmp) { strcpy(buffer, tmp); px_free(tmp); }
 		}
 
@@ -243,7 +264,7 @@ px_strrstrip(char *string)
 	for (int i=0 ; string[i] ; i++)
 		if (!isspace(string[i]))
 			tmp = string + i;
-	*tmp = '\0';
+	tmp[1] = '\0';
 	return string;
 }
 

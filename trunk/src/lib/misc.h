@@ -51,6 +51,13 @@ char *px_strndup(const char *s, size_t n);
 char *px_strdup(const char *s);
 
 /**
+ * Duplicates a string vector
+ * @sv String vector to duplicate
+ * @return Newly allocated string vector (free w/ px_strfreev())
+ */
+char **px_strdupv(const char **sv);
+
+/**
  * Concatenates two or more strings into a newly allocated string
  * @s The first string to concatenate.
  * @... Subsequent strings.  The last argument must be NULL.
