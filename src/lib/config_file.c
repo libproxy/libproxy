@@ -207,6 +207,8 @@ px_config_file_free(pxConfigFile *self)
 		px_strfreev(self->sections[i]->vals);
 		px_free(self->sections[i]);
 	}
+	px_free(self->sections);
+	px_free(self->filename);
 	px_free(self);
 }
 

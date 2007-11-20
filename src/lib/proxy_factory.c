@@ -29,6 +29,7 @@
 #include "misc.h"
 #include "proxy_factory.h"
 #include "wpad.h"
+#include "config_file.h"
 
 #define DEFAULT_CONFIG_ORDER "USER,SESSION,SYSTEM"
 
@@ -53,6 +54,7 @@ struct _pxProxyFactory {
 	pxPACRunnerCallback         pac_runner;
 	pxPAC                      *pac;
 	pxWPAD                     *wpad;
+	pxConfigFile               *cf;
 };
 
 // Convert the PAC formatted response into our proxy URL array response
@@ -326,7 +328,6 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	pxConfig *config   = NULL;
 	char    **response = px_strsplit("direct://", ";");
 	char     *tmp = NULL, *order = NULL, **orderv = NULL;
-	FILE     *file = NULL;
 	
 	// Verify some basic stuff
 	if (!self)                    goto do_return;
@@ -337,59 +338,27 @@ px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
 	for (int i=0 ; self->on_get_proxy && self->on_get_proxy[i] ; i++)
 		self->on_get_proxy[i](self);
 	
-	// Open the config file
-	tmp  = px_strcat(SYSCONFDIR, "/", "proxy.conf", NULL);
-	file = fopen(tmp, "r");
-	px_free(tmp);
-	
-	// If we have a config file, read its info
-	if (file)
+	// If our config file is stale, close it
+	if (self->cf && px_config_file_is_stale(self->cf))
 	{
-		for (char *line = NULL ; (line = px_readline(fileno(file))) ; px_free(line))
-		{
-			// Strip whitespace
-			tmp = px_strstrip(line);
-			px_free(line);
-			line = tmp;
-			
-			// Check for comment
-			if (*line == '#') continue;
-			
-			// Build the string
-			if (order)
-			{
-				tmp = px_strcat(order, ",", line, NULL);
-				px_free(order);
-				order = tmp;
-			}
-			else
-				order = px_strdup(line);
-		}
-		fclose(file);
+		px_config_file_free(self->cf);
+		self->cf = NULL;
 	}
 	
-	// Read the environmental info
-	if (getenv("PX_CONFIG_ORDER"))
-	{
-		if (order)
-		{
-			tmp = px_strcat(order, ",", getenv("PX_CONFIG_ORDER"), NULL);
-			px_free(order);
-			order = tmp;
-		}
-		else
-			order = px_strdup(getenv("PX_CONFIG_ORDER"));
-	}
+	// Try to open our config file if we don't have one
+	if (!self->cf)
+		self->cf = px_config_file_new(SYSCONFDIR "/proxy.conf");
+
+	// If we have a config file, load the order from it		
+	if (self->cf)
+		tmp = px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "config_order");
+		
+	// Attempt to get info from the environment
+	order = getenv("PX_CONFIG_ORDER");
 	
-	// Finally add the default config
-	if (order)
-	{
-		tmp = px_strcat(order, ",", DEFAULT_CONFIG_ORDER, NULL);
-		px_free(order);
-		order = tmp;
-	}
-	else
-		order = px_strdup(DEFAULT_CONFIG_ORDER);
+	// Create the config order
+	order = px_strcat(tmp ? tmp : "", ",", order ? order : "", ",", DEFAULT_CONFIG_ORDER, NULL);
+	px_free(tmp); tmp = NULL;
 	
 	// Create the config plugin order vector
 	orderv = px_strsplit(order, ",");
