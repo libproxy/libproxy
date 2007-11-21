@@ -32,6 +32,7 @@ pxConfig *get_config_from_file(pxProxyFactory *self, char *misc, char *filename)
 	{
 		if (cf) px_config_file_free(cf);
 		cf = px_config_file_new(filename);
+		px_proxy_factory_misc_set(self, misc, cf);
 	}
 	
 	if (!cf) return NULL;
@@ -78,4 +79,6 @@ void on_proxy_factory_destantiate(pxProxyFactory *self)
 	px_proxy_factory_config_del(self, "file_user");
 	px_config_file_free(px_proxy_factory_misc_get(self, "file_system"));
 	px_config_file_free(px_proxy_factory_misc_get(self, "file_user"));
+	px_proxy_factory_misc_set(self, "file_system", NULL);
+	px_proxy_factory_misc_set(self, "file_user", NULL);
 }
