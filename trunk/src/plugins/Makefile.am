@@ -1,12 +1,21 @@
 plugindir           = @PLUGINDIR@
 
 # Which modules to build
-plugin_LTLIBRARIES  = envvar.la file.la
-if WITH_MOZJS
-plugin_LTLIBRARIES += mozjs.la
+plugin_LTLIBRARIES  =
+if WITH_ENVVAR
+plugin_LTLIBRARIES += envvar.la
+endif
+if WITH_FILE
+plugin_LTLIBRARIES += file.la
 endif
 if WITH_GNOME
 plugin_LTLIBRARIES += gnome.la
+endif
+if WITH_KDE
+plugin_LTLIBRARIES += kde.la
+endif
+if WITH_MOZJS
+plugin_LTLIBRARIES += mozjs.la
 endif
 if WITH_NETWORKMANAGER
 plugin_LTLIBRARIES += networkmanager.la
@@ -24,18 +33,24 @@ file_la_CFLAGS            = -I../lib
 file_la_LIBADD            = ../lib/libproxy.la
 file_la_LDFLAGS           = -module -avoid-version
 
+# GConf/GNOME Config Plugin
+gnome_la_SOURCES          = gnome.c
+gnome_la_CFLAGS           = -I../lib @GCONF_CFLAGS@
+gnome_la_LIBADD           = ../lib/libproxy.la
+gnome_la_LDFLAGS          = -module -avoid-version @GCONF_LIBS@
+
+# KDE Config Plugin
+kde_la_SOURCES            = kde.c
+kde_la_CFLAGS             = -I../lib
+kde_la_LIBADD             = ../lib/libproxy.la
+kde_la_LDFLAGS            = -module -avoid-version
+
 # Mozilla (Spidermonkey) based PAC runner
 mozjs_la_SOURCES          = mozjs.c
 mozjs_la_CFLAGS           = -I../lib @MOZJS_CFLAGS@
 mozjs_la_LIBADD           = ../lib/libproxy.la
 mozjs_la_LDFLAGS          = -module -avoid-version @MOZJS_LIBS@
 nodist_mozjs_la_SOURCES   = pacutils.h
-
-# GConf/GNOME Config Plugin
-gnome_la_SOURCES          = gnome.c
-gnome_la_CFLAGS           = -I../lib @GCONF_CFLAGS@
-gnome_la_LIBADD           = ../lib/libproxy.la
-gnome_la_LDFLAGS          = -module -avoid-version @GCONF_LIBS@
 
 # NetworkManager Plugin
 networkmanager_la_SOURCES = networkmanager.c
