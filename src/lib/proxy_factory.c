@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <math.h>
+#include <ltdl.h>
 
 #include "misc.h"
 #include "proxy_factory.h"
@@ -47,7 +48,7 @@ struct _pxKeyVal {
 typedef struct _pxKeyVal pxKeyVal;
 
 struct _pxProxyFactory {
-	void                      **plugins;
+	lt_dlhandle                *plugins;
 	pxProxyFactoryConfig      **configs;
 	pxKeyVal                  **misc;
 	pxProxyFactoryVoidCallback *on_get_proxy;
@@ -125,9 +126,12 @@ px_proxy_factory_new ()
 	DIR *plugindir = opendir(PLUGINDIR);
 	if (!plugindir) return self;
 	
+	// Initialize the DLL loader
+	lt_dlinit();
+	
 	// Count the number of plugins
 	for (i=0 ; readdir(plugindir) ; i++);
-	self->plugins = (void **) px_malloc0(sizeof(void *) * (i + 1));
+	self->plugins = (lt_dlhandle *) px_malloc0(sizeof(lt_dlhandle) * (i + 1));
 	rewinddir(plugindir);
 	
 	// For each plugin...
@@ -136,7 +140,7 @@ px_proxy_factory_new ()
 	{
 		// Load the plugin
 		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name, NULL);
-		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
+		self->plugins[i] = lt_dlopen(tmp);
 		px_free(tmp);
 		if (!(self->plugins[i]))
 		{
@@ -146,10 +150,10 @@ px_proxy_factory_new ()
 		
 		// Call the instantiation hook
 		pxProxyFactoryBoolCallback instantiate;
-		instantiate = dlsym(self->plugins[i], "on_proxy_factory_instantiate");
+		instantiate = lt_dlsym(self->plugins[i], "on_proxy_factory_instantiate");
 		if (instantiate && !instantiate(self))
 		{
-			dlclose(self->plugins[i]);
+			lt_dlclose(self->plugins[i]);
 			self->plugins[i--] = NULL;
 			continue;
 		}
@@ -634,12 +638,12 @@ px_proxy_factory_free (pxProxyFactory *self)
 		{
 			// Call the destantiation hook
 			pxProxyFactoryVoidCallback destantiate;
-			destantiate = dlsym(self->plugins[i], "on_proxy_factory_destantiate");
+			destantiate = lt_dlsym(self->plugins[i], "on_proxy_factory_destantiate");
 			if (destantiate)
 				destantiate(self);
 			
 			// Unload the plugin
-			dlclose(self->plugins[i]);
+			lt_dlclose(self->plugins[i]);
 			self->plugins[i] = NULL;
 		}
 		px_free(self->plugins);
