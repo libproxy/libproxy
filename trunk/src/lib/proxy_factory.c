@@ -661,7 +661,8 @@ px_proxy_factory_free (pxProxyFactory *self)
 	}
 	
 	// Free everything else
-	if (self->pac)  px_pac_free(self->pac);
-	if (self->wpad) px_wpad_free(self->wpad);
+	px_pac_free(self->pac);
+	px_wpad_free(self->wpad);
+	px_config_file_free(self->cf);
 	px_free(self);
 }
