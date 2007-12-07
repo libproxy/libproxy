@@ -23,7 +23,6 @@
 #include <proxy.h>
 
 // Internal libproxy API
-#include <proxy_factory.h>
 #include <misc.h>
 
 #define STDIN fileno(stdin)
@@ -38,18 +37,18 @@ main(int argc, char **argv)
 		return 1;
 	}
 	
-	for (char *line = NULL ; line = px_readline(STDIN) ; px_free(line))
+	for (char *url = NULL ; url = px_readline(STDIN) ; px_free(url))
 	{
-		char **proxy = px_proxy_factory_get_proxies(pf, line);
-		for (int i = 0 ; proxy[i] ; i++)
+		char **proxies = px_proxy_factory_get_proxies(pf, url);
+		for (int i = 0 ; proxies[i] ; i++)
 		{
-			printf(proxy[i]);
-			if (proxy[i+1])
+			printf(proxies[i]);
+			if (proxies[i+1])
 				printf(" ");
 			else
 				printf("\n");
 		}
-		px_strfreev(proxy);
+		px_strfreev(proxies);
 	}
 	
 	px_proxy_factory_free(pf);
