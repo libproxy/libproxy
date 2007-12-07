@@ -18,18 +18,65 @@
  ******************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <unistd.h>
+#include <string.h>
 
-// External libproxy API
+// Import libproxy API
 #include <proxy.h>
 
-// Internal libproxy API
-#include <misc.h>
-
 #define STDIN fileno(stdin)
+
+static char *
+strdup(char *string)
+{
+	char *result = malloc(strlen(string));
+	assert(result != NULL);
+	strcpy(result, string);
+	return result;
+}
+
+/**
+ * Reads a single line of text from the specified file descriptor
+ * @fd File descriptor to read from
+ * @return Newly allocated string containing one line only
+ */
+static char *
+readline(int fd)
+{
+	// Verify we have an open socket
+	if (fd < 0) return NULL;
+	
+	// For each character received add it to the buffer unless it is a newline
+	char *buffer = NULL;
+	for (int i=1; i > 0 ; i++)
+	{
+		char c;
+		
+		// Receive a single character, check for newline or EOF
+		if (read(fd, &c, 1) != 1) return buffer;
+		if (c == '\n')            return buffer ? buffer : strdup("");
+
+		// Allocate new buffer if we need
+		if (i % 1024 == 1)
+		{
+			char *tmp = buffer;
+			buffer = malloc(1024 * i + 1);
+			assert(buffer != NULL);
+			if (tmp) { strcpy(buffer, tmp); free(tmp); }
+		}
+
+		// Add new character
+		buffer[i-1] = c;
+	}
+	return buffer;
+}
 
 int
 main(int argc, char **argv)
 {
+	// Create the proxy factory object
 	pxProxyFactory *pf = px_proxy_factory_new();
 	if (!pf)
 	{
@@ -37,8 +84,12 @@ main(int argc, char **argv)
 		return 1;
 	}
 	
-	for (char *url = NULL ; url = px_readline(STDIN) ; px_free(url))
+	// For each URL we read on STDIN, get the proxies to use
+	for (char *url = NULL ; url = readline(STDIN) ; free(url))
 	{
+		// Get an array of proxies to use. These should be used
+		// in the order returned. Only move on to the next proxy
+		// if the first one fails (etc).
 		char **proxies = px_proxy_factory_get_proxies(pf, url);
 		for (int i = 0 ; proxies[i] ; i++)
 		{
@@ -47,10 +98,12 @@ main(int argc, char **argv)
 				printf(" ");
 			else
 				printf("\n");
+			free(proxies[i]);
 		}
-		px_strfreev(proxies);
+		free(proxies);
 	}
 	
+	// Destantiate the proxy factory object
 	px_proxy_factory_free(pf);
 	return 0;
 }
