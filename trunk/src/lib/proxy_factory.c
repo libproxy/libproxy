@@ -322,7 +322,7 @@ px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
  * @return A NULL-terminated array of proxy strings to use
  */
 char **
-px_proxy_factory_get_proxy (pxProxyFactory *self, char *url)
+px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 {
 	pxURL    *realurl  = px_url_new(url);
 	pxConfig *config   = NULL;

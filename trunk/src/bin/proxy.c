@@ -40,7 +40,7 @@ main(int argc, char **argv)
 	
 	for (char *line = NULL ; line = px_readline(STDIN) ; px_free(line))
 	{
-		char **proxy = px_proxy_factory_get_proxy(pf, line);
+		char **proxy = px_proxy_factory_get_proxies(pf, line);
 		for (int i = 0 ; proxy[i] ; i++)
 		{
 			printf(proxy[i]);
