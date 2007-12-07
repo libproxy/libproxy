@@ -1,8 +1,19 @@
 #summary Ignore feature support matrix
 
-|| *{{{Ignore Provider}}}* || *{{{IPv4}}}* || *{{{IPv4:80}}}* || *{{{IPv4 CIDR}}}* || *{{{IPv4 Netmask}}}* || *{{{IPv6}}}* || *{{{IPv6:80}}}* || *{{{IPv6 CIDR}}}* || *{{{IPv6 Netmask}}}* || *{{{domain.com}}}* || *{{{domain.com:80}}}* || *{{{.domain.com}}}* || *{{{.domain.com:80}}}* || *{{{*.domain.com}}}* || *{{{*.domain.com:80}}}* || *{{{http://domain.com/foo}}}* || *{{{http://domain.com/f*}}}* ||
-|| GNOME || Y || N || Y || N || Y || N || Y || N || Y || N || N || N || Y || N || N || N ||
-|| KDE || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? ||
-|| Firefox || Y || ? || Y || ? || Y || ? || Y || ? || Y || ? || Y || ? || ? || ? || ? || ? ||
-|| Env || Y || Y || N || N || Y || Y || N || N || Y || Y || N || N || N || N || N || N ||
-|| *libproxy* || *Y* || *Y* || *Y* || *N* || *Y* || *Y* || *Y* || *N* || *Y* || *Y* || *Y* || *N* || *Y* || *N* || *N* || *N* ||
+|| || *{{{GNOME}}}* || *{{{KDE}}}* || *{{{Firefox}}}* || *{{{Env. Var.}}}* || *{{{libproxy}}}* ||
+|| *{{{IPv4}}}* || Y || ? || Y || Y || *Y* ||
+|| *{{{IPv4:80}}}* || N || ? || ? || Y || *Y* ||
+|| *{{{IPv4 CIDR}}}* || Y || ? || Y || N || *Y* ||
+|| *{{{IPv4 Netmask}}}* || N || ? || ? || N || *N* ||
+|| *{{{IPv6}}}* || Y || ? || Y || Y || *Y* ||
+|| *{{{IPv6:80}}}* || N || ? || ? || Y || *Y* ||
+|| *{{{IPv6 CIDR}}}* || Y || ? || Y || N || *Y* ||
+|| *{{{IPv6 Netmask}}}* || N || ? || ? || N || *N* ||
+|| *{{{domain.com}}}* || Y || ? || Y || Y || *Y* ||
+|| *{{{domain.com:80}}}* || N || ? || ? || Y || *Y* ||
+|| *{{{.domain.com}}}* || N || ? || Y || N || *Y* ||
+|| *{{{.domain.com:80}}}* || N || ? || ? || N || *?* ||
+|| *{{{*.domain.com}}}* || Y || ? || ? || N || *Y* ||
+|| *{{{*.domain.com:80}}}* || N || ? || ? || N || *?* ||
+|| *{{{http://domain.com/foo}}}* || N || ? || ? || N || *?* ||
+|| *{{{http://domain.com/f*}}}* || N || ? || ? || N || *?* ||
