@@ -1,7 +1,8 @@
 #summary Ignore feature support matrix
 
-|| Ignore Provider || IPv4 || IPv4:80 || IPv4 CIDR || IPv4 Netmask || IPv6 || IPv6:80 || IPv6 CIDR || IPv6 Netmask || domain.com || domain.com:80 || .domain.com || .domain.com:80 || `*`.domain.com || `*`.domain.com:80 || http://domain.com/foo || http://domain.com/f* ||
+|| *{{{Ignore Provider}}}* || *{{{IPv4}}}* || *{{{IPv4:80}}}* || *{{{IPv4 CIDR}}}* || *{{{IPv4 Netmask}}}* || *{{{IPv6}}}* || *{{{IPv6:80}}}* || *{{{IPv6 CIDR}}}* || *{{{IPv6 Netmask}}}* || *{{{domain.com}}}* || *{{{domain.com:80}}}* || *{{{.domain.com}}}* || *{{{.domain.com:80}}}* || *{{{*.domain.com}}}* || *{{{*.domain.com:80}}}* || *{{{http://domain.com/foo}}}* || *{{{http://domain.com/f*}}}* ||
 || GNOME || Y || N || Y || N || Y || N || Y || N || Y || N || N || N || Y || N || N || N ||
 || KDE || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? || ? ||
 || Firefox || Y || ? || Y || ? || Y || ? || Y || ? || Y || ? || Y || ? || ? || ? || ? || ? ||
 || Env || Y || Y || N || N || Y || Y || N || N || Y || Y || N || N || N || N || N || N ||
+|| *libproxy* || *Y* || *Y* || *Y* || *N* || *Y* || *Y* || *Y* || *N* || *Y* || *Y* || *Y* || *N* || *Y* || *N* || *N* || *N* ||
