@@ -3,12 +3,12 @@
 || || *{{{libproxy}}}* || *{{{GNOME}}}* || *{{{KDE}}}* || *{{{Firefox}}}* || *{{{Env. Var.}}}* || *{{{IE}}}* || *{{{Safari}}}* || 
 || *{{{IPv4}}}*                  || *TODO* || Y ||  || Y || Y || || ||
 || *{{{IPv4:80}}}*               || *TODO* || N ||  ||   || Y || || ||
-|| *{{{IPv4 CIDR}}}*             || *TODO* || Y ||  || Y || N || || ||
-|| *{{{IPv4 Netmask}}}*          || *TODO* || N ||  ||   || N || || ||
+|| *{{{IPv4/CIDR}}}*             || *TODO* || Y ||  || Y || N || || ||
+|| *{{{IPv4/Netmask}}}*          || *TODO* || N ||  ||   || N || || ||
 || *{{{IPv6}}}*                  || *TODO* || Y ||  || Y || Y || || ||
 || *{{{IPv6:80}}}*               || *TODO* || N ||  ||   || Y || || ||
-|| *{{{IPv6 CIDR}}}*             || *TODO* || Y ||  || Y || N || || ||
-|| *{{{IPv6 Netmask}}}*          || *TODO* || N ||  ||   || N || || ||
+|| *{{{IPv6/CIDR}}}*             || *TODO* || Y ||  || Y || N || || ||
+|| *{{{IPv6/Netmask}}}*          || *TODO* || N ||  ||   || N || || ||
 || *{{{domain.com}}}*            || *DONE* || Y ||  || Y || Y || || ||
 || *{{{domain.com:80}}}*         || *DONE* || N ||  ||   || Y || || ||
 || *{{{.domain.com}}}*           || *DONE* || N ||  || Y || N || || ||
