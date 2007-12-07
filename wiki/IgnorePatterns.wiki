@@ -1,13 +1,7 @@
-#summary One-sentence summary of this page.
+#summary Ignore feature support matrix
 
-= Introduction =
-
-Add your content here.
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+|| Config source / Ignore feature || IP || .domain.com || `*`.domain.com || sub.domain.com || CIDR || Netmask || URL globs || Port || 
+|| GNOME || Y || N || Y || Y || Y || Y || N || N ||
+|| KDE || 
+|| Firefox || Y || N || Y || Y || Y || N || N || N ||
+|| Env || Y || N || N || Y || N || N || N || Y ||
