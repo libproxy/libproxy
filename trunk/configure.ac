@@ -51,8 +51,8 @@ AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
               [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
             [],
-            [PKG_CHECK_EXISTS(firefox-js, with_mozjs=yes, with_mozjs=no);
-             PKG_CHECK_EXISTS(xulrunner-js, with_mozjs=yes, with_mozjs=no)])
+            [PKG_CHECK_EXISTS(firefox-js, with_mozjs=yes, 
+             PKG_CHECK_EXISTS(xulrunner-js, with_mozjs=yes, with_mozjs=no))])
 if test x$with_mozjs = xyes; then
 	PKG_CHECK_MODULES(MOZJS, firefox-js,, [PKG_CHECK_MODULES(MOZJS, xulrunner-js)])
 	AC_SUBST(MOZJS_CFLAGS)
