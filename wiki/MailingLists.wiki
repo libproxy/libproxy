@@ -1,0 +1,13 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+This is a list of applications and libraries that may be interested in implementing libproxy.
+
+
+= Details =
+
+|| Name || Website || Maling list ||
+|| libsoup || http://live.gnome.org/LibSoup || ||
+|| libcurl || http://curl.haxx.se/libcurl/ || ||
+|| wget || http://www.gnu.org/software/wget/ || ||
