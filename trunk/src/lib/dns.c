@@ -20,6 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <netdb.h>
 #define __USE_BSD
 #include <unistd.h>
 
@@ -78,6 +79,7 @@ get_domain_name()
 		hostname = px_malloc0((++i + 1) * 128);
 		
 	// Lookup the hostname
+	// TODO: Make this whole process not suck
 	struct hostent *host_info = gethostbyname(hostname);
 	if (host_info)
 	{
