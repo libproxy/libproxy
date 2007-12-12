@@ -14,6 +14,6 @@ This is a list of applications and libraries that may be interested in integrati
 || Gnome || www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list ||
 || KDE || www.kde.org || http://www.kde.org/mailinglists/ ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev ||
-|| Python || www.python.org || *http://www.python.org/community/lists/* ||
+|| Python || www.python.org || *http://www.python.org/community/lists/ * ||
 || .NET || || ||
 || Firefox || || ||
