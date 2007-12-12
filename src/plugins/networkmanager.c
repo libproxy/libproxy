@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <misc.h>
 #include <proxy_factory.h>

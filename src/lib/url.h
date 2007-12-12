@@ -20,7 +20,6 @@
 #ifndef URL_H_
 #define URL_H_
 
-#include "ip.h"      // For class pxURL
 #include "stdbool.h" // For type bool
 
 /**
@@ -44,7 +43,7 @@ bool px_url_is_valid(const char *url);
  * @headers A list of headers to be included in the request.
  * @return Socket to read the response on.
  */
-int px_url_open(pxURL *self, const char **headers);
+int px_url_get(pxURL *self, const char **headers);
 
 /**
  * @return Host portion of the pxURL
@@ -52,9 +51,16 @@ int px_url_open(pxURL *self, const char **headers);
 const char *px_url_get_host(pxURL *self);
 
 /**
- * @return pxIP address of the host in the pxURL
+ * Get the IP addresses of the hostname in this pxURL without using DNS.
+ * @return IP addresses of the host in the pxURL. 
  */
-const pxIP **px_url_get_ips(pxURL *self);
+const struct sockaddr *px_url_get_ip_no_dns(pxURL *self);
+
+/**
+ * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
+ * @return IP addresses of the host in the pxURL. 
+ */
+const struct sockaddr **px_url_get_ips(pxURL *self);
 
 /**
  * @return Path portion of the pxURL

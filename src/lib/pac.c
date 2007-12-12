@@ -19,6 +19,9 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "url.h"
 #include "misc.h"
@@ -122,7 +125,7 @@ px_pac_reload(pxPAC *self)
 	unsigned long int content_length = 0;
 	
 	// Get the pxPAC
-	sock = px_url_open(self->url, headers);
+	sock = px_url_get(self->url, headers);
 	if (sock < 0) return false;
 
 	// Verify status line

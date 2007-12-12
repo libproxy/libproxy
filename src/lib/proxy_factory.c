@@ -25,6 +25,9 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <math.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 
 #include "misc.h"
 #include "proxy_factory.h"
@@ -90,23 +93,202 @@ _format_pac_response(char *response)
 	return chain;
 }
 
-static int
-_ignore (pxURL *url, char *ignore)
+static inline bool
+_endswith(char *string, char *suffix)
 {
-	// Look at envvar ignores (man wget), gnome, kde, firefox, mac osx, windows
-	// Want to support:
-	//	IP 			-- 192.168.4.27 (glob?) including IPv6
-	//  Netmask 	-- 192.168.4.0/24 OR 255.255.255.0
-	//  hostname:	-- xyz.cypress.com	- exact match
-	//				-- .cypress.com 	- ends with
-	//				-- *.cypress.com	- glob
-	//	URL			-- http://www.google.com/bunnies/ - basically a starts with
-	//				-- http://www.google.com/bunnies* - globs, would match /bunnies_happy 
-	// If one of these formats are supported by NONE of the configuration sources, we should drop it to avoid complexity 
+	int st_len = strlen(string);
+	int su_len = strlen(suffix);
 	
-	return 0;
+	return (st_len >= su_len && !strcmp(string + (st_len-su_len), suffix));
 }
 
+static bool
+_sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)
+{
+	if (!ip_a || !ip_b) return false;
+	if (ip_a->sa_family != ip_b->sa_family) return false;
+	if (nm && ip_a->sa_family != nm->sa_family) return false;
+	
+	// Setup the arrays
+	uint8_t bytes = 0, *a_data = NULL, *b_data = NULL, *nm_data = NULL;
+	if (ip_a->sa_family == AF_INET)
+	{
+		bytes   = 32 / 8;
+		a_data  = (uint8_t *) &((struct sockaddr_in *) ip_a)->sin_addr;
+		b_data  = (uint8_t *) &((struct sockaddr_in *) ip_b)->sin_addr;
+		nm_data = nm ? (uint8_t *) &((struct sockaddr_in *) nm)->sin_addr : NULL;
+	}
+	else if (ip_a->sa_family == AF_INET6)
+	{
+		bytes   = 128 / 8;
+		a_data  = (uint8_t *) &((struct sockaddr_in6 *) ip_a)->sin6_addr;
+		b_data  = (uint8_t *) &((struct sockaddr_in6 *) ip_b)->sin6_addr;
+		nm_data = nm ? (uint8_t *) &((struct sockaddr_in6 *) nm)->sin6_addr : NULL;
+	}
+	else
+		return false;
+	
+	for (int i=0 ; i < bytes ; i++)
+	{
+		if (nm && (a_data[i] & nm_data[i]) != (b_data[i] & nm_data[i]))
+			return false;
+		else if (a_data[i] != b_data[i])
+			return false;
+	}
+	return true;
+}
+
+static struct sockaddr *
+_sockaddr_from_string(const char *ip, uint32_t len)
+{
+	if (!ip) return NULL;
+	struct sockaddr *result = NULL;
+	
+	// Copy the string
+	if (len >= 0)
+		ip = px_strndup(ip, len);
+	else
+		ip = px_strdup(ip);
+	
+	// Try to parse IPv4
+	result = px_malloc0(sizeof(struct sockaddr_in));
+	result->sa_family = AF_INET;
+	if (inet_pton(AF_INET, ip, &((struct sockaddr_in *) result)->sin_addr) > 0)
+		goto out;
+	
+	// Try to parse IPv6
+	px_free(result);
+	result = px_malloc0(sizeof(struct sockaddr_in6));
+	result->sa_family = AF_INET6;
+	if (inet_pton(AF_INET6, ip, &((struct sockaddr_in6 *) result)->sin6_addr) > 0)
+		goto out;
+	
+	// No address found
+	px_free(result);
+	result = NULL;
+	out:
+		px_free((char *) ip);
+		return result;
+}
+
+static struct sockaddr *
+_sockaddr_from_cidr(int af, int cidr)
+{
+	// TODO: Support CIDR notation
+	return NULL;
+}
+
+static bool
+_ip_ignore(pxURL *url, char *ignore)
+{
+	if (!url || !ignore) return false;
+	
+	bool result   = false;
+	uint32_t port = 0;
+	const struct sockaddr *dst_ip = px_url_get_ip_no_dns(url);
+	      struct sockaddr *ign_ip = NULL, *net_ip = NULL;
+	
+	// IPv4
+	// IPv6
+	if ((ign_ip = _sockaddr_from_string(ignore, -1)))
+		goto out;
+	
+	// IPv4/CIDR
+	// IPv4/IPv4
+	// IPv6/CIDR
+	// IPv6/IPv6
+	if (strchr(ignore, '/'))
+	{
+		ign_ip = _sockaddr_from_string(ignore, strchr(ignore, '/') - ignore);
+		net_ip = _sockaddr_from_string(strchr(ignore, '/') + 1, -1);
+		
+		// If CIDR notation was used, get the netmask
+		if (ign_ip && !net_ip)
+		{
+			uint32_t cidr = 0;
+			if (sscanf(strchr(ignore, '/') + 1, "%d", &cidr) == 1)
+				net_ip = _sockaddr_from_cidr(ign_ip->sa_family, cidr);
+		}
+		
+		if (ign_ip && net_ip && ign_ip->sa_family == net_ip->sa_family)
+			goto out;
+
+		px_free(ign_ip);
+		px_free(net_ip);
+		ign_ip = NULL;
+		net_ip = NULL;
+	}
+	
+	// IPv4:port
+	// [IPv6]:port
+	if (strrchr(ignore, ':') && sscanf(strrchr(ignore, ':'), ":%u", &port) == 1 && port > 0)
+	{
+		ign_ip = _sockaddr_from_string(ignore, strrchr(ignore, ':') - ignore);
+		
+		// Make sure this really is just a port and not just an IPv6 address
+		if (ign_ip && (ign_ip->sa_family != AF_INET6 || ignore[0] == '['))
+			goto out;
+		
+		px_free(ign_ip);
+		ign_ip = NULL;
+		port   = 0;
+	}
+	
+	out:
+		result = _sockaddr_equals(dst_ip, ign_ip, net_ip);
+		px_free(ign_ip);
+		px_free(net_ip);
+		return port != 0 ? (port == px_url_get_port(url) && result): result;
+}
+
+static inline bool
+_domain_ignore(pxURL *url, char *ignore)
+{
+	if (!url || !ignore)
+		return false;
+	
+	// Get our URL's hostname and port
+	char *host = px_strdup(px_url_get_host(url));
+	int   port = px_url_get_port(url);
+	
+	// Get our ignore pattern's hostname and port
+	char *ihost = px_strdup(ignore);
+	int   iport = 0;
+	if (strchr(ihost, ':'))
+	{
+		char *tmp = strchr(ihost, ':');
+		if (sscanf(tmp+1, "%d", &iport) == 1)
+			*tmp  = '\0';
+		else
+			iport = 0;
+	}
+	
+	// Hostname match (domain.com or domain.com:80)
+	if (!strcmp(host, ihost))
+		if (!iport || port == iport)
+			goto match;
+	
+	// Endswith (.domain.com or .domain.com:80)
+	if (ihost[0] == '.' && _endswith(host, ihost))
+		if (!iport || port == iport)
+			goto match;
+	
+	// Glob (*.domain.com or *.domain.com:80)
+	if (ihost[0] == '*' && _endswith(host, ihost+1))
+		if (!iport || port == iport)
+			goto match;
+	
+	// No match was found
+	px_free(host);
+	px_free(ihost);
+	return false;
+	
+	// A match was found
+	match:
+		px_free(host);
+		px_free(ihost);
+		return true;
+}
 
 /**
  * Creates a new pxProxyFactory instance.  This instance
@@ -426,10 +608,17 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		config->url = px_strdup("wpad://");
 	}
 	
-	// TODO: Ignores
-	
-	if(_ignore(realurl, config->ignore))
-		goto do_return;
+	// Check our ignore patterns
+	char **ignores = px_strsplit(config->ignore, ",");
+	for (int i=0 ; ignores[i] ; i++)
+	{
+		if (_domain_ignore(realurl, ignores[i]) || _ip_ignore(realurl, ignores[i]))
+		{
+			px_strfreev(ignores);
+			goto do_return;
+		}
+	}
+	px_strfreev(ignores);
 	
 	// If we have a wpad config
 	if (!strcmp(config->url, "wpad://"))

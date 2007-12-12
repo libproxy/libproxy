@@ -19,6 +19,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 #define __USE_BSD
 #include <unistd.h>
 
@@ -29,34 +33,42 @@
 #include "pacutils.h"
 
 static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
-	char *host, *tmp;
-	
 	// Get hostname argument
-	host = px_strdup(JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
+	char *tmp = px_strdup(JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
 
 	// Look it up
-	struct hostent *host_info = gethostbyname(host);
-	px_free(host);
+	struct addrinfo *info;
+	if (getaddrinfo(tmp, NULL, NULL, &info))
+		goto error;
+	px_free(tmp);
 	
-	// If we found it...
-	if (host_info && host_info->h_length == 4) {
-		// Allocate our host string
-		host = JS_malloc(cx, 16);
-		if (!host) { *rval = JSVAL_NULL; return true; }
-		
-		// Generate host string
-		tmp = host_info->h_addr_list[0];
-		sprintf(host, "%hhu.%hhu.%hhu.%hhu", tmp[0], tmp[1], tmp[2], tmp[3]);
-		
-		// Return
-		JSString *ip = JS_NewString(cx, host, strlen(host));
-		*rval = STRING_TO_JSVAL(ip);
+	// Try for IPv4
+	tmp = px_malloc0(INET_ADDRSTRLEN+1);
+	if (inet_ntop(info->ai_family, 
+					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
+					tmp, INET_ADDRSTRLEN+1) > 0)
+	{
+		JSString *ip = JS_NewString(cx, tmp, strlen(tmp));
+		*rval        = STRING_TO_JSVAL(ip);
 		return true;
 	}
 	
-	// Return
-	*rval = JSVAL_NULL;
-	return true;
+	// Try for IPv6
+	px_free(tmp);
+	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
+	if (inet_ntop(info->ai_family, 
+					&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
+					tmp, INET6_ADDRSTRLEN+1) > 0)
+	{
+		JSString *ip = JS_NewString(cx, tmp, strlen(tmp));
+		*rval        = STRING_TO_JSVAL(ip);
+		return true;
+	}
+		
+	error:
+		px_free(tmp);
+		*rval = JSVAL_NULL;
+		return true;
 }
 
 static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {

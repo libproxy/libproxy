@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "misc.h"
 #include "url.h"
@@ -31,12 +34,12 @@
  * pxURL object. All fields are private.
  */
 struct _pxURL {
-	char  *url;
-	char  *scheme;
-	char  *host;
-	int    port;
-	char  *path;
-	pxIP **ips;
+	char             *url;
+	char             *scheme;
+	char             *host;
+	int               port;
+	char             *path;
+	struct sockaddr **ips;
 };
 
 /**
@@ -53,7 +56,7 @@ px_url_free(pxURL *self)
 	if (self->ips)
 	{
 		for (int i=0 ; self->ips[i] ; i++)
-			px_ip_free(self->ips[i]);
+			px_free(self->ips[i]);
 		px_free(self->ips);
 	}
 	px_free(self);
@@ -78,7 +81,7 @@ px_url_is_valid(const char *url)
  * @return Socket to read the response on.
  */
 int
-px_url_open(pxURL *self, const char **headers)
+px_url_get(pxURL *self, const char **headers)
 {
 	char *request = NULL;
 	char *joined_headers = NULL;
@@ -88,9 +91,21 @@ px_url_open(pxURL *self, const char **headers)
 	if (!px_url_get_ips(self)) goto error;
 	
 	// Iterate through each pxIP trying to make a connection
-	px_url_get_ips(self); // Do lookup
 	for (int i = 0 ;  self->ips && self->ips[i] && sock < 0 ; i++)
-		sock = px_ip_connect(self->ips[i], TCP, px_url_get_port(self));
+	{
+		sock = socket(self->ips[i]->sa_family, SOCK_STREAM, 0);
+		if (sock < 0) continue;
+		
+		if (self->ips[i]->sa_family == AF_INET && 
+			!connect(sock, self->ips[i], sizeof(struct sockaddr_in)))
+			break;
+		else if (self->ips[i]->sa_family == AF_INET6 && 
+			!connect(sock, self->ips[i], sizeof(struct sockaddr_in6)))
+			break;
+
+		close(sock);
+		sock = -1;
+	}
 	if (sock < 0) goto error;
 	
 	// Merge optional headers
@@ -143,18 +158,96 @@ px_url_get_host(pxURL *self)
 }
 
 /**
- * @return pxIP address of the host in the pxURL
+ * Get the IP address of the hostname in this pxURL without using DNS.
+ * @return IP address of the host in the pxURL. 
  */
-const pxIP **
+const struct sockaddr *
+px_url_get_ip_no_dns(pxURL *self)
+{
+	if (!self) return NULL;
+	
+	// Check the cache
+	if (self->ips && self->ips[0])
+		return (const struct sockaddr *) self->ips[0];
+	px_free(self->ips);
+	
+	// Try for IPv4 first
+	struct sockaddr *ip = px_malloc0(sizeof(struct sockaddr_in));
+	if (inet_pton(AF_INET, px_url_get_host(self), &((struct sockaddr_in *) ip)->sin_addr) > 0)
+	{
+		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
+		self->ips[0] = ip;
+		self->ips[0]->sa_family = AF_INET;
+		return (const struct sockaddr *) self->ips[0];
+	}
+	px_free(ip);
+	
+	// Try for IPv6 next
+	ip = px_malloc0(sizeof(struct sockaddr_in6));
+	if (inet_pton(AF_INET6, px_url_get_host(self), &((struct sockaddr_in6 *) ip)->sin6_addr) > 0)
+	{
+		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
+		self->ips[0] = ip;
+		self->ips[0]->sa_family = AF_INET6;
+		return (const struct sockaddr *) self->ips[0];
+	}
+	px_free(ip);
+	
+	// The hostname was not an IP address
+	return NULL;
+}
+
+/**
+ * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
+ * @return IP addresses of the host in the pxURL. 
+ */
+const struct sockaddr **
 px_url_get_ips(pxURL *self)
 {
 	if (!self) return NULL;
 	
 	// Check the cache
-	if (self->ips) return (const pxIP **) self->ips;
+	if (self->ips) return (const struct sockaddr **) self->ips;
 	
-	self->ips = px_ip_new_from_hostent_all(gethostbyname(self->host));
-	return (const pxIP **) self->ips;
+	// Check without DNS first
+	if (px_url_get_ip_no_dns(self)) return (const struct sockaddr **) self->ips;
+	
+	// Check DNS for IPs
+	struct addrinfo *info;
+	if (!getaddrinfo(px_url_get_host(self), NULL, NULL, &info))
+	{
+		struct addrinfo *first = info;
+		int count;
+		
+		// Count how many IPs we got back
+		for (count=0 ; info ; info = info->ai_next)
+			count++;
+		
+		// Copy the sockaddr's into self->ips
+		info = first;
+		self->ips = px_malloc0(sizeof(struct sockaddr *) * ++count);
+		for (int i=0 ; info ; info = info->ai_next)
+		{
+			if (info->ai_addr->sa_family == AF_INET)
+			{
+				self->ips[i] = px_malloc0(sizeof(struct sockaddr_in));
+				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in));
+				((struct sockaddr_in *) self->ips[i++])->sin_port = htons(self->port);
+			}
+			else if (info->ai_addr->sa_family == AF_INET6)
+			{
+				self->ips[i] = px_malloc0(sizeof(struct sockaddr_in6));
+				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in6));
+				((struct sockaddr_in6 *) self->ips[i++])->sin6_port = htons(self->port);
+			}
+		}
+		
+		freeaddrinfo(first);
+		return (const struct sockaddr **) self->ips;
+	}
+	
+	// No addresses found
+	return NULL;
 }
 
 /**
