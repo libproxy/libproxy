@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This is a list of applications and libraries that may be interested in implementing libproxy.
+This is a list of applications and libraries that may be interested in integrating libproxy.
 
 
 = Details =
@@ -10,4 +10,4 @@ This is a list of applications and libraries that may be interested in implement
 || Name || Website || Maling list ||
 || libsoup || http://live.gnome.org/LibSoup || ||
 || libcurl || http://curl.haxx.se/libcurl/ || ||
-|| wget || http://www.gnu.org/software/wget/ || ||
+|| wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists ||
