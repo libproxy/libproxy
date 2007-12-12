@@ -281,12 +281,3 @@ px_strstrip(char *string)
 	px_free(tmp);
 	return string;
 }
-
-
-
-
-
-
-
-
-

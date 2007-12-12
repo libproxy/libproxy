@@ -851,3 +851,19 @@ px_proxy_factory_free (pxProxyFactory *self)
 	px_config_file_free(self->cf);
 	px_free(self);
 }
+
+/**
+ * Utility function to create pxConfig objects. Steals ownership of the parameters.
+ * @url The proxy config url.  If NULL, no pxConfig will be created.
+ * @ignore Ignore patterns.  If NULL, a pxConfig will still be created.
+ * @return pxConfig instance or NULL if url is NULL.
+ */
+pxConfig *
+px_config_create(char *url, char *ignore)
+{
+	if (!url) return NULL;
+	pxConfig *config = px_malloc0(sizeof(pxConfig));
+	config->url      = url;
+	config->ignore   = ignore ? ignore : px_strdup("");
+	return config;
+}
