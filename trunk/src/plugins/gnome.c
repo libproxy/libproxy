@@ -121,6 +121,7 @@ gconf_on_get_proxy(pxProxyFactory *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
 	// Otherwise, make sure this plugin is NOT registered.
+	// TODO: Don't shell out... this is a MAJOR performance bottleneck
 	if (!system("xlsclients 2>/dev/null | grep -q -E '[\t ]gnome-(session|panel)$'"))
 		px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, 
 									(pxProxyFactoryPtrCallback) gconf_config_cb);
