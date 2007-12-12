@@ -139,7 +139,7 @@ _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const
 }
 
 static struct sockaddr *
-_sockaddr_from_string(const char *ip, uint32_t len)
+_sockaddr_from_string(const char *ip, int len)
 {
 	if (!ip) return NULL;
 	struct sockaddr *result = NULL;
