@@ -25,15 +25,7 @@
 
 pxConfig *get_config_cb(pxProxyFactory *self)
 {
-	char *proxy = getenv("http_proxy");
-	if (!proxy)  return NULL;
-	pxConfig *config = malloc(sizeof(pxConfig));
-	if (!config) return NULL;
-	config->url = px_strdup(proxy);
-	if (!config->url) { free(config); return NULL; }
-	config->ignore = px_strdup(""); // TODO: Make this pay attention to 'no_proxy' later
-	if (!config->ignore) { free(config->url); free(config); return NULL; }
-	return config;
+	return px_config_create(px_strdup(getenv("http_proxy")), px_strdup(getenv("no_proxy")));
 }
 
 bool on_proxy_factory_instantiate(pxProxyFactory *self)

@@ -27,8 +27,8 @@
 pxConfig *
 kde_config_cb(pxProxyFactory *self)
 {
+	// TODO: make ignores work w/ KDE
 	char *url = NULL, *ignore = NULL, *tmp = getenv("HOME");
-	pxConfig *config;
 	if (!tmp) return NULL;
 	
 	// Open the config file
@@ -61,19 +61,23 @@ kde_config_cb(pxProxyFactory *self)
 		px_free(tmp);
 		tmp = px_config_file_get_value(cf, "Proxy Settings", "Proxy Config Script");
 		if (tmp) url = px_strcat("pac+", tmp);
+		else     url = px_strdup("wpad://");
 	}
 	
-	// Anything else?  Fall back to WPAD...
+	// Use WPAD
+	else if (!strcmp(tmp, "3"))
+		url = px_strdup("wpad://");
+	
+	// Use envvar
+	else if (!strcmp(tmp, "4"))
+		url = NULL; // We'll bypass this config plugin and let the envvar plugin work
 	
 	// Cleanup
 	px_free(tmp);
 	px_config_file_free(cf);
 			
 	out:
-		config         = px_malloc0(sizeof(pxConfig));
-		config->url    = url    ? url    : px_strdup("wpad://");
-		config->ignore = ignore ? ignore : px_strdup("");
-		return config;
+		return px_config_create(url, ignore);
 }
 
 void

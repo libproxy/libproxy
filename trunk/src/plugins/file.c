@@ -36,16 +36,9 @@ pxConfig *get_config_from_file(pxProxyFactory *self, char *misc, char *filename)
 	}
 	
 	if (!cf) return NULL;
-	
-	pxConfig *config = px_malloc0(sizeof(pxConfig));
-	config->url      = px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy");
-	config->ignore   = px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore");
-	if (!config->url)
-		config->url  = px_strdup("wpad://");
-	if (!config->ignore)
-		config->ignore  = px_strdup("");
-	
-	return config;
+	return px_config_create(
+				px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy"),
+				px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore"));
 }
 
 pxConfig *system_get_config_cb(pxProxyFactory *self)

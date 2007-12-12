@@ -48,6 +48,14 @@ struct _pxConfig {
 };
 typedef struct _pxConfig pxConfig;
 
+/**
+ * Utility function to create pxConfig objects. Steals ownership of the parameters.
+ * @url The proxy config url.  If NULL, no pxConfig will be created.
+ * @ignore Ignore patterns.  If NULL, a pxConfig will still be created.
+ * @return pxConfig instance or NULL if url is NULL.
+ */
+pxConfig *px_config_create(char *url, char *ignore);
+
 typedef void     (*pxProxyFactoryVoidCallback)    (pxProxyFactory *self);
 typedef bool     (*pxProxyFactoryBoolCallback)    (pxProxyFactory *self);
 typedef void    *(*pxProxyFactoryPtrCallback)     (pxProxyFactory *self);

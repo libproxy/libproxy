@@ -42,23 +42,21 @@ gconf_config_cb(pxProxyFactory *self)
 	// Get the mode
 	char *mode = gconf_client_get_string(client, "/system/proxy/mode", NULL);
 	if (!mode) { g_object_unref(client); return NULL; }
-	
-	// Create the basic Config
-	pxConfig *config = px_malloc0(sizeof(pxConfig));
-	config->ignore   = px_strdup(""); // TODO: implement ignores
+
+	char *url = NULL, *ignore = NULL;
 	
 	// Mode is direct://
 	if (!strcmp(mode, "none"))
-		config->url = px_strdup("direct://");
+		url = px_strdup("direct://");
 
 	// Mode is wpad:// or pac+http://...
 	else if (!strcmp(mode, "auto"))
 	{
 		char *tmp = gconf_client_get_string(client, "/system/proxy/autoconfig_url", NULL);
 		if (px_url_is_valid(tmp))
-			config->url = g_strdup_printf("pac+%s", tmp); 
+			url = g_strdup_printf("pac+%s", tmp); 
 		else
-			config->url = px_strdup("wpad://");
+			url = px_strdup("wpad://");
 		px_free(tmp);
 	}
 	
@@ -84,23 +82,38 @@ gconf_config_cb(pxProxyFactory *self)
 		
 		// If host and port were found, build config url
 		if (host && strcmp(host, "") && port)
-			config->url = g_strdup_printf("%s://%s:%d", type, host, port);
-		
-		// Fall back to auto-detect
-		else
-			config->url = px_strdup("wpad://");
+			url = g_strdup_printf("%s://%s:%d", type, host, port);
 		
 		if (type) px_free(type);
 		if (host) px_free(host);		
 	}
+	px_free(mode);
 	
-	// Fall back to auto-detect
-	else
-		config->url = px_strdup("wpad://");
+	if (url)
+	{
+		GSList *ignores = gconf_client_get_list(client, "/system/http_proxy/ignore_hosts", 
+												GCONF_VALUE_STRING, NULL);
+		if (ignores)
+		{
+			GSList *start = ignores;
+			for ( ; ignores ; ignores = g_slist_next(ignores))
+			{
+				if (ignore)
+				{
+					char *tmp = g_strdup_printf("%s,%s", ignore, ignores->data);
+					g_free(ignore);
+					ignore = tmp;
+				}
+				else
+					ignore = g_strdup(ignores->data);
+				g_free(ignores->data);
+			}
+			g_slist_free(start);
+		}
+	}
 	
 	g_object_unref(client);
-	px_free(mode);
-	return config;
+	return px_config_create(url, ignore);
 }
 
 void
