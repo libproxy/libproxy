@@ -19,10 +19,98 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <misc.h>
 #include <proxy_factory.h>
 #include <config_file.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xmu/WinUtil.h>
+
+// This function is shamelessly stolen from xlsclient... :)
+/*
+ *
+ * 
+Copyright 1989, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+ * *
+ * Author:  Jim Fulton, MIT X Consortium
+ */
+bool
+x_has_client(char *prog, ...)
+{
+	va_list ap;
+	
+	// Open display
+	Display *display = XOpenDisplay(NULL);
+	if (!display)
+		return false;
+	
+	// For each screen...
+	for (int i=0; i < ScreenCount(display); i++)
+	{
+		Window dummy, *children = NULL;
+		unsigned int nchildren = 0;
+		
+		// Get the root window's children
+		if (!XQueryTree(display, RootWindow(display, i), &dummy, &dummy, &children, &nchildren))
+			continue;
+		
+		// For each child on the screen...
+	    for (int j=0; j < nchildren; j++)
+	    {
+	    	// If we can get their client info...
+	    	Window client;
+	    	if ((client = XmuClientWindow(display, children[j])) != None)
+	    	{
+	    		int argc;
+	    		char **argv;
+	    		
+	    		// ... and if we can find out their command ...
+	    		if (!XGetCommand (display, client, &argv, &argc) || argc == 0)
+	    			continue;
+	    		
+	    		// ... check the commands against our list
+	    		va_start(ap, prog);
+	    		for (char *s = prog ; s ; s = va_arg(ap, char *))
+	    		{
+	    			// We've found a match, return...
+	    			if (!strcmp(argv[0], s))
+	    			{
+	    				va_end(ap);
+		    			XCloseDisplay(display);
+		    			return true;
+	    			}
+	    		}
+	    		va_end(ap);
+	    	}
+	    }
+	}
+	
+	// Close the display
+	XCloseDisplay(display);
+	return false;
+}
 
 pxConfig *
 kde_config_cb(pxProxyFactory *self)
@@ -80,37 +168,19 @@ kde_config_cb(pxProxyFactory *self)
 		return px_config_create(url, ignore);
 }
 
-void
-kde_on_get_proxy(pxProxyFactory *self)
-{
-	// If we are running in KDE, then make sure this plugin is registered.
-	// Otherwise, make sure this plugin is NOT registered.
-	// TODO: Don't shell out... this is a MAJOR performance bottleneck
-	if (!system("xlsclients 2>/dev/null | grep -q '[\t ]kicker$'"))
-		px_proxy_factory_config_add(self, "kde", PX_CONFIG_CATEGORY_SESSION, 
-									(pxProxyFactoryPtrCallback) kde_config_cb);
-	else
-		px_proxy_factory_config_del(self, "kde");
-	
-	return;
-}
-
 bool
 on_proxy_factory_instantiate(pxProxyFactory *self)
 {
-	// Note that we instantiate like this because SESSION config plugins
-	// are only suppossed to remain registered while the application
-	// is actually IN that session.  So for instance, if the app
-	// was run in GNU screen and is taken out of the GNOME sesion
-	// it was started in, we should handle that gracefully.
-	px_proxy_factory_on_get_proxy_add(self, kde_on_get_proxy);
-	return true;
+	// If we are running in KDE, then make sure this plugin is registered.
+	if (x_has_client("kicker", NULL))
+		return px_proxy_factory_config_add(self, "kde", PX_CONFIG_CATEGORY_SESSION, 
+											(pxProxyFactoryPtrCallback) kde_config_cb);
+	return false;
 }
 
 void
 on_proxy_factory_destantiate(pxProxyFactory *self)
 {
-	px_proxy_factory_on_get_proxy_del(self, kde_on_get_proxy);
 	px_proxy_factory_config_del(self, "kde");
 	px_config_file_free(px_proxy_factory_misc_get(self, "kde"));
 	px_proxy_factory_misc_set(self, "kde", NULL);

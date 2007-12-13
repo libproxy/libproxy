@@ -35,15 +35,15 @@ file_la_LDFLAGS           = -module -avoid-version
 
 # GConf/GNOME Config Plugin
 gnome_la_SOURCES          = gnome.c
-gnome_la_CFLAGS           = -I../lib @GCONF_CFLAGS@
+gnome_la_CFLAGS           = -I../lib @GNOME_CFLAGS@
 gnome_la_LIBADD           = ../lib/libproxy.la
-gnome_la_LDFLAGS          = -module -avoid-version @GCONF_LIBS@
+gnome_la_LDFLAGS          = -module -avoid-version @GNOME_LIBS@
 
 # KDE Config Plugin
 kde_la_SOURCES            = kde.c
-kde_la_CFLAGS             = -I../lib
+kde_la_CFLAGS             = -I../lib @KDE_CFLAGS@
 kde_la_LIBADD             = ../lib/libproxy.la
-kde_la_LDFLAGS            = -module -avoid-version
+kde_la_LDFLAGS            = -module -avoid-version @KDE_LIBS@
 
 # Mozilla (Spidermonkey) based PAC runner
 mozjs_la_SOURCES          = mozjs.c
