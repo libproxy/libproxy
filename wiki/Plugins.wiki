@@ -1,4 +1,4 @@
-#A table showing plugins and when they were introduced
+#summary A table showing plugins and when they were introduced
 
 || Plugin Name    || Description || First Version || Config Type ||
 || envvar         || Reads proxy configuration from an environmental variable || 0.1 || None ||
