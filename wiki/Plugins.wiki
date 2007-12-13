@@ -1,0 +1,9 @@
+#A table showing plugins and when they were introduced
+
+|| Plugin Name    || Description || First Version || Config Type ||
+|| envvar         || Reads proxy configuration from an environmental variable || 0.1 || None ||
+|| gnome          || Reads proxy configuration from GConf || 0.1 || Session ||
+|| mozjs          || Uses Mozilla JavaScript to run PAC files || 0.1 || N/A ||
+|| file           || Reads proxy configuration from a file || 0.2 || User & System ||
+|| kde            || Reads proxy configuration from kioslaverc || 0.2 || Session ||
+|| networkmanager || Automatically notifies libproxy when the network has changed || 0.2 || N/A ||
