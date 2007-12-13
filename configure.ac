@@ -12,64 +12,117 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 ### Checks for libraries for plugins.
+PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
+PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
+PKG_CHECK_MODULES(gconf, gconf-2.0, have_gconf=yes, have_gconf=no)
+PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes, have_mozjs=no)
+PKG_CHECK_MODULES(MOZJS, xulrunner-js, have_mozjs=yes, 
+					[test x$have_mozjs == xyes || have_mozjs=no])
+PKG_CHECK_MODULES(NetworkManager, NetworkManager, 
+					have_networkmanager=yes, have_networkmanager=no)
+
 # Environmental Variable
 AC_ARG_WITH([envvar],
             [AS_HELP_STRING([--with-envvar],
-              [build environmental variable configuration plugin @<:@default=yes@:>@])],
+            [build environmental variable configuration plugin @<:@default=yes@:>@])],
             [], [with_envvar=yes])
 AM_CONDITIONAL([WITH_ENVVAR], [test x$with_envvar = xyes])
 
 # File
 AC_ARG_WITH([file],
             [AS_HELP_STRING([--with-file],
-              [build file-based configuration plugin @<:@default=yes@:>@])],
+            [build file-based configuration plugin @<:@default=yes@:>@])],
             [], [with_file=yes])
 AM_CONDITIONAL([WITH_FILE], [test x$with_envvar = xyes])
             
 # GNOME
 AC_ARG_WITH([gnome],
             [AS_HELP_STRING([--with-gnome],
-              [build GNOME configuration plugin @<:@automatic@:>@])],
+            [build GNOME configuration plugin @<:@automatic@:>@])],
             [],
-            [PKG_CHECK_EXISTS(gconf-2.0, with_gnome=yes, with_gnome=no)])
+            [test x$have_gconf == xyes && 
+             test x$have_x11   == xyes &&
+             test x$have_xmu   == xyes &&
+             with_gnome=yes])
 if test x$with_gnome = xyes; then
-	PKG_CHECK_MODULES(GCONF, gconf-2.0)
-	AC_SUBST(GCONF_CFLAGS)
-	AC_SUBST(GCONF_LIBS)
+	if test x$have_gconf == xyes && \
+	   test x$have_x11 == xyes && \
+	   test x$have_xmu == xyes; then
+		GNOME_CFLAGS="$x11_CFLAGS $xmu_CFLAGS $gconf_CFLAGS"
+		GNOME_LIBS="$x11_LIBS $xmu_LIBS $gconf_LIBS"
+		
+		echo
+		echo "-------------------------------------------"
+		echo $GNOME_CFLAGS
+		echo "-------------------------------------------"
+		echo
+		
+		AC_SUBST(GNOME_CFLAGS)
+		AC_SUBST(GNOME_LIBS)
+	else
+		echo "GNOME plugin requires: x11, xmu and gconf!"
+		exit 1
+	fi
 fi
 AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 
 # KDE
 AC_ARG_WITH([kde],
             [AS_HELP_STRING([--with-kde],
-              [build KDE configuration plugin @<:@default=yes@:>@])],
-            [], [with_kde=yes])
+            [build KDE configuration plugin @<:@automatic@:>@])],
+            [],
+            [test x$have_x11   == xyes &&
+             test x$have_xmu   == xyes &&
+             with_kde=yes])
+if test x$with_kde = xyes; then
+	if test x$have_x11 == xyes && \
+	   test x$have_xmu == xyes; then
+		KDE_CFLAGS="$x11_CFLAGS $xmu_CFLAGS"
+		KDE_LIBS="$x11_LIBS $xmu_LIBS"
+		AC_SUBST(KDE_CFLAGS)
+		AC_SUBST(KDE_LIBS)
+	else
+		echo "KDE plugin requires: x11 and xmu!"
+		exit 1
+	fi
+fi
 AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
 
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
-              [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
+            [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
             [],
-            [PKG_CHECK_EXISTS(firefox-js, with_mozjs=yes, 
-             PKG_CHECK_EXISTS(xulrunner-js, with_mozjs=yes, with_mozjs=no))])
+            [test x$have_mozjs == xyes && with_mozjs=yes])
 if test x$with_mozjs = xyes; then
-	PKG_CHECK_MODULES(MOZJS, firefox-js,, [PKG_CHECK_MODULES(MOZJS, xulrunner-js)])
-	AC_SUBST(MOZJS_CFLAGS)
-	AC_SUBST(MOZJS_LIBS)
+	if test x$have_mozjs == xyes; then
+		MOZJS_CFLAGS="$mozjs_CFLAGS"
+		MOZJS_LIBS="$mozjs_LIBS"
+		AC_SUBST(MOZJS_CFLAGS)
+		AC_SUBST(MOZJS_LIBS)
+	else
+		echo "Mozilla JavaScript plugin requires: mozjs!"
+		exit 1
+	fi
 fi
 AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 
 # NetworkManager
 AC_ARG_WITH([networkmanager],
             [AS_HELP_STRING([--with-networkmanager],
-              [build NetworkManager plugin @<:@automatic@:>@])],
+            [build NetworkManager plugin @<:@automatic@:>@])],
             [],
-            [PKG_CHECK_EXISTS(NetworkManager, with_networkmanager=yes, with_networkmanager=no)])
+            [test x$have_networkmanager == xyes && with_networkmanager=yes])
 if test x$with_networkmanager = xyes; then
-	PKG_CHECK_MODULES(NETWORKMANAGER, NetworkManager)
-	AC_SUBST(NETWORKMANAGER_CFLAGS)
-	AC_SUBST(NETWORKMANAGER_LIBS)
+	if test x$have_networkmanager == xyes; then
+		NETWORKMANAGER_CFLAGS="$NetworkManager_CFLAGS"
+		NETWORKMANAGER_LIBS="$NetworkManager_LIBS"
+		AC_SUBST(NETWORKMANAGER_CFLAGS)
+		AC_SUBST(NETWORKMANAGER_LIBS)
+	else
+		echo "NetworkManager plugin requires: NetworkManager!"
+		exit 1
+	fi
 fi
 AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 
@@ -77,7 +130,7 @@ AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 # Python
 AC_ARG_WITH([python],
             [AS_HELP_STRING([--with-python],
-              [build Python bindings @<:@automatic@:>@])],
+            [build Python bindings @<:@automatic@:>@])],
             [AM_PATH_PYTHON([2.5], with_python=yes)],
             [AM_PATH_PYTHON([2.5], with_python=yes, with_python=no)])
 AM_CONDITIONAL([WITH_PYTHON], [test x$with_python = xyes])
