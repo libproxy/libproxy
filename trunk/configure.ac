@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([libproxy],[0.2],[nathaniel@natemccallum.com])
+AC_INIT([libproxy],[0.3],[nathaniel@natemccallum.com])
 AC_CONFIG_SRCDIR([src/lib/proxy_factory.c])
 AM_INIT_AUTOMAKE
 
@@ -16,7 +16,7 @@ PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
 PKG_CHECK_MODULES(gconf, gconf-2.0, have_gconf=yes, have_gconf=no)
 PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes, have_mozjs=no)
-PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, [])
+PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, :)
 PKG_CHECK_MODULES(NetworkManager, NetworkManager, 
 					have_networkmanager=yes, have_networkmanager=no)
 
@@ -55,6 +55,8 @@ if test x$with_gnome = xyes; then
 		echo "GNOME plugin requires: x11, xmu and gconf!"
 		exit 1
 	fi
+else
+	with_gnome=no
 fi
 AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 
@@ -77,6 +79,8 @@ if test x$with_kde = xyes; then
 		echo "KDE plugin requires: x11 and xmu!"
 		exit 1
 	fi
+else
+	with_kde=no
 fi
 AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
 
@@ -96,6 +100,8 @@ if test x$with_mozjs = xyes; then
 		echo "Mozilla JavaScript plugin requires: mozjs!"
 		exit 1
 	fi
+else
+	with_mozjs=no
 fi
 AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 
@@ -115,6 +121,8 @@ if test x$with_networkmanager = xyes; then
 		echo "NetworkManager plugin requires: NetworkManager!"
 		exit 1
 	fi
+else
+	with_networkmanager=no
 fi
 AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 
