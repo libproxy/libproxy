@@ -30,8 +30,10 @@ This is a list of applications and libraries that may be interested in linking t
 || Fedora ||
 || Debian ||
 || OpenSUSE ||
+|| Mandriva ||
+|| Gentoo ||
+|| Foresight Linux ||
 || FreeBSD ||
 || NetBSD ||
 || OpenBSD ||
-|| Mandriva ||
-|| Gentoo ||
+|| Open Solaris ||
