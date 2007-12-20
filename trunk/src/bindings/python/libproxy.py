@@ -37,7 +37,7 @@ if not _libpython:
 if not ctypes.util.find_library("proxy"):
     raise ImportError, "Unable to import libproxy!?!?"
 _libproxy = ctypes.cdll.LoadLibrary(ctypes.util.find_library("proxy"))
-_libproxy.px_proxy_factory_get_proxy.restype = ctypes.POINTER(ctypes.c_void_p)
+_libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
 
 class ProxyFactory(object):
     """A ProxyFactory object is used to provide potential proxies to use
@@ -64,14 +64,14 @@ class ProxyFactory(object):
     def __init__(self):
         self._pf = _libproxy.px_proxy_factory_new()
         
-    def getProxy(self, url):
+    def getProxies(self, url):
         """Given a URL, returns a list of proxies in priority order to be used
         to reach that URL."""
         if type(url) != str:
             raise TypeError, "url must be a string!"
         
         proxies = []
-        array = _libproxy.px_proxy_factory_get_proxy(self._pf, url)
+        array = _libproxy.px_proxy_factory_get_proxies(self._pf, url)
         i=0
         while array[i]:
             proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
