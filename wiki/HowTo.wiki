@@ -1,6 +1,6 @@
 #summary This page shows how to use libproxy in various different applications/languages
 
-= C/++ =
+= C(++) =
 
 Take a look at the simple pseudo-code below to get started.  A complete functioning program is found in the source tarball at src/bin/proxy.c.
 
