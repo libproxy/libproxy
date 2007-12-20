@@ -1,0 +1,19 @@
+#summary How you can contribute to this project
+
+= I can code! =
+
+  # Check out the [Roadmap TODO list]
+  # Make a patch
+  # Submit it for review
+
+= I can do PR! =
+  # Check out the [Applications projects that need to support libproxy]
+  # File a bug
+  # Politely contact them and request libproxy support
+
+= I can write documentation! =
+  # Look for holes in the current documentation
+  # Edit the wiki
+
+= I can recite Homer's Illiad from memory in a Cockney accent! =
+  # Actually, we don't have any use for this skill...
