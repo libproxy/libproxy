@@ -1,5 +1,5 @@
 #summary This page shows how to use libproxy in various different applications/languages
-#labels Featured,Phase-Design
+#labels Featured,Phase-Design,Phase-Deploy
 
 = C(++) =
 
