@@ -1,6 +1,6 @@
 #summary How to use libproxy in a python application.
 
-For a more complete example, see HowToC.
+For a more complete example, see [HowToC].
 
 {{{
 import libproxy
