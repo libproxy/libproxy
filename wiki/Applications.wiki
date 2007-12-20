@@ -5,7 +5,7 @@
 This is a list of applications and libraries that may be interested in linking to libproxy if it's available. *Bold* denotes mailing lists that have not been contacted yet.
 
 
-= Details =
+= Applications =
 
 || Name || Website || Maling list || Bug || Adoption ver ||
 || libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103  || ||
@@ -27,16 +27,17 @@ This is a list of applications and libraries that may be interested in linking t
 || .NET/Mono || || || || ||
 || Firefox || || || || ||
 
-==Distributions==
-|| *Distribution* || *URL* || *Bug URL* || *Conctacted?* ||
-|| Ubuntu || || || no ||
-|| Fedora || || || no ||
-|| Debian || || || no ||
-|| OpenSUSE || || || no ||
-|| Mandriva || || || no ||
-|| Gentoo || || || no ||
-|| Foresight Linux || || || no ||
-|| FreeBSD || || || no ||
-|| NetBSD || || || no ||
-|| OpenBSD || || || no ||
+= Distributions =
+This table lists distributions that should support libproxy:
+|| *Distribution* || *URL* || *Bug URL* || *Conctacted?* || *Packaged?* ||
+|| Ubuntu || || || no || no ||
+|| Fedora || || || no || no ||
+|| Debian || || || no || no ||
+|| OpenSUSE || || || no || no ||
+|| Mandriva || || || no || no ||
+|| Gentoo || || || no || no ||
+|| Foresight Linux || || || no || no ||
+|| FreeBSD || || || no || no ||
+|| NetBSD || || || no || no ||
+|| OpenBSD || || || no || no ||
 || Open Solaris || || || no ||
