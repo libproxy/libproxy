@@ -1,0 +1,13 @@
+#summary Where libproxy is today
+
+Current Release: 0.2
+
+Features:
+  * a stable API
+  * proxy auto-detection (working PAC and WPAD implementations)
+  * a command line utility which exposes the API
+  * an implementation of ignore lists
+  * proxy lockdowns
+  * Python bindings
+  * .NET bindings
+  * Lots of [Plugins] (click to see details)
