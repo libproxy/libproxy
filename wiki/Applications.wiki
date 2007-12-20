@@ -30,14 +30,14 @@ This table lists applications that we would like to see support libproxy:
 = Distributions =
 This table lists distributions that should support libproxy:
 || *Distribution* || *Website* || *Maling list* || *Bug URL* || *Conctacted?* || *Packaged?* ||
-|| Ubuntu || || || || no || no ||
-|| Fedora || || || || no || no ||
-|| Debian || || || || no || no ||
-|| OpenSUSE || || || || no || no ||
-|| Mandriva || || || || no || no ||
-|| Gentoo || || || || no || no ||
-|| Foresight Linux || || || || no || no ||
-|| FreeBSD || || || || no || no ||
-|| NetBSD || || || || no || no ||
-|| OpenBSD || || || || no || no ||
-|| OpenSolaris || || || || no || no ||
+|| Ubuntu || http://www.ubuntu.com || || || no || no ||
+|| Fedora || http://www.fedoraproject.org || || || no || no ||
+|| Debian || http://www.debian.org || || || no || no ||
+|| OpenSUSE || http://www.opensuse.org || || || no || no ||
+|| Mandriva || http://www.mandriva.com || || || no || no ||
+|| Gentoo || http://www.gentoo.org || || || no || no ||
+|| Foresight Linux || http://www.foresightlinux.com || || || no || no ||
+|| FreeBSD || http://www.freebsd.org || || || no || no ||
+|| NetBSD || http://www.netbsd.org || || || no || no ||
+|| OpenBSD || http://www.openbsd.org || || || no || no ||
+|| OpenSolaris || http://www.opensolaris.org || || || no || no ||
