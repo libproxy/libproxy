@@ -6,7 +6,7 @@ This table lists applications that we would like to see support libproxy:
 || libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103  || ||
 || libcurl || http://curl.haxx.se/libcurl/ || http://curl.haxx.se/mail/list.cgi?list=curl-library || http://sourceforge.net/tracker/index.php?func=detail&aid=1855054&group_id=976&atid=100976 || ||
 || wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists || {{{[mailing list]}}} || ||
-|| Gnome || www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || ||
+|| Gnome || http://www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || ||
 || Pidgin || || || || ||
 || Liferea || || || || ||
 || Telepathy framework || || || || ||
@@ -16,9 +16,9 @@ This table lists applications that we would like to see support libproxy:
 || Vinegre || || || || ||
 || RhythmBox || || || || ||
 || Sound Juicer || || || || ||
-|| KDE || www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || ||
+|| KDE || http://www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || ||
-|| Python || www.python.org || http://www.python.org/community/lists/ || || ||
+|| Python || http://www.python.org || http://www.python.org/community/lists/ || || ||
 || .NET/Mono || || || || ||
 || Firefox || || || || ||
 
