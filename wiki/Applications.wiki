@@ -6,8 +6,8 @@ This is a list of applications and libraries that may be interested in linking t
 
 
 = Applications =
-
-|| Name || Website || Maling list || Bug || Adoption ver ||
+This table lists applications that we would like to see support libproxy:
+|| *Application* || *Website* || *Maling list* || *Bug* || *Adopted?* ||
 || libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103  || ||
 || libcurl || http://curl.haxx.se/libcurl/ || http://curl.haxx.se/mail/list.cgi?list=curl-library || http://sourceforge.net/tracker/index.php?func=detail&aid=1855054&group_id=976&atid=100976 || ||
 || wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists || {{{[mailing list]}}} || ||
@@ -29,15 +29,15 @@ This is a list of applications and libraries that may be interested in linking t
 
 = Distributions =
 This table lists distributions that should support libproxy:
-|| *Distribution* || *URL* || *Bug URL* || *Conctacted?* || *Packaged?* ||
-|| Ubuntu || || || no || no ||
-|| Fedora || || || no || no ||
-|| Debian || || || no || no ||
-|| OpenSUSE || || || no || no ||
-|| Mandriva || || || no || no ||
-|| Gentoo || || || no || no ||
-|| Foresight Linux || || || no || no ||
-|| FreeBSD || || || no || no ||
-|| NetBSD || || || no || no ||
-|| OpenBSD || || || no || no ||
-|| Open Solaris || || || no ||
+|| *Distribution* || *Website* || *Maling list* || *Bug URL* || *Conctacted?* || *Packaged?* ||
+|| Ubuntu || || || || no || no ||
+|| Fedora || || || || no || no ||
+|| Debian || || || || no || no ||
+|| OpenSUSE || || || || no || no ||
+|| Mandriva || || || || no || no ||
+|| Gentoo || || || || no || no ||
+|| Foresight Linux || || || || no || no ||
+|| FreeBSD || || || || no || no ||
+|| NetBSD || || || || no || no ||
+|| OpenBSD || || || || no || no ||
+|| OpenSolaris || || || || no || no ||
