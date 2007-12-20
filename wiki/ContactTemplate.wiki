@@ -2,7 +2,7 @@
 
 Use the following template when contacting a project or distribution to let them know about libproxy.  Please replace BUG_URL and NAME with the url to the bug report filed and your name, respectively.
 
-{{{
+=== BEGIN_TEMPLATE ===
 Hello everyone!
 
 I would like to announce the release of version 0.2 of libproxy, an
@@ -23,4 +23,4 @@ bug requesting libproxy adoption has also been filed: BUG_URL
 
 Thanks for your time!
 NAME
-}}}
+=== END_TEMPLATE ===
