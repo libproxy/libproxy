@@ -10,7 +10,7 @@
   * *Adding libproxy support to other applications*
     # Pick a [Applications project that needs to support libproxy]
     # Download the source code for that project
-    # Make a patch for the project to support libproxy
+    # Make a patch for the project to [HowTo support libproxy]
     # File the patch on the pre-existing bug (see the PR section below)
     # Politely dialog with the project and advocate for adoption of your patch
 
