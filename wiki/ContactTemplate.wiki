@@ -11,7 +11,7 @@ configurations uniformly across applications and user sessions.
 libproxy has a stable API and modules to read configuration from
 GNOME, KDE, a file, or an environment variable (for compatibility with
 existing implementations). In addition, libproxy automatically adjusts
-for changing network topology via integration with NetworkManager and
+for changing network topology via integration with `NetworkManager` and
 is able to autodetect proxy settings through WPAD and PAC compliance.
 
 Through these features, an application that links to libproxy will not
