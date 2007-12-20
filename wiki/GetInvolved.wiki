@@ -16,5 +16,7 @@
   # Look for holes in the current documentation
   # Edit the wiki
 
-= I can recite Homer's Illiad from memory in a cockney accent! =
-  # Actually, we don't have any use for this skill...
+= I can juggle 5 flaming chainsaws! =
+  # Cool!
+  # How much does medical insurance cost you?
+  # Actually, I don't think we have any use for this skill...
