@@ -1,0 +1,15 @@
+#summary Our future vision for libproxy
+
+Our next release (0.3) will focus on:
+  * bug fixes
+  * stability
+  * memory usage
+  * performance
+  * cleanup
+  * better support for HTTP/HTTPS/FTP proxy configs in the plugins
+
+By release 1.0 we plan to implement:
+  * LDAP plugin
+  * Plugins for multiple JavaScript providers
+  * Mac and Windows support
+  * Support for the *full* WPAD spec
