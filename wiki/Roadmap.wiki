@@ -1,4 +1,5 @@
 #summary Our future vision for libproxy
+#labels Featured,Phase-Requirements
 
 Our next release (0.3) will focus on:
   * bug fixes
