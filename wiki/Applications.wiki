@@ -1,10 +1,5 @@
 #summary Applications that should use libproxy
 
-= Introduction =
-
-This is a list of applications and libraries that may be interested in linking to libproxy if it's available. *Bold* denotes mailing lists that have not been contacted yet.
-
-
 = Applications =
 This table lists applications that we would like to see support libproxy:
 || *Application* || *Website* || *Maling list* || *Bug* || *Adopted?* ||
@@ -23,9 +18,10 @@ This table lists applications that we would like to see support libproxy:
 || Sound Juicer || || || || ||
 || KDE || www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || ||
-|| Python || www.python.org || *http://www.python.org/community/lists/ * || || ||
+|| Python || www.python.org || http://www.python.org/community/lists/ || || ||
 || .NET/Mono || || || || ||
 || Firefox || || || || ||
+
 
 = Distributions =
 This table lists distributions that should support libproxy:
