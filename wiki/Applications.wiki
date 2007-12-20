@@ -15,8 +15,14 @@ This is a list of applications and libraries that may be interested in linking t
 || Pidgin || || || || ||
 || Liferea || || || || ||
 || Telepathy framework || || || || ||
+|| Ekiga || || || || ||
+|| X-Chat || || || || ||
+|| Konqueror || || || || ||
+|| Vinegre || || || || ||
+|| RhythmBox || || || || ||
+|| Sound Juicer || || || || ||
 || KDE || www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || ||
 || Python || www.python.org || *http://www.python.org/community/lists/ * || || ||
-|| .NET || || || || ||
+|| .NET/Mono || || || || ||
 || Firefox || || || || ||
