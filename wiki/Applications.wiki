@@ -7,8 +7,8 @@ This is a list of applications and libraries that may be interested in linking t
 
 = Details =
 
-|| Name || Website || Maling list || Bugzilla || Adoption ver ||
-|| libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list ||  || ||
+|| Name || Website || Maling list || Bug || Adoption ver ||
+|| libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103  || ||
 || libcurl || http://curl.haxx.se/libcurl/ || http://curl.haxx.se/mail/list.cgi?list=curl-library || http://sourceforge.net/tracker/?group_id=976&atid=100976&func=add || ||
 || wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists || {{{[mailing list]}}} || ||
 || Gnome || www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || ||
