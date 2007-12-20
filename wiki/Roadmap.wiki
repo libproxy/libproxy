@@ -20,5 +20,5 @@ By release 1.0 we plan to implement:
     * Read config from wherever Mac OS X stores it
   * Support for the *full* [http://tools.ietf.org/id/draft-ietf-wrec-wpad-01.txt WPAD spec]
   * LDAP plugin
-  * dconf support?
+  * [http://live.gnome.org/dconf dconf support] (maybe)
   
