@@ -6,9 +6,12 @@ Current Release: 0.2
 Features:
   * a stable API
   * proxy auto-detection (working PAC and WPAD implementations)
+  * GNOME support
+  * KDE support
+  * NetworkManager support
+  * System administrators can lock down proxy configuration
   * a command line utility which exposes the API
-  * an implementation of ignore lists
-  * proxy lockdowns
-  * Python bindings
-  * .NET bindings
-  * Lots of [Plugins] (click to see details)
+
+Bindings:
+  * Python
+  * .NET
