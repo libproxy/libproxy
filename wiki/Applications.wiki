@@ -1,4 +1,5 @@
 #summary Applications that should use libproxy
+#labels Phase-Support
 
 ||||||||||||  _*Applications*_ -- A list of programs that should link to libproxy: ||
 || *Name* || *Website* || *Maling list* || *Bug URL* || *Contacted?* || *Adopted?* ||
