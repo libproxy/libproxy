@@ -1,11 +1,11 @@
 #summary The project contact template
 
-Use the following template when contacting a project or distribution to let them know about libproxy.
+Use the following template when contacting a project or distribution to let them know about libproxy.  Please replace BUG_URL and NAME with the url to the bug report filed and your name, respectively.
 
 {{{
 Hello everyone!
 
-I would like to announce the release of version $VERSION of libproxy, an
+I would like to announce the release of version 0.2 of libproxy, an
 open-source library that provides functions to manage proxy
 configurations uniformly across applications and user sessions.
 libproxy has a stable API and modules to read configuration from
@@ -19,9 +19,8 @@ have to worry about proxy configuration or even a change of networks:
 libproxy will automatically provide the correct proxy to use.
 
 Please have a look at http://libproxy.googlecode.com for more info. A
-bug requesting libproxy adoption has also been filed:
-$BUG_URL
+bug requesting libproxy adoption has also been filed: BUG_URL
 
 Thanks for your time!
-$NAME
+NAME
 }}}
