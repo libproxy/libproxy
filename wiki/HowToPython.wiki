@@ -8,7 +8,7 @@ import libproxy
 URL = "http://www.google.com"
 
 pf = libproxy.ProxyFactory()
-for proxy in pf.getProxy(URL):
+for proxy in pf.getProxies(URL):
   # Do something with the proxy
   if fetch_url(URL, proxy):
     break
