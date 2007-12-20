@@ -1,4 +1,5 @@
 #summary How you can contribute to this project
+#labels Featured,Phase-Support
 
 = I can code! =
 
