@@ -1,0 +1,15 @@
+#summary How to use libproxy in a python application.
+
+For a more complete example, see HowToC.
+
+{{{
+import libproxy
+
+URL = "http://www.google.com"
+
+pf = libproxy.ProxyFactory()
+for proxy in pf.getProxy(URL):
+  # Do something with the proxy
+  if fetch_url(URL, proxy):
+    break
+}}}
