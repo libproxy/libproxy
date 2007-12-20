@@ -1,0 +1,54 @@
+#summary This page shows how to use libproxy in various different applications/languages
+
+= C/++ =
+
+Take a look at the simple pseudo-code below to get started.  A complete functioning program is found in the source tarball at src/bin/proxy.c.
+
+{{{
+// This contains the libproxy public API
+#include <proxy.h>
+
+// A fake function that fetches the URL using the specified proxy.
+// This function is just a pseudo-summary of "whatever your application does"
+// Returns 1 on successful GET request.
+extern int fetch_url(char *url, char *proxy);
+
+int main()
+{
+  // Create a proxy factory instance
+  pxProxyFactory *pf = px_proxy_factory_new();
+  if (!pf) return 1;
+
+  // Get which proxies to use in order to fetch "http://www.google.com"
+  char **proxies = px_proxy_factory_get_proxies(pf, "http://www.google.com");
+
+  // Iterate over the returned proxies, attemping to fetch the URL
+  for (int i=0 ; proxies[i] ; i++)
+    if (fetch_url("http://www.google.com", proxies[i]))
+      break;
+
+  // Free the proxy list
+  for (int i=0 ; proxies[i] ; i++)
+    free(proxies[i]);
+  free(proxies);
+
+  // Free the proxy factory
+  px_proxy_factory_free(pf);
+
+  return 0;
+}
+}}}
+
+= Python =
+
+{{{
+import libproxy
+
+URL = "http://www.google.com"
+
+pf = libproxy.ProxyFactory()
+for proxy in pf.getProxies(URL):
+  # Do something with the proxy
+  if fetch_url(URL, proxy):
+    break
+}}}
