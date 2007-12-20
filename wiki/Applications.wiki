@@ -26,14 +26,17 @@ This is a list of applications and libraries that may be interested in linking t
 || Python || www.python.org || *http://www.python.org/community/lists/ * || || ||
 || .NET/Mono || || || || ||
 || Firefox || || || || ||
-|| Ubuntu ||
-|| Fedora ||
-|| Debian ||
-|| OpenSUSE ||
-|| Mandriva ||
-|| Gentoo ||
-|| Foresight Linux ||
-|| FreeBSD ||
-|| NetBSD ||
-|| OpenBSD ||
-|| Open Solaris ||
+
+==Distributions==
+|| *Distribution* || *URL* || *Bug URL* || *Conctacted?* ||
+|| Ubuntu || || || no ||
+|| Fedora || || || no ||
+|| Debian || || || no ||
+|| OpenSUSE || || || no ||
+|| Mandriva || || || no ||
+|| Gentoo || || || no ||
+|| Foresight Linux || || || no ||
+|| FreeBSD || || || no ||
+|| NetBSD || || || no ||
+|| OpenBSD || || || no ||
+|| Open Solaris || || || no ||
