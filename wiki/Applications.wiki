@@ -26,3 +26,12 @@ This is a list of applications and libraries that may be interested in linking t
 || Python || www.python.org || *http://www.python.org/community/lists/ * || || ||
 || .NET/Mono || || || || ||
 || Firefox || || || || ||
+|| Ubuntu ||
+|| Fedora ||
+|| Debian ||
+|| OpenSUSE ||
+|| FreeBSD ||
+|| NetBSD ||
+|| OpenBSD ||
+|| Mandriva ||
+|| Gentoo ||
