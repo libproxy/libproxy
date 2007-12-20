@@ -14,7 +14,7 @@ This is a list of applications and libraries that may be interested in linking t
 || Gnome || www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || ||
 || Pidgin || || || || ||
 || Liferea || || || || ||
-|| Evolution (if it doesn't use libsoup) || || || || ||
+|| Telepathy framework || || || || ||
 || KDE || www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || ||
 || Python || www.python.org || *http://www.python.org/community/lists/ * || || ||
