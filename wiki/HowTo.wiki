@@ -2,7 +2,39 @@
 #labels Featured,Phase-Design,Phase-Deploy
 
 = C(++) =
+=== API ===
+There are only three functions in the external API:
+{{{
+/**
+ * Creates a new pxProxyFactory instance.
+ * 
+ * @return A new pxProxyFactory instance or NULL on error
+ */
+pxProxyFactory *px_proxy_factory_new();
 
+/**
+ * Get which proxies to use for the specified URL.
+ * 
+ * A NULL-terminated array of proxy strings is returned.
+ * If the first proxy fails, the second should be tried, etc...
+ * Don't forget to free the strings/array when you are done.
+ * 
+ * The format of the returned proxy strings are as follows:
+ *   - http://proxy:port
+ *   - socks://proxy:port
+ *   - direct://
+ * @url The URL we are trying to reach
+ * @return A NULL-terminated array of proxy strings to use
+ */
+char **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
+
+/**
+ * Frees the pxProxyFactory instance when no longer used.
+ */
+void px_proxy_factory_free(pxProxyFactory *self);
+}}}
+
+=== Example ===
 Take a look at the simple pseudo-code below to get started.  A complete functioning program is found in the source tarball at src/bin/proxy.c.
 
 {{{
