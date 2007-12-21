@@ -13,11 +13,11 @@
 || [http://en.wikipedia.org/wiki/Proxy_auto-config Proxy Auto-Configuration (PAC)] || 0.1 ||  ||
 || [http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol Web Proxy Auto-Discovery (WPAD)] || 0.1 ||  ||
 || Configuration Lockdown || 0.2 ||  ||
-|||||| _*Configuration Plugins*_ || *Config Type* || *Dependencies* || *Build Dependencies* ||
-|| Environment variable config plugin || 0.1 || 0.2 || Uncategorized || || ||
-|| INI-style file config plugin || 0.2 || || User & System ||  || ||
-|| GNOME config plugin || 0.1 ||  || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev ||
-|| KDE config plugin || 0.2 ||  || Session || x11 and xmu || x11-dev and xmu-dev ||
+|||||| _*Configuration Plugins*_ || *Dependencies* || *Build Dependencies* || *Config Type* ||
+|| Environment variable config plugin || 0.1 || 0.2 || || || Uncategorized ||
+|| INI-style file config plugin || 0.2 || || || || User & System ||
+|| GNOME config plugin || 0.1 ||  || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev || Session ||
+|| KDE config plugin || 0.2 ||  || x11 and xmu || x11-dev and xmu-dev || Session ||
 || Windows registry config plugin || || || || || ||
 || Mac OS X InternetConfig config plugin || || || || || ||
 || LDAP config plugin || || || || || ||
