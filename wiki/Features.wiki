@@ -2,18 +2,18 @@
 #labels Featured,Phase-Requirements,Phase-Design
 
 = Features =
-|| *Area* || *Version Added* || *Version Stablized* ||
-|||||| _*API*_ ||
-|| External C API || 0.1 || 0.2 ||
-|| External Python API || 0.2 ||  ||
-|| External .NET API || 0.2 ||  ||
-|| Internal API || 0.1 ||  ||
-|||||| _*Core Features*_ ||
-|| CLI Tool || 0.1 ||  ||
-|| [http://en.wikipedia.org/wiki/Proxy_auto-config Proxy Auto-Configuration (PAC)] || 0.1 ||  ||
-|| [http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol Web Proxy Auto-Discovery (WPAD)] || 0.1 ||  ||
-|| Configuration Lockdown || 0.2 ||  ||
-|||||| _*Configuration Plugins*_ || *Dependencies* || *Build Dependencies* || *Config Type* ||
+|| *Area* || *Version Added* || *Version Stablized* || *Dependencies* || *Build Dependencies* ||
+|||||||||| _*API*_ ||
+|| External C API || 0.1 || 0.2 || || ||
+|| External Python API || 0.2 || || || ||
+|| External .NET API || 0.2 || || || ||
+|| Internal API || 0.1 ||  || || ||
+|||||||||| _*Core Features*_ ||
+|| CLI Tool || 0.1 || || || ||
+|| [http://en.wikipedia.org/wiki/Proxy_auto-config Proxy Auto-Configuration (PAC)] || 0.1 || || || ||
+|| [http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol Web Proxy Auto-Discovery (WPAD)] || 0.1 || || || ||
+|| Configuration Lockdown || 0.2 || || || ||
+|||||||||| _*Configuration Plugins*_ || *Config Type* ||
 || Environment variable config plugin || 0.1 || 0.2 || || || Uncategorized ||
 || INI-style file config plugin || 0.2 || || || || User & System ||
 || GNOME config plugin || 0.1 ||  || x11, xmu, gconf || x11-dev, xmu-dev, gconf-dev || Session ||
@@ -22,10 +22,10 @@
 || Mac OS X InternetConfig config plugin || || || || || ||
 || LDAP config plugin || || || || || ||
 || [http://live.gnome.org/dconf dconf] config plugin || || || || || ||
-|||||| _*Javascript Plugins*_ ||
-|| PAC via Firefox/Xulrunner || 0.1 ||  ||
-|| PAC via WebKit ||  ||  ||
-|| PAC via Safari ||  ||  ||
-|| PAC via Internet Explorer ||  ||  ||
-|||||| _*Other Plugins*_ ||
-|| NetworkManager plugin || 0.2 ||  ||
+|||||||||| _*Javascript Plugins*_ ||
+|| PAC via Firefox/Xulrunner || 0.1 ||  || || ||
+|| PAC via WebKit ||  ||  || || ||
+|| PAC via Safari ||  ||  || || ||
+|| PAC via Internet Explorer || || || || ||
+|||||||||| _*Other Plugins*_ ||
+|| NetworkManager plugin || 0.2 || || || ||
