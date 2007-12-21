@@ -28,4 +28,4 @@
 || PAC via Safari || || || || ||
 || PAC via Internet Explorer || || || || ||
 |||||||||| _*Other Plugins*_ ||
-|| NetworkManager plugin || 0.2 || || || ||
+|| NetworkManager plugin || 0.2 || || dbus || dbus-dev, networkmanager-dev||
