@@ -1,7 +1,7 @@
 #summary Where libproxy is today
 #labels Featured
 
-Current Release: 0.2
+Current Release: 0.2.1
 
 Features:
   * a stable API
