@@ -15,8 +15,8 @@ AC_PROG_MAKE_SET
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
 PKG_CHECK_MODULES(gconf, gconf-2.0, have_gconf=yes, have_gconf=no)
-PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes, have_mozjs=no)
-PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, :)
+PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, 
+					[PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes, have_mozjs=no)])
 PKG_CHECK_MODULES(NetworkManager, NetworkManager, 
 					have_networkmanager=yes, have_networkmanager=no)
 
