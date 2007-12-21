@@ -7,7 +7,7 @@
 || External C API || 0.1 || 0.2 ||
 || External Python API || 0.2 ||  ||
 || External .NET API || 0.2 ||  ||
-|| Internal API || 0.2 ||  ||
+|| Internal API || 0.1 ||  ||
 |||||| _*Core Features*_ ||
 || CLI Tool || 0.1 ||  ||
 || Proxy Auto-Configuration (PAC) || 0.1 ||  ||
