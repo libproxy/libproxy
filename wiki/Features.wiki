@@ -13,12 +13,12 @@
 || [http://en.wikipedia.org/wiki/Proxy_auto-config Proxy Auto-Configuration (PAC)] || 0.1 ||  ||
 || [http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol Web Proxy Auto-Discovery (WPAD)] || 0.1 ||  ||
 || Configuration Lockdown || 0.2 ||  ||
-|||||| _*Configuration Plugins*_ ||
-|| Environment variable config plugin || 0.1 || 0.2 ||
-|| INI-style file config plugin || 0.2 || ||
-|| GNOME config plugin || 0.1 ||  ||
-|| KDE config plugin || 0.2 ||  ||
-|| Windows registry config plugin || || ||
+|||||| _*Configuration Plugins*_ || *Config Type* || *Dependencies* || *Build Dependencies* ||
+|| Environment variable config plugin || 0.1 || 0.2 || Uncategorized || || ||
+|| INI-style file config plugin || 0.2 || || User & System ||  || ||
+|| GNOME config plugin || 0.1 ||  || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev || User & System ||  || ||
+|| KDE config plugin || 0.2 ||  || Session || x11 and xmu || x11-dev and xmu-dev ||
+|| Windows registry config plugin || || || User & System || Windows || Windows ||
 || Mac OS X InternetConfig config plugin || || ||
 || LDAP config plugin || || ||
 || [http://live.gnome.org/dconf dconf] config plugin || || ||
