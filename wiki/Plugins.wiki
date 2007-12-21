@@ -3,7 +3,7 @@
 || *Plugin Name*    || *Description* || *First Version* || *Config Type* || *Requires* || *Build Requires* ||
 || envvar         || Reads proxy configuration from an environmental variable || 0.1 || None || || ||
 || gnome          || Reads proxy configuration from GConf || 0.1 || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev ||
-|| mozjs          || Uses Mozilla JavaScript to run PAC files || 0.1 || N/A || firefox or mozjs || firefox-dev or mozjs-dev ||
+|| mozjs          || Uses Mozilla JavaScript to run PAC files || 0.1 || N/A || firefox or mozjs or xulrunner || firefox-dev or mozjs-dev or xulrunner-dev ||
 || file           || Reads proxy configuration from a file || 0.2 || User & System ||  || ||
 || kde            || Reads proxy configuration from kioslaverc || 0.2 || Session || x11 and xmu || x11-dev and xmu-dev ||
 || networkmanager || Automatically notifies libproxy when the network has changed || 0.2 || N/A || dbus || dbus and networkmanager-dev ||
