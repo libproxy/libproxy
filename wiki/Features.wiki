@@ -1,0 +1,30 @@
+#summary Features we have implemented or will implement
+#labels Featured,Phase-Requirements,Phase-Design
+
+= Features =
+|| *Area* || *Version Added* || *Version Stablized* ||
+|||||| _*API*_ ||
+|| External C API || 0.1 || 0.2 ||
+|| External Python API || 0.2 ||  ||
+|| External .NET API || 0.2 ||  ||
+|| Internal API || 0.2 ||  ||
+|||||| _*Core Features*_ ||
+|| CLI Tool || 0.1 ||  ||
+|| Proxy Auto-Configuration (PAC) || 0.1 ||  ||
+|| Web Proxy Auto-Discovery (WPAD) || 0.1 ||  ||
+|| Configuration Lockdown || 0.2 ||  ||
+|||||| _*Configuration Plugins*_ ||
+|| Environment variable config plugin || 0.1 || 0.2 ||
+|| GNOME config plugin || 0.1 ||  ||
+|| KDE config plugin || 0.2 ||  ||
+|| Windows registry config plugin || || ||
+|| Mac OS X InternetConfig config plugin || || ||
+|| LDAP config plugin || || ||
+|| [http://live.gnome.org/dconf dconf] config plugin || || ||
+|||||| _*Javascript Plugins*_ ||
+|| PAC via Firefox/Xulrunner || 0.1 ||  ||
+|| PAC via WebKit ||  ||  ||
+|| PAC via Safari ||  ||  ||
+|| PAC via Internet Explorer ||  ||  ||
+|||||| _*Other Plugins*_ ||
+|| NetworkManager plugin || 0.2 ||  ||
