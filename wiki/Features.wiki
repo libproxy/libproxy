@@ -16,7 +16,7 @@
 |||||| _*Configuration Plugins*_ || *Config Type* || *Dependencies* || *Build Dependencies* ||
 || Environment variable config plugin || 0.1 || 0.2 || Uncategorized || || ||
 || INI-style file config plugin || 0.2 || || User & System ||  || ||
-|| GNOME config plugin || 0.1 ||  || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev || User & System ||  || ||
+|| GNOME config plugin || 0.1 ||  || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev ||
 || KDE config plugin || 0.2 ||  || Session || x11 and xmu || x11-dev and xmu-dev ||
 || Windows registry config plugin || || || User & System || Windows || Windows ||
 || Mac OS X InternetConfig config plugin || || ||
