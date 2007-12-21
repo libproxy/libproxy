@@ -1,4 +1,5 @@
 #summary How to contact us
+#labels Featured,Phase-Support
 
 === IRC ===
 `#libproxy` on irc.freenode.net
