@@ -18,10 +18,10 @@
 || INI-style file config plugin || 0.2 || || User & System ||  || ||
 || GNOME config plugin || 0.1 ||  || Session || x11, xmu, and gconf || x11-dev, xmu-dev and gconf-dev ||
 || KDE config plugin || 0.2 ||  || Session || x11 and xmu || x11-dev and xmu-dev ||
-|| Windows registry config plugin || || || User & System || Windows || Windows ||
-|| Mac OS X InternetConfig config plugin || || ||
-|| LDAP config plugin || || ||
-|| [http://live.gnome.org/dconf dconf] config plugin || || ||
+|| Windows registry config plugin || || || || || ||
+|| Mac OS X InternetConfig config plugin || || || || || ||
+|| LDAP config plugin || || || || || ||
+|| [http://live.gnome.org/dconf dconf] config plugin || || || || || ||
 |||||| _*Javascript Plugins*_ ||
 || PAC via Firefox/Xulrunner || 0.1 ||  ||
 || PAC via WebKit ||  ||  ||
