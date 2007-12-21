@@ -23,9 +23,9 @@
 || LDAP config plugin || || || || || ||
 || [http://live.gnome.org/dconf dconf] config plugin || || || || || ||
 |||||||||| _*Javascript Plugins*_ ||
-|| PAC via Firefox/Xulrunner || 0.1 ||  || || ||
-|| PAC via WebKit ||  ||  || || ||
-|| PAC via Safari ||  ||  || || ||
+|| PAC via Firefox/Xulrunner || 0.1 || || firefox or xulrunner || firefox-dev or xulrunner-dev ||
+|| PAC via WebKit || || || || ||
+|| PAC via Safari || || || || ||
 || PAC via Internet Explorer || || || || ||
 |||||||||| _*Other Plugins*_ ||
 || NetworkManager plugin || 0.2 || || || ||
