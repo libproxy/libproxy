@@ -23,13 +23,11 @@
 typedef struct _pxProxyFactory  pxProxyFactory;
 
 /**
- * Creates a new pxProxyFactory instance.  This instance
- * and all its methods are NOT thread safe, so please take
- * care in their use.
+ * Creates a new pxProxyFactory instance.
  * 
  * @return A new pxProxyFactory instance or NULL on error
  */
-pxProxyFactory  *px_proxy_factory_new      ();
+pxProxyFactory *px_proxy_factory_new();
 
 /**
  * Get which proxies to use for the specified URL.
@@ -45,11 +43,11 @@ pxProxyFactory  *px_proxy_factory_new      ();
  * @url The URL we are trying to reach
  * @return A NULL-terminated array of proxy strings to use
  */
-char           **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
+char **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
 
 /**
  * Frees the pxProxyFactory instance when no longer used.
  */
-void             px_proxy_factory_free     (pxProxyFactory *self);
+void px_proxy_factory_free(pxProxyFactory *self);
 
 #endif /*PROXY_H_*/
