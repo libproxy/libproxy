@@ -1,0 +1,4 @@
+#summary How to contact us
+
+=== IRC ===
+`#libproxy` on irc.freenode.net
