@@ -26,7 +26,7 @@
 
 #include "misc.h"
 #include "pac.h"
-#include "dns.h"
+#include "wpad_dns.h"
 
 struct _pxDNS {
 	pxURL **urls;
