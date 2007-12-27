@@ -24,19 +24,13 @@
 #include <string.h>
 
 #include "misc.h"
+#include "strdict.h"
 #include "config_file.h"
 
-struct _pxConfigFileSection {
-	char *name;
-	char **keys;
-	char **vals;
-};
-typedef struct _pxConfigFileSection pxConfigFileSection;
-
 struct _pxConfigFile {
-	char                 *filename;
-	time_t                mtime;
-	pxConfigFileSection **sections;
+	char      *filename;
+	time_t     mtime;
+	pxStrDict *sections;
 };
 
 pxConfigFile *
@@ -50,14 +44,13 @@ px_config_file_new(char *filename)
 
 	// Allocate our structure; get mtime and filename
 	pxConfigFile *self      = px_malloc0(sizeof(pxConfigFile));
-	self->mtime             = st.st_mtime;
 	self->filename          = px_strdup(filename);
+	self->mtime             = st.st_mtime;
+	self->sections          = px_strdict_new((void *) px_strdict_free);
 	
 	// Add one section (PX_CONFIG_FILE_DEFAULT_SECTION)
-	self->sections               = px_malloc0(sizeof(pxConfigFileSection *) * 2);
-	self->sections[0]            = px_malloc0(sizeof(pxConfigFileSection));
-	self->sections[0]->name      = px_strdup(PX_CONFIG_FILE_DEFAULT_SECTION);
-	pxConfigFileSection *current = self->sections[0];
+	px_strdict_set(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION, px_strdict_new(free));
+	pxStrDict *current = (pxStrDict *) px_strdict_get(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION);
 	
 	// Parse our file
 	for (char *line=NULL ; (line = px_readline(fd)) ; px_free(line))
@@ -76,78 +69,19 @@ px_config_file_new(char *filename)
 			memmove(line, line+1, strlen(line)-1);
 			line[strlen(line)-2] = '\0';
 			
-			// Check for each section...
-			for (int i=0 ; self->sections[i] ; i++)
-			{
-				// If we found the section already, set it as current and move on
-				if (!strcmp(self->sections[i]->name, line))
-				{
-					current = self->sections[i];
-					break;
-				}
-				
-				// If the section wasn't found, add a new section
-				if (!self->sections[i+1])
-				{
-					// Create new section
-					current       = px_malloc0(sizeof(pxConfigFileSection));
-					current->name = px_strdup(line);
-					
-					// Add section to the end
-					pxConfigFileSection **sections = self->sections;
-					self->sections = px_malloc0(sizeof(pxConfigFileSection *) * (i+3));
-					memcpy(self->sections, sections, sizeof(pxConfigFileSection) * (i+1));
-					self->sections[i+1] = current;
-					px_free(sections);
-					
-					break;
-				}
-			}
-			continue;
+			if (px_strdict_get(self->sections, line))
+				current = (pxStrDict *) px_strdict_get(self->sections, line);
+			else
+				px_strdict_set(self->sections, line, px_strdict_new(free));
 		}
 
 		// If this is a key/val line, get the key/val.
-		if ((tmp = strchr(line, '=')) && tmp[1])
+		else if ((tmp = strchr(line, '=')) && tmp[1])
 		{
-			// If this is our first key/val, create a new array
-			if (!current->keys || !current->vals)
-			{
-				// Add key
-				current->keys    = px_malloc0(sizeof(char *) * 2);
-				current->keys[0] = px_strndup(line, tmp - line);
-				current->keys[1] = NULL;
-				
-				// Add val
-				current->vals    = px_malloc0(sizeof(char *) * 2);
-				current->vals[0] = px_strdup(tmp+1);
-				current->vals[1] = NULL;
-			}
-			
-			// If this is not our first key/val, tack it on the end
-			else
-			{
-				for (int i=0 ; current->keys[i] ; i++)
-				{
-					if (!current->keys[i+1])
-					{
-						// Add val
-						char **vals = px_malloc0(sizeof(char *) * (i+3));
-						memcpy(vals, current->vals, sizeof(char *) * (i+1));
-						vals[i+1] = px_strstrip(tmp+1);
-						px_free(current->vals); current->vals = vals;
-						
-						// Add key
-						*tmp = '\0';
-						char **keys = px_malloc0(sizeof(char *) * (i+3));
-						memcpy(keys, current->keys, sizeof(char *) * (i+1));
-						keys[i+1] = px_strstrip(line);
-						px_free(current->keys); current->keys = keys;
-						
-						break;
-					}
-				}
-			}
-			continue;
+			*tmp = '\0';
+			char *key = px_strstrip(line);
+			px_strdict_set(current, key, px_strstrip(tmp+1));
+			px_free(key);
 		}
 	}
 	
@@ -162,39 +96,10 @@ px_config_file_is_stale(pxConfigFile *self)
 	return (!stat(self->filename, &st) && st.st_mtime > self->mtime);
 }
 
-char **
-px_config_file_get_sections(pxConfigFile *self)
-{
-	int count;
-	for (count=0 ; self->sections[count] ; count++);
-	char **output = px_malloc0(sizeof(char *) * ++count);
-	for (count=0 ; self->sections[count] ; count++)
-		output[count] = px_strdup(self->sections[count]->name);
-	return output;
-}
-
-char **
-px_config_file_get_keys(pxConfigFile *self, char *section)
-{
-	for (int i=0 ; self->sections[i] ; i++)
-	{
-		if (!strcmp(self->sections[i]->name, section))
-			return px_strdupv((const char **) self->sections[i]->keys);
-	}
-	
-	return NULL;
-}
-
 char *
 px_config_file_get_value(pxConfigFile *self, char *section, char *key)
 {
-	for (int i=0 ; self->sections[i] ; i++)
-		if (!strcmp(self->sections[i]->name, section))
-			for (int j=0 ; self->sections[i]->keys && self->sections[i]->keys[j] ; j++)
-				if (!strcmp(self->sections[i]->keys[j], key))
-					return px_strdup(self->sections[i]->vals[j]);
-	
-	return NULL;
+	return px_strdup(px_strdict_get((pxStrDict *) px_strdict_get(self->sections, section), key));
 }
 
 void
@@ -202,14 +107,7 @@ px_config_file_free(pxConfigFile *self)
 {
 	if (!self) return;
 	
-	for (int i=0 ; self->sections && self->sections[i] ; i++)
-	{
-		px_free(self->sections[i]->name);
-		px_strfreev(self->sections[i]->keys);
-		px_strfreev(self->sections[i]->vals);
-		px_free(self->sections[i]);
-	}
-	px_free(self->sections);
+	px_strdict_free(self->sections);
 	px_free(self->filename);
 	px_free(self);
 }
