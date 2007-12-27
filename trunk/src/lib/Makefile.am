@@ -1,9 +1,11 @@
 lib_LTLIBRARIES     = libproxy.la
 libproxy_la_SOURCES = \
+						array.c array.h \
 						config_file.c config_file.h \
 						misc.c misc.h \
 						pac.c pac.h \
 						proxy_factory.c proxy_factory.h \
+						strdict.c strdict.h \
 						url.c url.h \
 						wpad.c wpad.h \
 						wpad_dhcp.c wpad_dhcp.h \
