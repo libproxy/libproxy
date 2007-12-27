@@ -34,6 +34,7 @@
 #include "proxy_factory.h"
 #include "wpad.h"
 #include "config_file.h"
+#include "array.h"
 #include "strdict.h"
 
 #define DEFAULT_CONFIG_ORDER "USER,SESSION,SYSTEM"
@@ -47,7 +48,7 @@ typedef struct _pxProxyFactoryConfig pxProxyFactoryConfig;
 
 struct _pxProxyFactory {
 	pthread_mutex_t             mutex;
-	void                      **plugins;
+	pxArray                    *plugins;
 	pxProxyFactoryConfig      **configs;
 	pxStrDict                  *misc;
 	pxProxyFactoryVoidCallback *on_get_proxy;
@@ -287,6 +288,16 @@ _domain_ignore(pxURL *url, char *ignore)
 		return true;
 }
 
+static void
+destantiate_plugins(void *item, void *self)
+{
+	// Call the destantiation hook
+	pxProxyFactoryVoidCallback destantiate;
+	destantiate = dlsym(item, "on_proxy_factory_destantiate");
+	if (destantiate)
+		destantiate(self);
+}
+
 /**
  * Creates a new pxProxyFactory instance.
  * 
@@ -297,41 +308,31 @@ px_proxy_factory_new ()
 {
 	pxProxyFactory *self = px_malloc0(sizeof(pxProxyFactory));
 	pthread_mutex_init(&self->mutex, NULL);
+	self->plugins        = px_array_new(NULL, (void *) dlclose, true, false);
 	self->misc           = px_strdict_new(NULL);
-	unsigned int i;
 	
 	// Open the plugin dir
 	DIR *plugindir = opendir(PLUGINDIR);
 	if (!plugindir) return self;
 	
-	// Count the number of plugins
-	for (i=0 ; readdir(plugindir) ; i++);
-	self->plugins = (void **) px_malloc0(sizeof(void *) * (i + 1));
-	rewinddir(plugindir);
-	
 	// For each plugin...
 	struct dirent *ent;
-	for (i=0 ; (ent = readdir(plugindir)) ; i++)
+	for (int i=0 ; (ent = readdir(plugindir)) ; i++)
 	{
 		// Load the plugin
 		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name, NULL);
-		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
+		void *plugin = dlopen(tmp, RTLD_LOCAL);
 		px_free(tmp);
-		if (!(self->plugins[i]))
-		{
-			i--;
+		if (!plugin)
 			continue;
-		}
 		
 		// Call the instantiation hook
 		pxProxyFactoryBoolCallback instantiate;
-		instantiate = dlsym(self->plugins[i], "on_proxy_factory_instantiate");
+		instantiate = dlsym(plugin, "on_proxy_factory_instantiate");
 		if (instantiate && !instantiate(self))
-		{
-			dlclose(self->plugins[i]);
-			self->plugins[i--] = NULL;
-			continue;
-		}
+			dlclose(plugin);
+		else if (instantiate)
+			px_array_add(self->plugins, plugin);
 	}
 	closedir(plugindir);
 	
@@ -751,29 +752,13 @@ px_proxy_factory_network_changed(pxProxyFactory *self)
 void
 px_proxy_factory_free (pxProxyFactory *self)
 {
-	unsigned int i;
-	
 	if (!self) return;
 	
 	pthread_mutex_lock(&self->mutex);
 	
 	// Free the plugins
-	if (self->plugins)
-	{
-		for (i=0 ; self->plugins[i] ; i++)
-		{
-			// Call the destantiation hook
-			pxProxyFactoryVoidCallback destantiate;
-			destantiate = dlsym(self->plugins[i], "on_proxy_factory_destantiate");
-			if (destantiate)
-				destantiate(self);
-			
-			// Unload the plugin
-			dlclose(self->plugins[i]);
-			self->plugins[i] = NULL;
-		}
-		px_free(self->plugins);
-	}
+	px_array_foreach(self->plugins, destantiate_plugins, self);
+	px_array_free(self->plugins);
 	
 	// Free misc
 	px_strdict_free(self->misc);
