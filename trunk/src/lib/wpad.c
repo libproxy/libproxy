@@ -18,9 +18,6 @@
  ******************************************************************************/
 
 #include "misc.h"
-#include "dhcp.h"
-#include "dns.h"
-#include "slp.h"
 #include "wpad.h"
 
 struct _pxWPAD {

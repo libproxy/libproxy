@@ -20,16 +20,16 @@
 #include <stdlib.h>
 
 #include "pac.h"
-#include "slp.h"
+#include "wpad_dhcp.h"
 
-struct _pxSLP { };
+struct _pxDHCP { };
 
 /**
- * Creates a new SLP PAC detector.
- * @return New SLP PAD detector
+ * Creates a new pxDHCP PAC detector.
+ * @return New pxDHCP PAD detector
  */
-pxSLP *
-px_slp_new()
+pxDHCP *
+px_dhcp_new()
 {
 	return NULL;
 }
@@ -39,7 +39,7 @@ px_slp_new()
  * @return Detected PAC or NULL if none is found
  */
 pxPAC *
-px_slp_next(pxSLP *self)
+px_dhcp_next(pxDHCP *self)
 {
 	return NULL;
 }
@@ -48,16 +48,16 @@ px_slp_next(pxSLP *self)
  * Restarts the detection chain at the beginning.
  */
 void
-px_slp_rewind(pxSLP *self)
+px_dhcp_rewind(pxDHCP *self)
 {
 	return;
 }
 
 /**
- * Frees a SLP object.
+ * Frees a pxDHCP object.
  */
 void
-px_slp_free(pxSLP *self)
+px_dhcp_free(pxDHCP *self)
 {
 	return;
 }
