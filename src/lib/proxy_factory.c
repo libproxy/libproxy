@@ -47,15 +47,15 @@ struct _pxProxyFactoryConfig {
 typedef struct _pxProxyFactoryConfig pxProxyFactoryConfig;
 
 struct _pxProxyFactory {
-	pthread_mutex_t             mutex;
-	pxArray                    *plugins;
-	pxProxyFactoryConfig      **configs;
-	pxStrDict                  *misc;
-	pxProxyFactoryVoidCallback *on_get_proxy;
-	pxPACRunnerCallback         pac_runner;
-	pxPAC                      *pac;
-	pxWPAD                     *wpad;
-	pxConfigFile               *cf;
+	pthread_mutex_t        mutex;
+	pxArray               *plugins;
+	pxProxyFactoryConfig **configs;
+	pxStrDict             *misc;
+	pxArray               *on_get_proxies;
+	pxPACRunnerCallback    pac_runner;
+	pxPAC                 *pac;
+	pxWPAD                *wpad;
+	pxConfigFile          *cf;
 };
 
 // Convert the PAC formatted response into our proxy URL array response
@@ -298,6 +298,12 @@ destantiate_plugins(void *item, void *self)
 		destantiate(self);
 }
 
+static void
+call_on_proxy_factory_get_proxies(void *item, void *self)
+{
+	((pxProxyFactoryVoidCallback) item)(self);
+}
+
 /**
  * Creates a new pxProxyFactory instance.
  * 
@@ -310,6 +316,7 @@ px_proxy_factory_new ()
 	pthread_mutex_init(&self->mutex, NULL);
 	self->plugins        = px_array_new(NULL, (void *) dlclose, true, false);
 	self->misc           = px_strdict_new(NULL);
+	self->on_get_proxies = px_array_new(NULL, NULL, true, false);
 	
 	// Open the plugin dir
 	DIR *plugindir = opendir(PLUGINDIR);
@@ -456,8 +463,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	pthread_mutex_lock(&self->mutex);
 	
 	// Call the events
-	for (int i=0 ; self->on_get_proxy && self->on_get_proxy[i] ; i++)
-		self->on_get_proxy[i](self);
+	px_array_foreach(self->on_get_proxies, call_on_proxy_factory_get_proxies, self);
 	
 	// If our config file is stale, close it
 	if (self->cf && px_config_file_is_stale(self->cf))
@@ -665,60 +671,15 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 }
 
 bool
-px_proxy_factory_on_get_proxy_add (pxProxyFactory *self, pxProxyFactoryVoidCallback callback)
+px_proxy_factory_on_get_proxies_add (pxProxyFactory *self, pxProxyFactoryVoidCallback callback)
 {
-	int count;
-	pxProxyFactoryVoidCallback *tmp;
-	
-	// Verify some basic stuff
-	if (!self)     return false;
-	if (!callback) return false;
-	
-	// Allocate an empty config array if there is none
-	if (!self->on_get_proxy) self->on_get_proxy = px_malloc0(sizeof(pxProxyFactoryVoidCallback));
-	
-	// Get a count of how many callbacks we have
-	for (count=0 ; self->on_get_proxy[count] ; count++);
-	
-	// Allocate new array, copy old values into it and free old array
-	tmp = px_malloc0(sizeof(pxProxyFactoryVoidCallback) * (count + 2));
-	memcpy(tmp, self->on_get_proxy, sizeof(pxProxyFactoryVoidCallback) * count);
-	px_free(self->on_get_proxy);
-	self->on_get_proxy = tmp;
-	
-	// Add the new callback to the end
-	self->on_get_proxy[count] = callback;
-	
-	return true;
+	return self ? px_array_add(self->on_get_proxies, callback) : false;
 }
 
 bool
-px_proxy_factory_on_get_proxy_del (pxProxyFactory *self, pxProxyFactoryVoidCallback callback)
+px_proxy_factory_on_get_proxies_del (pxProxyFactory *self, pxProxyFactoryVoidCallback callback)
 {
-	int i,j;
-	
-	// Verify some basic stuff
-	if (!self)               return false;
-	if (!callback)           return false;
-	if (!self->on_get_proxy) return false;
-	
-	// Remove and shift all callbacks down (if found)
-	for (i=0,j=0 ; self->on_get_proxy[j]; i++,j++)
-	{
-		if (i != j)
-			self->on_get_proxy[j] = self->on_get_proxy[i];
-		else if (self->on_get_proxy[i] == callback)
-			self->on_get_proxy[j--] = NULL;
-	}
-	
-	// If we have an empty array, free it
-	if (!self->on_get_proxy[0])
-	{
-		px_free(self->on_get_proxy);
-		self->on_get_proxy = NULL;
-	}
-	
-	return i != j ? true : false;
+	return self ? px_array_del(self->on_get_proxies, callback) : false;
 }
 
 bool
@@ -733,17 +694,10 @@ px_proxy_factory_pac_runner_set (pxProxyFactory *self, pxPACRunnerCallback callb
 void
 px_proxy_factory_network_changed(pxProxyFactory *self)
 {
-	if (self->wpad)
-	{
-		px_wpad_free(self->wpad);
-		self->wpad = NULL;
-	}
-	
-	if (self->pac)
-	{
-		px_pac_free(self->pac);
-		self->pac = NULL;
-	}
+	px_wpad_free(self->wpad);
+	px_pac_free(self->pac);
+	self->wpad = NULL;
+	self->pac  = NULL;
 }
 
 /**
