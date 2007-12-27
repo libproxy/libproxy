@@ -66,8 +66,8 @@ bool             px_proxy_factory_config_del      (pxProxyFactory *self, const c
 bool             px_proxy_factory_misc_set        (pxProxyFactory *self, const char *key, const void *value);
 void            *px_proxy_factory_misc_get        (pxProxyFactory *self, const char *key);
 void             px_proxy_factory_network_changed (pxProxyFactory *self);
-bool             px_proxy_factory_on_get_proxy_add(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
-bool             px_proxy_factory_on_get_proxy_del(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
+bool             px_proxy_factory_on_get_proxies_add(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
+bool             px_proxy_factory_on_get_proxies_del(pxProxyFactory *self, pxProxyFactoryVoidCallback callback);
 bool             px_proxy_factory_pac_runner_set  (pxProxyFactory *self, pxPACRunnerCallback callback);
 
 #endif /*PROXY_FACTORY_H_*/
