@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <string.h>
 
-// Import libproxy API
+/* Import libproxy API */
 #include <proxy.h>
 
 #define STDIN fileno(stdin)
@@ -45,20 +45,20 @@ strdup(char *string)
 static char *
 readline(int fd)
 {
-	// Verify we have an open socket
+	/* Verify we have an open socket */
 	if (fd < 0) return NULL;
 	
-	// For each character received add it to the buffer unless it is a newline
+	/* For each character received add it to the buffer unless it is a newline */
 	char *buffer = NULL;
 	for (int i=1; i > 0 ; i++)
 	{
 		char c;
 		
-		// Receive a single character, check for newline or EOF
+		/* Receive a single character, check for newline or EOF */
 		if (read(fd, &c, 1) != 1) return buffer;
 		if (c == '\n')            return buffer ? buffer : strdup("");
 
-		// Allocate new buffer if we need
+		/* Allocate new buffer if we need */
 		if (i % 1024 == 1)
 		{
 			char *tmp = buffer;
@@ -67,7 +67,7 @@ readline(int fd)
 			if (tmp) { strcpy(buffer, tmp); free(tmp); }
 		}
 
-		// Add new character
+		/* Add new character */
 		buffer[i-1] = c;
 	}
 	return buffer;
@@ -76,7 +76,7 @@ readline(int fd)
 int
 main(int argc, char **argv)
 {
-	// Create the proxy factory object
+	/* Create the proxy factory object */
 	pxProxyFactory *pf = px_proxy_factory_new();
 	if (!pf)
 	{
@@ -84,12 +84,14 @@ main(int argc, char **argv)
 		return 1;
 	}
 	
-	// For each URL we read on STDIN, get the proxies to use
+	/* For each URL we read on STDIN, get the proxies to use */
 	for (char *url = NULL ; url = readline(STDIN) ; free(url))
 	{
-		// Get an array of proxies to use. These should be used
-		// in the order returned. Only move on to the next proxy
-		// if the first one fails (etc).
+		/*
+		 * Get an array of proxies to use. These should be used
+		 * in the order returned. Only move on to the next proxy
+		 * if the first one fails (etc).
+		 */
 		char **proxies = px_proxy_factory_get_proxies(pf, url);
 		for (int i = 0 ; proxies[i] ; i++)
 		{
@@ -103,7 +105,7 @@ main(int argc, char **argv)
 		free(proxies);
 	}
 	
-	// Destantiate the proxy factory object
+	/* Destantiate the proxy factory object */
 	px_proxy_factory_free(pf);
 	return 0;
 }

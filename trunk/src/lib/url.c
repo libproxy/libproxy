@@ -87,10 +87,10 @@ px_url_get(pxURL *self, const char **headers)
 	char *joined_headers = NULL;
 	int sock = -1;
 	
-	// DNS lookup of host
+	/* DNS lookup of host */
 	if (!px_url_get_ips(self)) goto error;
 	
-	// Iterate through each pxIP trying to make a connection
+	/* Iterate through each pxIP trying to make a connection */
 	for (int i = 0 ;  self->ips && self->ips[i] && sock < 0 ; i++)
 	{
 		sock = socket(self->ips[i]->sa_family, SOCK_STREAM, 0);
@@ -108,7 +108,7 @@ px_url_get(pxURL *self, const char **headers)
 	}
 	if (sock < 0) goto error;
 	
-	// Merge optional headers
+	/* Merge optional headers */
 	if (headers)
 	{
 		joined_headers = px_strjoin(headers, "\r\n");
@@ -117,17 +117,17 @@ px_url_get(pxURL *self, const char **headers)
 	else
 		joined_headers = px_strdup("");
 
-	// Create request header
+	/* Create request header */
 	request = px_strcat("GET ", px_url_get_path(self), 
 						" HTTP/1.1\r\nHost: ", px_url_get_host(self),
 						"\r\n", joined_headers, "\r\n\r\n", NULL);
 	px_free(joined_headers);
 			
-	// Send HTTP request
+	/* Send HTTP request */
 	if (send(sock, request, strlen(request), 0) != strlen(request)) goto error;
 	px_free(request); request = NULL;
 	
-	// Return the socket, which is ready for reading the response
+	/* Return the socket, which is ready for reading the response */
 	return sock;
 	
 	error:
@@ -166,12 +166,12 @@ px_url_get_ip_no_dns(pxURL *self)
 {
 	if (!self) return NULL;
 	
-	// Check the cache
+	/* Check the cache */
 	if (self->ips && self->ips[0])
 		return (const struct sockaddr *) self->ips[0];
 	px_free(self->ips);
 	
-	// Try for IPv4 first
+	/* Try for IPv4 first */
 	struct sockaddr *ip = px_malloc0(sizeof(struct sockaddr_in));
 	if (inet_pton(AF_INET, px_url_get_host(self), &((struct sockaddr_in *) ip)->sin_addr) > 0)
 	{
@@ -182,7 +182,7 @@ px_url_get_ip_no_dns(pxURL *self)
 	}
 	px_free(ip);
 	
-	// Try for IPv6 next
+	/* Try for IPv6 next */
 	ip = px_malloc0(sizeof(struct sockaddr_in6));
 	if (inet_pton(AF_INET6, px_url_get_host(self), &((struct sockaddr_in6 *) ip)->sin6_addr) > 0)
 	{
@@ -193,7 +193,7 @@ px_url_get_ip_no_dns(pxURL *self)
 	}
 	px_free(ip);
 	
-	// The hostname was not an IP address
+	/* The hostname was not an IP address */
 	return NULL;
 }
 
@@ -206,24 +206,24 @@ px_url_get_ips(pxURL *self)
 {
 	if (!self) return NULL;
 	
-	// Check the cache
+	/* Check the cache */
 	if (self->ips) return (const struct sockaddr **) self->ips;
 	
-	// Check without DNS first
+	/* Check without DNS first */
 	if (px_url_get_ip_no_dns(self)) return (const struct sockaddr **) self->ips;
 	
-	// Check DNS for IPs
+	/* Check DNS for IPs */
 	struct addrinfo *info;
 	if (!getaddrinfo(px_url_get_host(self), NULL, NULL, &info))
 	{
 		struct addrinfo *first = info;
 		int count;
 		
-		// Count how many IPs we got back
+		/* Count how many IPs we got back */
 		for (count=0 ; info ; info = info->ai_next)
 			count++;
 		
-		// Copy the sockaddr's into self->ips
+		/* Copy the sockaddr's into self->ips */
 		info = first;
 		self->ips = px_malloc0(sizeof(struct sockaddr *) * ++count);
 		for (int i=0 ; info ; info = info->ai_next)
@@ -246,7 +246,7 @@ px_url_get_ips(pxURL *self)
 		return (const struct sockaddr **) self->ips;
 	}
 	
-	// No addresses found
+	/* No addresses found */
 	return NULL;
 }
 
@@ -287,24 +287,24 @@ px_url_get_scheme(pxURL *self)
 pxURL *
 px_url_new(const char *url)
 {
-	// Allocate pxURL
+	/* Allocate pxURL */
 	pxURL *self  = px_malloc0(sizeof(pxURL));
 	
-	// Get scheme
+	/* Get scheme */
 	if (!strstr(url, "://")) goto error;
 	self->scheme = px_strndup(url, strstr(url, "://") - url);
 	
-	// Get host
+	/* Get host */
 	self->host   = px_strdup(strstr(url, "://") + strlen("://"));
 	
-	// Get path
+	/* Get path */
 	self->path   = px_strdup(strchr(self->host, '/'));
 	if (self->path)
 		self->host[strlen(self->host) - strlen(self->path)] = 0;
 	else
 		self->path = px_strdup("");
 		
-	// Get the port
+	/* Get the port */
 	bool port_specified = false;
 	if (strchr(self->host, ':')) {
 		if (!atoi(strchr(self->host, ':')+1)) goto error;
@@ -315,10 +315,10 @@ px_url_new(const char *url)
 	else
 		self->port = px_url_get_default_port(self);
 		
-	// Make sure we have a real host
+	/* Make sure we have a real host */
 	if (!strcmp(self->host, "")) goto error;
 	
-	// Verify by re-assembly
+	/* Verify by re-assembly */
 	self->url = px_malloc0(strlen(url) + 1);
 	if (!port_specified)
 		snprintf(self->url, strlen(url) + 1, "%s://%s%s", self->scheme, self->host, self->path);

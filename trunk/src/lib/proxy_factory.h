@@ -35,13 +35,15 @@ enum _pxConfigCategory {
 };
 typedef enum  _pxConfigCategory pxConfigCategory;
 
-// URLs look like this:
-//   http://host:port
-//   socks://host:port
-//   pac+http://pac_host:port/path/to/pac
-//   wpad://
-//   direct://
-// TODO: ignore syntax TBD
+/*
+ * URLs look like this:
+ *   http://host:port
+ *   socks://host:port
+ *   pac+http://pac_host:port/path/to/pac
+ *   wpad://
+ *   direct://
+ */
+ /* TODO: ignore syntax TBD */
 struct _pxConfig {
 	char *url;
 	char *ignore;

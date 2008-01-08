@@ -20,7 +20,7 @@
 #ifndef MISC_H_
 #define MISC_H_
 
-#include <stdlib.h> // For type size_t
+#include <stdlib.h> /* For type size_t */
 
 /**
  * Allocates memory and always returns valid memory.
