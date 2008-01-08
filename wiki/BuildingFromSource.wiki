@@ -33,7 +33,7 @@ Information on libproxy bindings coming soon...
 = Building the Code =
 {{{
 $ ./autogen.sh
-$ ./configure --with-gnome --with-mozjs --with-networkmanager
+$ ./configure --with-gnome --with-kde --with-mozjs --with-networkmanager
 $ make
 $ su
 # make install
