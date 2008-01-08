@@ -78,7 +78,7 @@ px_strdict_set(pxStrDict *self, const char *key, void *value)
 {
 	if (!self || !key) return false;
 	
-	// We are unseting the value
+	/* We are unseting the value */
 	if (!value)
 	{
 		void *item[3] = { (void *) key, value, self->free };

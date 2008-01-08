@@ -60,11 +60,10 @@ px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bo
 bool
 px_array_add(pxArray *self, void *item)
 {
-	// Verify some basic stuff
+	/* Verify some basic stuff */
 	if (!self || !item) return false;
 	
-	// If we are a unique array and a dup is found,
-	// either bail or replace the item
+	/* If we are a unique array and a dup is found, either bail or replace the item */
 	if (self->unique && px_array_find(self, item) >= 0)
 	{
 		if (!self->replace)
@@ -90,7 +89,7 @@ px_array_del(pxArray *self, const void *item)
 	unsigned int index = px_array_find(self, item);
 	if (index < 0) return false;
 	
-	// Free the old one and shift elements down
+	/* Free the old one and shift elements down */
 	self->free(self->data[index]);
 	memmove(self->data+index,
 			self->data+index+1,

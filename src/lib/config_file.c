@@ -36,36 +36,36 @@ struct _pxConfigFile {
 pxConfigFile *
 px_config_file_new(char *filename)
 {
-	// Open the file and stat it
+	/* Open the file and stat it */
 	struct stat st;
 	int fd = open(filename, O_RDONLY);
 	if (fd < 0) return NULL;
 	fstat(fd, &st);
 
-	// Allocate our structure; get mtime and filename
+	/* Allocate our structure; get mtime and filename */
 	pxConfigFile *self      = px_malloc0(sizeof(pxConfigFile));
 	self->filename          = px_strdup(filename);
 	self->mtime             = st.st_mtime;
 	self->sections          = px_strdict_new((void *) px_strdict_free);
 	
-	// Add one section (PX_CONFIG_FILE_DEFAULT_SECTION)
+	/* Add one section (PX_CONFIG_FILE_DEFAULT_SECTION) */
 	px_strdict_set(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION, px_strdict_new(free));
 	pxStrDict *current = (pxStrDict *) px_strdict_get(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION);
 	
-	// Parse our file
+	/* Parse our file */
 	for (char *line=NULL ; (line = px_readline(fd)) ; px_free(line))
 	{
-		// Strip
+		/* Strip */
 		char *tmp = px_strstrip(line);
 		px_free(line); line = tmp;
 		
-		// Check for comment and/or empty line
+		/* Check for comment and/or empty line */
 		if (*line == '#' || !strcmp(line, "")) continue;
 		
-		// If we have a new section
+		/* If we have a new section */
 		if (*line == '[' || line[strlen(line)-1] == ']')
 		{
-			// Get just the section name
+			/* Get just the section name */
 			memmove(line, line+1, strlen(line)-1);
 			line[strlen(line)-2] = '\0';
 			
@@ -75,7 +75,7 @@ px_config_file_new(char *filename)
 				px_strdict_set(self->sections, line, px_strdict_new(free));
 		}
 
-		// If this is a key/val line, get the key/val.
+		/* If this is a key/val line, get the key/val. */
 		else if ((tmp = strchr(line, '=')) && tmp[1])
 		{
 			*tmp = '\0';
