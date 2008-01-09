@@ -27,6 +27,7 @@
 #include <math.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 
 #include "misc.h"
@@ -50,6 +51,7 @@ struct _pxKeyVal {
 typedef struct _pxKeyVal pxKeyVal;
 
 struct _pxProxyFactory {
+	pthread_mutex_t             mutex;
 	void                      **plugins;
 	pxProxyFactoryConfig      **configs;
 	pxKeyVal                  **misc;
@@ -291,9 +293,7 @@ _domain_ignore(pxURL *url, char *ignore)
 }
 
 /**
- * Creates a new pxProxyFactory instance.  This instance
- * and all its methods are NOT thread safe, so please take
- * care in their use.
+ * Creates a new pxProxyFactory instance.
  * 
  * @return A new pxProxyFactory instance or NULL on error
  */
@@ -302,6 +302,9 @@ px_proxy_factory_new ()
 {
 	pxProxyFactory *self = px_malloc0(sizeof(pxProxyFactory));
 	unsigned int i;
+	
+	// Create the mutex
+	pthread_mutex_init(&self->mutex, NULL);
 	
 	// Open the plugin dir
 	DIR *plugindir = opendir(PLUGINDIR);
@@ -516,6 +519,9 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	if (!url || !strcmp(url, "")) goto do_return;
 	if (!realurl)                 goto do_return;
 	
+	// Lock mutex
+	pthread_mutex_lock(&self->mutex);
+	
 	// Call the events
 	for (int i=0 ; self->on_get_proxy && self->on_get_proxy[i] ; i++)
 		self->on_get_proxy[i](self);
@@ -721,6 +727,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	do_return:
 		if (config)  { px_free(config->url); px_free(config->ignore); px_free(config); }
 		if (realurl) px_url_free(realurl);
+		if (self)    pthread_mutex_unlock(&self->mutex);
 		return response;
 }
 
@@ -816,6 +823,8 @@ px_proxy_factory_free (pxProxyFactory *self)
 	
 	if (!self) return;
 	
+	pthread_mutex_lock(&self->mutex);
+	
 	// Free the plugins
 	if (self->plugins)
 	{
@@ -849,6 +858,8 @@ px_proxy_factory_free (pxProxyFactory *self)
 	px_pac_free(self->pac);
 	px_wpad_free(self->wpad);
 	px_config_file_free(self->cf);
+	pthread_mutex_unlock(&self->mutex);
+	pthread_mutex_destroy(&self->mutex);
 	px_free(self);
 }
 
