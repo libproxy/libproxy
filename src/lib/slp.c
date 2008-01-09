@@ -17,19 +17,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdbool.h>
+#include <stdlib.h>
 
-typedef void (*pxStrDictItemCallback)(void *);
-typedef void (*pxStrDictForeachCallback)(const char *, void *, void *);
+#include "pac.h"
+#include "slp.h"
 
-typedef struct _pxStrDict pxStrDict;
+struct _pxSLP { };
 
-pxStrDict *px_strdict_new(pxStrDictItemCallback free);
+/**
+ * Creates a new SLP PAC detector.
+ * @return New SLP PAD detector
+ */
+pxSLP *
+px_slp_new()
+{
+	return NULL;
+}
 
-bool px_strdict_set(pxStrDict *self, const char *key, void *value);
+/**
+ * Detect the next PAC in the chain.
+ * @return Detected PAC or NULL if none is found
+ */
+pxPAC *
+px_slp_next(pxSLP *self)
+{
+	return NULL;
+}
 
-const void *px_strdict_get(pxStrDict *self, const char *key);
+/**
+ * Restarts the detection chain at the beginning.
+ */
+void
+px_slp_rewind(pxSLP *self)
+{
+	return;
+}
 
-void px_strdict_foreach(pxStrDict *self, pxStrDictForeachCallback *cb, void *arg);
-
-void px_strdict_free(pxStrDict *self);
+/**
+ * Frees a SLP object.
+ */
+void
+px_slp_free(pxSLP *self)
+{
+	return;
+}

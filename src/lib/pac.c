@@ -70,13 +70,13 @@ px_pac_new(pxURL *url)
 {
 	if (!url) return NULL;
 	
-	/* Allocate the object */
+	// Allocate the object
 	pxPAC *self = px_malloc0(sizeof(pxPAC));
 	
-	/* Copy the given URL */
-	self->url = px_url_new(px_url_to_string(url)); /* Always returns valid value */
+	// Copy the given URL
+	self->url = px_url_new(px_url_to_string(url)); // Always returns valid value
 		
-	/* Make sure we have a real pxPAC */
+	// Make sure we have a real pxPAC
 	if (!px_pac_reload(self)) { px_pac_free(self); return NULL; }
 	
 	return self;
@@ -90,13 +90,13 @@ px_pac_new(pxURL *url)
 pxPAC *
 px_pac_new_from_string(char *url)
 {
-	/* Create temporary URL */
+	// Create temporary URL
 	pxURL *tmpurl = px_url_new(url);
 	if (!tmpurl) return NULL;
 	
-	/* Create pac */
+	// Create pac
 	pxPAC *self = px_pac_new(tmpurl);
-	px_url_free(tmpurl); /* Free no longer used URL */
+	px_url_free(tmpurl); // Free no longer used URL
 	if (!self) return NULL;
 	return self;
 }
@@ -124,33 +124,33 @@ px_pac_reload(pxPAC *self)
 	bool correct_mime_type;
 	unsigned long int content_length = 0;
 	
-	/* Get the pxPAC */
+	// Get the pxPAC
 	sock = px_url_get(self->url, headers);
 	if (sock < 0) return false;
 
-	/* Verify status line */
+	// Verify status line
 	line = px_readline(sock);
 	if (!line)                                                    goto error;
-	if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
-	if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
+	if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; // Check valid HTTP response
+	if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; // Check status code
 	
-	/* Check for correct mime type and content length */
+	// Check for correct mime type and content length
 	while (strcmp(line, "\r")) {
-		/* Check for content type */
+		// Check for content type
 		if (strstr(line, "Content-Type: ") == line && strstr(line, PAC_MIME_TYPE))
 			correct_mime_type = true;
 			
-		/* Check for content length */
+		// Check for content length
 		else if (strstr(line, "Content-Length: ") == line)
 			content_length = atoi(line + strlen("Content-Length: "));
 		
-		/* Get new line */
+		// Get new line
 		px_free(line);
 		line = px_readline(sock);
 		if (!line) goto error;
 	}
 	
-	/* Get content */
+	// Get content
 	if (!content_length || !correct_mime_type) goto error;
 	px_free(line); line = NULL;
 	px_free(self->cache);
@@ -158,7 +158,7 @@ px_pac_reload(pxPAC *self)
 	for (int recvd=0 ; recvd != content_length ; )
 		recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
 	
-	/* Clean up */
+	// Clean up
 	close(sock);
 	return true;
 	

@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([libproxy],[0.2.1],[nathaniel@natemccallum.com])
+AC_INIT([libproxy],[0.2.2],[nathaniel@natemccallum.com])
 AC_CONFIG_SRCDIR([src/lib/proxy_factory.c])
 AM_INIT_AUTOMAKE
 
@@ -10,10 +10,6 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-
-### Check for pthread
-AC_CHECK_HEADERS(pthread.h)
-AC_CHECK_FUNCS(pthread_mutex_init)
 
 ### Checks for libraries for plugins.
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)

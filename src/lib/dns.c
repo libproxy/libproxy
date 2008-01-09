@@ -26,7 +26,7 @@
 
 #include "misc.h"
 #include "pac.h"
-#include "wpad_dns.h"
+#include "dns.h"
 
 struct _pxDNS {
 	pxURL **urls;
@@ -34,13 +34,13 @@ struct _pxDNS {
 	char   *domain;
 };
 
-/* The top-level domain blacklist */
+// The top-level domain blacklist
 static char *tld[] = {
-	/* General top-level domains */
+	// General top-level domains
 	"arpa", "root", "aero", "biz", "cat", "com", "coop", "edu", "gov", "info",
 	"int", "jobs", "mil", "mobi", "museum", "name", "net", "org", "pro", "travel",
 	
-	/* Country codes */
+	// Country codes
 	"ac", "ad", "ae", "af", "ag", "ai", "al", "am", "an", "ao", "aq", "ar", 
 	"as", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", 
 	"bh", "bi", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bv", "bw", "by", 
@@ -63,23 +63,23 @@ static char *tld[] = {
 	"uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "ye", 
 	"yt", "yu", "za", "zm", "zw",
 	
-	/* Other domains to blacklist */
+	// Other domains to blacklist
 	"co.uk", "com.au", 
 	
-	/* Terminator */
+	// Terminator
 	NULL
 };
 
 static char *
 get_domain_name()
 {
-	/* Get the hostname */
+	// Get the hostname
 	char *hostname = px_malloc0(128);
 	for (int i = 0 ; gethostname(hostname, (i + 1) * 128) && errno == ENAMETOOLONG ; )
 		hostname = px_malloc0((++i + 1) * 128);
 		
-	/* Lookup the hostname */
-	/* TODO: Make this whole process not suck */
+	// Lookup the hostname
+	// TODO: Make this whole process not suck
 	struct hostent *host_info = gethostbyname(hostname);
 	if (host_info)
 	{
@@ -87,7 +87,7 @@ get_domain_name()
 		hostname = px_strdup(host_info->h_name);
 	}
 	
-	/* Get domain portion */
+	// Get domain portion
 	if (!strchr(hostname, '.')) return NULL;
 	if (!strcmp(".", strchr(hostname, '.'))) return NULL;
 	char *tmp = px_strdup(strchr(hostname, '.') + 1);
@@ -107,29 +107,29 @@ get_urls(const char *domain)
 		return urls;
 	}
 	
-	/* Split up the domain */
+	// Split up the domain
 	char **domainv = px_strsplit(domain, ".");
 	if (!domainv) return NULL;
 	
-	/* Count the number of domain blocks */
+	// Count the number of domain blocks
 	int count = 0;
 	for (int i=0 ; *(domainv + i) ; i++)
 		count++;
 	
-	/* Allocate our URL array */
+	// Allocate our URL array
 	urls = px_malloc0(sizeof(pxURL *) * (count + 2));
 	
-	/* Create the URLs */
+	// Create the URLs
 	urls[0] = px_url_new("http://wpad/wpad.dat");
 	char *url  = px_malloc0(strlen("http://wpad./wpad.dat") + strlen(domain) + 1);
 	for (int i=0, j=1 ; domainv[i] ; i++) {
-		/* Check the domain against the blacklist */
+		// Check the domain against the blacklist
 		char *tmp = px_strjoin((const char **) (domainv + i), ".");
 		for (int k=0; tld[k] ; k++)
 			if (!strcmp(tmp, tld[k])) { px_free(tmp); tmp = NULL; break; }
 		if (!tmp) continue;
 		
-		/* Create the URL */
+		// Create the URL
 		sprintf(url, "http://wpad.%s/wpad.dat", tmp);
 		px_free(tmp); tmp = NULL;
 		urls[j] = px_url_new(url);
@@ -176,25 +176,25 @@ px_dns_next(pxDNS *self)
 	if (!self->urls) {
 		char *domain;
 		
-		/* Reset the counter */
+		// Reset the counter
 		self->next = 0;
 		
-		/* Get the domain name */
+		// Get the domain name
 		if (self->domain)
 			domain = px_strdup(self->domain);
 		else 
 			domain = get_domain_name();
 
-		/* Get the URLs */
+		// Get the URLs
 		self->urls = get_urls(domain);
 		px_free(domain);
 		
-		/* Make sure we have more than one URL */
+		// Make sure we have more than one URL
 		if (!self->urls || !self->urls[0])
 			return NULL;
 	}
 	
-	/* Try to find a PAC at each URL */
+	// Try to find a PAC at each URL
 	for (pxPAC *pac = NULL ; self->urls[self->next] ; )
 		if ((pac = px_pac_new(self->urls[self->next++])))
 			return pac;
