@@ -1,0 +1,23 @@
+Wed Dec 20 19:11:23 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
+	* === Released 0.2.1 ===
+	* Build fix for mozjs
+	* Python bindings fix for renamed function
+	* Split off x_has_client() into its own file
+Wed Dec 12 20:12:56 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
+	* === Released 0.2 ===
+	* Added Python bindings
+	* Added .NET bindings
+	* NetworkManager plugin
+	* KDE plugin
+	* File plugin
+	* More accurate GNOME session detection
+	* Ignore pattern support
+	* px_proxy_factory_get_proxy() renamed to px_proxy_factory_get_proxies()
+	* Relicense from LGPLv3+ to LGPLv2.1+
+	* Sacrifice re-homeing session support for massive performance gains
+	* Tons of bug fixes, memory leaks, etc
+Wed Oct 31 13:09:10 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
+	* === Released 0.1 ===
+	* AUTHORS: Added authors
+	* README: basic readme info
+        * src/lib/proxy.h: add missing doc line
