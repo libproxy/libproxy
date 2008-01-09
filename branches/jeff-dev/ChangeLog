@@ -1,4 +1,8 @@
-Wed Dec 20 19:11:23 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
+Wed Jan 09 04:18:45 2008  Jeff Schroeder  <jeffschroeder@computer.org>
+	* === Released 0.2.2 ===
+	* Python bindings fix
+	* Added pthreads support from r191 in trunk
+	* Removed local copy of strdup() in proxy.c for OS X build issues
 	* === Released 0.2.1 ===
 	* Build fix for mozjs
 	* Python bindings fix for renamed function
