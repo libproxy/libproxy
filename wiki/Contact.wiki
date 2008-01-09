@@ -3,3 +3,9 @@
 
 === IRC ===
 `#libproxy` on irc.freenode.net
+
+=== Email ===
+Send an email to [mailto:libproxy@googlegroups.com libproxy@googlegroups.com]
+
+
+Browse the list at http://libproxy.googegroups.com
