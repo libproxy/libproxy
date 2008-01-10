@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([libproxy],[0.2.1],[nathaniel@natemccallum.com])
+AC_INIT([libproxy],[0.2.2],[nathaniel@natemccallum.com])
 AC_CONFIG_SRCDIR([src/lib/proxy_factory.c])
 AM_INIT_AUTOMAKE
 
