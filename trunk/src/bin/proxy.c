@@ -28,15 +28,6 @@
 
 #define STDIN fileno(stdin)
 
-static char *
-strdup(char *string)
-{
-	char *result = malloc(strlen(string));
-	assert(result != NULL);
-	strcpy(result, string);
-	return result;
-}
-
 /**
  * Reads a single line of text from the specified file descriptor
  * @fd File descriptor to read from
