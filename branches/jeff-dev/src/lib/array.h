@@ -17,18 +17,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef CONFIG_FILE_H_
-#define CONFIG_FILE_H_
-
 #include <stdbool.h>
 
-#define PX_CONFIG_FILE_DEFAULT_SECTION "__DEFAULT__"
+typedef bool (*pxArrayItemsEqual)(void *, void *);
+typedef void (*pxArrayItemCallback)(void *);
+typedef void (*pxArrayItemCallbackWithArg)(void *, void *);
+typedef struct _pxArray pxArray;
 
-typedef struct _pxConfigFile pxConfigFile;
+pxArray *px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bool replace);
 
-pxConfigFile *px_config_file_new         (char *filename);
-bool          px_config_file_is_stale    (pxConfigFile *self);
-char         *px_config_file_get_value   (pxConfigFile *self, char *section, char *key);
-void          px_config_file_free        (pxConfigFile *self);
+bool px_array_add(pxArray *self, void *item);
 
-#endif /*CONFIG_FILE_H_*/
+bool px_array_del(pxArray *self, const void *item);
+
+void px_array_foreach(pxArray *self, pxArrayItemCallbackWithArg cb, void *arg);
+
+int px_array_find(pxArray *self, const void *item);
+
+const void *px_array_get(pxArray *self, int index);
+
+void px_array_free(pxArray *self);

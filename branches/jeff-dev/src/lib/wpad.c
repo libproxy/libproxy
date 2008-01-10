@@ -18,9 +18,6 @@
  ******************************************************************************/
 
 #include "misc.h"
-#include "dhcp.h"
-#include "dns.h"
-#include "slp.h"
 #include "wpad.h"
 
 struct _pxWPAD {
@@ -74,7 +71,7 @@ px_wpad_next(pxWPAD *self)
 {
 	if (!self) return NULL;
 	
-	// Check all the detectors for a PAC
+	/* Check all the detectors for a PAC */
 	pxPAC *pac = NULL;
 	if (!(pac = px_dhcp_next(self->dhcp)))
 		if (!(pac = px_slp_next(self->slp)))

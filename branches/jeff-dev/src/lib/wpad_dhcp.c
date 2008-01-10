@@ -17,58 +17,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef WPAD_H_
-#define WPAD_H_
+#include <stdlib.h>
 
 #include "pac.h"
 #include "wpad_dhcp.h"
-#include "wpad_dns.h"
-#include "wpad_slp.h"
+
+struct _pxDHCP { };
 
 /**
- * WPAD object. All fields are private.
+ * Creates a new pxDHCP PAC detector.
+ * @return New pxDHCP PAD detector
  */
-typedef struct _pxWPAD pxWPAD;
-
-/**
- * Create a new WPAD object (for detecting PAC locations)
- * @return A New WPAD object
- */
-pxWPAD *px_wpad_new();
-
-/**
- * Creates a new WPAD object with more options.
- * For all options, ownership is stolen by the new WPAD object.
- * In other words, don't pass a detector to this function and then use it 
- * later (or free it).
- * @dhcp The DHCP detector to use (or NULL for the default detector)
- * @dns The DNS detector to use (or NULL for the default detector)
- * @slp The SLP detector to use (or NULL for the default detector)
- * @return New DNS PAD detector
- */
-pxWPAD *px_wpad_new_full(pxDHCP *dhcp, pxDNS *dns, pxSLP *slp);
+pxDHCP *
+px_dhcp_new()
+{
+	return NULL;
+}
 
 /**
  * Detect the next PAC in the chain.
  * @return Detected PAC or NULL if none is found
  */
-pxPAC *px_wpad_next(pxWPAD *self);
+pxPAC *
+px_dhcp_next(pxDHCP *self)
+{
+	return NULL;
+}
 
 /**
  * Restarts the detection chain at the beginning.
  */
-void px_wpad_rewind(pxWPAD *self);
+void
+px_dhcp_rewind(pxDHCP *self)
+{
+	return;
+}
 
 /**
- * Frees a WPAD object.
+ * Frees a pxDHCP object.
  */
-void px_wpad_free(pxWPAD *self);
-
-/**
- * Returns whether or not a PAC was found during this detection cycle.
- * Always returns false if called directly after wpad_wpad_rewind().
- * @return Whether or not a PAC was found
- */
-bool px_wpad_pac_found(pxWPAD *self);
-
-#endif /*WPAD_H_*/
+void
+px_dhcp_free(pxDHCP *self)
+{
+	return;
+}

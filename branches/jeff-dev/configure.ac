@@ -11,6 +11,10 @@ AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
+### Check for pthread
+AC_CHECK_HEADERS(pthread.h)
+AC_CHECK_FUNCS(pthread_mutex_init)
+
 ### Checks for libraries for plugins.
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)

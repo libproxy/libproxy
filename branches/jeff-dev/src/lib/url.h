@@ -20,7 +20,7 @@
 #ifndef URL_H_
 #define URL_H_
 
-#include "stdbool.h" // For type bool
+#include "stdbool.h" /* For type bool */
 
 /**
  * WPAD object. All fields are private.
