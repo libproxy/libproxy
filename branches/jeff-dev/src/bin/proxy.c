@@ -41,7 +41,8 @@ readline(int fd)
 	
 	/* For each character received add it to the buffer unless it is a newline */
 	char *buffer = NULL;
-	for (int i=1; i > 0 ; i++)
+	int i;
+	for (i = 1; i > 0 ; i++)
 	{
 		char c;
 		
@@ -76,7 +77,8 @@ main(int argc, char **argv)
 	}
 	
 	/* For each URL we read on STDIN, get the proxies to use */
-	for (char *url = NULL ; url = readline(STDIN) ; free(url))
+	char *url;
+	for (*url = NULL ; url = readline(STDIN) ; free(url))
 	{
 		/*
 		 * Get an array of proxies to use. These should be used
@@ -84,7 +86,8 @@ main(int argc, char **argv)
 		 * if the first one fails (etc).
 		 */
 		char **proxies = px_proxy_factory_get_proxies(pf, url);
-		for (int i = 0 ; proxies[i] ; i++)
+		int i;
+		for (i = 0 ; proxies[i] ; i++)
 		{
 			printf(proxies[i]);
 			if (proxies[i+1])
