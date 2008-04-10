@@ -4,6 +4,7 @@
 = Features =
 || *Area* || *Version Added* || *Version Stablized* || *Dependencies* ||
 |||||||| _*API*_ ||
+|| Thread Safety || 0.2.2 || || ||
 || External C API || 0.1 || 0.2 || ||
 || External Python API || 0.2 || || ||
 || External .NET API || 0.2 || || ||
