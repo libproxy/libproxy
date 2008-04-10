@@ -446,6 +446,9 @@ px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
  * 
  * A NULL-terminated array of proxy strings is returned.
  * If the first proxy fails, the second should be tried, etc...
+ * Don't forget to free the strings/array when you are done.
+ * In all cases, at least one entry in the array will be returned.
+ * There are no error conditions.
  * 
  * The format of the returned proxy strings are as follows:
  *   - http://proxy:port
