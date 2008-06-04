@@ -47,7 +47,7 @@ A plugin can also choose to have no configuration type.
 
 By default, plugins are attempted in the following order: SESSION, USER, SYSTEM, and finally plugins without a type.  The order _within_ the categories is undefined and could be random.  If a plugins says it can't find the configuration, the next plugin is tried.  So for instance, the KDE plugin will not be used unless you are actually logged into KDE.  The same applies for GNOME.
 
-The plugin order _can_ be manually specified throug an environmental variable.  For instance, the following will set libproxy to use the envvar plugin first, then USER, then SYSTEM, then SESSION (capitalization is important):
+The plugin order _can_ be manually specified through an environmental variable.  For instance, the following will set libproxy to use the envvar plugin first, then USER, then SYSTEM, then SESSION (capitalization is important):
 {{{
 export PX_CONFIG_ORDER=envvar,USER,SYSTEM,SESSION
 }}}
