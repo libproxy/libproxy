@@ -36,10 +36,10 @@ See BuildingFromSource for specific build dependencies and distro package requir
 = Proxy Authentication =
 Because proxy authentication is protocol specific, it is outside the scope of this library.  libproxy tells you WHICH proxy servers to try to use, not HOW to use them.
 
-= Configuration Plugins =
+= Plugin Order =
 *DISCLAIMER: The following has not been declared stable and may change or go away*
 
-libproxy uses a plugin system which allows libproxy to collect configuration from a variety of sources.  It is often asked "How do I know which plugin is chosen?"  Every configuraion plugin has a type.  There are three configuration types: 
+libproxy uses a plugin system which allows libproxy to collect configuration from a variety of sources.  It is often asked "How do I know which plugin is chosen?"  Every configuration plugin has a type.  There are three configuration types: 
   # SYSTEM  - Defines configuration on a system-wide basis
   # USER    - Defines configuration on a user-wide basis
   # SESSION - Defines configuration for this current login session only
@@ -53,3 +53,5 @@ export PX_CONFIG_ORDER=envvar,USER,SYSTEM,SESSION
 }}}
 
 You can also lock-down the plugin order for all users on a system.  This feature is not yet documented.
+
+Please note that non-configuration plugins are loaded in an undefined order.
