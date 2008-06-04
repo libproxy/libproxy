@@ -15,10 +15,10 @@
 || [http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol Web Proxy Auto-Discovery (WPAD)] || 0.1 || || ||
 || Configuration Lockdown || 0.2 || || ||
 |||||||| _*Configuration Plugins*_ || *Config Type* ||
-|| Environment variable config plugin || 0.1 || 0.2 || || Uncategorized ||
-|| INI-style file config plugin || 0.2 || || || User & System ||
-|| GNOME config plugin || 0.1 ||  || x11, xmu, gconf || Session ||
-|| KDE config plugin || 0.2 ||  || x11, xmu || Session ||
+|| Environment variable config plugin || 0.1 || 0.2 || || No type specified ||
+|| INI-style file config plugin || 0.2 || || || USER & SYSTEM ||
+|| GNOME config plugin || 0.1 ||  || x11, xmu, gconf || SESSION ||
+|| KDE config plugin || 0.2 ||  || x11, xmu || SESSION ||
 || Windows registry config plugin || || || ||
 || Mac OS X InternetConfig config plugin || || || ||
 || LDAP config plugin || || || ||
@@ -32,3 +32,24 @@
 || NetworkManager plugin || 0.2 || || dbus ||
 
 See BuildingFromSource for specific build dependencies and distro package requirements.
+
+= Proxy Authentication =
+Because proxy authentication is protocol specific, it is outside the scope of this library.  libproxy tells you WHICH proxy servers to try to use, not HOW to use them.
+
+= Configuration Plugins =
+*DISCLAIMER: The following has not been declared stable and may change or go away*
+
+libproxy uses a plugin system which allows libproxy to collect configuration from a variety of sources.  It is often asked "How do I know which plugin is chosen?"  Every configuraion plugin has a type.  There are three configuration types: 
+  # SYSTEM  - Defines configuration on a system-wide basis
+  # USER    - Defines configuration on a user-wide basis
+  # SESSION - Defines configuration for this current login session only
+A plugin can also choose to have no configuration type.
+
+By default, plugins are attempted in the following order: SESSION, USER, SYSTEM, and finally plugins without a type.  The order _within_ the categories is undefined and could be random.  If a plugins says it can't find the configuration, the next plugin is tried.  So for instance, the KDE plugin will not be used unless you are actually logged into KDE.  The same applies for GNOME.
+
+The plugin order _can_ be manually specified throug an environmental variable.  For instance, the following will set libproxy to use the envvar plugin first, then USER, then SYSTEM, then SESSION (capitalization is important):
+{{{
+export PX_CONFIG_ORDER=envvar,USER,SYSTEM,SESSION
+}}}
+
+You can also lock-down the plugin order for all users on a system.  This feature is not yet documented.
