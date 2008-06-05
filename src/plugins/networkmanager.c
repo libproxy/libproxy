@@ -84,13 +84,13 @@ nm_on_get_proxy(pxProxyFactory *self)
 bool
 on_proxy_factory_instantiate(pxProxyFactory *self)
 {
-	px_proxy_factory_on_get_proxies_add(self, nm_on_get_proxy);
+	px_proxy_factory_on_get_proxy_add(self, nm_on_get_proxy);
 }
 
 void
 on_proxy_factory_destantiate(pxProxyFactory *self)
 {
-	px_proxy_factory_on_get_proxies_del(self, nm_on_get_proxy);
+	px_proxy_factory_on_get_proxy_del(self, nm_on_get_proxy);
 	DBusConnection *conn = px_proxy_factory_misc_get(self, "networkmanager");
 	if (conn)
 	{

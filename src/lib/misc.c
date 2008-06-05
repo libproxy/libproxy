@@ -110,13 +110,13 @@ px_strcat(const char *s, ...)
 {
 	va_list args;
 	
-	/* Count the number of characters to concatentate */
+	// Count the number of characters to concatentate
 	va_start(args, s);
 	int count = strlen(s);
 	for (char *tmp = NULL ; (tmp = va_arg(args, char *)) ; count += strlen(tmp));
 	va_end(args);
 	
-	/* Build our output string */
+	// Build our output string
 	char *output = px_malloc0(count + 1);
 	strcat(output, s);
 	va_start(args, s);
@@ -139,13 +139,13 @@ px_strjoin(const char **strv, const char *delimiter)
 	if (!strv) return NULL;
 	if (!delimiter) return NULL;
 	
-	/* Count up the length we need */
+	// Count up the length we need
 	size_t length = 0;
 	for (int i=0 ; strv[i]; i++)
 		length += strlen(strv[i]) + strlen(delimiter);
 	if (!length) return NULL;
 	
-	/* Do the join */
+	// Do the join
 	char *str = px_malloc0(length);
 	for (int i=0 ; strv[i]; i++)
 	{
@@ -164,15 +164,15 @@ px_strjoin(const char **strv, const char *delimiter)
 char **
 px_strsplit(const char *string, const char *delimiter)
 {
-	/* Count how many times the delimiter appears */
+	// Count how many times the delimiter appears
 	int count = 1;
 	for (const char *tmp = string ; (tmp = strstr(tmp, delimiter)) ; tmp += strlen(delimiter))
 		count++;
 		
-	/* Allocate the vector */
+	// Allocate the vector
 	char **strv = px_malloc0(sizeof(char *) * (count + 1));
 	
-	/* Fill the vector */
+	// Fill the vector
 	const char *last = string;
 	for (int i=0 ; i < count ; i++)
 	{
@@ -210,20 +210,20 @@ px_strfreev(char **strv)
 char *
 px_readline(int fd)
 {
-	/* Verify we have an open socket */
+	// Verify we have an open socket
 	if (fd < 0) return NULL;
 	
-	/* For each character received add it to the buffer unless it is a newline */
+	// For each character received add it to the buffer unless it is a newline
 	char *buffer = NULL;
 	for (int i=1; i > 0 ; i++)
 	{
 		char c;
 		
-		/* Receive a single character, check for newline or EOF */
+		// Receive a single character, check for newline or EOF
 		if (read(fd, &c, 1) != 1) return buffer;
 		if (c == '\n')            return buffer ? buffer : px_strdup("");
 
-		/* Allocate new buffer if we need */
+		// Allocate new buffer if we need
 		if (i % 1024 == 1)
 		{
 			char *tmp = buffer;
@@ -231,7 +231,7 @@ px_readline(int fd)
 			if (tmp) { strcpy(buffer, tmp); px_free(tmp); }
 		}
 
-		/* Add new character */
+		// Add new character
 		buffer[i-1] = c;
 	}
 	return buffer;
