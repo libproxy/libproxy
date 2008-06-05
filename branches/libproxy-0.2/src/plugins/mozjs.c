@@ -36,38 +36,33 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 	// Get hostname argument
 	char *tmp = px_strdup(JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
 
+	// Set the default return value
+	*rval = JSVAL_NULL;
+
 	// Look it up
-	struct addrinfo *info;
+	struct addrinfo *info = NULL;
 	if (getaddrinfo(tmp, NULL, NULL, &info))
-		goto error;
-	px_free(tmp);
-	
-	// Try for IPv4
-	tmp = px_malloc0(INET_ADDRSTRLEN+1);
-	if (inet_ntop(info->ai_family, 
-					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
-					tmp, INET_ADDRSTRLEN+1) > 0)
-	{
-		JSString *ip = JS_NewString(cx, tmp, strlen(tmp));
-		*rval        = STRING_TO_JSVAL(ip);
-		return true;
-	}
-	
-	// Try for IPv6
+		goto out;
+
+	// Allocate the IP address
 	px_free(tmp);
 	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
-	if (inet_ntop(info->ai_family, 
-					&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
-					tmp, INET6_ADDRSTRLEN+1) > 0)
-	{
-		JSString *ip = JS_NewString(cx, tmp, strlen(tmp));
-		*rval        = STRING_TO_JSVAL(ip);
-		return true;
-	}
+	
+	// Try for IPv4 and IPv6
+	if (!inet_ntop(info->ai_family, 
+					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
+					tmp, INET_ADDRSTRLEN+1) > 0)
+		if (!inet_ntop(info->ai_family, 
+						&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
+						tmp, INET6_ADDRSTRLEN+1) > 0)
+			goto out;
+
+	// We succeeded
+	*rval = STRING_TO_JSVAL(JS_NewString(cx, tmp, strlen(tmp)));
 		
-	error:
+	out:
+		if (info) freeaddrinfo(info);
 		px_free(tmp);
-		*rval = JSVAL_NULL;
 		return true;
 }
 
