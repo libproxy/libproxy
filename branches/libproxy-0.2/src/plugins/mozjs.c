@@ -59,6 +59,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 	// We succeeded
 	*rval = STRING_TO_JSVAL(JS_NewString(cx, tmp, strlen(tmp)));
+	tmp = NULL;
 		
 	out:
 		if (info) freeaddrinfo(info);
