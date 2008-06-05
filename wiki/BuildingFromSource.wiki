@@ -26,7 +26,7 @@ libproxy can be build with minimal dependencies or with several additional plugi
 || Gnome Config Plugin || x11-devel, xmu-devel, gconf-devel || libgconf2-dev, libxmu-dev ||
 || KDE Config Plugin || x11-devel, xmu-devel || libxmu-dev ||
 || PAC via Firefox/Xulrunner || firefox-devel or xulrunner-devel || firefox-dev or libmozjs-dev ||
-|| PAC via WebKit || WebKit-gtk-devel || firefox-dev or libmozjs-dev ||
+|| PAC via WebKit || WebKit-gtk-devel || ||
 
 Information on libproxy bindings coming soon...
 
