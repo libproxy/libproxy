@@ -163,10 +163,12 @@ char *mozjs_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 
 	// If no context exists (or if the pac was changed), create one
 	if (!ctxs)
+	{
 		if ((ctxs = ctxs_new(pac)))
 			px_proxy_factory_misc_set(self, "mozjs", ctxs);
 		else
 			return NULL;
+	}
 
 	// Build arguments to the FindProxyForURL() function
 	char *tmpurl  = px_strdup(px_url_to_string(url));
