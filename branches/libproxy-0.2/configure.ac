@@ -15,8 +15,10 @@ AC_PROG_MAKE_SET
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
 PKG_CHECK_MODULES(gconf, gconf-2.0, have_gconf=yes, have_gconf=no)
+PKG_CHECK_MODULES(webkit, webkit-1.0, have_webkit=yes, have_webkit=no)
 PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, 
-					[PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes, have_mozjs=no)])
+		[PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes,
+		[PKG_CHECK_MODULES(mozjs, mozilla-js, have_mozjs=yes, have_mozjs=no)])])
 PKG_CHECK_MODULES(NetworkManager, NetworkManager, 
 					have_networkmanager=yes, have_networkmanager=no)
 
@@ -83,6 +85,27 @@ else
 	with_kde=no
 fi
 AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
+
+# WebKit Javascript
+AC_ARG_WITH([webkit],
+            [AS_HELP_STRING([--with-webkit],
+            [build WebKit JavaScriptCore PAC runner plugin @<:@automatic@:>@])],
+            [],
+            [test x$have_webkit == xyes && with_webkit=yes])
+if test x$with_webkit = xyes; then
+	if test x$have_webkit == xyes; then
+		WEBKIT_CFLAGS="$webkit_CFLAGS"
+		WEBKIT_LIBS="$webkit_LIBS"
+		AC_SUBST(WEBKIT_CFLAGS)
+		AC_SUBST(WEBKIT_LIBS)
+	else
+		echo "WebKit JavaScriptCore plugin requires: WebKit!"
+		exit 1
+	fi
+else
+	with_webkit=no
+fi
+AM_CONDITIONAL([WITH_WEBKIT], [test x$with_webkit = xyes])
 
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
@@ -153,7 +176,7 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 PLUGINDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/plugins
 AC_SUBST(PLUGINDIR)
-CFLAGS="-std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sysconfdir\\\" -D_POSIX_C_SOURCE=1"
+CFLAGS="-g -std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sysconfdir\\\" -D_POSIX_C_SOURCE=1"
 
 ### Checks for library functions.
 AC_FUNC_MALLOC
@@ -172,6 +195,7 @@ echo -e "\t\tenvvar          : $with_envvar"
 echo -e "\t\tfile            : $with_file"
 echo -e "\t\tgnome           : $with_gnome"
 echo -e "\t\tkde             : $with_kde"
+echo -e "\t\twebkit          : $with_webkit"
 echo -e "\t\tmozjs           : $with_mozjs"
 echo -e "\t\tnetworkmanager  : $with_networkmanager"
 echo

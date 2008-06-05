@@ -14,6 +14,9 @@ endif
 if WITH_KDE
 plugin_LTLIBRARIES += kde.la
 endif
+if WITH_WEBKIT
+plugin_LTLIBRARIES += webkit.la
+endif
 if WITH_MOZJS
 plugin_LTLIBRARIES += mozjs.la
 endif
@@ -44,6 +47,13 @@ kde_la_SOURCES            = kde.c xhasclient.c
 kde_la_CFLAGS             = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
 kde_la_LIBADD             = ../lib/libproxy.la
 kde_la_LDFLAGS            = -module -avoid-version @KDE_LIBS@
+
+# WebKit (JavaScriptCore) based PAC runner
+webkit_la_SOURCES          = webkit.c
+webkit_la_CFLAGS           = -I$(top_srcdir)/src/lib @WEBKIT_CFLAGS@
+webkit_la_LIBADD           = ../lib/libproxy.la
+webkit_la_LDFLAGS          = -module -avoid-version @WEBKIT_LIBS@
+nodist_webkit_la_SOURCES   = pacutils.h
 
 # Mozilla (Spidermonkey) based PAC runner
 mozjs_la_SOURCES          = mozjs.c
