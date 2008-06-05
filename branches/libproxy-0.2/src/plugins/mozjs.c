@@ -79,72 +79,113 @@ static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return true;
 }
 
+typedef struct {
+	JSRuntime *run;
+	JSContext *ctx;
+	JSClass   *cls;
+	char      *pac;
+} ctxStore;
+
+void ctxs_free(ctxStore *self)
+{
+	if (!self) return;
+	if (self->ctx) JS_DestroyContext(self->ctx);
+	if (self->run) JS_DestroyRuntime(self->run);
+	if (self->cls) px_free(self->cls);
+	px_free(self->pac);
+	px_free(self);
+}
+
+ctxStore *ctxs_new(pxPAC *pac)
+{
+	JSObject *global = NULL;
+	jsval     rval;
+
+	// Create the basic context
+	ctxStore *self = px_malloc0(sizeof(ctxStore));
+
+	// Setup Javascript global class
+	self->cls     = px_malloc0(sizeof(JSClass));
+	self->cls->name        = "global";
+	self->cls->flags       = 0;
+	self->cls->addProperty = JS_PropertyStub;
+	self->cls->delProperty = JS_PropertyStub;
+	self->cls->getProperty = JS_PropertyStub;
+	self->cls->setProperty = JS_PropertyStub;
+	self->cls->enumerate   = JS_EnumerateStub;
+	self->cls->resolve     = JS_ResolveStub;
+	self->cls->convert     = JS_ConvertStub;
+	self->cls->finalize    = JS_FinalizeStub;
+
+	// Initialize Javascript runtime environment
+	if (!(self->run = JS_NewRuntime(1024 * 1024)))                   goto error;
+	if (!(self->ctx = JS_NewContext(self->run, 1024 * 1024)))        goto error;
+	if (!(global  = JS_NewObject(self->ctx, self->cls, NULL, NULL))) goto error;
+	JS_InitStandardClasses(self->ctx, global);
+
+	// Define Javascript functions
+	JS_DefineFunction(self->ctx, global, "dnsResolve", dnsResolve, 1, 0);
+	JS_DefineFunction(self->ctx, global, "myIpAddress", myIpAddress, 0, 0);
+	JS_EvaluateScript(self->ctx, global, JAVASCRIPT_ROUTINES, 
+			        strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
+			        
+	// Add PAC to the environment
+	JS_EvaluateScript(self->ctx, global, px_pac_to_string(pac),
+                       strlen(px_pac_to_string(pac)), 
+                       px_url_to_string((pxURL *) px_pac_get_url(pac)),
+                       0, &rval);
+
+	// Save the pac
+	self->pac = px_strdup(px_pac_to_string(pac));
+	return self;
+
+error:
+	ctxs_free(self);
+	return NULL;
+}
+
 char *mozjs_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 {
-	JSRuntime *runtime = NULL;
-	JSContext *context = NULL;
-	JSObject  *global  = NULL;
-	jsval rval;
-	char *answer = NULL;
-	
 	// Make sure we have the pac file and url
 	if (!pac) return NULL;
 	if (!url) return NULL;
 	if (!px_pac_to_string(pac) && !px_pac_reload(pac)) return NULL;
-		
-	// Setup Javascript global class
-	JSClass *global_class     = px_malloc0(sizeof(JSClass));
-	global_class->name        = "global";
-	global_class->flags       = 0;
-	global_class->addProperty = JS_PropertyStub;
-	global_class->delProperty = JS_PropertyStub;
-	global_class->getProperty = JS_PropertyStub;
-	global_class->setProperty = JS_PropertyStub;
-	global_class->enumerate   = JS_EnumerateStub;
-	global_class->resolve     = JS_ResolveStub;
-	global_class->convert     = JS_ConvertStub;
-	global_class->finalize    = JS_FinalizeStub;
-	
-	// Initialize Javascript runtime environment
-	if (!(runtime = JS_NewRuntime(1024 * 1024))) goto out;
-	if (!(context = JS_NewContext(runtime, 1024 * 1024))) goto out;
-	if (!(global  = JS_NewObject(context, global_class, NULL, NULL))) goto out;
-	JS_InitStandardClasses(context, global);
-	
-	// Define Javascript functions
-	JS_DefineFunction(context, global, "dnsResolve", dnsResolve, 1, 0);
-	JS_DefineFunction(context, global, "myIpAddress", myIpAddress, 0, 0);
-	JS_EvaluateScript(context, global, JAVASCRIPT_ROUTINES, 
-	                  strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
-	                  
-	// Add PAC to the environment
-	JS_EvaluateScript(context, JS_GetGlobalObject(context),
-                      px_pac_to_string(pac), strlen(px_pac_to_string(pac)), 
-	                  px_url_to_string((pxURL *) px_pac_get_url(pac)), 0, &rval);
+
+	// Get the cached context
+	ctxStore *ctxs = px_proxy_factory_misc_get(self, "mozjs");
+
+	// If there is a cached context, make sure it is the same pac
+	if (ctxs && strcmp(ctxs->pac, px_pac_to_string(pac)))
+	{
+		ctxs_free(ctxs);
+		ctxs = NULL;
+	}
+
+	// If no context exists (or if the pac was changed), create one
+	if (!ctxs)
+		if ((ctxs = ctxs_new(pac)))
+			px_proxy_factory_misc_set(self, "mozjs", ctxs);
+		else
+			return NULL;
 
 	// Build arguments to the FindProxyForURL() function
 	char *tmpurl  = px_strdup(px_url_to_string(url));
 	char *tmphost = px_strdup(px_url_get_host(url));
-	jsval val[2] = {
-		STRING_TO_JSVAL(JS_NewString(context, tmpurl, strlen(tmpurl))),
-		STRING_TO_JSVAL(JS_NewString(context, tmphost, strlen(tmphost)))
+	jsval args[2] = {
+		STRING_TO_JSVAL(JS_NewString(ctxs->ctx, tmpurl, strlen(tmpurl))),
+		STRING_TO_JSVAL(JS_NewString(ctxs->ctx, tmphost, strlen(tmphost)))
 	};
 	
 	// Find the proxy (call FindProxyForURL())
-	JSBool result = JS_CallFunctionName(context, JS_GetGlobalObject(context), 
-	                                    "FindProxyForURL", 2, val, &rval);
-	if (!result) goto out;
-	answer = px_strdup(JS_GetStringBytes(JS_ValueToString(context, rval)));
+	jsval rval;
+	JSBool result = JS_CallFunctionName(ctxs->ctx, JS_GetGlobalObject(ctxs->ctx), "FindProxyForURL", 2, args, &rval);
+	if (!result) return NULL;
+	char *answer = px_strdup(JS_GetStringBytes(JS_ValueToString(ctxs->ctx, rval)));
 	if (!answer || !strcmp(answer, "undefined")) {
 		px_free(answer); 
-		answer = NULL;
+		return NULL;
 	}
-	
-	out:
-		if (context) JS_DestroyContext(context);
-		if (runtime) JS_DestroyRuntime(runtime);
-		px_free(global_class);
-		return answer;
+	return answer;
 }
 
 bool on_proxy_factory_instantiate(pxProxyFactory *self)
@@ -154,5 +195,7 @@ bool on_proxy_factory_instantiate(pxProxyFactory *self)
 
 void on_proxy_factory_destantiate(pxProxyFactory *self)
 {
+	ctxs_free(px_proxy_factory_misc_get(self, "mozjs"));
+	px_proxy_factory_misc_set(self, "mozjs", NULL);
 	px_proxy_factory_pac_runner_set(self, NULL);
 }
