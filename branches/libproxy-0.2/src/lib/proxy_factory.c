@@ -321,7 +321,7 @@ px_proxy_factory_new ()
 	{
 		// Load the plugin
 		char *tmp = px_strcat(PLUGINDIR, "/", ent->d_name, NULL);
-		self->plugins[i] = dlopen(tmp, RTLD_LOCAL);
+		self->plugins[i] = dlopen(tmp, RTLD_NOW | RTLD_LOCAL);
 		px_free(tmp);
 		if (!(self->plugins[i]))
 		{
