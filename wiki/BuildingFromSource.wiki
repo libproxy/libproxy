@@ -22,10 +22,11 @@ sudo apt-get install libmozjs-dev libxmu-dev libgconf2-dev libdbus-1-dev network
 libproxy can be build with minimal dependencies or with several additional plugins. This matrix lists the necessary dependencies for all available plugins.
 
 || Plugin || Fedora || Ubuntu ||
-|| NetworkManager Plugin|| dbus-dev, networkmanager-dev || libdbus-1-dev, network-manager-dev ||
-|| Gnome Config Plugin || x11-dev, xmu-dev, gconf-dev || libgconf2-dev, libxmu-dev ||
-|| KDE Config Plugin || x11-dev, xmu-dev || libxmu-dev ||
-|| Pac via Firefox/Xulrunner || firefox-dev or xulrunner-dev || firefox-dev or libmozjs-dev ||
+|| NetworkManager Plugin|| dbus-devel, NetworkManager-devel || libdbus-1-dev, network-manager-dev ||
+|| Gnome Config Plugin || x11-devel, xmu-devel, gconf-devel || libgconf2-dev, libxmu-dev ||
+|| KDE Config Plugin || x11-devel, xmu-devel || libxmu-dev ||
+|| PAC via Firefox/Xulrunner || firefox-devel or xulrunner-devel || firefox-dev or libmozjs-dev ||
+|| PAC via WebKit || WebKit-gtk-devel || firefox-dev or libmozjs-dev ||
 
 Information on libproxy bindings coming soon...
 
