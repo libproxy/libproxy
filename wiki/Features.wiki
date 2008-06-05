@@ -25,7 +25,7 @@
 || [http://live.gnome.org/dconf dconf] config plugin || || || ||
 |||||||| _*Javascript Plugins*_ ||
 || PAC via Firefox/Xulrunner || 0.1 || || firefox or xulrunner ||
-|| PAC via WebKit || || || ||
+|| PAC via WebKit || 0.2.3 || || WebKit or JavaScriptCore ||
 || PAC via Safari || || || ||
 || PAC via Internet Explorer || || || ||
 |||||||| _*Other Plugins*_ ||
