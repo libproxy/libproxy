@@ -86,7 +86,7 @@ typedef struct {
 	char      *pac;
 } ctxStore;
 
-void ctxs_free(ctxStore *self)
+static void ctxs_free(ctxStore *self)
 {
 	if (!self) return;
 	if (self->ctx) JS_DestroyContext(self->ctx);
@@ -96,7 +96,7 @@ void ctxs_free(ctxStore *self)
 	px_free(self);
 }
 
-ctxStore *ctxs_new(pxPAC *pac)
+static ctxStore *ctxs_new(pxPAC *pac)
 {
 	JSObject *global = NULL;
 	jsval     rval;
@@ -197,7 +197,7 @@ bool on_proxy_factory_instantiate(pxProxyFactory *self)
 
 void on_proxy_factory_destantiate(pxProxyFactory *self)
 {
+	px_proxy_factory_pac_runner_set(self, NULL);
 	ctxs_free(px_proxy_factory_misc_get(self, "mozjs"));
 	px_proxy_factory_misc_set(self, "mozjs", NULL);
-	px_proxy_factory_pac_runner_set(self, NULL);
 }
