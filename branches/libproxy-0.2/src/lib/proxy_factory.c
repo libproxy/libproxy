@@ -325,6 +325,7 @@ px_proxy_factory_new ()
 		px_free(tmp);
 		if (!(self->plugins[i]))
 		{
+			dlerror();
 			i--;
 			continue;
 		}
