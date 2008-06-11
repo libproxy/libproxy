@@ -186,7 +186,7 @@ CFLAGS="-g -std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sys
 AC_FUNC_MALLOC
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
-AC_CONFIG_FILES([libproxy-1.0.pc Makefile src/Makefile src/lib/Makefile
+AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile
                  src/bindings/dotnet/Makefile])
