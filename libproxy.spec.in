@@ -1,5 +1,5 @@
 Name:           libproxy
-Group:          *** TBD ***
+Group:          System/Libraries
 Summary:        A library handling all the details of proxy configuration
 Version:        @VERSION@
 Release:        1.1
@@ -28,7 +28,7 @@ libproxy offers the following features:
 
 %package tools
 Summary: A sample & test application to test what libproxy will reply
-Group: *** TBD ***
+Group: Productivity/Network/Diagnostic
 
 %description tools
 A simple application that will use libproxy to give the results you can expect from 
@@ -36,7 +36,7 @@ other applications. Great to debug what would happen.
 
 %package devel 
 Summary: A library handling all the details of proxy configurationa - development headers
-Group: *** TBD ***
+Group: Development/Libraries/C and C++
 
 %description devel
 libproxy offers the following features:
@@ -50,7 +50,7 @@ libproxy offers the following features:
 
 %package -n %{name}0           
 Summary: A library handling all the details of proxy configuration
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n %{name}0
 libproxy offers the following features:
@@ -66,21 +66,21 @@ This package offers, next to the library, the base plugins envvar and file
 
 %package -n %{name}0-gnome
 Summary: Libproxy plugin for gnome configuration
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n %{name}0-gnome
 A plugin to extend libproxy with capabilities to query gnome/gconf about the proxy settings.
 
 %package -n %{name}0-kde
 Summary: Libproxy plugin for kde configuration
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n %{name}0-kde
 A plugin to extend libproxy with capabilities to query KDE about proxy settings
 
 %package -n %{name}0-mozjs
 Summary: Libproxy plugin to support wpad/pac parsing via Mozilla JavaScript Engine
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n %{name}0-mozjs
 A plugin to extend libproxy with capabilities to pass addresses to a WPAD/PAC Script
@@ -88,14 +88,14 @@ to have it parse for the correct proxy. PAC requires JavaScript Engine in the ba
 
 %package -n %{name}0-networkmanager
 Summary: Libproxy plugin for networkmanager configuration
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n %{name}0-networkmanager
 A plugin to extend libproxy with capabilities to query NetworkManager about proxy settings
 
 %package -n python-%{name}
 Summary: Python bindings for libproxy
-Group: *** TBD ***
+Group: System/Libraries
 
 %description -n python-%{name}
 Allows for the usage of libproxy from python applications
