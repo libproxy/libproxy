@@ -9,6 +9,7 @@
 || Gnome || http://www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || no || no ||
 || Pidgin || http://www.pidgin.im || http://pidgin.im/listinfo.html || http://developer.pidgin.im/ticket/4459 || YES || no ||
 || Liferea || || || || no || no ||
+|| VideoLan Client || || http://www.videolan.org/support/lists.html || http://article.gmane.org/gmane.comp.video.videolan.vlc.devel/42802 || yes || no ||
 || Telepathy framework || || || || no || no ||
 || Ekiga || || || || no || no ||
 || X-Chat || || || || no || no ||
