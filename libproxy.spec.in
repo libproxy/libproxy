@@ -1,3 +1,6 @@
+%define build_nm 0%{suse_version} < 1030
+%define build_webkit 0%{suse_version} > 1100
+
 Name:           libproxy
 Group:          System/Libraries
 Summary:        A library handling all the details of proxy configuration
@@ -9,12 +12,17 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 BuildRequires: xorg-x11-libXmu-devel
 BuildRequires: gconf2-devel
+%if 0%{build_nm}
+# never versions contain NM 0.7, which is not compatible
 BuildRequires: NetworkManager-devel
+%endif
 BuildRequires: python-devel
 BuildRequires: gecko-sdk
 BuildRequires: dbus-1-devel
-BuildRequires: libQtWebKit-devel
-
+# Up to openSUSE 11.0, libwebkit was not available
+%if 0%{build_webkit}
+BuildRequires: libwebkit-devel
+%endif
 
 %description
 libproxy offers the following features:
@@ -147,9 +155,11 @@ rm $RPM_BUILD_ROOT%{_libdir}/%{name}.la
 %defattr(-, root, root)
 %{_libdir}/%{name}/%{version}/plugins/gnome.so
 
+%if 0%{build_nm}
 %files -n %{name}0-networkmanager
 %defattr(-, root, root)
 %{_libdir}/%{name}/%{version}/plugins/networkmanager.so
+%endif
 
 %files -n %{name}0-mozjs
 %defattr(-, root, root)
