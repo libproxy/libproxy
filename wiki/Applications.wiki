@@ -27,7 +27,7 @@
 || Ubuntu || http://www.ubuntu.com || || || no || no ||
 || Fedora || http://www.fedoraproject.org || || || no || no ||
 || Debian || http://www.debian.org || || || no || no ||
-|| OpenSUSE || http://www.opensuse.org || || https://bugzilla.novell.com/show_bug.cgi?id=397249 || no || no ||
+|| OpenSUSE || http://www.opensuse.org || || https://bugzilla.novell.com/show_bug.cgi?id=397249 || yes || no ||
 || Mandriva || http://www.mandriva.com || || || no || no ||
 || Gentoo || http://www.gentoo.org || || || no || no ||
 || Foresight Linux || http://www.foresightlinux.com || || || no || no ||
