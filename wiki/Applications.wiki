@@ -8,8 +8,8 @@
 || wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists || {{{[mailing list]}}} || YES || no ||
 || Gnome || http://www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || no || no ||
 || Pidgin || http://www.pidgin.im || http://pidgin.im/listinfo.html || http://developer.pidgin.im/ticket/4459 || YES || no ||
-|| Liferea || || || || no || no ||
-|| VideoLan Client || || http://www.videolan.org/support/lists.html || http://article.gmane.org/gmane.comp.video.videolan.vlc.devel/43245 || yes || yes ||
+|| Liferea || || || || no || no || 
+|| VideoLan Client || http://www.videolan.org || http://www.videolan.org/support/lists.html || http://article.gmane.org/gmane.comp.video.videolan.vlc.devel/43245 || yes || yes ||
 || Telepathy framework || || || || no || no ||
 || Ekiga || || || || no || no ||
 || X-Chat || || || || no || no ||
