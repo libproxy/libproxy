@@ -1,6 +1,8 @@
 #!/bin/bash
 
-libtoolize -c -f --automake
+LIBTOOLIZE=`which glibtoolize`
+[ $LIBTOOLIZE ] || LIBTOOLIZE`which libtoolize`
+$LIBTOOLIZE -c -f --automake
 aclocal
 #autoheader
 automake --foreign -a -c -f
