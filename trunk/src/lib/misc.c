@@ -205,36 +205,43 @@ px_strfreev(char **strv)
 /**
  * Reads a single line of text from the specified file descriptor
  * @fd File descriptor to read from
+ * @buffer The buffer to write to (usually NULL)
+ * @bufsize The size of the buffer (usually 0)
  * @return Newly allocated string containing one line only
  */
 char *
-px_readline(int fd)
+px_readline(int fd, char *buffer, size_t bufsize)
 {
+	char c = '\0';
+
 	/* Verify we have an open socket */
 	if (fd < 0) return NULL;
-	
-	/* For each character received add it to the buffer unless it is a newline */
-	char *buffer = NULL;
-	for (int i=1; i > 0 ; i++)
+
+	/* Read a character.  If we don't get a character, return the buffer. */
+	if (read(fd, &c, 1) != 1) return buffer;
+
+	/* If we are at the end of the line, return. */
+	if (c == '\n') return buffer ? buffer : strdup("");
+
+	/* We have a character, make sure we have a buffer. */
+	if (!buffer)
 	{
-		char c;
-		
-		/* Receive a single character, check for newline or EOF */
-		if (read(fd, &c, 1) != 1) return buffer;
-		if (c == '\n')            return buffer ? buffer : px_strdup("");
-
-		/* Allocate new buffer if we need */
-		if (i % 1024 == 1)
-		{
-			char *tmp = buffer;
-			buffer = px_malloc0(1024 * i + 1);
-			if (tmp) { strcpy(buffer, tmp); px_free(tmp); }
-		}
-
-		/* Add new character */
-		buffer[i-1] = c;
+		buffer = px_strdup("");
+		bufsize = 0;
 	}
-	return buffer;
+
+	/* If our buffer is full, add more to the buffer. */
+	if (bufsize <= strlen(buffer))
+	{
+		char *tmp = px_malloc0(1024 + strlen(buffer) + 1);
+		strcpy(tmp, buffer);
+		free(buffer);
+		buffer = tmp;
+		bufsize = strlen(buffer) + 1024;
+	}
+
+	strncat(buffer, &c, 1);
+	return px_readline(fd, buffer, bufsize);
 }
 
 /**
