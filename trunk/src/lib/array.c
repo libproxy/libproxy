@@ -86,7 +86,7 @@ px_array_add(pxArray *self, void *item)
 bool
 px_array_del(pxArray *self, const void *item)
 {
-	unsigned int index = px_array_find(self, item);
+	int index = px_array_find(self, item);
 	if (index < 0) return false;
 	
 	/* Free the old one and shift elements down */
