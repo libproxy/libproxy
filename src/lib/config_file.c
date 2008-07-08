@@ -53,7 +53,7 @@ px_config_file_new(char *filename)
 	pxStrDict *current = (pxStrDict *) px_strdict_get(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION);
 	
 	/* Parse our file */
-	for (char *line=NULL ; (line = px_readline(fd)) ; px_free(line))
+	for (char *line=NULL ; (line = px_readline(fd, NULL, 0)) ; px_free(line))
 	{
 		/* Strip */
 		char *tmp = px_strstrip(line);

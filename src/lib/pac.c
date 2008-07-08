@@ -129,7 +129,7 @@ px_pac_reload(pxPAC *self)
 	if (sock < 0) return false;
 
 	/* Verify status line */
-	line = px_readline(sock);
+	line = px_readline(sock, NULL, 0);
 	if (!line)                                                    goto error;
 	if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
 	if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
@@ -146,7 +146,7 @@ px_pac_reload(pxPAC *self)
 		
 		/* Get new line */
 		px_free(line);
-		line = px_readline(sock);
+		line = px_readline(sock, NULL, 0);
 		if (!line) goto error;
 	}
 	
