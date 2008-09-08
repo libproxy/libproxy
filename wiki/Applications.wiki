@@ -25,9 +25,9 @@
 ||||||||||||  _*Distributions*_ -- A list of operating systems that should provide libproxy: ||
 || *Name* || *Website* || *Mailing list* || *Bug URL* || *Contacted?* || *Packaged?* ||
 || Ubuntu || http://www.ubuntu.com || || || no || no ||
-|| Fedora || http://www.fedoraproject.org || || || no || no ||
+|| Fedora || http://www.fedoraproject.org || || [https://bugzilla.redhat.com/show_bug.cgi?id=457035 RedHat Bugzilla] || yes || no ||
 || Debian || http://www.debian.org || || || no || no ||
-|| OpenSUSE || http://www.opensuse.org || || https://bugzilla.novell.com/show_bug.cgi?id=397249 || yes || no ||
+|| OpenSUSE || http://www.opensuse.org || || [https://bugzilla.novell.com/show_bug.cgi?id=397249 Novell Bugzilla] || yes || no ||
 || Mandriva || http://www.mandriva.com || || || no || no ||
 || Gentoo || http://www.gentoo.org || || || no || no ||
 || Foresight Linux || http://www.foresightlinux.com || || || no || no ||
