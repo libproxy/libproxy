@@ -82,23 +82,26 @@ main(int argc, char **argv)
 		fprintf(stderr, "An unknown error occurred!\n");
 		return 1;
 	}
-	if (argc > 1) { // User entered some arguments on startup. skip interactive
-		for(int i = 1; i < argc ; i++) {
-			printf ("The proxy-choice for \"%s\" would be:\n", argv[i]);
-			char **proxies = px_proxy_factory_get_proxies(pf, argv[1]);
+	if (argc > 1) 
+	{ /* User entered some arguments on startup. skip interactive */
+		for(int i = 1; i < argc ; i++) 
+		{
+			char **proxies = px_proxy_factory_get_proxies(pf, argv[i]);
 			for (int j = 0; proxies[j] ; j++)
 			{
-				printf(" -> %s\n", proxies[j]);
+				printf(proxies[j]);
+				if (proxies[j+1])
+					printf(" ");
+				else
+					printf("\n");
 				free(proxies[j]);
 			}
 			free(proxies);
 		}	
 	}
 	else
-	{ // Interactive mode
+	{ /* Interactive mode */
 		/* For each URL we read on STDIN, get the proxies to use */
-		printf("Please type a URL to be checked. ");
-		printf("Example: http://code.google.com/p/libproxy (CTRL- t exit)\n");
 		for (char *url = NULL ; url = readline(STDIN, NULL, 0) ; free(url))
 		{
 			/*
