@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,28 +82,43 @@ main(int argc, char **argv)
 		fprintf(stderr, "An unknown error occurred!\n");
 		return 1;
 	}
-	
-	/* For each URL we read on STDIN, get the proxies to use */
-	for (char *url = NULL ; url = readline(STDIN, NULL, 0) ; free(url))
-	{
-		/*
-		 * Get an array of proxies to use. These should be used
-		 * in the order returned. Only move on to the next proxy
-		 * if the first one fails (etc).
-		 */
-		char **proxies = px_proxy_factory_get_proxies(pf, url);
-		for (int i = 0 ; proxies[i] ; i++)
-		{
-			printf(proxies[i]);
-			if (proxies[i+1])
-				printf(" ");
-			else
-				printf("\n");
-			free(proxies[i]);
-		}
-		free(proxies);
+	if (argc > 1) { // User entered some arguments on startup. skip interactive
+		for(int i = 1; i < argc ; i++) {
+			printf ("The proxy-choice for \"%s\" would be:\n", argv[i]);
+			char **proxies = px_proxy_factory_get_proxies(pf, argv[1]);
+			for (int j = 0; proxies[j] ; j++)
+			{
+				printf(" -> %s\n", proxies[j]);
+				free(proxies[j]);
+			}
+			free(proxies);
+		}	
 	}
-	
+	else
+	{ // Interactive mode
+		/* For each URL we read on STDIN, get the proxies to use */
+		printf("Please type a URL to be checked. ");
+		printf("Example: http://code.google.com/p/libproxy (CTRL- t exit)\n");
+		for (char *url = NULL ; url = readline(STDIN, NULL, 0) ; free(url))
+		{
+			/*
+			 * Get an array of proxies to use. These should be used
+			 * in the order returned. Only move on to the next proxy
+			 * if the first one fails (etc).
+			 */
+			char **proxies = px_proxy_factory_get_proxies(pf, url);
+			for (int i = 0 ; proxies[i] ; i++)
+			{
+				printf(proxies[i]);
+				if (proxies[i+1])
+					printf(" ");
+				else
+					printf("\n");
+				free(proxies[i]);
+			}
+			free(proxies);
+		}
+	}
 	/* Destantiate the proxy factory object */
 	px_proxy_factory_free(pf);
 	return 0;
