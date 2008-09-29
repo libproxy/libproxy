@@ -72,6 +72,25 @@ readline(int fd, char *buffer, size_t bufsize)
 	return readline(fd, buffer, bufsize);
 }
 
+/**
+ * Prints an array of proxie. Proxies are space separated.
+ * @proxies an array containing the proxies returned by libproxy.
+ */
+void
+print_proxies(char **proxies)
+{
+	for (int j = 0; proxies[j] ; j++)
+	{
+		printf(proxies[j]);
+		if (proxies[j+1])
+			printf(" ");
+		else
+			printf("\n");
+		free(proxies[j]);
+	}
+	free(proxies);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -82,25 +101,22 @@ main(int argc, char **argv)
 		fprintf(stderr, "An unknown error occurred!\n");
 		return 1;
 	}
+	/* User entered some arguments on startup. skip interactive */
 	if (argc > 1) 
-	{ /* User entered some arguments on startup. skip interactive */
+	{ 
 		for(int i = 1; i < argc ; i++) 
 		{
-			char **proxies = px_proxy_factory_get_proxies(pf, argv[i]);
-			for (int j = 0; proxies[j] ; j++)
-			{
-				printf(proxies[j]);
-				if (proxies[j+1])
-					printf(" ");
-				else
-					printf("\n");
-				free(proxies[j]);
-			}
-			free(proxies);
+			/*
+			 * Get an array of proxies to use. These should be used
+			 * in the order returned. Only move on to the next proxy
+			 * if the first one fails (etc).
+			 */
+			print_proxies(px_proxy_factory_get_proxies(pf, argv[i]));
 		}	
 	}
+	/* Interactive mode */
 	else
-	{ /* Interactive mode */
+	{ 
 		/* For each URL we read on STDIN, get the proxies to use */
 		for (char *url = NULL ; url = readline(STDIN, NULL, 0) ; free(url))
 		{
@@ -109,17 +125,7 @@ main(int argc, char **argv)
 			 * in the order returned. Only move on to the next proxy
 			 * if the first one fails (etc).
 			 */
-			char **proxies = px_proxy_factory_get_proxies(pf, url);
-			for (int i = 0 ; proxies[i] ; i++)
-			{
-				printf(proxies[i]);
-				if (proxies[i+1])
-					printf(" ");
-				else
-					printf("\n");
-				free(proxies[i]);
-			}
-			free(proxies);
+			print_proxies(px_proxy_factory_get_proxies(pf, url));
 		}
 	}
 	/* Destantiate the proxy factory object */
