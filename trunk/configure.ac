@@ -23,7 +23,7 @@ PKG_CHECK_MODULES(webkit, webkit-1.0, have_webkit=yes, have_webkit=no)
 PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes, 
 		[PKG_CHECK_MODULES(mozjs, firefox-js, have_mozjs=yes,
 		[PKG_CHECK_MODULES(mozjs, mozilla-js, have_mozjs=yes, have_mozjs=no)])])
-PKG_CHECK_MODULES(NetworkManager, NetworkManager, 
+PKG_CHECK_MODULES(NetworkManager, NetworkManager dbus-1, 
 					have_networkmanager=yes, have_networkmanager=no)
 
 # Environmental Variable
