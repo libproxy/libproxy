@@ -1,7 +1,7 @@
 #!/bin/bash
 
-LIBTOOLIZE=`which glibtoolize`
-[ $LIBTOOLIZE ] || LIBTOOLIZE`which libtoolize`
+LIBTOOLIZE=`which glibtoolize 2>/dev/null` 
+[ $LIBTOOLIZE ] || LIBTOOLIZE=`which libtoolize`
 $LIBTOOLIZE -c -f --automake
 aclocal
 #autoheader
