@@ -92,7 +92,7 @@ void px_strfreev(char **strv);
  * @fd File descriptor to read from
  * @return Newly allocated string containing one line only
  */
-char *px_readline(int fd);
+char *px_readline(int fd, char *buffer, size_t bufsize);
 
 /**
  * Trims off all the leading whitespace characters
