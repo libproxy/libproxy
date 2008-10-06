@@ -45,6 +45,7 @@ other applications. Great to debug what would happen.
 %package devel 
 Summary: A library handling all the details of proxy configurationa - development headers
 Group: Development/Libraries/C and C++
+Requires: %{name}0 = %{version}
 
 %description devel
 libproxy offers the following features:
@@ -114,7 +115,7 @@ Allows for the usage of libproxy from python applications
 # %patch0 -p1
 
 %build
-%configure --with-python
+CFLAGS="-fPIC" %configure --with-python
 make
 
 %install
