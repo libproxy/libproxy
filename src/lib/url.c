@@ -178,6 +178,7 @@ px_url_get_ip_no_dns(pxURL *self)
 		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
 		self->ips[0] = ip;
 		self->ips[0]->sa_family = AF_INET;
+		((struct sockaddr_in *) self->ips[0])->sin_port = htons(self->port);
 		return (const struct sockaddr *) self->ips[0];
 	}
 	px_free(ip);
@@ -189,6 +190,7 @@ px_url_get_ip_no_dns(pxURL *self)
 		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
 		self->ips[0] = ip;
 		self->ips[0]->sa_family = AF_INET6;
+		((struct sockaddr_in6 *) self->ips[0])->sin6_port = htons(self->port);
 		return (const struct sockaddr *) self->ips[0];
 	}
 	px_free(ip);
