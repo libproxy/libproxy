@@ -221,7 +221,7 @@ px_readline(int fd, char *buffer, size_t bufsize)
 	if (read(fd, &c, 1) != 1) return buffer;
 
 	/* If we are at the end of the line, return. */
-	if (c == '\n') return buffer ? buffer : strdup("");
+	if (c == '\n') return buffer ? buffer : px_strdup("");
 
 	/* We have a character, make sure we have a buffer. */
 	if (!buffer)
