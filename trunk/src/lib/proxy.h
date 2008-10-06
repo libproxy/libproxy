@@ -27,7 +27,7 @@ typedef struct _pxProxyFactory  pxProxyFactory;
  * 
  * @return A new pxProxyFactory instance or NULL on error
  */
-pxProxyFactory *px_proxy_factory_new();
+pxProxyFactory *px_proxy_factory_new(void);
 
 /**
  * Get which proxies to use for the specified URL.
