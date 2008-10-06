@@ -59,14 +59,14 @@ gconf_config_cb(pxProxyFactory *self)
 		if (px_url_is_valid(tmp))
 			url = g_strdup_printf("pac+%s", tmp); 
 		else
-			url = px_strdup("wpad://");
-		px_free(tmp);
+			url = g_strdup("wpad://");
+		g_free(tmp);
 	}
 	
 	// Mode is http://... or socks://...
 	else if (!strcmp(mode, "manual"))
 	{
-		char *type = px_strdup("http");
+		char *type = g_strdup("http");
 		char *host = gconf_client_get_string(client, "/system/http_proxy/host", NULL);
 		int   port = gconf_client_get_int   (client, "/system/http_proxy/port", NULL);
 		if (port < 0 || port > 65535) port = 0;
@@ -74,10 +74,10 @@ gconf_config_cb(pxProxyFactory *self)
 		// If http proxy is not set, try socks
 		if (!host || !strcmp(host, "") || !port)
 		{
-			if (type) px_free(type);
-			if (host) px_free(host);
+			if (type) g_free(type);
+			if (host) g_free(host);
 			
-			type = px_strdup("socks");
+			type = g_strdup("socks");
 			host = gconf_client_get_string(client, "/system/proxy/socks_host", NULL);
 			port = gconf_client_get_int   (client, "/system/proxy/socks_port", NULL);
 			if (port < 0 || port > 65535) port = 0;
@@ -87,10 +87,10 @@ gconf_config_cb(pxProxyFactory *self)
 		if (host && strcmp(host, "") && port)
 			url = g_strdup_printf("%s://%s:%d", type, host, port);
 		
-		if (type) px_free(type);
-		if (host) px_free(host);		
+		if (type) g_free(type);
+		if (host) g_free(host);		
 	}
-	px_free(mode);
+	g_free(mode);
 	
 	if (url)
 	{
@@ -98,24 +98,33 @@ gconf_config_cb(pxProxyFactory *self)
 												GCONF_VALUE_STRING, NULL);
 		if (ignores)
 		{
+			GString *ignore_str = g_string_new(NULL);
 			GSList *start = ignores;
-			for ( ; ignores ; ignores = g_slist_next(ignores))
+			for ( ; ignores ; ignores = ignores->next)
 			{
-				if (ignore)
-				{
-					char *tmp = g_strdup_printf("%s,%s", ignore, ignores->data);
-					g_free(ignore);
-					ignore = tmp;
-				}
-				else
-					ignore = g_strdup(ignores->data);
+				if (ignore_str->len)
+					g_string_append(ignore_str, ",");
+				g_string_append(ignore_str, ignores->data);
 				g_free(ignores->data);
 			}
 			g_slist_free(start);
+			ignore = g_string_free(ignore_str, FALSE);
 		}
 	}
 	
 	g_object_unref(client);
+
+	if (G_UNLIKELY(!g_mem_is_system_malloc()))
+	{
+		char *tmp;
+		tmp = px_strdup(url);
+		g_free(url);
+		url = tmp;
+		tmp = px_strdup(ignore);
+		g_free(ignore);
+		ignore = tmp;
+	}
+
 	return px_config_create(url, ignore);
 }
 
