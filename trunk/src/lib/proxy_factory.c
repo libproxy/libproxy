@@ -323,11 +323,33 @@ px_proxy_factory_new ()
 	self->plugins        = px_array_new(NULL, (void *) dlclose, true, false);
 	self->misc           = px_strdict_new(NULL);
 	self->on_get_proxies = px_array_new(NULL, NULL, true, false);
+	char *plugins = NULL, **pluginsv = NULL;
 	
 	/* Open the plugin dir */
 	DIR *plugindir = opendir(PLUGINDIR);
 	if (!plugindir) return self;
-	
+
+	/* let's first try the plugins that were specified as preferred */
+	plugins = getenv("PX_PLUGIN_ORDER");
+	if (plugins)
+	{
+		pluginsv = px_strsplit(plugins,",");
+		for (int i=0; pluginsv[i]; i++)
+		{
+			char *tmp = px_strcat(PLUGINDIR, "/", pluginsv[i], ".so", NULL);
+			void *plugin = dlopen(tmp, RTLD_NOW | RTLD_LOCAL);
+			px_free(tmp);
+			if (!plugin)
+				continue;
+
+			pxProxyFactoryBoolCallback instantiate;
+			instantiate = dlsym(plugin, "on_proxy_factory_instantiate");
+			if (instantiate && !instantiate(self))
+				dlclose(plugin);
+			else if (instantiate)
+				px_array_add(self->plugins, plugin);
+		}	
+	}
 	/* For each plugin... */
 	struct dirent *ent;
 	for (int i=0 ; (ent = readdir(plugindir)) ; i++)
@@ -338,6 +360,13 @@ px_proxy_factory_new ()
 		px_free(tmp);
 		if (!plugin)
 			continue;
+
+		/* Verify if the plugin has already been loaded */
+		if (px_array_find(self->plugins, plugin) >= 0)
+		{
+			dlclose(plugin);
+			continue;
+		}
 		
 		/* Call the instantiation hook */
 		pxProxyFactoryBoolCallback instantiate;
