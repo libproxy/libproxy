@@ -311,7 +311,10 @@ call_on_proxy_factory_get_proxies(void *item, void *self)
 }
 
 /**
- * Creates a new pxProxyFactory instance.
+ * Creates a new pxProxyFactory instance. This instance should be kept
+ * around as long as possible as it contains cached data to increase
+ * performance.  Memory usage should be minimal (cache is small) and the
+ * cache lifespan is handled automatically.
  * 
  * @return A new pxProxyFactory instance or NULL on error
  */
@@ -478,6 +481,24 @@ px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
  * Don't forget to free the strings/array when you are done.
  * In all cases, at least one entry in the array will be returned.
  * There are no error conditions.
+ *
+ * Regarding performance: this method always blocks and may be called
+ * in a separate thread (is thread-safe).  In most cases, the time
+ * required to complete this function call is simply the time required
+ * to read the configuration (i.e. from gconf, kconfig, etc).  
+ *
+ * In the case of PAC, if no valid PAC is found in the cache (i.e.
+ * configuration has changed, cache is invalid, etc), the PAC file is 
+ * downloaded and inserted into the cache. This is the most expensive
+ * operation as the PAC is retrieved over the network. Once a PAC exists
+ * in the cache, it is merely a javascript invocation to evaluate the PAC.
+ * One should note that DNS can be called from within a PAC during 
+ * javascript invocation.
+ *
+ * In the case of WPAD, WPAD is used to automatically locate a PAC on the
+ * network.  Currently, we only use DNS for this, but other methods may
+ * be implemented in the future.  Once the PAC is located, normal PAC 
+ * performance (described above) applies.
  * 
  * The format of the returned proxy strings are as follows:
  *   - http://proxy:port
