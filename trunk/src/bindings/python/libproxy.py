@@ -42,9 +42,11 @@ _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
 class ProxyFactory(object):
     """A ProxyFactory object is used to provide potential proxies to use
     in order to reach a given URL (via 'getProxy(url)').
-    
-    ProxyFactory is NOT thread safe!
-    
+ 
+    This instance should be kept around as long as possible as it contains
+    cached data to increase performance.  Memory usage should be minimal (cache
+    is small) and the cache lifespan is handled automatically.
+
     Usage is pretty simple:
         pf = libproxy.ProxyFactory()
         for url in urls:
@@ -66,7 +68,31 @@ class ProxyFactory(object):
         
     def getProxies(self, url):
         """Given a URL, returns a list of proxies in priority order to be used
-        to reach that URL."""
+        to reach that URL.
+
+        A list of proxy strings is returned.  If the first proxy fails, the 
+        second should be tried, etc... In all cases, at least one entry in the
+        list will be returned. There are no error conditions.
+
+        Regarding performance: this method always blocks and may be called
+        in a separate thread (is thread-safe).  In most cases, the time
+        required to complete this function call is simply the time required
+        to read the configuration (i.e. from gconf, kconfig, etc).  
+
+        In the case of PAC, if no valid PAC is found in the cache (i.e.
+        configuration has changed, cache is invalid, etc), the PAC file is 
+        downloaded and inserted into the cache. This is the most expensive
+        operation as the PAC is retrieved over the network. Once a PAC exists
+        in the cache, it is merely a javascript invocation to evaluate the PAC.
+        One should note that DNS can be called from within a PAC during 
+        javascript invocation.
+
+        In the case of WPAD, WPAD is used to automatically locate a PAC on the
+        network.  Currently, we only use DNS for this, but other methods may
+        be implemented in the future.  Once the PAC is located, normal PAC 
+        performance (described above) applies.
+
+        """
         if type(url) != str:
             raise TypeError, "url must be a string!"
         
