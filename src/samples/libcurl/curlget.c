@@ -33,11 +33,11 @@ int main(int argc, char * argv[]) {
   curl = curl_easy_init();
   if (curl)
   {
+    curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
     char **proxies = px_proxy_factory_get_proxies(pf, argv[1]);
     for (int i=0;proxies[i];i++)
     {
       curl_easy_setopt(curl, CURLOPT_PROXY, proxies[i]);
-      curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
       result = curl_easy_perform(curl);
       if (result == 0 ) continue;
     }
