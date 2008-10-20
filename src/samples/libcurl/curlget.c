@@ -11,8 +11,8 @@
 
 int main(int argc, char * argv[]) {
   pxProxyFactory *pf = NULL;
-  CURL *curl = NULL;
-  CURLcode result;
+  CURL *curl         = NULL;
+  CURLcode result    = 1;
 
   /* Check if we have a parameter passed, otherwise bail out... I need one */
   if (argc < 2)
@@ -54,26 +54,26 @@ int main(int argc, char * argv[]) {
   /* Try to fetch our url using each proxy */
   for (int i=0 ; proxies[i] ; i++)
   {
-    /* Setup our proxy's config into curl */
-    curl_easy_setopt(curl, CURLOPT_PROXY, proxies[i]);
+    if (result != 0)
+    {
+      /* Setup our proxy's config into curl */
+      curl_easy_setopt(curl, CURLOPT_PROXY, proxies[i]);
 
-    /* HTTP Proxy */
-    if (!strncmp("http", proxies[i], 4))
-      curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+      /* HTTP Proxy */
+      if (!strncmp("http", proxies[i], 4))
+        curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
 
-    /* SOCKS Proxy, is this correct??? */
-    /* What about SOCKS 4A, 5 and 5_HOSTNAME??? */
-    else if (!strncmp("socks", proxies[i], 4))
-      curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
+      /* SOCKS Proxy, is this correct??? */
+      /* What about SOCKS 4A, 5 and 5_HOSTNAME??? */
+      else if (!strncmp("socks", proxies[i], 4))
+        curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
 
-    /* Attempt to fetch the page */
-    result = curl_easy_perform(curl);
+      /* Attempt to fetch the page */
+      result = curl_easy_perform(curl);
+    }
 
     /* Free the proxy */
     free(proxies[i]);
-
-    /* Try next proxy if the fetch failed */
-    if (result == 0) break;
   }
 
   /* Free the (now empty) proxy array */
