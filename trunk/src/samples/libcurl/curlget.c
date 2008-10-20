@@ -10,7 +10,8 @@
 #include <stdlib.h>
 
 int main(int argc, char * argv[]) {
-  CURL *curl;
+  pxProxyFactory *pf = NULL;
+  CURL *curl = NULL;
   CURLcode result;
 
   /* Check if we have a parameter passed, otherwise bail out... I need one */
@@ -26,30 +27,63 @@ int main(int argc, char * argv[]) {
 
   /* Initializing curl... has to happen exactly once in the program */
   curl_global_init( CURL_GLOBAL_ALL );
-  /* Initializing libproxy */
-  pxProxyFactory *pf = px_proxy_factory_new();
 
-  /* Using curl to get the address defined in argv[1] */
-  curl = curl_easy_init();
-  if (curl)
+  /* Create pxProxyFactory object */
+  if (!(pf = px_proxy_factory_new()))
   {
-    curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
-    char **proxies = px_proxy_factory_get_proxies(pf, argv[1]);
-    for (int i=0;proxies[i];i++)
-    {
-      curl_easy_setopt(curl, CURLOPT_PROXY, proxies[i]);
-      result = curl_easy_perform(curl);
-      if (result == 0 ) continue;
-    }
-    // Free the proxy list
-    for (int i=0 ; proxies[i] ; i++)
-      free(proxies[i]);
-    free(proxies);
-    curl_easy_cleanup(curl);
- }
+    printf("Unable to create pxProxyFactory object!\n");
+    curl_global_cleanup();
+    return -2;
+  }
 
-  /* let's clean up again */
+  /* Create curl handle */
+  if (!(curl = curl_easy_init()))
+  {
+    printf("Unable to get libcurl handle!\n");
+    px_proxy_factory_free(pf);
+    curl_global_cleanup();
+    return -3;
+  }
+
+  /* Get the array of proxies to try */
+  char **proxies = px_proxy_factory_get_proxies(pf, argv[1]);
+
+  /* Set the URL into the curl handle */
+  curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
+
+  /* Try to fetch our url using each proxy */
+  for (int i=0 ; proxies[i] ; i++)
+  {
+    /* Setup our proxy's config into curl */
+    curl_easy_setopt(curl, CURLOPT_PROXY, proxies[i]);
+
+    /* HTTP Proxy */
+    if (!strncmp("http", proxies[i], 4))
+      curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+
+    /* SOCKS Proxy, is this correct??? */
+    /* What about SOCKS 4A, 5 and 5_HOSTNAME??? */
+    else if (!strncmp("socks", proxies[i], 4))
+      curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
+
+    /* Attempt to fetch the page */
+    result = curl_easy_perform(curl);
+
+    /* Free the proxy */
+    free(proxies[i]);
+
+    /* Try next proxy if the fetch failed */
+    if (result == 0) break;
+  }
+
+  /* Free the (now empty) proxy array */
+  free(proxies);
+
+  /* Free the curl and libproxy handles */
   px_proxy_factory_free(pf);
+  curl_easy_cleanup(curl);
+
+  /* Cleanup the libcurl library */
   curl_global_cleanup();
   return 0;
 }
