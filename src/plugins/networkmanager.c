@@ -84,7 +84,7 @@ nm_on_get_proxy(pxProxyFactory *self)
 bool
 on_proxy_factory_instantiate(pxProxyFactory *self)
 {
-	px_proxy_factory_on_get_proxies_add(self, nm_on_get_proxy);
+	return px_proxy_factory_on_get_proxies_add(self, nm_on_get_proxy);
 }
 
 void
