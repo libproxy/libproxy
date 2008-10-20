@@ -74,6 +74,12 @@ int main(int argc, char * argv[]) {
 
     /* Free the proxy */
     free(proxies[i]);
+
+    /* If we reached the end of the proxies array and still did not
+    succeed to conntect, let's inform the user that we failed. */
+    if (proxies[i+1] == NULL && result != 0)
+      printf ("The requested URL (%s) could not be retrieved using the current setup\n", argv[1]);
+
   }
 
   /* Free the (now empty) proxy array */
@@ -86,5 +92,6 @@ int main(int argc, char * argv[]) {
   /* Cleanup the libcurl library */
   curl_global_cleanup();
   return 0;
+  
 }
 
