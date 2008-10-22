@@ -170,10 +170,33 @@ _sockaddr_from_string(const char *ip, int len)
 }
 
 static struct sockaddr *
-_sockaddr_from_cidr(int af, int cidr)
+_sockaddr_from_cidr(sa_family_t af, int cidr)
 {
-	/* TODO: Support CIDR notation */
-	return NULL;
+	int length;
+	struct sockaddr *mask;
+
+	/* Allocate our sockaddr and record its length */
+	if (af == AF_INET)
+	{
+		mask   = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in));
+		length = 32 / 8;
+	}
+	else if (af == AF_INET6)
+	{
+		mask   = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in6));
+		length = 128 / 8;
+	}
+	else
+		return NULL;
+
+	/* Set the address family */
+	mask->sa_family = af;
+
+	/* Convert the cidr to a netmask */
+	for (int i=0 ; i < length ; i++)
+		mask->sa_data[i] = htonl(255 << ( 8 - ((cidr - (8 * i)) < 8 ? (cidr - (8 * i)) : 8) ));
+
+	return mask;
 }
 
 static bool
