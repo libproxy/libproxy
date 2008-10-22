@@ -130,7 +130,7 @@ _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const
 	{
 		if (nm && (a_data[i] & nm_data[i]) != (b_data[i] & nm_data[i]))
 			return false;
-		else if (a_data[i] != b_data[i])
+		else if (!nm && (a_data[i] != b_data[i]))
 			return false;
 	}
 	return true;
