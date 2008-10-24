@@ -188,7 +188,7 @@ _sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
 		struct sockaddr_in6 *mask = px_malloc0(sizeof(struct sockaddr_in6));
 		mask->sin6_family = af;
 		for (uint8_t i=0 ; i < sizeof(mask->sin6_addr) ; i++)
-			mask->sin6_addr.__in6_u.__u6_addr8[i] = ~0 << (8 - (8*i > cidr ? 0 : cidr-8*i < 8 ? cidr-8*i : 8) );
+			mask->sin6_addr.s6_addr[i] = ~0 << (8 - (8*i > cidr ? 0 : cidr-8*i < 8 ? cidr-8*i : 8) );
 
 		return (struct sockaddr *) mask;
 	}
