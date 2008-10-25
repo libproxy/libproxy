@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -34,19 +34,19 @@ pxConfig *get_config_from_file(pxProxyFactory *self, char *misc, char *filename)
 		cf = px_config_file_new(filename);
 		px_proxy_factory_misc_set(self, misc, cf);
 	}
-	
+
 	if (!cf) return NULL;
 	return px_config_create(
 				px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy"),
 				px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore"));
 }
 
-pxConfig *system_get_config_cb(pxProxyFactory *self)
+pxConfig *system_get_config_cb(pxProxyFactory *self, pxURL *url)
 {
 	return get_config_from_file(self, "file_system", SYSCONFDIR "/proxy.conf");
 }
 
-pxConfig *user_get_config_cb(pxProxyFactory *self)
+pxConfig *user_get_config_cb(pxProxyFactory *self, pxURL *url)
 {
 	char *tmp = getenv("HOME");
 	if (!tmp) return NULL;
@@ -59,10 +59,8 @@ pxConfig *user_get_config_cb(pxProxyFactory *self)
 bool on_proxy_factory_instantiate(pxProxyFactory *self)
 {
 	bool a, b;
-	a = px_proxy_factory_config_add(self, "file_system", PX_CONFIG_CATEGORY_SYSTEM, 
-										(pxProxyFactoryPtrCallback) system_get_config_cb);
-	b = px_proxy_factory_config_add(self, "file_user", PX_CONFIG_CATEGORY_USER, 
-										(pxProxyFactoryPtrCallback) user_get_config_cb);
+	a = px_proxy_factory_config_add(self, "file_system", PX_CONFIG_CATEGORY_SYSTEM, system_get_config_cb);
+	b = px_proxy_factory_config_add(self, "file_user", PX_CONFIG_CATEGORY_USER, user_get_config_cb);
 	return (a || b);
 }
 
