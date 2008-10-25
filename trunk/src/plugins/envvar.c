@@ -25,7 +25,21 @@
 
 pxConfig *get_config_cb(pxProxyFactory *self, pxURL *url)
 {
-	return px_config_create(px_strdup(getenv("http_proxy")), px_strdup(getenv("no_proxy")));
+	char *proxy = NULL;
+
+	// If the URL is an ftp url, try to read the ftp proxy
+	if (!strcmp(px_url_get_scheme(url), "ftp"))
+		proxy = getenv("ftp_proxy");
+
+	// If the URL is an https url, try to read the https proxy
+	else if (!strcmp(px_url_get_scheme(url), "https"))
+		proxy = getenv("https_proxy");
+
+	// If the URL is not ftp or no ftp_proxy was found, get the http_proxy
+	if (!proxy)
+		proxy = getenv("http_proxy");
+
+	return px_config_create(px_strdup(proxy), px_strdup(getenv("no_proxy")));
 }
 
 bool on_proxy_factory_instantiate(pxProxyFactory *self)
