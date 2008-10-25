@@ -67,11 +67,28 @@ gconf_config_cb(pxProxyFactory *self, pxURL *url)
 	else if (!strcmp(mode, "manual"))
 	{
 		char *type = g_strdup("http");
-		char *host = gconf_client_get_string(client, "/system/http_proxy/host", NULL);
-		int   port = gconf_client_get_int   (client, "/system/http_proxy/port", NULL);
+		char *host = NULL;
+		int   port = 0;
+
+		// Get the per-scheme proxy settings
+		if (!strcmp(px_url_get_scheme(url), "https"))
+		{
+			host = gconf_client_get_string(client, "/system/https_proxy/host", NULL);
+			port = gconf_client_get_int   (client, "/system/https_proxy/port", NULL);
+		}
+		else if (!strcmp(px_url_get_scheme(url), "ftp"))
+		{
+			host = gconf_client_get_string(client, "/system/ftp_proxy/host", NULL);
+			port = gconf_client_get_int   (client, "/system/ftp_proxy/port", NULL);
+		}
+		else
+		{
+			host = gconf_client_get_string(client, "/system/http_proxy/host", NULL);
+			port = gconf_client_get_int   (client, "/system/http_proxy/port", NULL);
+		}
 		if (port < 0 || port > 65535) port = 0;
 
-		// If http proxy is not set, try socks
+		// If http(s)/ftp proxy is not set, try socks
 		if (!host || !strcmp(host, "") || !port)
 		{
 			if (type) g_free(type);
