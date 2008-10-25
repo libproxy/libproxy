@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -42,7 +42,7 @@
 struct _pxProxyFactoryConfig {
 	pxConfigCategory           category;
 	char                      *name;
-	pxProxyFactoryPtrCallback  callback;
+	pxProxyFactoryConfigCallback  callback;
 };
 typedef struct _pxProxyFactoryConfig pxProxyFactoryConfig;
 
@@ -63,16 +63,16 @@ static char **
 _format_pac_response(char *response)
 {
 	char **chain, *tmp;
-	
+
 	if (!response) return px_strsplit("direct://", ";");
 	chain = px_strsplit(response, ";");
 	px_free(response);
-	
+
 	for (int i=0 ; chain[i] ; i++)
 	{
 		tmp = px_strstrip(chain[i]);
 		px_free(chain[i]);
-		
+
 		if (!strncmp(tmp, "PROXY", 5) || !strncmp(tmp, "SOCKS", 5))
 		{
 			char *hostport = px_strstrip(tmp + 5);
@@ -84,10 +84,10 @@ _format_pac_response(char *response)
 		}
 		else
 			chain[i] = px_strdup("direct://");
-		
+
 		px_free(tmp);
 	}
-	
+
 	return chain;
 }
 
@@ -96,7 +96,7 @@ _endswith(char *string, char *suffix)
 {
 	int st_len = strlen(string);
 	int su_len = strlen(suffix);
-	
+
 	return (st_len >= su_len && !strcmp(string + (st_len-su_len), suffix));
 }
 
@@ -106,7 +106,7 @@ _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const
 	if (!ip_a || !ip_b) return false;
 	if (ip_a->sa_family != ip_b->sa_family) return false;
 	if (nm && ip_a->sa_family != nm->sa_family) return false;
-	
+
 	/* Setup the arrays */
 	uint8_t bytes = 0, *a_data = NULL, *b_data = NULL, *nm_data = NULL;
 	if (ip_a->sa_family == AF_INET)
@@ -125,7 +125,7 @@ _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const
 	}
 	else
 		return false;
-	
+
 	for (int i=0 ; i < bytes ; i++)
 	{
 		if (nm && (a_data[i] & nm_data[i]) != (b_data[i] & nm_data[i]))
@@ -141,26 +141,26 @@ _sockaddr_from_string(const char *ip, int len)
 {
 	if (!ip) return NULL;
 	struct sockaddr *result = NULL;
-	
+
 	/* Copy the string */
 	if (len >= 0)
 		ip = px_strndup(ip, len);
 	else
 		ip = px_strdup(ip);
-	
+
 	/* Try to parse IPv4 */
 	result = px_malloc0(sizeof(struct sockaddr_in));
 	result->sa_family = AF_INET;
 	if (inet_pton(AF_INET, ip, &((struct sockaddr_in *) result)->sin_addr) > 0)
 		goto out;
-	
+
 	/* Try to parse IPv6 */
 	px_free(result);
 	result = px_malloc0(sizeof(struct sockaddr_in6));
 	result->sa_family = AF_INET6;
 	if (inet_pton(AF_INET6, ip, &((struct sockaddr_in6 *) result)->sin6_addr) > 0)
 		goto out;
-	
+
 	/* No address found */
 	px_free(result);
 	result = NULL;
@@ -200,19 +200,19 @@ static bool
 _ip_ignore(pxURL *url, char *ignore)
 {
 	if (!url || !ignore) return false;
-	
+
 	bool result   = false;
 	uint32_t port = 0;
 	const struct sockaddr *dst_ip = px_url_get_ip_no_dns(url);
 	      struct sockaddr *ign_ip = NULL, *net_ip = NULL;
-	
+
 	/*
 	 * IPv4
 	 * IPv6
 	 */
 	if ((ign_ip = _sockaddr_from_string(ignore, -1)))
 		goto out;
-	
+
 	/*
 	 * IPv4/CIDR
 	 * IPv4/IPv4
@@ -223,7 +223,7 @@ _ip_ignore(pxURL *url, char *ignore)
 	{
 		ign_ip = _sockaddr_from_string(ignore, strchr(ignore, '/') - ignore);
 		net_ip = _sockaddr_from_string(strchr(ignore, '/') + 1, -1);
-		
+
 		/* If CIDR notation was used, get the netmask */
 		if (ign_ip && !net_ip)
 		{
@@ -231,7 +231,7 @@ _ip_ignore(pxURL *url, char *ignore)
 			if (sscanf(strchr(ignore, '/') + 1, "%d", &cidr) == 1)
 				net_ip = _sockaddr_from_cidr(ign_ip->sa_family, cidr);
 		}
-		
+
 		if (ign_ip && net_ip && ign_ip->sa_family == net_ip->sa_family)
 			goto out;
 
@@ -240,7 +240,7 @@ _ip_ignore(pxURL *url, char *ignore)
 		ign_ip = NULL;
 		net_ip = NULL;
 	}
-	
+
 	/*
 	 * IPv4:port
 	 * [IPv6]:port
@@ -248,16 +248,16 @@ _ip_ignore(pxURL *url, char *ignore)
 	if (strrchr(ignore, ':') && sscanf(strrchr(ignore, ':'), ":%u", &port) == 1 && port > 0)
 	{
 		ign_ip = _sockaddr_from_string(ignore, strrchr(ignore, ':') - ignore);
-		
+
 		/* Make sure this really is just a port and not just an IPv6 address */
 		if (ign_ip && (ign_ip->sa_family != AF_INET6 || ignore[0] == '['))
 			goto out;
-		
+
 		px_free(ign_ip);
 		ign_ip = NULL;
 		port   = 0;
 	}
-	
+
 	out:
 		result = _sockaddr_equals(dst_ip, ign_ip, net_ip);
 		px_free(ign_ip);
@@ -270,11 +270,11 @@ _domain_ignore(pxURL *url, char *ignore)
 {
 	if (!url || !ignore)
 		return false;
-	
+
 	/* Get our URL's hostname and port */
 	char *host = px_strdup(px_url_get_host(url));
 	int   port = px_url_get_port(url);
-	
+
 	/* Get our ignore pattern's hostname and port */
 	char *ihost = px_strdup(ignore);
 	int   iport = 0;
@@ -286,27 +286,27 @@ _domain_ignore(pxURL *url, char *ignore)
 		else
 			iport = 0;
 	}
-	
+
 	/* Hostname match (domain.com or domain.com:80) */
 	if (!strcmp(host, ihost))
 		if (!iport || port == iport)
 			goto match;
-	
+
 	/* Endswith (.domain.com or .domain.com:80) */
 	if (ihost[0] == '.' && _endswith(host, ihost))
 		if (!iport || port == iport)
 			goto match;
-	
+
 	/* Glob (*.domain.com or *.domain.com:80) */
 	if (ihost[0] == '*' && _endswith(host, ihost+1))
 		if (!iport || port == iport)
 			goto match;
-	
+
 	/* No match was found */
 	px_free(host);
 	px_free(ihost);
 	return false;
-	
+
 	/* A match was found */
 	match:
 		px_free(host);
@@ -335,7 +335,7 @@ call_on_proxy_factory_get_proxies(void *item, void *self)
  * around as long as possible as it contains cached data to increase
  * performance.  Memory usage should be minimal (cache is small) and the
  * cache lifespan is handled automatically.
- * 
+ *
  * @return A new pxProxyFactory instance or NULL on error
  */
 pxProxyFactory *
@@ -347,7 +347,7 @@ px_proxy_factory_new ()
 	self->misc           = px_strdict_new(NULL);
 	self->on_get_proxies = px_array_new(NULL, NULL, true, false);
 	char *plugins = NULL, **pluginsv = NULL;
-	
+
 	/* Open the plugin dir */
 	DIR *plugindir = opendir(PLUGINDIR);
 	if (!plugindir) return self;
@@ -371,7 +371,7 @@ px_proxy_factory_new ()
 				dlclose(plugin);
 			else if (instantiate)
 				px_array_add(self->plugins, plugin);
-		}	
+		}
 	}
 	/* For each plugin... */
 	struct dirent *ent;
@@ -390,7 +390,7 @@ px_proxy_factory_new ()
 			dlclose(plugin);
 			continue;
 		}
-		
+
 		/* Call the instantiation hook */
 		pxProxyFactoryBoolCallback instantiate;
 		instantiate = dlsym(plugin, "on_proxy_factory_instantiate");
@@ -400,24 +400,24 @@ px_proxy_factory_new ()
 			px_array_add(self->plugins, plugin);
 	}
 	closedir(plugindir);
-	
+
 	return self;
 }
 
 bool
-px_proxy_factory_config_add(pxProxyFactory *self, const char *name, pxConfigCategory category, pxProxyFactoryPtrCallback callback)
+px_proxy_factory_config_add(pxProxyFactory *self, const char *name, pxConfigCategory category, pxProxyFactoryConfigCallback callback)
 {
 	int count;
 	pxProxyFactoryConfig **tmp;
-	
+
 	/* Verify some basic stuff */
 	if (!self)                      return false;
 	if (!callback)                  return false;
 	if (!name || !strcmp(name, "")) return false;
-	
+
 	/* Allocate an empty config array if there is none */
 	if (!self->configs) self->configs = px_malloc0(sizeof(pxProxyFactoryConfig *));
-	
+
 	/*
 	 * Make sure that 'name' is unique
 	 * Also, get a count of how many configs we have
@@ -425,19 +425,19 @@ px_proxy_factory_config_add(pxProxyFactory *self, const char *name, pxConfigCate
 	for (count=0 ; self->configs[count] ; count++)
 		if (!strcmp(self->configs[count]->name, name))
 			return false;
-	
+
 	/* Allocate new array, copy old values into it and free old array */
 	tmp = px_malloc0(sizeof(pxProxyFactoryConfig *) * (count + 2));
 	memcpy(tmp, self->configs, sizeof(pxProxyFactoryConfig *) * count);
 	px_free(self->configs);
 	self->configs = tmp;
-	
+
 	/* Add the new callback to the end */
 	self->configs[count]           = px_malloc0(sizeof(pxProxyFactoryConfig));
 	self->configs[count]->category = category;
 	self->configs[count]->name     = px_strdup(name);
 	self->configs[count]->callback = callback;
-	
+
 	return true;
 }
 
@@ -445,12 +445,12 @@ bool
 px_proxy_factory_config_del(pxProxyFactory *self, const char *name)
 {
 	int i,j;
-	
+
 	/* Verify some basic stuff */
 	if (!self)                      return false;
 	if (!name || !strcmp(name, "")) return false;
 	if (!self->configs)             return false;
-	
+
 	/* Remove and shift all configs down (if found) */
 	for (i=0,j=0 ; self->configs[j]; i++,j++)
 	{
@@ -462,14 +462,14 @@ px_proxy_factory_config_del(pxProxyFactory *self, const char *name)
 			px_free(self->configs[j--]);
 		}
 	}
-	
+
 	/* If we have an empty array, free it */
 	if (!self->configs[0])
 	{
 		px_free(self->configs);
 		self->configs = NULL;
 	}
-	
+
 	return i != j ? true : false;
 }
 
@@ -489,13 +489,13 @@ px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
 	/* Verify some basic stuff */
 	if (!self)                    return NULL;
 	if (!key || !strcmp(key, "")) return NULL;
-	
+
 	return (void *) px_strdict_get(self->misc, key);
 }
 
 /**
  * Get which proxies to use for the specified URL.
- * 
+ *
  * A NULL-terminated array of proxy strings is returned.
  * If the first proxy fails, the second should be tried, etc...
  * Don't forget to free the strings/array when you are done.
@@ -505,21 +505,21 @@ px_proxy_factory_misc_get(pxProxyFactory *self, const char *key)
  * Regarding performance: this method always blocks and may be called
  * in a separate thread (is thread-safe).  In most cases, the time
  * required to complete this function call is simply the time required
- * to read the configuration (i.e. from gconf, kconfig, etc).  
+ * to read the configuration (i.e. from gconf, kconfig, etc).
  *
  * In the case of PAC, if no valid PAC is found in the cache (i.e.
- * configuration has changed, cache is invalid, etc), the PAC file is 
+ * configuration has changed, cache is invalid, etc), the PAC file is
  * downloaded and inserted into the cache. This is the most expensive
  * operation as the PAC is retrieved over the network. Once a PAC exists
  * in the cache, it is merely a javascript invocation to evaluate the PAC.
- * One should note that DNS can be called from within a PAC during 
+ * One should note that DNS can be called from within a PAC during
  * javascript invocation.
  *
  * In the case of WPAD, WPAD is used to automatically locate a PAC on the
  * network.  Currently, we only use DNS for this, but other methods may
- * be implemented in the future.  Once the PAC is located, normal PAC 
+ * be implemented in the future.  Once the PAC is located, normal PAC
  * performance (described above) applies.
- * 
+ *
  * The format of the returned proxy strings are as follows:
  *   - http://proxy:port
  *   - socks://proxy:port
@@ -534,25 +534,25 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	pxConfig *config   = NULL;
 	char    **response = px_strsplit("direct://", ";");
 	char     *tmp = NULL, *order = NULL, **orderv = NULL;
-	
+
 	/* Verify some basic stuff */
 	if (!self)                    goto do_return;
 	if (!url || !strcmp(url, "")) goto do_return;
 	if (!realurl)                 goto do_return;
-	
+
 	/* Lock mutex */
 	pthread_mutex_lock(&self->mutex);
-	
+
 	/* Call the events */
 	px_array_foreach(self->on_get_proxies, call_on_proxy_factory_get_proxies, self);
-	
+
 	/* If our config file is stale, close it */
 	if (self->cf && px_config_file_is_stale(self->cf))
 	{
 		px_config_file_free(self->cf);
 		self->cf = NULL;
 	}
-	
+
 	/* Try to open our config file if we don't have one */
 	if (!self->cf)
 		self->cf = px_config_file_new(SYSCONFDIR "/proxy.conf");
@@ -560,18 +560,18 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	/* If we have a config file, load the order from it */
 	if (self->cf)
 		tmp = px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "config_order");
-		
+
 	/* Attempt to get info from the environment */
 	order = getenv("PX_CONFIG_ORDER");
-	
+
 	/* Create the config order */
 	order = px_strcat(tmp ? tmp : "", ",", order ? order : "", ",", DEFAULT_CONFIG_ORDER, NULL);
 	px_free(tmp); tmp = NULL;
-	
+
 	/* Create the config plugin order vector */
 	orderv = px_strsplit(order, ",");
 	px_free(order);
-	
+
 	/* Get the config by searching the config order */
 	for (int i=0 ; orderv[i] && !config ; i++)
 	{
@@ -585,21 +585,21 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			category = PX_CONFIG_CATEGORY_SYSTEM;
 		else
 			category = PX_CONFIG_CATEGORY_NONE;
-		
+
 		for (int j=0 ; self->configs && self->configs[j] && !config ; j++)
 		{
 			if (category != PX_CONFIG_CATEGORY_NONE && self->configs[j]->category == category)
-				config = self->configs[j]->callback(self);
+				config = self->configs[j]->callback(self, realurl);
 			else if (category == PX_CONFIG_CATEGORY_NONE && !strcmp(self->configs[j]->name, orderv[i]))
-				config = self->configs[j]->callback(self);
+				config = self->configs[j]->callback(self, realurl);
 		}
 	}
 	px_strfreev(orderv);
-	
+
 	/* No config was found via search order, call all plugins */
 	for (int i=0 ; self->configs && self->configs[i] && !config ; i++)
-		config = self->configs[i]->callback(self);
-	
+		config = self->configs[i]->callback(self, realurl);
+
 	/* No plugin returned a valid config, fall back to 'wpad://' */
 	if (!config)
 	{
@@ -608,9 +608,9 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		config->url    = px_strdup("wpad://");
 		config->ignore = px_strdup("");
 	}
-	
+
 	/* If the config plugin returned an invalid config type or malformed URL, fall back to 'wpad://' */
-	if (!(!strncmp(config->url, "http://", 7) || 
+	if (!(!strncmp(config->url, "http://", 7) ||
 		  !strncmp(config->url, "socks://", 8) ||
 		  !strncmp(config->url, "pac+", 4) ||
 		  !strcmp (config->url, "wpad://") ||
@@ -626,14 +626,14 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		px_free(config->url);
 		config->url = px_strdup("wpad://");
 	}
-	else if ((!strncmp(config->url, "http://", 7) || !strncmp(config->url, "socks://", 8)) && 
+	else if ((!strncmp(config->url, "http://", 7) || !strncmp(config->url, "socks://", 8)) &&
 			  !px_url_is_valid(config->url))
 	{
 		fprintf(stderr, "*** Config plugin returned malformed URL! Falling back to auto-detection...\n");
 		px_free(config->url);
 		config->url = px_strdup("wpad://");
 	}
-	
+
 	/* Check our ignore patterns */
 	char **ignores = px_strsplit(config->ignore, ",");
 	for (int i=0 ; ignores[i] ; i++)
@@ -645,7 +645,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		}
 	}
 	px_strfreev(ignores);
-	
+
 	/* If we have a wpad config */
 	if (!strcmp(config->url, "wpad://"))
 	{
@@ -661,7 +661,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 				goto do_return;
 			}
 		}
-		
+
 		/*
 		 * If we have no PAC, get one
 		 * If getting the PAC fails, but the WPAD cycle worked, restart the cycle
@@ -671,26 +671,26 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			px_wpad_rewind(self->wpad);
 			self->pac = px_wpad_next(self->wpad);
 		}
-		
+
 		/* If the WPAD cycle failed, fall back to direct */
 		if (!self->pac)
 		{
 			fprintf(stderr, "*** Unable to locate PAC! Falling back to direct...\n");
 			goto do_return;
 		}
-		
+
 		/* Run the PAC */
 		if (self->pac_runner)
 		{
 			px_strfreev(response);
 			response = _format_pac_response(self->pac_runner(self, self->pac, realurl));
 		}
-		
+
 		/* No PAC runner found, fall back to direct */
 		else
 			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
-	
+
 	/* If we have a PAC config */
 	else if (!strncmp(config->url, "pac+", 4))
 	{
@@ -700,7 +700,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			px_wpad_free(self->wpad);
 			self->wpad = NULL;
 		}
-		
+
 		/* If a PAC already exists, but came from a different URL than the one specified, remove it */
 		if (self->pac)
 		{
@@ -717,7 +717,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			}
 			px_url_free(urltmp);
 		}
-		
+
 		/* Try to load the PAC if it is not already loaded */
 		if (!self->pac && !(self->pac = px_pac_new_from_string(config->url + 4)))
 		{
@@ -734,7 +734,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		else
 			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
-	
+
 	/* If we have a manual config (http://..., socks://...) */
 	else if (!strncmp(config->url, "http://", 7) || !strncmp(config->url, "socks://", 8))
 	{
@@ -743,7 +743,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		px_strfreev(response);
 		response = px_strsplit(config->url, ";");
 	}
-	
+
 	/* Actually return, freeing misc stuff */
 	do_return:
 		if (config)  { px_free(config->url); px_free(config->ignore); px_free(config); }
@@ -789,16 +789,16 @@ void
 px_proxy_factory_free (pxProxyFactory *self)
 {
 	if (!self) return;
-	
+
 	pthread_mutex_lock(&self->mutex);
-	
+
 	/* Free the plugins */
 	px_array_foreach(self->plugins, destantiate_plugins, self);
 	px_array_free(self->plugins);
-	
+
 	/* Free misc */
 	px_strdict_free(self->misc);
-	
+
 	/* Free everything else */
 	px_pac_free(self->pac);
 	px_wpad_free(self->wpad);
