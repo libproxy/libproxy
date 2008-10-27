@@ -29,7 +29,7 @@
 || Debian || http://www.debian.org || || || no || no ||
 || OpenSUSE || http://www.opensuse.org || || [https://bugzilla.novell.com/show_bug.cgi?id=397249 Novell Bugzilla] || yes || no ||
 || Mandriva || http://www.mandriva.com || || || no || no ||
-|| Gentoo || http://www.gentoo.org || || || no || no ||
+|| Gentoo || http://www.gentoo.org || || [http://bugs.gentoo.org/show_bug.cgi?id=244028 Gentoo Bugzilla || yes || yes ||
 || Foresight Linux || http://www.foresightlinux.com || || || no || no ||
 || FreeBSD || http://www.freebsd.org || || || no || no ||
 || NetBSD || http://www.netbsd.org || || || no || no ||
