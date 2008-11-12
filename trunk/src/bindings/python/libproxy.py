@@ -77,15 +77,15 @@ class ProxyFactory(object):
         Regarding performance: this method always blocks and may be called
         in a separate thread (is thread-safe).  In most cases, the time
         required to complete this function call is simply the time required
-        to read the configuration (i.e. from gconf, kconfig, etc).  
+        to read the configuration (e.g  from GConf, Kconfig, etc).  
 
         In the case of PAC, if no valid PAC is found in the cache (i.e.
         configuration has changed, cache is invalid, etc), the PAC file is 
         downloaded and inserted into the cache. This is the most expensive
         operation as the PAC is retrieved over the network. Once a PAC exists
-        in the cache, it is merely a javascript invocation to evaluate the PAC.
+        in the cache, it is merely a JavaScript invocation to evaluate the PAC.
         One should note that DNS can be called from within a PAC during 
-        javascript invocation.
+        JavaScript invocation.
 
         In the case of WPAD, WPAD is used to automatically locate a PAC on the
         network.  Currently, we only use DNS for this, but other methods may
