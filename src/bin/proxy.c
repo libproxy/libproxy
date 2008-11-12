@@ -73,7 +73,7 @@ readline(int fd, char *buffer, size_t bufsize)
 }
 
 /**
- * Prints an array of proxie. Proxies are space separated.
+ * Prints an array of proxies. Proxies are space separated.
  * @proxies an array containing the proxies returned by libproxy.
  */
 void
@@ -128,7 +128,7 @@ main(int argc, char **argv)
 			print_proxies(px_proxy_factory_get_proxies(pf, url));
 		}
 	}
-	/* Destantiate the proxy factory object */
+	/* Destroy the proxy factory object */
 	px_proxy_factory_free(pf);
 	return 0;
 }
