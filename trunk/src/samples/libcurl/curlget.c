@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
   }
 
   /* Initializing curl... has to happen exactly once in the program */
-  curl_global_init( CURL_GLOBAL_ALL );
+  if (curl_global_init( CURL_GLOBAL_ALL )) return -4;
 
   /* Create pxProxyFactory object */
   if (!(pf = px_proxy_factory_new()))
