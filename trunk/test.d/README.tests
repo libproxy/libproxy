@@ -1,0 +1,21 @@
+===== Overview =====
+Each test for libproxy should be self-contained and simple
+enough to only test one function at a time. You've been given
+the flexibility to write test in any language you choose but
+must follow a certain format for things to work properly.
+
+===== Format =====
+Each test is required to output "pass" and "reason" lines
+in bourne shell variable format. The testsuite will exec
+each test to load the variables and then output the results.
+
+"pass" should return true or false and "name" is optional.
+
+pass=[true | false]
+reason="Reason why this test failed"
+name="example_test_name"
+
+===== Issues =====
+- Very limited test coverage. This needs to be fully fleshed out.
+- libproxy_test_envvar.test runs sucessfully on Ubuntu 8.10, but fails on
+  Ubuntu 8.04.1 and Fedora 9
