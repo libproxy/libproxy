@@ -80,7 +80,7 @@ int main(int argc, char * argv[]) {
       /* SOCKS Proxy, is this correct??? */
       /* What about SOCKS 4A, 5 and 5_HOSTNAME??? */
       else if (!strncmp("socks", proxies[i], 4))
-        curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
+        curl_easy_setopt(curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
 
       /* Attempt to fetch the page */
       result = curl_easy_perform(curl);
