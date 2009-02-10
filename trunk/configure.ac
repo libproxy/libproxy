@@ -10,6 +10,7 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AM_PROG_CC_C_O
 
 ### Check for pthread
 AC_CHECK_HEADERS(pthread.h)
@@ -158,8 +159,8 @@ AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 AC_ARG_WITH([python],
             [AS_HELP_STRING([--with-python],
             [build Python bindings @<:@automatic@:>@])],
-            [AM_PATH_PYTHON([2.5], with_python=yes)],
-            [AM_PATH_PYTHON([2.5], with_python=yes, with_python=no)])
+            [AM_PATH_PYTHON([2.5], have_python=yes, have_python=no)],
+            [have_python=yes && with_python=yes])
 AM_CONDITIONAL([WITH_PYTHON], [test x$with_python = xyes])
 
 # Java
