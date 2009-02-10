@@ -185,6 +185,7 @@ CFLAGS="-g -std=c99 $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sys
 
 ### Checks for library functions.
 AC_FUNC_MALLOC
+AC_SEARCH_LIBS([dlopen], [dl])
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
