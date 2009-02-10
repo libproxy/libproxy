@@ -53,7 +53,7 @@ px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bo
 	self->unique  = unique;
 	self->replace = replace;
 	self->length  = 0;
-	self->data    = px_malloc0(sizeof(void *));
+	self->data    = NULL;
 	return self;
 }
 
@@ -74,10 +74,9 @@ px_array_add(pxArray *self, void *item)
 		return true;
 	}
 	
-	self->length++;
 	void **data = px_malloc0(sizeof(void *) * (self->length + 1));
 	memcpy(data, self->data, sizeof(void *) * self->length);
-	data[self->length] = item;
+	data[self->length++] = item;
 	px_free(self->data);
 	self->data = data;
 	return true;
@@ -93,7 +92,7 @@ px_array_del(pxArray *self, const void *item)
 	self->free(self->data[index]);
 	memmove(self->data+index,
 			self->data+index+1,
-			sizeof(void *) * (self->length - index));
+			sizeof(void *) * (--self->length - index));
 	
 	return true;
 }
@@ -101,7 +100,7 @@ px_array_del(pxArray *self, const void *item)
 void
 px_array_foreach(pxArray *self, pxArrayItemCallbackWithArg cb, void *arg)
 {
-	for (int i=0 ; self->data[i] ; i++)
+	for (int i=0 ; i < self->length ; i++)
 		cb(self->data[i], arg);
 }
 
@@ -110,7 +109,7 @@ px_array_find(pxArray *self, const void *item)
 {
 	if (!self || !item) return -1;
 	
-	for (int i=0 ; self->data[i] ; i++)
+	for (int i=0 ; i < self->length ; i++)
 		if (self->equals(self->data[i], (void *) item))
 			return i;
 	
@@ -132,7 +131,7 @@ px_array_free(pxArray *self)
 {
 	if (!self) return;
 	
-	for (int i=0 ; self->data[i] ; i++)
+	for (int i=0 ; i < self->length ; i++)
 		self->free(self->data[i]);
 	px_free(self);
 }

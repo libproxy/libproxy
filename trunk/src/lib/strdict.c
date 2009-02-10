@@ -101,10 +101,13 @@ px_strdict_set(pxStrDict *self, const char *key, void *value)
 const void *
 px_strdict_get(pxStrDict *self, const char *key)
 {
-	void *v[3] = { (void *) key, NULL, NULL };
+	if (!self || !key) return NULL;
+
+	void *v[3] = { (void *) key, NULL, NULL }, **ret;
 	int i = px_array_find(self->data, v);
 	if (i < 0) return NULL;
-	return px_array_get(self->data, i);
+	ret = px_array_get(self->data, i);
+	return ret[1];
 }
 
 void
