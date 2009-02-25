@@ -62,6 +62,7 @@ readline(int fd, char *buffer, size_t bufsize)
 	{
 		char *tmp = NULL;
 		assert((tmp = malloc(1024 + strlen(buffer) + 1)));
+		memset(tmp, 0, 1024 + strlen(buffer) + 1);
 		strcpy(tmp, buffer);
 		free(buffer);
 		buffer = tmp;
