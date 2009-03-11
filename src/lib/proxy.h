@@ -20,6 +20,11 @@
 #ifndef PROXY_H_
 #define PROXY_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct _pxProxyFactory  pxProxyFactory;
 
 /**
@@ -72,5 +77,9 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
  * Frees the pxProxyFactory instance when no longer used.
  */
 void px_proxy_factory_free(pxProxyFactory *self);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*PROXY_H_*/
