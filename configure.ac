@@ -46,14 +46,14 @@ AC_ARG_WITH([gnome],
             [AS_HELP_STRING([--with-gnome],
             [build GNOME configuration plugin @<:@automatic@:>@])],
             [],
-            [test x$have_gconf == xyes && 
-             test x$have_x11   == xyes &&
-             test x$have_xmu   == xyes &&
+            [test x$have_gconf = xyes && 
+             test x$have_x11   = xyes &&
+             test x$have_xmu   = xyes &&
              with_gnome=yes])
 if test x$with_gnome = xyes; then
-	if test x$have_gconf == xyes && \
-	   test x$have_x11 == xyes && \
-	   test x$have_xmu == xyes; then
+	if test x$have_gconf = xyes && \
+	   test x$have_x11 = xyes && \
+	   test x$have_xmu = xyes; then
 		GNOME_CFLAGS="$x11_CFLAGS $xmu_CFLAGS $gconf_CFLAGS"
 		GNOME_LIBS="$x11_LIBS $xmu_LIBS $gconf_LIBS"
 		AC_SUBST(GNOME_CFLAGS)
@@ -72,12 +72,12 @@ AC_ARG_WITH([kde],
             [AS_HELP_STRING([--with-kde],
             [build KDE configuration plugin @<:@automatic@:>@])],
             [],
-            [test x$have_x11   == xyes &&
-             test x$have_xmu   == xyes &&
+            [test x$have_x11   = xyes &&
+             test x$have_xmu   = xyes &&
              with_kde=yes])
 if test x$with_kde = xyes; then
-	if test x$have_x11 == xyes && \
-	   test x$have_xmu == xyes; then
+	if test x$have_x11 = xyes && \
+	   test x$have_xmu = xyes; then
 		KDE_CFLAGS="$x11_CFLAGS $xmu_CFLAGS"
 		KDE_LIBS="$x11_LIBS $xmu_LIBS"
 		AC_SUBST(KDE_CFLAGS)
@@ -96,9 +96,9 @@ AC_ARG_WITH([webkit],
             [AS_HELP_STRING([--with-webkit],
             [build WebKit JavaScriptCore PAC runner plugin @<:@automatic@:>@])],
             [],
-            [test x$have_webkit == xyes && with_webkit=yes])
+            [test x$have_webkit = xyes && with_webkit=yes])
 if test x$with_webkit = xyes; then
-	if test x$have_webkit == xyes; then
+	if test x$have_webkit = xyes; then
 		WEBKIT_CFLAGS="$webkit_CFLAGS"
 		WEBKIT_LIBS="$webkit_LIBS"
 		AC_SUBST(WEBKIT_CFLAGS)
@@ -117,9 +117,9 @@ AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
             [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
             [],
-            [test x$have_mozjs == xyes && with_mozjs=yes])
+            [test x$have_mozjs = xyes && with_mozjs=yes])
 if test x$with_mozjs = xyes; then
-	if test x$have_mozjs == xyes; then
+	if test x$have_mozjs = xyes; then
 		MOZJS_CFLAGS="$mozjs_CFLAGS"
 		MOZJS_LIBS="$mozjs_LIBS"
 		AC_SUBST(MOZJS_CFLAGS)
@@ -138,9 +138,9 @@ AC_ARG_WITH([networkmanager],
             [AS_HELP_STRING([--with-networkmanager],
             [build NetworkManager plugin @<:@automatic@:>@])],
             [],
-            [test x$have_networkmanager == xyes && with_networkmanager=yes])
+            [test x$have_networkmanager = xyes && with_networkmanager=yes])
 if test x$with_networkmanager = xyes; then
-	if test x$have_networkmanager == xyes; then
+	if test x$have_networkmanager = xyes; then
 		NETWORKMANAGER_CFLAGS="$NetworkManager_CFLAGS"
 		NETWORKMANAGER_LIBS="$NetworkManager_LIBS"
 		AC_SUBST(NETWORKMANAGER_CFLAGS)
