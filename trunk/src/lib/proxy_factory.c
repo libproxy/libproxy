@@ -261,7 +261,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		for (int j=0 ; j < px_array_length(self->ignores) ; j++)
 		{
 			pxIgnorePlugin *ip = (pxIgnorePlugin *) px_array_get(self->ignores, j);
-			if (ip->ignore(ip, ignores[i]))
+			if (ip->ignore(ip, realurl, ignores[i]))
 			{
 				px_strfreev(ignores);
 				goto do_return;
