@@ -214,8 +214,9 @@ error:
 static bool
 _constructor(pxPlugin *self)
 {
+	((pxPACRunnerPlugin *) self)->run                  = _run;
 	((pxWebKitPACRunnerPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                                    = _destructor;
+	self->destructor                                   = _destructor;
 	return true;
 }
 
