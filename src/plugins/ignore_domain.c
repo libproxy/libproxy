@@ -39,7 +39,6 @@ _ignore(struct _pxIgnorePlugin *self, pxURL *url, const char *ignore)
 {
 	if (!url || !ignore)
 			return false;
-	puts(ignore);
 
 	/* Get our URL's hostname and port */
 	char *host = px_strdup(px_url_get_host(url));
