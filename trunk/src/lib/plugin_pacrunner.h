@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,31 +17,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef ARRAY_H_
-#define ARRAY_H_
-#include <stdbool.h>
+#ifndef PLUGIN_PACRUNNER_H_
+#define PLUGIN_PACRUNNER_H_
+#include "plugin.h"
+#include "url.h"
+#include "pac.h"
 
-typedef bool (*pxArrayItemsEqual)(void *, void *);
-typedef void (*pxArrayItemCallback)(void *);
-typedef void (*pxArrayItemCallbackWithArg)(void *, void *);
-typedef struct _pxArray pxArray;
+typedef struct _pxPACRunnerPlugin {
+	PX_PLUGIN_SUBCLASS(pxPlugin);
+	char *(*run)(struct _pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url);
+} pxPACRunnerPlugin;
+#define pxPACRunnerPluginVersion 0
 
-pxArray *px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bool replace);
+bool px_pac_runner_plugin_constructor(pxPlugin *self);
 
-bool px_array_add(pxArray *self, void *item);
-
-bool px_array_del(pxArray *self, const void *item);
-
-void px_array_foreach(pxArray *self, pxArrayItemCallbackWithArg cb, void *arg);
-
-int px_array_find(pxArray *self, const void *item);
-
-const void *px_array_get(pxArray *self, int index);
-
-void px_array_free(pxArray *self);
-
-unsigned int px_array_length(pxArray *self);
-
-void px_array_sort(pxArray *self, int (*compare)(const void *, const void *));
-
-#endif /* ARRAY_H_ */
+#endif /* PLUGIN_PACRUNNER_H_ */

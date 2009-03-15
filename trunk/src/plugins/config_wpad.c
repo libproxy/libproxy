@@ -17,31 +17,51 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef ARRAY_H_
-#define ARRAY_H_
-#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
-typedef bool (*pxArrayItemsEqual)(void *, void *);
-typedef void (*pxArrayItemCallback)(void *);
-typedef void (*pxArrayItemCallbackWithArg)(void *, void *);
-typedef struct _pxArray pxArray;
+#include <misc.h>
+#include <plugin_manager.h>
+#include <plugin_config.h>
 
-pxArray *px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bool replace);
+static char *
+_get_config(pxConfigPlugin *self, pxURL *url)
+{
+	return px_strdup("wpad://");
+}
 
-bool px_array_add(pxArray *self, void *item);
+static char *
+_get_ignore(pxConfigPlugin *self, pxURL *url)
+{
+	return px_strdup("");
+}
 
-bool px_array_del(pxArray *self, const void *item);
+static bool
+_get_credentials(pxConfigPlugin *self, pxURL *url, char **username, char **password)
+{
+	return false;
+}
 
-void px_array_foreach(pxArray *self, pxArrayItemCallbackWithArg cb, void *arg);
+static bool
+_set_credentials(pxConfigPlugin *self, pxURL *url, const char *username, const char *password)
+{
+	return false;
+}
 
-int px_array_find(pxArray *self, const void *item);
+static bool
+_constructor(pxPlugin *plugin)
+{
+	pxConfigPlugin *self  = (pxConfigPlugin *) plugin;
+	self->category        = PX_CONFIG_PLUGIN_CATEGORY_NONE;
+	self->get_config      = &_get_config;
+	self->get_ignore      = &_get_ignore;
+	self->get_credentials = &_get_credentials;
+	self->set_credentials = &_set_credentials;
+	return true;
+}
 
-const void *px_array_get(pxArray *self, int index);
-
-void px_array_free(pxArray *self);
-
-unsigned int px_array_length(pxArray *self);
-
-void px_array_sort(pxArray *self, int (*compare)(const void *, const void *));
-
-#endif /* ARRAY_H_ */
+bool
+px_module_load(pxPluginManager *self)
+{
+	return px_plugin_manager_constructor_add(self, "config_wpad", pxConfigPlugin, _constructor);
+}

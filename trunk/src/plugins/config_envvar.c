@@ -21,9 +21,11 @@
 #include <string.h>
 
 #include <misc.h>
-#include <proxy_factory.h>
+#include <plugin_manager.h>
+#include <plugin_config.h>
 
-pxConfig *get_config_cb(pxProxyFactory *self, pxURL *url)
+static char *
+_get_config(pxConfigPlugin *self, pxURL *url)
 {
 	char *proxy = NULL;
 
@@ -39,15 +41,41 @@ pxConfig *get_config_cb(pxProxyFactory *self, pxURL *url)
 	if (!proxy)
 		proxy = getenv("http_proxy");
 
-	return px_config_create(px_strdup(proxy), px_strdup(getenv("no_proxy")));
+	return px_strdup(proxy);
 }
 
-bool on_proxy_factory_instantiate(pxProxyFactory *self)
+static char *
+_get_ignore(pxConfigPlugin *self, pxURL *url)
 {
-	return px_proxy_factory_config_add(self, "envvar", PX_CONFIG_CATEGORY_NONE, get_config_cb);
+	return px_strdup(getenv("no_proxy"));
 }
 
-void on_proxy_factory_destantiate(pxProxyFactory *self)
+static bool
+_get_credentials(pxConfigPlugin *self, pxURL *url, char **username, char **password)
 {
-	px_proxy_factory_config_del(self, "envvar");
+	return false;
+}
+
+static bool
+_set_credentials(pxConfigPlugin *self, pxURL *url, const char *username, const char *password)
+{
+	return false;
+}
+
+static bool
+_constructor(pxPlugin *plugin)
+{
+	pxConfigPlugin *self  = (pxConfigPlugin *) plugin;
+	self->category        = PX_CONFIG_PLUGIN_CATEGORY_NONE;
+	self->get_config      = &_get_config;
+	self->get_ignore      = &_get_ignore;
+	self->get_credentials = &_get_credentials;
+	self->set_credentials = &_set_credentials;
+	return true;
+}
+
+bool
+px_module_load(pxPluginManager *self)
+{
+	return px_plugin_manager_constructor_add(self, "config_envvar", pxConfigPlugin, _constructor);
 }

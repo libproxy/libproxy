@@ -4,7 +4,13 @@ libproxy_la_SOURCES = \
 						config_file.c config_file.h \
 						misc.c misc.h \
 						pac.c pac.h \
-						proxy_factory.c proxy_factory.h \
+						plugin_config.c plugin_config.h \
+						plugin_ignore.h \
+						plugin_manager.c plugin_manager.h \
+						plugin_network.h \
+						plugin_pacrunner.c plugin_pacrunner.h \
+						plugin.c plugin.h \
+						proxy_factory.c \
 						strdict.c strdict.h \
 						url.c url.h \
 						wpad.c wpad.h \
@@ -14,7 +20,7 @@ libproxy_la_SOURCES = \
 						proxy.h
 
 libproxy_la_CFLAGS  = -Wall
-libproxy_la_LDFLAGS = -lpthread
+libproxy_la_LDFLAGS = -lpthread -lm
 
 include_HEADERS     = proxy.h
 

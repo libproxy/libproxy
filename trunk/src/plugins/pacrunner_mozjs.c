@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -27,10 +27,24 @@
 #include <unistd.h>
 
 #include <misc.h>
-#include <proxy_factory.h>
+#include <plugin_manager.h>
+#include <plugin_pacrunner.h>
 
 #include <jsapi.h>
 #include "pacutils.h"
+
+typedef struct {
+	JSRuntime *run;
+	JSContext *ctx;
+	JSClass   *cls;
+	char      *pac;
+} ctxStore;
+
+typedef struct _pxMozillaPACRunnerPlugin {
+	PX_PLUGIN_SUBCLASS(pxPACRunnerPlugin);
+	void    (*old_destructor)(pxPlugin *);
+	ctxStore *ctxs;
+} pxMozillaPACRunnerPlugin;
 
 static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
 	// Get hostname argument
@@ -47,12 +61,12 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 	// Allocate the IP address
 	px_free(tmp);
 	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
-	
+
 	// Try for IPv4 and IPv6
-	if (!inet_ntop(info->ai_family, 
+	if (!inet_ntop(info->ai_family,
 					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
 					tmp, INET_ADDRSTRLEN+1) > 0)
-		if (!inet_ntop(info->ai_family, 
+		if (!inet_ntop(info->ai_family,
 						&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
 						tmp, INET6_ADDRSTRLEN+1) > 0)
 			goto out;
@@ -60,7 +74,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 	// We succeeded
 	*rval = STRING_TO_JSVAL(JS_NewString(cx, tmp, strlen(tmp)));
 	tmp = NULL;
-		
+
 	out:
 		if (info) freeaddrinfo(info);
 		px_free(tmp);
@@ -78,13 +92,6 @@ static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	*rval = JSVAL_NULL;
 	return true;
 }
-
-typedef struct {
-	JSRuntime *run;
-	JSContext *ctx;
-	JSClass   *cls;
-	char      *pac;
-} ctxStore;
 
 static void ctxs_free(ctxStore *self)
 {
@@ -126,12 +133,12 @@ static ctxStore *ctxs_new(pxPAC *pac)
 	// Define Javascript functions
 	JS_DefineFunction(self->ctx, global, "dnsResolve", dnsResolve, 1, 0);
 	JS_DefineFunction(self->ctx, global, "myIpAddress", myIpAddress, 0, 0);
-	JS_EvaluateScript(self->ctx, global, JAVASCRIPT_ROUTINES, 
+	JS_EvaluateScript(self->ctx, global, JAVASCRIPT_ROUTINES,
 			        strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
-			        
+
 	// Add PAC to the environment
 	JS_EvaluateScript(self->ctx, global, px_pac_to_string(pac),
-                       strlen(px_pac_to_string(pac)), 
+                       strlen(px_pac_to_string(pac)),
                        px_url_to_string((pxURL *) px_pac_get_url(pac)),
                        0, &rval);
 
@@ -144,7 +151,15 @@ error:
 	return NULL;
 }
 
-char *mozjs_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
+static void
+_destructor(pxPlugin *self)
+{
+	ctxs_free(((pxMozillaPACRunnerPlugin *) self)->ctxs);
+	((pxMozillaPACRunnerPlugin *) self)->old_destructor(self);
+}
+
+static char *
+_run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 {
 	// Make sure we have the pac file and url
 	if (!pac) return NULL;
@@ -152,20 +167,21 @@ char *mozjs_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 	if (!px_pac_to_string(pac) && !px_pac_reload(pac)) return NULL;
 
 	// Get the cached context
-	ctxStore *ctxs = px_proxy_factory_misc_get(self, "mozjs");
+	ctxStore *ctxs = ((pxMozillaPACRunnerPlugin *) self)->ctxs;
 
 	// If there is a cached context, make sure it is the same pac
 	if (ctxs && strcmp(ctxs->pac, px_pac_to_string(pac)))
 	{
 		ctxs_free(ctxs);
 		ctxs = NULL;
+		((pxMozillaPACRunnerPlugin *) self)->ctxs = NULL;
 	}
 
 	// If no context exists (or if the pac was changed), create one
 	if (!ctxs)
 	{
 		if ((ctxs = ctxs_new(pac)))
-			px_proxy_factory_misc_set(self, "mozjs", ctxs);
+			((pxMozillaPACRunnerPlugin *) self)->ctxs = ctxs;
 		else
 			return NULL;
 	}
@@ -177,27 +193,29 @@ char *mozjs_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 		STRING_TO_JSVAL(JS_NewString(ctxs->ctx, tmpurl, strlen(tmpurl))),
 		STRING_TO_JSVAL(JS_NewString(ctxs->ctx, tmphost, strlen(tmphost)))
 	};
-	
+
 	// Find the proxy (call FindProxyForURL())
 	jsval rval;
 	JSBool result = JS_CallFunctionName(ctxs->ctx, JS_GetGlobalObject(ctxs->ctx), "FindProxyForURL", 2, args, &rval);
 	if (!result) return NULL;
 	char *answer = px_strdup(JS_GetStringBytes(JS_ValueToString(ctxs->ctx, rval)));
 	if (!answer || !strcmp(answer, "undefined")) {
-		px_free(answer); 
+		px_free(answer);
 		return NULL;
 	}
 	return answer;
 }
 
-bool on_proxy_factory_instantiate(pxProxyFactory *self)
+static bool
+_constructor(pxPlugin *self)
 {
-	return px_proxy_factory_pac_runner_set(self, mozjs_pacrunner);
+	((pxMozillaPACRunnerPlugin *) self)->old_destructor = self->destructor;
+	self->destructor                                    = _destructor;
+	return true;
 }
 
-void on_proxy_factory_destantiate(pxProxyFactory *self)
+bool
+px_module_load(pxPluginManager *self)
 {
-	px_proxy_factory_pac_runner_set(self, NULL);
-	ctxs_free(px_proxy_factory_misc_get(self, "mozjs"));
-	px_proxy_factory_misc_set(self, "mozjs", NULL);
+	return px_plugin_manager_constructor_add_subtype(self, "pacrunner_mozjs", pxPACRunnerPlugin, pxMozillaPACRunnerPlugin, _constructor);
 }

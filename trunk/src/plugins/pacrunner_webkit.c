@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -27,10 +27,22 @@
 #include <unistd.h>
 
 #include <misc.h>
-#include <proxy_factory.h>
+#include <plugin_manager.h>
+#include <plugin_pacrunner.h>
 
 #include <JavaScriptCore/JavaScript.h>
 #include "pacutils.h"
+
+typedef struct {
+	JSGlobalContextRef ctx;
+	char              *pac;
+} ctxStore;
+
+typedef struct _pxWebKitPACRunnerPlugin {
+	PX_PLUGIN_SUBCLASS(pxPACRunnerPlugin);
+	void    (*old_destructor)(pxPlugin *);
+	ctxStore *ctxs;
+} pxWebKitPACRunnerPlugin;
 
 static char *jstr2str(JSStringRef str, bool release)
 {
@@ -53,14 +65,14 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef func, JSObjectRef sel
 	if (getaddrinfo(tmp, NULL, NULL, &info))
 		return NULL;
 	px_free(tmp);
-	
+
 	// Try for IPv4
 	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
-	if (!inet_ntop(info->ai_family, 
+	if (!inet_ntop(info->ai_family,
 					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
 					tmp, INET_ADDRSTRLEN+1) > 0)
 		// Try for IPv6
-		if (!inet_ntop(info->ai_family, 
+		if (!inet_ntop(info->ai_family,
 						&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
 						tmp, INET6_ADDRSTRLEN+1) > 0)
 		{
@@ -69,7 +81,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef func, JSObjectRef sel
 			return NULL;
 		}
 	freeaddrinfo(info);
-	
+
 	// Create the return value
 	JSStringRef str = JSStringCreateWithUTF8CString(tmp);
 	JSValueRef  ret = JSValueMakeString(ctx, str);
@@ -92,11 +104,6 @@ static JSValueRef myIpAddress(JSContextRef ctx, JSObjectRef func, JSObjectRef se
 	return NULL;
 }
 
-typedef struct {
-	JSGlobalContextRef ctx;
-	char              *pac;
-} ctxStore;
-
 static void ctxs_free(ctxStore *self)
 {
 	if (!self) return;
@@ -110,7 +117,7 @@ static ctxStore *ctxs_new(pxPAC *pac)
 {
 	JSStringRef str  = NULL;
 	JSObjectRef func = NULL;
-	
+
 	// Create the basic context
 	ctxStore *self = px_malloc0(sizeof(ctxStore));
 	self->pac = px_strdup(px_pac_to_string(pac));
@@ -148,7 +155,15 @@ error:
 	return NULL;
 }
 
-char *webkit_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
+static void
+_destructor(pxPlugin *self)
+{
+	ctxs_free(((pxWebKitPACRunnerPlugin *) self)->ctxs);
+	((pxWebKitPACRunnerPlugin *) self)->old_destructor(self);
+}
+
+static char *
+_run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 {
 	JSStringRef str = NULL;
 	JSValueRef  val = NULL;
@@ -160,7 +175,7 @@ char *webkit_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 	if (!px_pac_to_string(pac) && !px_pac_reload(pac)) return NULL;
 
 	// Get the cached context
-	ctxStore *ctxs = px_proxy_factory_misc_get(self, "webkit");
+	ctxStore *ctxs = ((pxWebKitPACRunnerPlugin *) self)->ctxs;
 
 	// If there is a cached context, make sure it is the same pac
 	if (ctxs && strcmp(ctxs->pac, px_pac_to_string(pac)))
@@ -173,7 +188,7 @@ char *webkit_pacrunner(pxProxyFactory *self, pxPAC *pac, pxURL *url)
 	if (!ctxs)
 	{
 		if ((ctxs = ctxs_new(pac)))
-			px_proxy_factory_misc_set(self, "webkit", ctxs);
+			((pxWebKitPACRunnerPlugin *) self)->ctxs = ctxs;
 		else
 			return NULL;
 	}
@@ -196,14 +211,16 @@ error:
 	return tmp;
 }
 
-bool on_proxy_factory_instantiate(pxProxyFactory *self)
+static bool
+_constructor(pxPlugin *self)
 {
-	return px_proxy_factory_pac_runner_set(self, webkit_pacrunner);
+	((pxWebKitPACRunnerPlugin *) self)->old_destructor = self->destructor;
+	self->destructor                                    = _destructor;
+	return true;
 }
 
-void on_proxy_factory_destantiate(pxProxyFactory *self)
+bool
+px_module_load(pxPluginManager *self)
 {
-	px_proxy_factory_pac_runner_set(self, NULL);
-	ctxs_free(px_proxy_factory_misc_get(self, "webkit"));
-	px_proxy_factory_misc_set(self, "webkit", NULL);
+	return px_plugin_manager_constructor_add_subtype(self, "pacrunner_webkit", pxPACRunnerPlugin, pxWebKitPACRunnerPlugin, _constructor);
 }
