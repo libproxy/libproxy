@@ -45,6 +45,7 @@ struct _pxPluginManager {
 static pxPlugin *
 copyprototype(const pxPlugin *prototype, size_t allocsize, size_t copysize)
 {
+	if (!prototype) return NULL;
 	if (copysize > allocsize) return NULL;
 	pxPlugin *proto = px_malloc0(allocsize);
 	if (prototype)
