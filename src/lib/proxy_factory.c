@@ -113,7 +113,6 @@ px_proxy_factory_new ()
 	pxPACRunnerPlugin prp;
 	memset(&prp, 0, sizeof(pxPACRunnerPlugin));
 	((pxPlugin *) &prp)->constructor = &px_pac_runner_plugin_constructor;
-	((pxPlugin *) &prp)->destructor  = &px_plugin_destructor;
 	if (!px_plugin_manager_register_type(self->pm, pxPACRunnerPlugin, (pxPlugin *) &prp)) goto error;
 
 	/* Register the NetworkPlugin type */
