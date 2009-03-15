@@ -1,7 +1,7 @@
 plugindir           = @PLUGINDIR@
 
 # Which modules to build
-plugin_LTLIBRARIES  =
+plugin_LTLIBRARIES  = ignore_domain.la
 if WITH_DIRECT
 plugin_LTLIBRARIES += config_direct.la
 endif
@@ -65,6 +65,12 @@ config_wpad_la_SOURCES             = config_wpad.c
 config_wpad_la_CFLAGS              = -I$(top_srcdir)/src/lib
 config_wpad_la_LIBADD              = ../lib/libproxy.la
 config_wpad_la_LDFLAGS             = -module -avoid-version
+
+# Domain Ignore Plugin
+ignore_domain_la_SOURCES           = ignore_domain.c
+ignore_domain_la_CFLAGS            = -I$(top_srcdir)/src/lib
+ignore_domain_la_LIBADD            = ../lib/libproxy.la
+ignore_domain_la_LDFLAGS           = -module -avoid-version
 
 # WebKit (JavaScriptCore) based PAC runner
 pacrunner_webkit_la_SOURCES        = pacrunner_webkit.c

@@ -20,10 +20,11 @@
 #ifndef PLUGIN_IGNORE_H_
 #define PLUGIN_IGNORE_H_
 #include "plugin.h"
+#include "url.h"
 
 typedef struct _pxIgnorePlugin {
 	PX_PLUGIN_SUBCLASS(pxPlugin);
-	bool   (*ignore)(struct _pxIgnorePlugin *self, const char *ignorestr);
+	bool   (*ignore)(struct _pxIgnorePlugin *self, pxURL *url, const char *ignorestr);
 } pxIgnorePlugin;
 #define pxIgnorePluginVersion 0
 
