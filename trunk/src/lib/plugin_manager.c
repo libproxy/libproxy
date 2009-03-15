@@ -194,7 +194,7 @@ px_plugin_manager_constructor_add_full(pxPluginManager *self,
 	/* If no constructors exist, create an empty array */
 	if (!constrs)
 	{
-		constrs = px_array_new(NULL, NULL, true, true);
+		constrs = px_array_new(NULL, (void *) freeinfo, true, true);
 		px_strdict_set(self->constructors, key, constrs);
 	}
 	px_free(key);
