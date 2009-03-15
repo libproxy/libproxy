@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -62,18 +62,18 @@ px_array_add(pxArray *self, void *item)
 {
 	/* Verify some basic stuff */
 	if (!self || !item) return false;
-	
+
 	/* If we are a unique array and a dup is found, either bail or replace the item */
 	if (self->unique && px_array_find(self, item) >= 0)
 	{
 		if (!self->replace)
 			return false;
-		
+
 		self->free(self->data[px_array_find(self, item)]);
 		self->data[px_array_find(self, item)] = item;
 		return true;
 	}
-	
+
 	void **data = px_malloc0(sizeof(void *) * (self->length + 1));
 	memcpy(data, self->data, sizeof(void *) * self->length);
 	data[self->length++] = item;
@@ -87,13 +87,13 @@ px_array_del(pxArray *self, const void *item)
 {
 	int index = px_array_find(self, item);
 	if (index < 0) return false;
-	
+
 	/* Free the old one and shift elements down */
 	self->free(self->data[index]);
 	memmove(self->data+index,
 			self->data+index+1,
 			sizeof(void *) * (--self->length - index));
-	
+
 	return true;
 }
 
@@ -108,11 +108,11 @@ int
 px_array_find(pxArray *self, const void *item)
 {
 	if (!self || !item) return -1;
-	
+
 	for (int i=0 ; i < self->length ; i++)
 		if (self->equals(self->data[i], (void *) item))
 			return i;
-	
+
 	return -1;
 }
 
@@ -122,7 +122,7 @@ px_array_get(pxArray *self, int index)
 	if (!self)     return NULL;
 	if (index < 0) index = self->length + index;
 	if (index < 0) return NULL;
-	
+
 	return self->data[index];
 }
 
@@ -130,8 +130,21 @@ void
 px_array_free(pxArray *self)
 {
 	if (!self) return;
-	
+
 	for (int i=0 ; i < self->length ; i++)
 		self->free(self->data[i]);
 	px_free(self);
 }
+
+unsigned int
+px_array_length(pxArray *self)
+{
+	return self->length;
+}
+
+void
+px_array_sort(pxArray *self, int (*compare)(const void *, const void *))
+{
+	qsort(self->data, self->length, sizeof(void *), compare);
+}
+

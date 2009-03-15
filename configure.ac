@@ -27,6 +27,13 @@ PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes,
 PKG_CHECK_MODULES(NetworkManager, NetworkManager dbus-1, 
 					have_networkmanager=yes, have_networkmanager=no)
 
+# Direct
+AC_ARG_WITH([direct],
+            [AS_HELP_STRING([--with-direct],
+            [build direct configuration plugin @<:@default=yes@:>@])],
+            [], [with_direct=yes])
+AM_CONDITIONAL([WITH_DIRECT], [test x$with_direct = xyes])
+
 # Environmental Variable
 AC_ARG_WITH([envvar],
             [AS_HELP_STRING([--with-envvar],
@@ -91,26 +98,33 @@ else
 fi
 AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
 
-# WebKit Javascript
-AC_ARG_WITH([webkit],
-            [AS_HELP_STRING([--with-webkit],
-            [build WebKit JavaScriptCore PAC runner plugin @<:@automatic@:>@])],
+# WPAD
+AC_ARG_WITH([wpad],
+            [AS_HELP_STRING([--with-wpad],
+            [build WPAD configuration plugin @<:@default=yes@:>@])],
+            [], [with_wpad=yes])
+AM_CONDITIONAL([WITH_WPAD], [test x$with_wpad = xyes])
+
+# NetworkManager
+AC_ARG_WITH([networkmanager],
+            [AS_HELP_STRING([--with-networkmanager],
+            [build NetworkManager plugin @<:@automatic@:>@])],
             [],
-            [test x$have_webkit = xyes && with_webkit=yes])
-if test x$with_webkit = xyes; then
-	if test x$have_webkit = xyes; then
-		WEBKIT_CFLAGS="$webkit_CFLAGS"
-		WEBKIT_LIBS="$webkit_LIBS"
-		AC_SUBST(WEBKIT_CFLAGS)
-		AC_SUBST(WEBKIT_LIBS)
+            [test x$have_networkmanager = xyes && with_networkmanager=yes])
+if test x$with_networkmanager = xyes; then
+	if test x$have_networkmanager = xyes; then
+		NETWORKMANAGER_CFLAGS="$NetworkManager_CFLAGS"
+		NETWORKMANAGER_LIBS="$NetworkManager_LIBS"
+		AC_SUBST(NETWORKMANAGER_CFLAGS)
+		AC_SUBST(NETWORKMANAGER_LIBS)
 	else
-		echo "WebKit JavaScriptCore plugin requires: WebKit!"
+		echo "NetworkManager plugin requires: NetworkManager!"
 		exit 1
 	fi
 else
-	with_webkit=no
+	with_networkmanager=no
 fi
-AM_CONDITIONAL([WITH_WEBKIT], [test x$with_webkit = xyes])
+AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
@@ -133,26 +147,26 @@ else
 fi
 AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 
-# NetworkManager
-AC_ARG_WITH([networkmanager],
-            [AS_HELP_STRING([--with-networkmanager],
-            [build NetworkManager plugin @<:@automatic@:>@])],
+# WebKit Javascript
+AC_ARG_WITH([webkit],
+            [AS_HELP_STRING([--with-webkit],
+            [build WebKit JavaScriptCore PAC runner plugin @<:@automatic@:>@])],
             [],
-            [test x$have_networkmanager = xyes && with_networkmanager=yes])
-if test x$with_networkmanager = xyes; then
-	if test x$have_networkmanager = xyes; then
-		NETWORKMANAGER_CFLAGS="$NetworkManager_CFLAGS"
-		NETWORKMANAGER_LIBS="$NetworkManager_LIBS"
-		AC_SUBST(NETWORKMANAGER_CFLAGS)
-		AC_SUBST(NETWORKMANAGER_LIBS)
+            [test x$have_webkit = xyes && with_webkit=yes])
+if test x$with_webkit = xyes; then
+	if test x$have_webkit = xyes; then
+		WEBKIT_CFLAGS="$webkit_CFLAGS"
+		WEBKIT_LIBS="$webkit_LIBS"
+		AC_SUBST(WEBKIT_CFLAGS)
+		AC_SUBST(WEBKIT_LIBS)
 	else
-		echo "NetworkManager plugin requires: NetworkManager!"
+		echo "WebKit JavaScriptCore plugin requires: WebKit!"
 		exit 1
 	fi
 else
-	with_networkmanager=no
+	with_webkit=no
 fi
-AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
+AM_CONDITIONAL([WITH_WEBKIT], [test x$with_webkit = xyes])
 
 ### Check for binding requirements
 # Python
@@ -198,13 +212,15 @@ AC_OUTPUT
 echo
 echo "------------------------------------------------------"
 echo -e "\tPlugins to build..."
+echo -e "\t\tdirect          : $with_direct"
 echo -e "\t\tenvvar          : $with_envvar"
 echo -e "\t\tfile            : $with_file"
 echo -e "\t\tgnome           : $with_gnome"
 echo -e "\t\tkde             : $with_kde"
-echo -e "\t\twebkit          : $with_webkit"
-echo -e "\t\tmozjs           : $with_mozjs"
+echo -e "\t\twpad            : $with_wpad"
 echo -e "\t\tnetworkmanager  : $with_networkmanager"
+echo -e "\t\tmozjs           : $with_mozjs"
+echo -e "\t\twebkit          : $with_webkit"
 echo
 echo -e "\tBindings to build..."
 echo -e "\t\tpython          : $with_python"

@@ -22,37 +22,48 @@
 #include <stdarg.h>
 
 #include <misc.h>
-#include <proxy_factory.h>
+#include <plugin_manager.h>
+#include <plugin_config.h>
 #include <config_file.h>
-
-#include <X11/Xlib.h>
-#include <X11/Xmu/WinUtil.h>
 
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
-pxConfig *
-kde_config_cb(pxProxyFactory *self, pxURL *url)
+typedef struct _pxKConfigConfigPlugin {
+	PX_PLUGIN_SUBCLASS(pxConfigPlugin);
+	pxConfigFile  *cf;
+	void         (*old_destructor)(pxPlugin *);
+} pxKConfigConfigPlugin;
+
+static void
+_destructor(pxPlugin *self)
+{
+	px_config_file_free(((pxKConfigConfigPlugin *) self)->cf);
+	((pxKConfigConfigPlugin *) self)->old_destructor(self);
+}
+
+static char *
+_get_config(pxConfigPlugin *self, pxURL *url)
 {
 	// TODO: make ignores work w/ KDE
-	char *curl = NULL, *ignore = NULL, *tmp = getenv("HOME");
+	char *curl = NULL, *tmp = getenv("HOME");
 	if (!tmp) return NULL;
 
 	// Open the config file
-	pxConfigFile *cf = px_proxy_factory_misc_get(self, "kde");
+	pxConfigFile *cf = ((pxKConfigConfigPlugin *) self)->cf;
 	if (!cf || px_config_file_is_stale(cf))
 	{
 		if (cf) px_config_file_free(cf);
 		tmp = px_strcat(getenv("HOME"), "/.kde/share/config/kioslaverc", NULL);
 		cf = px_config_file_new(tmp);
 		px_free(tmp);
-		px_proxy_factory_misc_set(self, "kde", cf);
+		((pxKConfigConfigPlugin *) self)->cf = cf;
 	}
 	if (!cf)  goto out;
 
 	// Read the config file to find out what type of proxy to use
 	tmp = px_config_file_get_value(cf, "Proxy Settings", "ProxyType");
-	if (!tmp) { px_config_file_free(cf); goto out; }
+	if (!tmp) goto out;
 
 	// Don't use any proxy
 	if (!strcmp(tmp, "0"))
@@ -81,25 +92,43 @@ kde_config_cb(pxProxyFactory *self, pxURL *url)
 
 	// Cleanup
 	px_free(tmp);
-	px_config_file_free(cf);
 
 	out:
-		return px_config_create(curl, ignore);
+		return curl;
 }
 
-bool
-on_proxy_factory_instantiate(pxProxyFactory *self)
+static char *
+_get_ignore(pxConfigPlugin *self, pxURL *url)
 {
-	// If we are running in KDE, then make sure this plugin is registered.
-	if (x_has_client("kicker", NULL))
-		return px_proxy_factory_config_add(self, "kde", PX_CONFIG_CATEGORY_SESSION, kde_config_cb);
+	return px_strdup("");
+}
+
+static bool
+_get_credentials(pxConfigPlugin *self, pxURL *proxy, char **username, char **password)
+{
 	return false;
 }
 
-void
-on_proxy_factory_destantiate(pxProxyFactory *self)
+static bool
+_set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const char *password)
 {
-	px_proxy_factory_config_del(self, "kde");
-	px_config_file_free(px_proxy_factory_misc_get(self, "kde"));
-	px_proxy_factory_misc_set(self, "kde", NULL);
+	return false;
+}
+
+static bool
+_constructor(pxPlugin *self)
+{
+	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	((pxKConfigConfigPlugin *) self)->old_destructor = self->destructor;
+	self->destructor                                 = _destructor;
+	return true;
+}
+
+bool
+px_module_load(pxPluginManager *self)
+{
+	// If we are running in KDE, then make sure this plugin is registered.
+	if (x_has_client("kicker", NULL))
+		return px_plugin_manager_constructor_add_subtype(self, "config_kde", pxConfigPlugin, pxKConfigConfigPlugin, _constructor);
+	return false;
 }

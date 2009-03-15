@@ -2,71 +2,89 @@ plugindir           = @PLUGINDIR@
 
 # Which modules to build
 plugin_LTLIBRARIES  =
+if WITH_DIRECT
+plugin_LTLIBRARIES += config_direct.la
+endif
 if WITH_ENVVAR
-plugin_LTLIBRARIES += envvar.la
+plugin_LTLIBRARIES += config_envvar.la
 endif
 if WITH_FILE
-plugin_LTLIBRARIES += file.la
+plugin_LTLIBRARIES += config_file.la
 endif
 if WITH_GNOME
-plugin_LTLIBRARIES += gnome.la
+plugin_LTLIBRARIES += config_gnome.la
 endif
 if WITH_KDE
-plugin_LTLIBRARIES += kde.la
+plugin_LTLIBRARIES += config_kde.la
 endif
-if WITH_WEBKIT
-plugin_LTLIBRARIES += webkit.la
-endif
-if WITH_MOZJS
-plugin_LTLIBRARIES += mozjs.la
+if WITH_WPAD
+plugin_LTLIBRARIES += config_wpad.la
 endif
 if WITH_NETWORKMANAGER
-plugin_LTLIBRARIES += networkmanager.la
+plugin_LTLIBRARIES += network_networkmanager.la
+endif
+if WITH_MOZJS
+plugin_LTLIBRARIES += pacrunner_mozjs.la
+endif
+if WITH_WEBKIT
+plugin_LTLIBRARIES += pacrunner_webkit.la
 endif
 
+# Direct Config Plugin
+config_direct_la_SOURCES           = config_direct.c
+config_direct_la_CFLAGS            = -I$(top_srcdir)/src/lib
+config_direct_la_LIBADD            = ../lib/libproxy.la
+config_direct_la_LDFLAGS           = -module -avoid-version
+
 # Environmental Variable Config Plugin
-envvar_la_SOURCES         = envvar.c
-envvar_la_CFLAGS          = -I$(top_srcdir)/src/lib
-envvar_la_LIBADD          = ../lib/libproxy.la
-envvar_la_LDFLAGS         = -module -avoid-version
+config_envvar_la_SOURCES           = config_envvar.c
+config_envvar_la_CFLAGS            = -I$(top_srcdir)/src/lib
+config_envvar_la_LIBADD            = ../lib/libproxy.la
+config_envvar_la_LDFLAGS           = -module -avoid-version
 
 # File Config Plugin
-file_la_SOURCES           = file.c
-file_la_CFLAGS            = -I$(top_srcdir)/src/lib
-file_la_LIBADD            = ../lib/libproxy.la
-file_la_LDFLAGS           = -module -avoid-version
+config_file_la_SOURCES             = config_file.c
+config_file_la_CFLAGS              = -I$(top_srcdir)/src/lib
+config_file_la_LIBADD              = ../lib/libproxy.la
+config_file_la_LDFLAGS             = -module -avoid-version
 
 # GConf/GNOME Config Plugin
-gnome_la_SOURCES          = gnome.c xhasclient.c
-gnome_la_CFLAGS           = -I$(top_srcdir)/src/lib @GNOME_CFLAGS@
-gnome_la_LIBADD           = ../lib/libproxy.la
-gnome_la_LDFLAGS          = -module -avoid-version @GNOME_LIBS@
+config_gnome_la_SOURCES            = config_gnome.c xhasclient.c
+config_gnome_la_CFLAGS             = -I$(top_srcdir)/src/lib @GNOME_CFLAGS@
+config_gnome_la_LIBADD             = ../lib/libproxy.la
+config_gnome_la_LDFLAGS            = -module -avoid-version @GNOME_LIBS@
 
 # KDE Config Plugin
-kde_la_SOURCES            = kde.c xhasclient.c
-kde_la_CFLAGS             = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
-kde_la_LIBADD             = ../lib/libproxy.la
-kde_la_LDFLAGS            = -module -avoid-version @KDE_LIBS@
+config_kde_la_SOURCES              = config_kde.c xhasclient.c
+config_kde_la_CFLAGS               = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
+config_kde_la_LIBADD               = ../lib/libproxy.la
+config_kde_la_LDFLAGS              = -module -avoid-version @KDE_LIBS@
+
+# WPAD Config Plugin
+config_wpad_la_SOURCES             = config_wpad.c
+config_wpad_la_CFLAGS              = -I$(top_srcdir)/src/lib
+config_wpad_la_LIBADD              = ../lib/libproxy.la
+config_wpad_la_LDFLAGS             = -module -avoid-version
 
 # WebKit (JavaScriptCore) based PAC runner
-webkit_la_SOURCES          = webkit.c
-webkit_la_CFLAGS           = -I$(top_srcdir)/src/lib @WEBKIT_CFLAGS@
-webkit_la_LIBADD           = ../lib/libproxy.la
-webkit_la_LDFLAGS          = -module -avoid-version @WEBKIT_LIBS@
-nodist_webkit_la_SOURCES   = pacutils.h
+pacrunner_webkit_la_SOURCES        = pacrunner_webkit.c
+pacrunner_webkit_la_CFLAGS         = -I$(top_srcdir)/src/lib @WEBKIT_CFLAGS@
+pacrunner_webkit_la_LIBADD         = ../lib/libproxy.la
+pacrunner_webkit_la_LDFLAGS        = -module -avoid-version @WEBKIT_LIBS@
+nodist_pacrunner_webkit_la_SOURCES = pacutils.h
 
 # Mozilla (Spidermonkey) based PAC runner
-mozjs_la_SOURCES          = mozjs.c
-mozjs_la_CFLAGS           = -I$(top_srcdir)/src/lib @MOZJS_CFLAGS@
-mozjs_la_LIBADD           = ../lib/libproxy.la
-mozjs_la_LDFLAGS          = -module -avoid-version @MOZJS_LIBS@
-nodist_mozjs_la_SOURCES   = pacutils.h
+pacrunner_mozjs_la_SOURCES         = pacrunner_mozjs.c
+pacrunner_mozjs_la_CFLAGS          = -I$(top_srcdir)/src/lib @MOZJS_CFLAGS@
+pacrunner_mozjs_la_LIBADD          = ../lib/libproxy.la
+pacrunner_mozjs_la_LDFLAGS         = -module -avoid-version @MOZJS_LIBS@
+nodist_pacrunner_mozjs_la_SOURCES  = pacutils.h
 
 # NetworkManager Plugin
-networkmanager_la_SOURCES = networkmanager.c
-networkmanager_la_CFLAGS  = -I$(top_srcdir)/src/lib @NETWORKMANAGER_CFLAGS@
-networkmanager_la_LIBADD  = ../lib/libproxy.la
-networkmanager_la_LDFLAGS = -module -avoid-version @NETWORKMANAGER_LIBS@
+network_networkmanager_la_SOURCES  = network_networkmanager.c
+network_networkmanager_la_CFLAGS   = -I$(top_srcdir)/src/lib @NETWORKMANAGER_CFLAGS@
+network_networkmanager_la_LIBADD   = ../lib/libproxy.la
+network_networkmanager_la_LDFLAGS  = -module -avoid-version @NETWORKMANAGER_LIBS@
 
 BUILT_SOURCES = pacutils.h
 CLEANFILES = pacutils.h

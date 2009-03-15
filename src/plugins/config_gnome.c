@@ -21,32 +21,38 @@
 #include <string.h>
 
 #include <misc.h>
-#include <proxy_factory.h>
+#include <plugin_manager.h>
+#include <plugin_config.h>
 
 #include <gconf/gconf-client.h>
 
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
-pxConfig *
-gconf_config_cb(pxProxyFactory *self, pxURL *url)
+typedef struct _pxGConfConfigPlugin {
+	PX_PLUGIN_SUBCLASS(pxConfigPlugin);
+	GConfClient *client;
+	void       (*old_destructor)(pxPlugin *);
+} pxGConfConfigPlugin;
+
+static void
+_destructor(pxPlugin *self)
 {
-	// Get the GConf client
-	GConfClient *client = px_proxy_factory_misc_get(self, "gnome");
-	if (!client)
-	{
-		// Create a new instance if not found
-		client = gconf_client_get_default();
-		if (!client) return NULL;
-		px_proxy_factory_misc_set(self, "gnome", client);
-	}
-	g_object_ref(client);
+	g_object_unref(((pxGConfConfigPlugin *) self)->client);
+	((pxGConfConfigPlugin *) self)->old_destructor(self);
+}
+
+static char *
+_get_config(pxConfigPlugin *self, pxURL *url)
+{
+	GConfClient *client = ((pxGConfConfigPlugin *) self)->client;
 
 	// Get the mode
 	char *mode = gconf_client_get_string(client, "/system/proxy/mode", NULL);
-	if (!mode) { g_object_unref(client); return NULL; }
+	if (!mode)
+		return NULL;
 
-	char *curl = NULL, *ignore = NULL;
+	char *curl = NULL;
 
 	// Mode is direct://
 	if (!strcmp(mode, "none"))
@@ -81,8 +87,10 @@ gconf_config_cb(pxProxyFactory *self, pxURL *url)
 			host = gconf_client_get_string(client, "/system/ftp_proxy/host", NULL);
 			port = gconf_client_get_int   (client, "/system/ftp_proxy/port", NULL);
 		}
-		else
+		if (!host || !strcmp(host, "") || !port)
 		{
+			if (host) g_free(host);
+
 			host = gconf_client_get_string(client, "/system/http_proxy/host", NULL);
 			port = gconf_client_get_int   (client, "/system/http_proxy/port", NULL);
 		}
@@ -109,63 +117,71 @@ gconf_config_cb(pxProxyFactory *self, pxURL *url)
 	}
 	g_free(mode);
 
+	char *tmp = px_strdup(curl);
 	if (curl)
-	{
-		GSList *ignores = gconf_client_get_list(client, "/system/http_proxy/ignore_hosts",
-												GCONF_VALUE_STRING, NULL);
-		if (ignores)
-		{
-			GString *ignore_str = g_string_new(NULL);
-			GSList *start = ignores;
-			for ( ; ignores ; ignores = ignores->next)
-			{
-				if (ignore_str->len)
-					g_string_append(ignore_str, ",");
-				g_string_append(ignore_str, ignores->data);
-				g_free(ignores->data);
-			}
-			g_slist_free(start);
-			ignore = g_string_free(ignore_str, FALSE);
-		}
-	}
-
-	g_object_unref(client);
-
-	if (G_UNLIKELY(!g_mem_is_system_malloc()))
-	{
-		char *tmp;
-		tmp = px_strdup(curl);
 		g_free(curl);
-		curl = tmp;
-		tmp = px_strdup(ignore);
-		g_free(ignore);
-		ignore = tmp;
-	}
+	return tmp;
+}
 
-	return px_config_create(curl, ignore);
+static char *
+_get_ignore(pxConfigPlugin *self, pxURL *url)
+{
+	GSList *ignores = gconf_client_get_list(((pxGConfConfigPlugin *) self)->client,
+                                            "/system/http_proxy/ignore_hosts",
+											GCONF_VALUE_STRING, NULL);
+	if (!ignores)
+		return px_strdup("");
+
+	GString *ignore_str = g_string_new(NULL);
+	GSList  *start      = ignores;
+	for ( ; ignores ; ignores = ignores->next)
+	{
+		if (ignore_str->len)
+			g_string_append(ignore_str, ",");
+		g_string_append(ignore_str, ignores->data);
+		g_free(ignores->data);
+	}
+	g_slist_free(start);
+
+	char *tmp = g_string_free(ignore_str, FALSE);
+	char *ignore = px_strdup(tmp);
+	g_free(tmp);
+	return ignore;
+}
+
+static bool
+_get_credentials(pxConfigPlugin *self, pxURL *proxy, char **username, char **password)
+{
+	return false;
+}
+
+static bool
+_set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const char *password)
+{
+	return false;
+}
+
+static bool
+_constructor(pxPlugin *self)
+{
+	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	((pxGConfConfigPlugin *) self)->old_destructor = self->destructor;
+	self->destructor                               = _destructor;
+
+	((pxGConfConfigPlugin *) self)->client         = gconf_client_get_default();
+	if (!((pxGConfConfigPlugin *) self)->client)
+		return false;
+	return true;
 }
 
 bool
-on_proxy_factory_instantiate(pxProxyFactory *self)
+px_module_load(pxPluginManager *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
 	if (x_has_client("gnome-session", "gnome-panel", NULL))
 	{
 		g_type_init();
-		return px_proxy_factory_config_add(self, "gnome", PX_CONFIG_CATEGORY_SESSION, gconf_config_cb);
+		return px_plugin_manager_constructor_add_subtype(self, "config_gnome", pxConfigPlugin, pxGConfConfigPlugin, _constructor);
 	}
 	return false;
-}
-
-void
-on_proxy_factory_destantiate(pxProxyFactory *self)
-{
-	px_proxy_factory_config_del(self, "gnome");
-
-	// Close the GConf connection, if present
-	if (px_proxy_factory_misc_get(self, "gnome"))
-	{
-		g_object_unref(px_proxy_factory_misc_get(self, "gnome"));
-		px_proxy_factory_misc_set(self, "gnome", NULL);
-	}
 }

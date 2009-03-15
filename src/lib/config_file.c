@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -47,28 +47,28 @@ px_config_file_new(char *filename)
 	self->filename          = px_strdup(filename);
 	self->mtime             = st.st_mtime;
 	self->sections          = px_strdict_new((void *) px_strdict_free);
-	
+
 	/* Add one section (PX_CONFIG_FILE_DEFAULT_SECTION) */
 	px_strdict_set(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION, px_strdict_new(free));
 	pxStrDict *current = (pxStrDict *) px_strdict_get(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION);
-	
+
 	/* Parse our file */
 	for (char *line=NULL ; (line = px_readline(fd, NULL, 0)) ; px_free(line))
 	{
 		/* Strip */
 		char *tmp = px_strstrip(line);
 		px_free(line); line = tmp;
-		
+
 		/* Check for comment and/or empty line */
 		if (*line == '#' || !strcmp(line, "")) continue;
-		
+
 		/* If we have a new section */
 		if (*line == '[' || line[strlen(line)-1] == ']')
 		{
 			/* Get just the section name */
 			memmove(line, line+1, strlen(line)-1);
 			line[strlen(line)-2] = '\0';
-			
+
 			if (px_strdict_get(self->sections, line))
 				current = (pxStrDict *) px_strdict_get(self->sections, line);
 			else
@@ -84,7 +84,7 @@ px_config_file_new(char *filename)
 			px_free(key);
 		}
 	}
-	
+
 	close(fd);
 	return self;
 }
@@ -106,7 +106,7 @@ void
 px_config_file_free(pxConfigFile *self)
 {
 	if (!self) return;
-	
+
 	px_strdict_free(self->sections);
 	px_free(self->filename);
 	px_free(self);
