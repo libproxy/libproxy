@@ -209,6 +209,7 @@ _run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 static bool
 _constructor(pxPlugin *self)
 {
+	((pxPACRunnerPlugin *) self)->run                   = _run;
 	((pxMozillaPACRunnerPlugin *) self)->old_destructor = self->destructor;
 	self->destructor                                    = _destructor;
 	return true;
