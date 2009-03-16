@@ -24,7 +24,7 @@
 || Firefox || || || || no || no ||
 ||||||||||||  _*Distributions*_ -- A list of operating systems that should provide libproxy: ||
 || *Name* || *Website* || *Mailing list* || *Bug URL* || *Contacted?* || *Packaged?* ||
-|| Ubuntu || http://www.ubuntu.com || || || no || no ||
+|| Ubuntu || http://www.ubuntu.com || || || no || yes / jaunty ||
 || Fedora || http://www.fedoraproject.org || || [https://bugzilla.redhat.com/show_bug.cgi?id=457035 RedHat Bugzilla] || yes || yes ||
 || Debian || http://www.debian.org || || || no || no ||
 || OpenSUSE || http://www.opensuse.org || || [https://bugzilla.novell.com/show_bug.cgi?id=397249 Novell Bugzilla] || yes || yes / 11.2+ ||
