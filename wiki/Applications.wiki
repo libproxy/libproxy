@@ -3,7 +3,7 @@
 
 ||||||||||||  _*Applications*_ -- A list of programs that should link to libproxy: ||
 || *Name* || *Website* || *Maling list* || *Bug URL* || *Contacted?* || *Adopted?* ||
-|| libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103 || YES || no ||
+|| libsoup || http://live.gnome.org/LibSoup || http://mail.gnome.org/mailman/listinfo/libsoup-list || http://bugzilla.gnome.org/show_bug.cgi?id=502103 || YES || YES ||
 || libcurl || http://curl.haxx.se/libcurl/ || http://curl.haxx.se/mail/list.cgi?list=curl-library || http://sourceforge.net/tracker/index.php?func=detail&aid=1855054&group_id=976&atid=350976 || YES || no ||
 || wget || http://www.gnu.org/software/wget/ || http://wget.addictivecode.org/MailingLists || {{{[mailing list]}}} || YES || no ||
 || Gnome || http://www.gnome.org || http://mail.gnome.org/mailman/listinfo/desktop-devel-list || http://bugzilla.gnome.org/ || no || no ||
