@@ -25,13 +25,13 @@
 ||||||||||||  _*Distributions*_ -- A list of operating systems that should provide libproxy: ||
 || *Name* || *Website* || *Mailing list* || *Bug URL* || *Contacted?* || *Packaged?* ||
 || Ubuntu || http://www.ubuntu.com || || || no || no ||
-|| Fedora || http://www.fedoraproject.org || || [https://bugzilla.redhat.com/show_bug.cgi?id=457035 RedHat Bugzilla] || yes || no ||
+|| Fedora || http://www.fedoraproject.org || || [https://bugzilla.redhat.com/show_bug.cgi?id=457035 RedHat Bugzilla] || yes || yes ||
 || Debian || http://www.debian.org || || || no || no ||
 || OpenSUSE || http://www.opensuse.org || || [https://bugzilla.novell.com/show_bug.cgi?id=397249 Novell Bugzilla] || yes || yes / 11.2+ ||
-|| Mandriva || http://www.mandriva.com || || || no || no ||
+|| Mandriva || http://www.mandriva.com || || || no || yes ||
 || Gentoo || http://www.gentoo.org || || [http://bugs.gentoo.org/show_bug.cgi?id=244028 Gentoo Bugzilla] || yes || yes ||
 || Foresight Linux || http://www.foresightlinux.com || || || no || no ||
 || FreeBSD || http://www.freebsd.org || || || no || no ||
 || NetBSD || http://www.netbsd.org || || || no || no ||
 || OpenBSD || http://www.openbsd.org || || || no || no ||
-|| OpenSolaris || http://www.opensolaris.org || || || no || no ||
+|| OpenSolaris || http://www.opensolaris.org || || || no || yes ||
