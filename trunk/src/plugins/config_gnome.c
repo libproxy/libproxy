@@ -178,7 +178,7 @@ bool
 px_module_load(pxPluginManager *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
-	if (x_has_client("gnome-session", "gnome-panel", NULL))
+	if (x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
 	{
 		g_type_init();
 		return px_plugin_manager_constructor_add_subtype(self, "config_gnome", pxConfigPlugin, pxGConfConfigPlugin, _constructor);
