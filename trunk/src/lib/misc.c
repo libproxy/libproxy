@@ -164,6 +164,9 @@ px_strjoin(const char **strv, const char *delimiter)
 char **
 px_strsplit(const char *string, const char *delimiter)
 {
+	/* if string is empty, return NULL */
+	if (!string) return NULL;
+
 	/* Count how many times the delimiter appears */
 	int count = 1;
 	for (const char *tmp = string ; (tmp = strstr(tmp, delimiter)) ; tmp += strlen(delimiter))
