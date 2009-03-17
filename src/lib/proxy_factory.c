@@ -255,7 +255,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	/* Check our ignore patterns */
 	char **ignores = px_strsplit(confign, ",");
 	px_free(confign); confign = NULL;
-	for (int i=0 ; ignores[i] ; i++)
+	for (int i=0 ; ignores && ignores[i] ; i++)
 	{
 		for (int j=0 ; j < px_array_length(self->ignores) ; j++)
 		{
