@@ -280,7 +280,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			self->wpad = px_wpad_new();
 			if (!self->wpad)
 			{
-				fprintf(stderr, "*** Unable to create WPAD! Falling back to direct...\n");
+				fprintf(stderr, "libproxy: Unable to create WPAD! Falling back to direct...\n");
 				goto do_return;
 			}
 		}
@@ -296,11 +296,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		}
 
 		/* If the WPAD cycle failed, fall back to direct */
-		if (!self->pac)
-		{
-			fprintf(stderr, "*** Unable to locate PAC! Falling back to direct...\n");
-			goto do_return;
-		}
+		if (!self->pac) goto do_return;
 
 		/* Run the PAC */
 		for (int i = 0 ; i < px_array_length(self->pacrunners) ; i++)
@@ -313,7 +309,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 		/* No PAC runner found, fall back to direct */
 		if (px_array_length(self->pacrunners) < 1)
-			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");
+			fprintf(stderr, "libproxy: PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
 
 	/* If we have a PAC config */
@@ -332,7 +328,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 			pxURL *urltmp = px_url_new(confurl + 4);
 			if (!urltmp)
 			{
-				fprintf(stderr, "*** Invalid PAC URL! Falling back to direct...\n");
+				fprintf(stderr, "libproxy: Invalid PAC URL! Falling back to direct...\n");
 				goto do_return;
 			}
 			if (!px_url_equals(urltmp, px_pac_get_url(self->pac)))
@@ -346,7 +342,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		/* Try to load the PAC if it is not already loaded */
 		if (!self->pac && !(self->pac = px_pac_new_from_string(confurl + 4)))
 		{
-			fprintf(stderr, "*** Invalid PAC URL! Falling back to direct...\n");
+			fprintf(stderr, "libproxy: Invalid PAC URL! Falling back to direct...\n");
 			goto do_return;
 		}
 
@@ -361,7 +357,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 		/* No PAC runner found, fall back to direct */
 		if (px_array_length(self->pacrunners) < 1)
-			fprintf(stderr, "*** PAC found, but no active PAC runner! Falling back to direct...\n");
+			fprintf(stderr, "libproxy: PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
 
 	/* If we have a manual config (http://..., socks://...) */
