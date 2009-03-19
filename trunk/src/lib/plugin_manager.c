@@ -185,6 +185,19 @@ px_plugin_manager_constructor_add_full(pxPluginManager *self,
 	if (!self)        return false;
 	if (!type)        return false;
 	if (!constructor) return false;
+	if (!name)        return false;
+
+    /* Check for plugins to blacklist */
+	char **blacklist = px_strsplit(getenv("PX_PLUGIN_BLACKLIST"), ",");
+	for (int i=0 ; blacklist && blacklist[i] ; i++)
+	{
+		if (!strcmp(name, blacklist[i]))
+		{
+			px_strfreev(blacklist);
+			return false;
+		}
+	}
+	px_strfreev(blacklist);
 
 	/* Get an array of all of the constructors for a particular name/version
 	 * as well as information about the type.
