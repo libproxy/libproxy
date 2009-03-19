@@ -119,9 +119,10 @@ px_array_find(pxArray *self, const void *item)
 const void *
 px_array_get(pxArray *self, int index)
 {
-	if (!self)     return NULL;
+	if (!self)                 return NULL;
 	if (index < 0) index = self->length + index;
-	if (index < 0) return NULL;
+	if (index < 0)             return NULL;
+	if (index >= self->length) return NULL;
 
 	return self->data[index];
 }

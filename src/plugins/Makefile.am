@@ -18,7 +18,7 @@ if WITH_KDE
 plugin_LTLIBRARIES += config_kde.la
 endif
 if WITH_WPAD
-plugin_LTLIBRARIES += config_wpad.la
+plugin_LTLIBRARIES += config_wpad.la wpad_dns.la wpad_dnsdevolution.la
 endif
 if WITH_NETWORKMANAGER
 plugin_LTLIBRARIES += network_networkmanager.la
@@ -97,6 +97,18 @@ network_networkmanager_la_SOURCES  = network_networkmanager.c
 network_networkmanager_la_CFLAGS   = -I$(top_srcdir)/src/lib @NETWORKMANAGER_CFLAGS@
 network_networkmanager_la_LIBADD   = ../lib/libproxy.la
 network_networkmanager_la_LDFLAGS  = -module -avoid-version @NETWORKMANAGER_LIBS@
+
+# DNS WPAD Plugin
+wpad_dns_la_SOURCES                = wpad_dns.c
+wpad_dns_la_CFLAGS                 = -I$(top_srcdir)/src/lib
+wpad_dns_la_LIBADD                 = ../lib/libproxy.la
+wpad_dns_la_LDFLAGS                = -module -avoid-version
+
+# DNS WPAD Plugin
+wpad_dnsdevolution_la_SOURCES      = wpad_dnsdevolution.c
+wpad_dnsdevolution_la_CFLAGS       = -I$(top_srcdir)/src/lib
+wpad_dnsdevolution_la_LIBADD       = ../lib/libproxy.la
+wpad_dnsdevolution_la_LDFLAGS      = -module -avoid-version
 
 BUILT_SOURCES = pacutils.h
 CLEANFILES = pacutils.h

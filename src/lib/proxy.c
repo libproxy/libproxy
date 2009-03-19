@@ -19,30 +19,21 @@
 #define _BSD_SOURCE
 
 #include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <sys/types.h>
-#include <dirent.h>
 #include <stdio.h>
-#include <dlfcn.h>
-#include <math.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <string.h>
 #include <pthread.h>
-
 
 #include "misc.h"
 #include "proxy.h"
-#include "wpad.h"
 #include "config_file.h"
 #include "array.h"
 #include "strdict.h"
 #include "plugin_manager.h"
 #include "plugin_config.h"
-#include "plugin_pacrunner.h"
-#include "plugin_network.h"
 #include "plugin_ignore.h"
+#include "plugin_network.h"
+#include "plugin_pacrunner.h"
+#include "plugin_wpad.h"
 
 struct _pxProxyFactory {
 	pthread_mutex_t  mutex;
@@ -51,9 +42,9 @@ struct _pxProxyFactory {
 	pxArray         *pacrunners;
 	pxArray         *networks;
 	pxArray         *ignores;
+	pxArray         *wpads;
 	pxPAC           *pac;
-	pxWPAD          *wpad;
-	//pxConfigFile    *cf;
+	bool             wpad;
 };
 
 /* Convert the PAC formatted response into our proxy URL array response */
@@ -107,23 +98,29 @@ px_proxy_factory_new ()
 	pxConfigPlugin cp;
 	memset(&cp, 0, sizeof(pxConfigPlugin));
 	((pxPlugin *) &cp)->compare = &px_config_plugin_compare;
-	if (!px_plugin_manager_register_type(self->pm, pxConfigPlugin, (pxPlugin *) &cp)) goto error;
+	if (!px_plugin_manager_register_type(self->pm, pxConfigPlugin, &cp)) goto error;
+
+	/* Register the IgnorePlugin type */
+	pxIgnorePlugin ip;
+	memset(&ip, 0, sizeof(pxIgnorePlugin));
+	if (!px_plugin_manager_register_type(self->pm, pxIgnorePlugin, &ip)) goto error;
+
+	/* Register the NetworkPlugin type */
+	pxNetworkPlugin np;
+	memset(&np, 0, sizeof(pxNetworkPlugin));
+	if (!px_plugin_manager_register_type(self->pm, pxNetworkPlugin, &np)) goto error;
 
 	/* Register the PACRunnerPlugin type */
 	pxPACRunnerPlugin prp;
 	memset(&prp, 0, sizeof(pxPACRunnerPlugin));
 	((pxPlugin *) &prp)->constructor = &px_pac_runner_plugin_constructor;
-	if (!px_plugin_manager_register_type(self->pm, pxPACRunnerPlugin, (pxPlugin *) &prp)) goto error;
+	if (!px_plugin_manager_register_type(self->pm, pxPACRunnerPlugin, &prp)) goto error;
 
-	/* Register the NetworkPlugin type */
-	pxNetworkPlugin np;
-	memset(&np, 0, sizeof(pxNetworkPlugin));
-	if (!px_plugin_manager_register_type(self->pm, pxNetworkPlugin, (pxPlugin *) &np)) goto error;
-
-	/* Register the IgnorePlugin type */
-	pxIgnorePlugin ip;
-	memset(&ip, 0, sizeof(pxIgnorePlugin));
-	if (!px_plugin_manager_register_type(self->pm, pxIgnorePlugin, (pxPlugin *) &ip)) goto error;
+	/* Register the WPADRunnerPlugin type */
+	pxWPADPlugin wpadp;
+	memset(&wpadp, 0, sizeof(pxWPADPlugin));
+	((pxPlugin *) &cp)->compare = &px_wpad_plugin_compare;
+	if (!px_plugin_manager_register_type(self->pm, pxWPADPlugin, &wpadp)) goto error;
 
     /* If we have a config file, load the config order from it */
 	pxConfigFile *cf = px_config_file_new(SYSCONFDIR "/proxy.conf");
@@ -146,6 +143,7 @@ px_proxy_factory_new ()
 	self->pacrunners = px_plugin_manager_instantiate_plugins(self->pm, pxPACRunnerPlugin);
 	self->networks   = px_plugin_manager_instantiate_plugins(self->pm, pxNetworkPlugin);
 	self->ignores    = px_plugin_manager_instantiate_plugins(self->pm, pxIgnorePlugin);
+	self->wpads      = px_plugin_manager_instantiate_plugins(self->pm, pxWPADPlugin);
 
 	pthread_mutex_init(&self->mutex, NULL);
 	return self;
@@ -211,9 +209,12 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		pxNetworkPlugin *np = (pxNetworkPlugin *) px_array_get(self->networks, i);
 		if (np->changed(np))
 		{
-			px_wpad_free(self->wpad);
+			for (int j=0 ; j < px_array_length(self->wpads) ; j++)
+			{
+				pxWPADPlugin *wpad = (pxWPADPlugin *) px_array_get(self->wpads, j);
+				wpad->rewind(wpad);
+			}
 			px_pac_free(self->pac);
-			self->wpad = NULL;
 			self->pac  = NULL;
 			break;
 		}
@@ -272,65 +273,66 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	/* If we have a wpad config */
 	if (!strcmp(confurl, "wpad://"))
 	{
-		/* Get the WPAD object if needed */
+		/* If the config has just changed from PAC to WPAD, clear the PAC */
 		if (!self->wpad)
 		{
-			if (self->pac) px_pac_free(self->pac);
+			px_pac_free(self->pac);
 			self->pac  = NULL;
-			self->wpad = px_wpad_new();
-			if (!self->wpad)
+			self->wpad = true;
+		}
+
+		/* If we have no PAC, get one */
+		if (!self->pac)
+		{
+			for (int i=0 ; i < px_array_length(self->wpads) ; i++)
 			{
-				fprintf(stderr, "libproxy: Unable to create WPAD! Falling back to direct...\n");
-				goto do_return;
+				pxWPADPlugin *wpad = (pxWPADPlugin *) px_array_get(self->wpads, i);
+				if ((self->pac = wpad->next(wpad)))
+					break;
+			}
+
+			/* If getting the PAC fails, but the WPAD cycle worked, restart the cycle */
+			if (!self->pac)
+			{
+				for (int i=0 ; i < px_array_length(self->wpads) ; i++)
+				{
+					pxWPADPlugin *wpad = (pxWPADPlugin *) px_array_get(self->wpads, i);
+					if (wpad->found)
+					{
+						/* Since a PAC was found at some point,
+						 * rewind all the WPADS to start from the beginning */
+						for (i=0 ; i < px_array_length(self->wpads) ; i++)
+						{
+							wpad = (pxWPADPlugin *) px_array_get(self->wpads, i);
+							wpad->rewind(wpad);
+						}
+
+						/* Attempt to find a PAC */
+						for (i=0 ; i < px_array_length(self->wpads) ; i++)
+						{
+							wpad = (pxWPADPlugin *) px_array_get(self->wpads, i);
+							if ((self->pac = wpad->next(wpad)))
+								break;
+						}
+						break;
+					}
+				}
 			}
 		}
-
-		/*
-		 * If we have no PAC, get one
-		 * If getting the PAC fails, but the WPAD cycle worked, restart the cycle
-		 */
-		if (!self->pac && !(self->pac = px_wpad_next(self->wpad)) && px_wpad_pac_found(self->wpad))
-		{
-			px_wpad_rewind(self->wpad);
-			self->pac = px_wpad_next(self->wpad);
-		}
-
-		/* If the WPAD cycle failed, fall back to direct */
-		if (!self->pac) goto do_return;
-
-		/* Run the PAC */
-		for (int i = 0 ; i < px_array_length(self->pacrunners) ; i++)
-		{
-			px_strfreev(response);
-			pxPACRunnerPlugin *prp = (pxPACRunnerPlugin *) px_array_get(self->pacrunners, i);
-			response = _format_pac_response(prp->run(prp, self->pac, realurl));
-			break; /* Only try one PAC Runner */
-		}
-
-		/* No PAC runner found, fall back to direct */
-		if (px_array_length(self->pacrunners) < 1)
-			fprintf(stderr, "libproxy: PAC found, but no active PAC runner! Falling back to direct...\n");
 	}
-
 	/* If we have a PAC config */
 	else if (!strncmp(confurl, "pac+", 4))
 	{
-		/* Clear WPAD to indicate that this is a non-WPAD PAC */
+		/* Save the PAC config */
 		if (self->wpad)
-		{
-			px_wpad_free(self->wpad);
-			self->wpad = NULL;
-		}
+			self->wpad = false;
 
 		/* If a PAC already exists, but came from a different URL than the one specified, remove it */
 		if (self->pac)
 		{
 			pxURL *urltmp = px_url_new(confurl + 4);
 			if (!urltmp)
-			{
-				fprintf(stderr, "libproxy: Invalid PAC URL! Falling back to direct...\n");
 				goto do_return;
-			}
 			if (!px_url_equals(urltmp, px_pac_get_url(self->pac)))
 			{
 				px_pac_free(self->pac);
@@ -341,11 +343,12 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 		/* Try to load the PAC if it is not already loaded */
 		if (!self->pac && !(self->pac = px_pac_new_from_string(confurl + 4)))
-		{
-			fprintf(stderr, "libproxy: Invalid PAC URL! Falling back to direct...\n");
 			goto do_return;
-		}
+	}
 
+	/* In case of either PAC or WPAD, we'll run the PAC */
+	if (!strcmp(confurl, "wpad://") || !strncmp(confurl, "pac+", 4))
+	{
 		/* Run the PAC */
 		for (int i = 0 ; i < px_array_length(self->pacrunners) ; i++)
 		{
@@ -357,14 +360,14 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 		/* No PAC runner found, fall back to direct */
 		if (px_array_length(self->pacrunners) < 1)
-			fprintf(stderr, "libproxy: PAC found, but no active PAC runner! Falling back to direct...\n");
+			goto do_return;
 	}
 
 	/* If we have a manual config (http://..., socks://...) */
 	else if (!strncmp(confurl, "http://", 7) || !strncmp(confurl, "socks://", 8))
 	{
-		if (self->wpad) { px_wpad_free(self->wpad); self->wpad = NULL; }
-		if (self->pac)  { px_pac_free(self->pac);   self->pac = NULL; }
+		self->wpad = false;
+		if (self->pac)  { px_pac_free(self->pac); self->pac = NULL; }
 		px_strfreev(response);
 		response = px_strsplit(confurl, ";");
 	}
@@ -392,13 +395,13 @@ px_proxy_factory_free (pxProxyFactory *self)
 	px_array_free(self->pacrunners);
 	px_array_free(self->networks);
 	px_array_free(self->ignores);
+	px_array_free(self->wpads);
 
 	/* Free the plugin manager */
 	px_plugin_manager_free(self->pm);
 
 	/* Free everything else */
 	px_pac_free(self->pac);
-	px_wpad_free(self->wpad);
 	pthread_mutex_unlock(&self->mutex);
 	pthread_mutex_destroy(&self->mutex);
 	px_free(self);

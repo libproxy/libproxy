@@ -1,52 +1,50 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef DHCP_H_
-#define DHCP_H_
+#include <stdlib.h>
+#include <string.h>
 
-#include "pac.h"
+#include "misc.h"
+#include "plugin_config.h"
 
-/**
- * A DHCP PAC detector. All fields are private.
- */
-typedef struct _pxDHCP pxDHCP;
+#define DEFAULT_WPAD_ORDER "wpad_dhcp,wpad_slp,wpad_dns,wpad_dnsdevolution"
 
-/**
- * Creates a new DHCP PAC detector.
- * @return New DHCP PAD detector
- */
-pxDHCP *px_dhcp_new();
+static int
+_findpos(const char *name)
+{
+	int pos = 0;
 
-/**
- * Detect the next PAC in the chain.
- * @return Detected PAC or NULL if none is found
- */
-pxPAC *px_dhcp_next(pxDHCP *self);
+	char **orderv = px_strsplit(DEFAULT_WPAD_ORDER, ",");
+	for (pos = 0 ; orderv[pos] ; pos++)
+		if (!strcmp(name, orderv[pos]))
+			goto do_return;
 
-/**
- * Restarts the detection chain at the beginning.
- */
-void px_dhcp_rewind(pxDHCP *self);
+	do_return:
+		px_strfreev(orderv);
+		return pos;
+}
 
-/**
- * Frees a pxDHCP object.
- */
-void px_dhcp_free(pxDHCP *self);
-
-#endif /*DHCP_H_*/
+int
+px_wpad_plugin_compare(pxPlugin *self, pxPlugin *other)
+{
+	if (!self || !other) return 0;
+	int s = _findpos(self->name);
+	int o = _findpos(other->name);
+	return s - o;
+}

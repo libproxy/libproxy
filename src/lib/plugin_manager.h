@@ -59,6 +59,6 @@ bool             px_plugin_manager_register_type_full(pxPluginManager *self,
                                                       size_t size,
                                                       const pxPlugin *prototype);
 #define          px_plugin_manager_register_type(self, type, prototype) \
-						px_plugin_manager_register_type_full(self, #type, type ## Version, sizeof(type), prototype)
+						px_plugin_manager_register_type_full(self, #type, type ## Version, sizeof(type), (pxPlugin *) prototype)
 
 #endif /* PLUGIN_MANAGER_H_ */
