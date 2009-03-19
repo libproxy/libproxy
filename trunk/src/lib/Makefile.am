@@ -9,15 +9,11 @@ libproxy_la_SOURCES = \
 						plugin_manager.c plugin_manager.h \
 						plugin_network.h \
 						plugin_pacrunner.c plugin_pacrunner.h \
+						plugin_wpad.c plugin_wpad.h \
 						plugin.c plugin.h \
-						proxy_factory.c \
+						proxy.c proxy.h \
 						strdict.c strdict.h \
-						url.c url.h \
-						wpad.c wpad.h \
-						wpad_dhcp.c wpad_dhcp.h \
-						wpad_dns.c wpad_dns.h \
-						wpad_slp.c wpad_slp.h \
-						proxy.h
+						url.c url.h
 
 libproxy_la_CFLAGS  = -Wall
 libproxy_la_LDFLAGS = -lpthread -lm

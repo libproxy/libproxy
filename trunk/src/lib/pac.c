@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -69,16 +69,16 @@ pxPAC *
 px_pac_new(pxURL *url)
 {
 	if (!url) return NULL;
-	
+
 	/* Allocate the object */
 	pxPAC *self = px_malloc0(sizeof(pxPAC));
-	
+
 	/* Copy the given URL */
 	self->url = px_url_new(px_url_to_string(url)); /* Always returns valid value */
-		
+
 	/* Make sure we have a real pxPAC */
 	if (!px_pac_reload(self)) { px_pac_free(self); return NULL; }
-	
+
 	return self;
 }
 
@@ -93,7 +93,7 @@ px_pac_new_from_string(char *url)
 	/* Create temporary URL */
 	pxURL *tmpurl = px_url_new(url);
 	if (!tmpurl) return NULL;
-	
+
 	/* Create pac */
 	pxPAC *self = px_pac_new(tmpurl);
 	px_url_free(tmpurl); /* Free no longer used URL */
@@ -123,7 +123,7 @@ px_pac_reload(pxPAC *self)
 	const char *headers[3] = { "Accept: " PAC_MIME_TYPE, "Connection: close", NULL };
 	bool correct_mime_type;
 	unsigned long int content_length = 0;
-	
+
 	/* Get the pxPAC */
 	sock = px_url_get(self->url, headers);
 	if (sock < 0) return false;
@@ -133,23 +133,23 @@ px_pac_reload(pxPAC *self)
 	if (!line)                                                    goto error;
 	if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
 	if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
-	
+
 	/* Check for correct mime type and content length */
 	while (strcmp(line, "\r")) {
 		/* Check for content type */
 		if (strstr(line, "Content-Type: ") == line && strstr(line, PAC_MIME_TYPE))
 			correct_mime_type = true;
-			
+
 		/* Check for content length */
 		else if (strstr(line, "Content-Length: ") == line)
 			content_length = atoi(line + strlen("Content-Length: "));
-		
+
 		/* Get new line */
 		px_free(line);
 		line = px_readline(sock, NULL, 0);
 		if (!line) goto error;
 	}
-	
+
 	/* Get content */
 	if (!content_length || !correct_mime_type) goto error;
 	px_free(line); line = NULL;
@@ -157,11 +157,11 @@ px_pac_reload(pxPAC *self)
 	self->cache = px_malloc0(content_length+1);
 	for (int recvd=0 ; recvd != content_length ; )
 		recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
-	
+
 	/* Clean up */
 	close(sock);
 	return true;
-	
+
 	error:
 		px_free(self->cache); self->cache = NULL;
 		if (sock >= 0) close(sock);

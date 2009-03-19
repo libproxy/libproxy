@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -87,20 +87,20 @@ px_url_get(pxURL *self, const char **headers)
 	char *request = NULL;
 	char *joined_headers = NULL;
 	int sock = -1;
-	
+
 	/* DNS lookup of host */
 	if (!px_url_get_ips(self)) goto error;
-	
+
 	/* Iterate through each pxIP trying to make a connection */
 	for (int i = 0 ;  self->ips && self->ips[i] && sock < 0 ; i++)
 	{
 		sock = socket(self->ips[i]->sa_family, SOCK_STREAM, 0);
 		if (sock < 0) continue;
-		
-		if (self->ips[i]->sa_family == AF_INET && 
+
+		if (self->ips[i]->sa_family == AF_INET &&
 			!connect(sock, self->ips[i], sizeof(struct sockaddr_in)))
 			break;
-		else if (self->ips[i]->sa_family == AF_INET6 && 
+		else if (self->ips[i]->sa_family == AF_INET6 &&
 			!connect(sock, self->ips[i], sizeof(struct sockaddr_in6)))
 			break;
 
@@ -108,7 +108,7 @@ px_url_get(pxURL *self, const char **headers)
 		sock = -1;
 	}
 	if (sock < 0) goto error;
-	
+
 	/* Merge optional headers */
 	if (headers)
 	{
@@ -119,18 +119,18 @@ px_url_get(pxURL *self, const char **headers)
 		joined_headers = px_strdup("");
 
 	/* Create request header */
-	request = px_strcat("GET ", px_url_get_path(self), 
+	request = px_strcat("GET ", px_url_get_path(self),
 						" HTTP/1.1\r\nHost: ", px_url_get_host(self),
 						"\r\n", joined_headers, "\r\n\r\n", NULL);
 	px_free(joined_headers);
-			
+
 	/* Send HTTP request */
 	if (send(sock, request, strlen(request), 0) != strlen(request)) goto error;
 	px_free(request); request = NULL;
-	
+
 	/* Return the socket, which is ready for reading the response */
 	return sock;
-	
+
 	error:
 		if (sock >= 0) close(sock);
 		px_free(request);
@@ -160,18 +160,18 @@ px_url_get_host(pxURL *self)
 
 /**
  * Get the IP address of the hostname in this pxURL without using DNS.
- * @return IP address of the host in the pxURL. 
+ * @return IP address of the host in the pxURL.
  */
 const struct sockaddr *
 px_url_get_ip_no_dns(pxURL *self)
 {
 	if (!self) return NULL;
-	
+
 	/* Check the cache */
 	if (self->ips && self->ips[0])
 		return (const struct sockaddr *) self->ips[0];
 	px_free(self->ips);
-	
+
 	/* Try for IPv4 first */
 	struct sockaddr *ip = px_malloc0(sizeof(struct sockaddr_in));
 	if (inet_pton(AF_INET, px_url_get_host(self), &((struct sockaddr_in *) ip)->sin_addr) > 0)
@@ -183,7 +183,7 @@ px_url_get_ip_no_dns(pxURL *self)
 		return (const struct sockaddr *) self->ips[0];
 	}
 	px_free(ip);
-	
+
 	/* Try for IPv6 next */
 	ip = px_malloc0(sizeof(struct sockaddr_in6));
 	if (inet_pton(AF_INET6, px_url_get_host(self), &((struct sockaddr_in6 *) ip)->sin6_addr) > 0)
@@ -195,37 +195,37 @@ px_url_get_ip_no_dns(pxURL *self)
 		return (const struct sockaddr *) self->ips[0];
 	}
 	px_free(ip);
-	
+
 	/* The hostname was not an IP address */
 	return NULL;
 }
 
 /**
  * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
- * @return IP addresses of the host in the pxURL. 
+ * @return IP addresses of the host in the pxURL.
  */
 const struct sockaddr **
 px_url_get_ips(pxURL *self)
 {
 	if (!self) return NULL;
-	
+
 	/* Check the cache */
 	if (self->ips) return (const struct sockaddr **) self->ips;
-	
+
 	/* Check without DNS first */
 	if (px_url_get_ip_no_dns(self)) return (const struct sockaddr **) self->ips;
-	
+
 	/* Check DNS for IPs */
 	struct addrinfo *info;
 	if (!getaddrinfo(px_url_get_host(self), NULL, NULL, &info))
 	{
 		struct addrinfo *first = info;
 		int count;
-		
+
 		/* Count how many IPs we got back */
 		for (count=0 ; info ; info = info->ai_next)
 			count++;
-		
+
 		/* Copy the sockaddr's into self->ips */
 		info = first;
 		self->ips = px_malloc0(sizeof(struct sockaddr *) * ++count);
@@ -244,11 +244,11 @@ px_url_get_ips(pxURL *self)
 				((struct sockaddr_in6 *) self->ips[i++])->sin6_port = htons(self->port);
 			}
 		}
-		
+
 		freeaddrinfo(first);
 		return (const struct sockaddr **) self->ips;
 	}
-	
+
 	/* No addresses found */
 	return NULL;
 }
@@ -290,23 +290,25 @@ px_url_get_scheme(pxURL *self)
 pxURL *
 px_url_new(const char *url)
 {
+	if (!url) return NULL;
+
 	/* Allocate pxURL */
 	pxURL *self  = px_malloc0(sizeof(pxURL));
-	
+
 	/* Get scheme */
 	if (!strstr(url, "://")) goto error;
 	self->scheme = px_strndup(url, strstr(url, "://") - url);
-	
+
 	/* Get host */
 	self->host   = px_strdup(strstr(url, "://") + strlen("://"));
-	
+
 	/* Get path */
 	self->path   = px_strdup(strchr(self->host, '/'));
 	if (self->path)
 		self->host[strlen(self->host) - strlen(self->path)] = 0;
 	else
 		self->path = px_strdup("");
-		
+
 	/* Get the port */
 	bool port_specified = false;
 	if (strchr(self->host, ':')) {
@@ -317,10 +319,10 @@ px_url_new(const char *url)
 	}
 	else
 		self->port = px_url_get_default_port(self);
-		
+
 	/* Make sure we have a real host */
 	if (!strcmp(self->host, "")) goto error;
-	
+
 	/* Verify by re-assembly */
 	self->url = px_malloc0(strlen(url) + 1);
 	if (!port_specified)
@@ -328,9 +330,9 @@ px_url_new(const char *url)
 	else
 		snprintf(self->url, strlen(url) + 1, "%s://%s:%d%s", self->scheme, self->host, self->port, self->path);
 	if (strcmp(self->url, url)) goto error;
-	
+
 	return self;
-	
+
 	error:
 		px_url_free(self);
 		return NULL;
