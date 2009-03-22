@@ -16,6 +16,9 @@ AM_PROG_CC_C_O
 AC_CHECK_HEADERS(pthread.h)
 AC_CHECK_FUNCS(pthread_mutex_init)
 
+### Check for socket functions (opensolaris requires -lsocket for example)
+AC_SEARCH_LIBS([socket],[socket inet])
+
 ### Checks for libraries for plugins.
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
