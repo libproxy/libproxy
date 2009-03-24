@@ -24,6 +24,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -87,6 +88,10 @@ px_url_get(pxURL *self, const char **headers)
 	char *request = NULL;
 	char *joined_headers = NULL;
 	int sock = -1;
+
+	/* in case of a file:// url we open the file and return a hande to it */
+	if (!strcmp(self->scheme,"file")) 
+		return open(self->path, O_RDONLY);
 
 	/* DNS lookup of host */
 	if (!px_url_get_ips(self)) goto error;
@@ -321,7 +326,7 @@ px_url_new(const char *url)
 		self->port = px_url_get_default_port(self);
 
 	/* Make sure we have a real host */
-	if (!strcmp(self->host, "")) goto error;
+	if (!strcmp(self->host, "") && strcmp(self->scheme, "file")) goto error;
 
 	/* Verify by re-assembly */
 	self->url = px_malloc0(strlen(url) + 1);

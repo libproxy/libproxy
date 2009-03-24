@@ -21,6 +21,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 
 #include "url.h"
@@ -128,35 +129,47 @@ px_pac_reload(pxPAC *self)
 	sock = px_url_get(self->url, headers);
 	if (sock < 0) return false;
 
-	/* Verify status line */
-	line = px_readline(sock, NULL, 0);
-	if (!line)                                                    goto error;
-	if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
-	if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
-
-	/* Check for correct mime type and content length */
-	while (strcmp(line, "\r")) {
-		/* Check for content type */
-		if (strstr(line, "Content-Type: ") == line && strstr(line, PAC_MIME_TYPE))
-			correct_mime_type = true;
-
-		/* Check for content length */
-		else if (strstr(line, "Content-Length: ") == line)
-			content_length = atoi(line + strlen("Content-Length: "));
-
-		/* Get new line */
-		px_free(line);
+	if (strcmp(px_url_get_scheme(self->url),"file"))
+	{
+		/* Verify status line */
 		line = px_readline(sock, NULL, 0);
-		if (!line) goto error;
-	}
+		if (!line)                                                    goto error;
+		if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
+		if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
 
-	/* Get content */
-	if (!content_length || !correct_mime_type) goto error;
-	px_free(line); line = NULL;
-	px_free(self->cache);
-	self->cache = px_malloc0(content_length+1);
-	for (int recvd=0 ; recvd != content_length ; )
-		recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
+		/* Check for correct mime type and content length */
+		while (strcmp(line, "\r")) {
+			/* Check for content type */
+			if (strstr(line, "Content-Type: ") == line && strstr(line, PAC_MIME_TYPE))
+				correct_mime_type = true;
+
+			/* Check for content length */
+			else if (strstr(line, "Content-Length: ") == line)
+				content_length = atoi(line + strlen("Content-Length: "));
+
+			/* Get new line */
+			px_free(line);
+			line = px_readline(sock, NULL, 0);
+			if (!line) goto error;
+		}
+
+		/* Get content */
+		if (!content_length || !correct_mime_type) goto error;
+		px_free(line); line = NULL;
+		px_free(self->cache);
+		self->cache = px_malloc0(content_length+1);
+		for (int recvd=0 ; recvd != content_length ; )
+			recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
+	}
+	else
+	{ /* file:// url */
+		struct stat buffer;
+		int status;
+
+		status = fstat(sock, &buffer);
+		self->cache = px_malloc0(buffer.st_blksize * buffer.st_blocks);
+		status = read(sock, self->cache, buffer.st_blksize * buffer.st_blocks);
+	}
 
 	/* Clean up */
 	close(sock);
