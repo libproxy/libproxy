@@ -166,7 +166,7 @@ px_pac_reload(pxPAC *self)
 		struct stat buffer;
 		int status;
 
-		status = fstat(sock, &buffer);
+		if (fstat(sock, &buffer)) goto error;
 		self->cache = px_malloc0(buffer.st_blksize * buffer.st_blocks);
 		status = read(sock, self->cache, buffer.st_blksize * buffer.st_blocks);
 	}
