@@ -15,7 +15,7 @@ else
     result="N/A"
 fi
 
-echo 'name="test_pac"'
+echo 'name="test_pac_http"'
 if [ "$result1" = "$result1_ok" -a "$result2" = "$result2_ok" ]; then
   echo pass=True
 else
