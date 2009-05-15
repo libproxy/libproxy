@@ -128,69 +128,74 @@ _on_key_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer u
 }
 
 static void
-_destructor(pxPlugin *self)
+_destructor(pxPlugin *s)
 {
+	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+
 #ifdef G_THREADS_ENABLED
-	if (((pxGConfConfigPlugin *) self)->mutex)
-	{
-		g_mutex_free(((pxGConfConfigPlugin *) self)->mutex);
-	}
+	if (self->mutex)
+		g_mutex_free(self->mutex);
 #endif
-	g_object_unref(((pxGConfConfigPlugin *) self)->client);
-	g_free(((pxGConfConfigPlugin *) self)->mode);
-	g_free(((pxGConfConfigPlugin *) self)->autoconfig_url);
-	g_free(((pxGConfConfigPlugin *) self)->http_host);
-	g_free(((pxGConfConfigPlugin *) self)->https_host);
-	g_free(((pxGConfConfigPlugin *) self)->ftp_host);
-	g_free(((pxGConfConfigPlugin *) self)->socks_host);
-	g_free(((pxGConfConfigPlugin *) self)->ignore_hosts);
-	((pxGConfConfigPlugin *) self)->old_destructor(self);
+	g_object_unref(self->client);
+	g_free(self->mode);
+	g_free(self->autoconfig_url);
+	g_free(self->http_host);
+	g_free(self->https_host);
+	g_free(self->ftp_host);
+	g_free(self->socks_host);
+	g_free(self->ignore_hosts);
+	self->old_destructor(s);
+}
+
+static inline void
+_conditional_update(pxGConfConfigPlugin *self)
+{
+	if (g_main_depth() > 0) return;
+
+	/* We are not in a main loop */
+	for (int i=0 ; _all_keys[i] ; i++)
+	{
+		/* Get the defaults */
+		GConfEntry ignores;
+		ignores.key = (char *) _all_keys[i];
+		ignores.value = gconf_client_get(self->client, ignores.key, NULL);
+		_on_key_change(self->client, 0, &ignores, self);
+		if (ignores.value) gconf_value_free(ignores.value);
+	}
 }
 
 static char *
-_get_config(pxConfigPlugin *self, pxURL *url)
+_get_config(pxConfigPlugin *s, pxURL *url)
 {
-	/* We are not in a main loop */
-	if (g_main_depth() <= 0)
-	{
-		for (int i=0 ; _all_keys[i] ; i++)
-		{
-			/* Get the defaults */
-			GConfEntry ignores;
-			ignores.key = (char *) _all_keys[i];
-			ignores.value = gconf_client_get(((pxGConfConfigPlugin *) self)->client, ignores.key, NULL);
-			_on_key_change(((pxGConfConfigPlugin *) self)->client, 0, &ignores, self);
-			if (ignores.value) gconf_value_free(ignores.value);
-		}
-	}
+	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	_conditional_update(self);
 
 #ifdef G_THREADS_ENABLED
-	if (((pxGConfConfigPlugin *) self)->mutex)
-		g_mutex_lock(((pxGConfConfigPlugin *) self)->mutex);
+	if (self->mutex) g_mutex_lock(self->mutex);
 #endif
-	GConfClient *client = ((pxGConfConfigPlugin *) self)->client;
+	GConfClient *client = self->client;
 
 	// Make sure we have a mode
-	if (!((pxGConfConfigPlugin *) self)->mode)
+	if (!self->mode)
 		return NULL;
 
 	char *curl = NULL;
 
 	// Mode is direct://
-	if (!strcmp(((pxGConfConfigPlugin *) self)->mode, "none"))
+	if (!strcmp(self->mode, "none"))
 		curl = px_strdup("direct://");
 
 	// Mode is wpad:// or pac+http://...
-	else if (!strcmp(((pxGConfConfigPlugin *) self)->mode, "auto"))
+	else if (!strcmp(self->mode, "auto"))
 	{
-		if (px_url_is_valid(((pxGConfConfigPlugin *) self)->autoconfig_url))
-			curl = g_strdup_printf("pac+%s", ((pxGConfConfigPlugin *) self)->autoconfig_url);
+		if (px_url_is_valid(self->autoconfig_url))
+			curl = g_strdup_printf("pac+%s", self->autoconfig_url);
 		else
 			curl = g_strdup("wpad://");
 	}
 
 	// Mode is http://... or socks://...
-	else if (!strcmp(((pxGConfConfigPlugin *) self)->mode, "manual"))
+	else if (!strcmp(self->mode, "manual"))
 	{
 		char *type = g_strdup("http");
 		char *host = NULL;
@@ -199,20 +204,20 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 		// Get the per-scheme proxy settings
 		if (!strcmp(px_url_get_scheme(url), "https"))
 		{
-			host = ((pxGConfConfigPlugin *) self)->https_host;
-			port = ((pxGConfConfigPlugin *) self)->https_port;
+			host = self->https_host;
+			port = self->https_port;
 		}
 		else if (!strcmp(px_url_get_scheme(url), "ftp"))
 		{
-			host = ((pxGConfConfigPlugin *) self)->ftp_host;
-			port = ((pxGConfConfigPlugin *) self)->ftp_port;
+			host = self->ftp_host;
+			port = self->ftp_port;
 		}
 		if (!host || !strcmp(host, "") || !port)
 		{
 			if (host) g_free(host);
 
-			host = ((pxGConfConfigPlugin *) self)->http_host;
-			port = ((pxGConfConfigPlugin *) self)->http_port;
+			host = self->http_host;
+			port = self->http_port;
 		}
 		if (port < 0 || port > 65535) port = 0;
 
@@ -223,8 +228,8 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 			if (host) g_free(host);
 
 			type = g_strdup("socks");
-			host = ((pxGConfConfigPlugin *) self)->socks_host;
-			port = ((pxGConfConfigPlugin *) self)->socks_port;
+			host = self->socks_host;
+			port = self->socks_port;
 			if (port < 0 || port > 65535) port = 0;
 		}
 
@@ -241,41 +246,28 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 		g_free(curl);
 
 #ifdef G_THREADS_ENABLED
-		if (((pxGConfConfigPlugin *) self)->mutex)
-			g_mutex_unlock(((pxGConfConfigPlugin *) self)->mutex);
+		if (self->mutex) g_mutex_unlock(self->mutex);
 #endif
 
 	return tmp;
 }
 
 static char *
-_get_ignore(pxConfigPlugin *self, pxURL *url)
+_get_ignore(pxConfigPlugin *s, pxURL *url)
 {
-	/* We are not in a main loop */
-	if (g_main_depth() <= 0)
-	{
-		/* Get the default ignore list */
-		GConfEntry ignores;
-		ignores.key = (char *) "/system/http_proxy/ignore_hosts";
-		ignores.value = gconf_client_get(((pxGConfConfigPlugin *) self)->client, ignores.key, NULL);
-		_on_key_change(((pxGConfConfigPlugin *) self)->client, 0, &ignores, self);
-		if (ignores.value) gconf_value_free(ignores.value);
-	}
+	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	_conditional_update(self);
 
 #ifdef G_THREADS_ENABLED
-	if (((pxGConfConfigPlugin *) self)->mutex)
-		g_mutex_lock(((pxGConfConfigPlugin *) self)->mutex);
+	if (self->mutex) g_mutex_lock(self->mutex);
 #endif
 
-	char *ignores = px_strdup(((pxGConfConfigPlugin *) self)->ignore_hosts);
-	if (!ignores)
-		ignores = px_strdup("");
+	char *ignores = px_strdup(self->ignore_hosts);
 
 #ifdef G_THREADS_ENABLED
-		if (((pxGConfConfigPlugin *) self)->mutex)
-			g_mutex_unlock(((pxGConfConfigPlugin *) self)->mutex);
+		if (self->mutex) g_mutex_unlock(self->mutex);
 #endif
-	return ignores;
+	return ignores ? ignores : px_strdup("");
 }
 
 static bool
@@ -291,19 +283,20 @@ _set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const
 }
 
 static bool
-_constructor(pxPlugin *self)
+_constructor(pxPlugin *s)
 {
-	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	PX_CONFIG_PLUGIN_BUILD(s, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
 
 	/* Get the default gconf client */
-	((pxGConfConfigPlugin *) self)->client = gconf_client_get_default();
-	if (!((pxGConfConfigPlugin *) self)->client)
+	self->client = gconf_client_get_default();
+	if (!self->client)
 		return false;
 
     /* Enable our mutex */
 #ifdef G_THREADS_ENABLED
 	if (g_thread_get_initialized())
-		((pxGConfConfigPlugin *) self)->mutex = g_mutex_new();
+		self->mutex = g_mutex_new();
 #endif
 
 	/* Get our default values */
@@ -311,16 +304,16 @@ _constructor(pxPlugin *self)
 	{
 		/* Setup our notifications for change */
 		char *dir = g_strndup(_all_keys[i], strrchr(_all_keys[i], '/') - _all_keys[i]);
-		gconf_client_add_dir(((pxGConfConfigPlugin *) self)->client, dir, GCONF_CLIENT_PRELOAD_NONE, NULL);
+		gconf_client_add_dir(self->client, dir, GCONF_CLIENT_PRELOAD_NONE, NULL);
 		g_free(dir);
-		gconf_client_notify_add(((pxGConfConfigPlugin *) self)->client, _all_keys[i], _on_key_change, self, NULL, NULL);
+		gconf_client_notify_add(self->client, _all_keys[i], _on_key_change, self, NULL, NULL);
 
 		/* Do a first read of the values */
-		gconf_client_notify(((pxGConfConfigPlugin *) self)->client, _all_keys[i]);
+		gconf_client_notify(self->client, _all_keys[i]);
 	}
 
-	((pxGConfConfigPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                               = _destructor;
+	self->old_destructor = s->destructor;
+	s->destructor        = _destructor;
 
 	return true;
 }
