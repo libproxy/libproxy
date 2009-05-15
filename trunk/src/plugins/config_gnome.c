@@ -110,13 +110,11 @@ _on_key_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer u
 		else
 		{
 			GString *ignore_str = g_string_new(NULL);
-			GSList  *start      = ignores;
 			for ( ; ignores ; ignores = ignores->next)
 			{
 				if (ignore_str->len)
 					g_string_append(ignore_str, ",");
 				g_string_append(ignore_str, ignores->data);
-				g_free(ignores->data);
 			}
 
 			self->ignore_hosts = g_string_free(ignore_str, FALSE);
