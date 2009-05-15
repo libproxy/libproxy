@@ -160,7 +160,7 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 			ignores.key = (char *) _all_keys[i];
 			ignores.value = gconf_client_get(((pxGConfConfigPlugin *) self)->client, ignores.key, NULL);
 			_on_key_change(((pxGConfConfigPlugin *) self)->client, 0, &ignores, self);
-			gconf_value_free(ignores.value);
+			if (ignores.value) gconf_value_free(ignores.value);
 		}
 	}
 
@@ -259,7 +259,7 @@ _get_ignore(pxConfigPlugin *self, pxURL *url)
 		ignores.key = (char *) "/system/http_proxy/ignore_hosts";
 		ignores.value = gconf_client_get(((pxGConfConfigPlugin *) self)->client, ignores.key, NULL);
 		_on_key_change(((pxGConfConfigPlugin *) self)->client, 0, &ignores, self);
-		gconf_value_free(ignores.value);
+		if (ignores.value) gconf_value_free(ignores.value);
 	}
 
 #ifdef G_THREADS_ENABLED
