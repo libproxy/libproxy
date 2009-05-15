@@ -133,7 +133,6 @@ _destructor(pxPlugin *self)
 #ifdef G_THREADS_ENABLED
 	if (((pxGConfConfigPlugin *) self)->mutex)
 	{
-		g_mutex_lock(((pxGConfConfigPlugin *) self)->mutex);
 		g_mutex_free(((pxGConfConfigPlugin *) self)->mutex);
 	}
 #endif
