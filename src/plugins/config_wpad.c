@@ -51,12 +51,7 @@ _set_credentials(pxConfigPlugin *self, pxURL *url, const char *username, const c
 static bool
 _constructor(pxPlugin *plugin)
 {
-	pxConfigPlugin *self  = (pxConfigPlugin *) plugin;
-	self->category        = PX_CONFIG_PLUGIN_CATEGORY_NONE;
-	self->get_config      = &_get_config;
-	self->get_ignore      = &_get_ignore;
-	self->get_credentials = &_get_credentials;
-	self->set_credentials = &_set_credentials;
+	PX_CONFIG_PLUGIN_BUILD(plugin, PX_CONFIG_PLUGIN_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	return true;
 }
 
