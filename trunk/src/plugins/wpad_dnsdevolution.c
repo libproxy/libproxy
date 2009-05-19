@@ -20,9 +20,14 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
-#include <netdb.h>
 #define __USE_BSD
 #include <unistd.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <netdb.h>
+#endif
 
 #include <misc.h>
 #include <array.h>

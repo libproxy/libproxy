@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 #include <pthread.h>
 
 #include "misc.h"
@@ -181,9 +182,12 @@ px_proxy_factory_new ()
  * performance (described above) applies.
  *
  * The format of the returned proxy strings are as follows:
- *   - http://proxy:port
- *   - socks://proxy:port
+ *   - http://[username:password@]proxy:port
+ *   - socks://[username:password@]proxy:port
  *   - direct://
+ * Please note that the username and password in the above URLs are optional
+ * and should be use to authenticate the connection if present.
+ *
  * @url The URL we are trying to reach
  * @return A NULL-terminated array of proxy strings to use
  */
