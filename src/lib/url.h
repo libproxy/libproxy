@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -52,15 +52,20 @@ const char *px_url_get_host(pxURL *self);
 
 /**
  * Get the IP addresses of the hostname in this pxURL without using DNS.
- * @return IP addresses of the host in the pxURL. 
+ * @return IP addresses of the host in the pxURL.
  */
 const struct sockaddr *px_url_get_ip_no_dns(pxURL *self);
 
 /**
  * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
- * @return IP addresses of the host in the pxURL. 
+ * @return IP addresses of the host in the pxURL.
  */
 const struct sockaddr **px_url_get_ips(pxURL *self);
+
+/**
+ * @return Password portion of the pxURL
+ */
+const char *px_url_get_password(pxURL *self);
 
 /**
  * @return Path portion of the pxURL
@@ -76,6 +81,11 @@ int px_url_get_port(pxURL *self);
  * @return Scheme portion of the pxURL
  */
 const char *px_url_get_scheme(pxURL *self);
+
+/**
+ * @return Username portion of the pxURL
+ */
+const char *px_url_get_username(pxURL *self);
 
 /**
  * @url String used to create the new pxURL object

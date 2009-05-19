@@ -38,6 +38,8 @@
 struct _pxURL {
 	char             *url;
 	char             *scheme;
+	char             *username;
+	char             *password;
 	char             *host;
 	int               port;
 	char             *path;
@@ -90,7 +92,7 @@ px_url_get(pxURL *self, const char **headers)
 	int sock = -1;
 
 	/* in case of a file:// url we open the file and return a hande to it */
-	if (!strcmp(self->scheme,"file")) 
+	if (!strcmp(self->scheme,"file"))
 		return open(self->path, O_RDONLY);
 
 	/* DNS lookup of host */
@@ -259,6 +261,16 @@ px_url_get_ips(pxURL *self)
 }
 
 /**
+ * @return Password portion of the pxURL
+ */
+const char *
+px_url_get_password(pxURL *self)
+{
+	if (!self) return NULL;
+	return self->password;
+}
+
+/**
  * @return Path portion of the pxURL
  */
 const char *
@@ -289,6 +301,16 @@ px_url_get_scheme(pxURL *self)
 }
 
 /**
+ * @return Username portion of the pxURL
+ */
+const char *
+px_url_get_username(pxURL *self)
+{
+	if (!self) return NULL;
+	return self->username;
+}
+
+/**
  * @url String used to create the new pxURL object
  * @return New pxURL object
  */
@@ -296,16 +318,28 @@ pxURL *
 px_url_new(const char *url)
 {
 	if (!url) return NULL;
+	const char *start = url;
 
 	/* Allocate pxURL */
 	pxURL *self  = px_malloc0(sizeof(pxURL));
 
 	/* Get scheme */
-	if (!strstr(url, "://")) goto error;
-	self->scheme = px_strndup(url, strstr(url, "://") - url);
+	if (!strstr(start, "://")) goto error;
+	self->scheme = px_strndup(start, strstr(start, "://") - start);
+	start += strlen(self->scheme) + 3;
+
+	/* If we have a username and password */
+	if (strchr(start, '@') && (strchr(start, '/') > strchr(start, '@') || strchr(start, '/') == NULL))
+	{
+		if (!strchr(start, ':')) goto error; // Can't find user/pass delimiter
+		self->username = px_strndup(start, strchr(start, ':') - start);
+		start += strlen(self->username) + 1;
+		self->password = px_strndup(start, strchr(start, '@') - start);
+		start += strlen(self->password) + 1;
+	}
 
 	/* Get host */
-	self->host   = px_strdup(strstr(url, "://") + strlen("://"));
+	self->host   = px_strdup(start);
 
 	/* Get path */
 	self->path   = px_strdup(strchr(self->host, '/'));
@@ -330,10 +364,14 @@ px_url_new(const char *url)
 
 	/* Verify by re-assembly */
 	self->url = px_malloc0(strlen(url) + 1);
-	if (!port_specified)
-		snprintf(self->url, strlen(url) + 1, "%s://%s%s", self->scheme, self->host, self->path);
+	if (self->username && self->password)
+		snprintf(self->url, strlen(url) + 1, "%s://%s:%s@%s", self->scheme, self->username, self->password, self->host);
 	else
-		snprintf(self->url, strlen(url) + 1, "%s://%s:%d%s", self->scheme, self->host, self->port, self->path);
+		snprintf(self->url, strlen(url) + 1, "%s://%s", self->scheme, self->host);
+	if (port_specified)
+		snprintf(self->url, strlen(url) + 1, "%s:%d%s", self->url, self->port, self->path);
+	else
+		snprintf(self->url, strlen(url) + 1, "%s%s", self->url, self->path);
 	if (strcmp(self->url, url)) goto error;
 
 	return self;
