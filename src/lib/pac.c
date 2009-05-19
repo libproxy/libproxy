@@ -22,7 +22,12 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
+#endif
 
 #include "url.h"
 #include "misc.h"
@@ -167,8 +172,13 @@ px_pac_reload(pxPAC *self)
 		int status;
 
 		if (fstat(sock, &buffer)) goto error;
-		self->cache = px_malloc0(buffer.st_blksize * buffer.st_blocks);
+#ifdef _WIN32
+		self->cache = px_malloc0(buffer.st_size + 1);
+		status = read(sock, self->cache, buffer.st_size);
+#else
+		self->cache = px_malloc0(buffer.st_blksize * buffer.st_blocks + 1);
 		status = read(sock, self->cache, buffer.st_blksize * buffer.st_blocks);
+#endif
 	}
 
 	/* Clean up */

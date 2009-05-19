@@ -19,10 +19,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <dirent.h>
 #include <math.h>
+
+#ifdef _WIN32
+#error "TODO: Write Windows dll support"
+#else
+#include <dlfcn.h>
+#endif
 
 #include "plugin_manager.h"
 #include "misc.h"
@@ -104,7 +109,12 @@ pxPluginManager *
 px_plugin_manager_new()
 {
 	pxPluginManager *self = px_malloc0(sizeof(pxPluginManager));
+#ifdef _WIN32
+#error "TODO: fixme!"
+	self->modules         = px_array_new(NULL, NULL, true, false);
+#else
 	self->modules         = px_array_new(NULL, (void *) dlclose, true, false);
+#endif
 	self->ptypes          = px_strdict_new((void *) freeinfo);
 	self->constructors    = px_strdict_new((void *) px_array_free);
 	return self;
@@ -113,11 +123,15 @@ px_plugin_manager_new()
 void
 px_plugin_manager_free(pxPluginManager *self)
 {
+#ifdef _WIN32
+#error "TODO: fixme!"
+#else
 	for (int i=0 ; i < px_array_length(self->modules) ; i++)
 	{
 		pxModuleUnload unload = dlsym((void *) px_array_get(self->modules, i), "px_module_unload");
 		if (unload) unload(self);
 	}
+#endif
 	px_strdict_free(self->constructors);
 	px_strdict_free(self->ptypes);
 	px_array_free(self->modules);
@@ -131,6 +145,10 @@ px_plugin_manager_load(pxPluginManager *self, char *filename)
 	if (!self)     return false;
 	if (!filename) return false;
 
+#ifdef _WIN32
+#error "TODO: fixme!"
+	return false;
+#else
 	/* Load the module */
 	void *module = dlopen(filename, RTLD_NOW | RTLD_LOCAL);
 	if (!module) return false;
@@ -148,6 +166,7 @@ px_plugin_manager_load(pxPluginManager *self, char *filename)
 	error:
 		dlclose(module);
 		return false;
+#endif
 }
 
 bool
