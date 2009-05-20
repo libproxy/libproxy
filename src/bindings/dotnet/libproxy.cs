@@ -30,7 +30,7 @@ namespace libproxy {
 		
 		[DllImport ("proxy")]
 		private static extern 
-			IntPtr px_proxy_factory_get_proxy(HandleRef self, string url);
+			IntPtr px_proxy_factory_get_proxies(HandleRef self, string url);
 		
 		[DllImport ("proxy")]
 		private static extern
@@ -48,7 +48,7 @@ namespace libproxy {
 			// Get the results
 			// TODO: If we call both this function and px_proxy_factory_free()
 			// this crashes, figure out why...
-			IntPtr array = px_proxy_factory_get_proxy(this.self, url);
+			IntPtr array = px_proxy_factory_get_proxies(this.self, url);
 
 			// Count the number of returned strings
 			while (Marshal.ReadIntPtr(array, count * IntPtr.Size) != IntPtr.Zero) count++;
