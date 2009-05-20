@@ -41,7 +41,7 @@ namespace libproxy {
 			this.self = new HandleRef(this, px_proxy_factory_new());
 		}
 		
-		public string[] GetProxy(string url)
+		public string[] GetProxies(string url)
 		{
 			int count = 0;
 			
