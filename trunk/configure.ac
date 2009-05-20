@@ -186,7 +186,29 @@ with_java=no
 AM_CONDITIONAL([WITH_JAVA], [test x$with_java = xyes])
 
 # .NET
-with_dotnet=no
+AC_ARG_WITH([dotnet],
+            [AS_HELP_STRING([--with-dotnet],
+            [build .NET/Mono bindings @<:@automatic@:>@])],
+            [PKG_CHECK_MODULES(MONO,mono >= 2.0.0, have_dotnet=yes, have_dotnet=no)],
+            [test x$have_dotnet = xyes && with_dotnet=yes])
+if test x$with_dotnet = xyes; then
+	if test x$have_dotnet = xyes; then
+	    AC_PATH_PROG(MCS, gmcs)
+	    ASSEMBLY_NAME="$PACKAGE"
+        ASSEMBLY_VERSION="$VERSION"
+		DOTNET_CFLAGS="$dotnet_CFLAGS"
+		DOTNET_LIBS="$dotnet_LIBS"
+		AC_SUBST(DOTNET_CFLAGS)
+		AC_SUBST(DOTNET_LIBS)
+		AC_SUBST(ASSEMBLY_NAME)
+		AC_SUBST(ASSEMBLY_VERSION)
+	else
+		echo ".Net / Mono mindings requires: mono!"
+		exit 1
+	fi
+else
+	with_dotnet=no
+fi
 AM_CONDITIONAL([WITH_DOTNET], [test x$with_dotnet = xyes])
 
 ### Checks for header files.
