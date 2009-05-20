@@ -17,6 +17,7 @@
 || Vinegre || || || || no || no ||
 || Rhythmbox || || || || no || no ||
 || Sound Juicer || || || || no || no ||
+|| Aria2 || http://aria2.sourceforge.net/ || || https://sourceforge.net/tracker/?func=detail&aid=2794235&group_id=159897&atid=813676 || yes || no ||
 || KDE || http://www.kde.org || http://www.kde.org/mailinglists/ || http://bugs.kde.org/ || no || no ||
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || no || no ||
 || Python || http://www.python.org || http://www.python.org/community/lists/ || || no || no ||
