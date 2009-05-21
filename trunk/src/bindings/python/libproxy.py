@@ -24,15 +24,6 @@ import ctypes.util
 
 import sys
 
-# Load libpython (for a cross platform 'free()')
-_names = ("python%d.%d" % sys.version_info[:2], "python%d%d" % sys.version_info[:2])
-_libpython = None
-for _name in _names:
-    if ctypes.util.find_library(_name):
-        _libpython = ctypes.cdll.LoadLibrary(ctypes.util.find_library(_name))
-if not _libpython:
-    raise ImportError, "Unable to import libpython!?!?"
-
 # Load libproxy
 if not ctypes.util.find_library("proxy"):
     raise ImportError, "Unable to import libproxy!?!?"
@@ -101,9 +92,9 @@ class ProxyFactory(object):
         i=0
         while array[i]:
             proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
-            _libpython.PyMem_Free(array[i])
+            _libproxy.px_free(array[i])
             i += 1
-        _libpython.PyMem_Free(array)
+        _libproxy.px_free(array)
         
         return proxies
         
