@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2009 Dominique Leuenberger <dominique@leuenberger.net>
+ * Copyright (C) 2008-2009 Dominique Leuenberger <dominique@leuenberger.net>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,21 +18,16 @@
  ******************************************************************************/
 
 using System;
-using libproxy;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-public class proxy {
-    public static int Main (string[] args)
-    {
-        if (args.Length > 0) {
-            ProxyFactory pf = new ProxyFactory();
-            string[] Proxies = pf.GetProxies(args[0]);
-            Console.WriteLine(Proxies[0]);
-            pf = null;
-            return 0;
-        } else {
-            Console.WriteLine("Please start the program with one parameter");
-            Console.WriteLine("Example: proxy.exe http://libproxy.googlecode.com/");
-            return 1;
-        }
-    }
-}
+[assembly:AssemblyVersion("@VERSION@")]
+[assembly:AssemblyTitle ("LibProxy#")]
+[assembly:AssemblyDescription ("A library that provides automatic proxy configuration management.")]
+[assembly:AssemblyCopyright ("Copyright (c) 2006-2009 Nathaniel McCallum")]
+[assembly:AssemblyCompany ("")]
+[assembly:AssemblyDelaySign(false)]
+[assembly:AssemblyKeyFile("libproxy.snk")]
+[assembly:CLSCompliant(false)]
+
