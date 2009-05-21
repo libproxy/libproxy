@@ -1,0 +1,8 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+
+Name: Libproxy#
+Description: Libproxy# - .NET Binding to libproxy
+Version: @VERSION@
+Libs: -r:${libdir}/libproxy/${Version}/libproxy-sharp.dll  
