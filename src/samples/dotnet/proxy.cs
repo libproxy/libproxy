@@ -8,6 +8,7 @@ public class proxy {
             ProxyFactory pf = new ProxyFactory();
             string[] Proxies = pf.GetProxies(args[0]);
             Console.WriteLine(Proxies[0]);
+            pf = null;
             return 0;
         } else {
             Console.WriteLine("Please start the program with one parameter");
