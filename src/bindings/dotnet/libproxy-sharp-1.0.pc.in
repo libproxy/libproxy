@@ -5,4 +5,4 @@ libdir=@libdir@
 Name: Libproxy#
 Description: Libproxy# - .NET Binding to libproxy
 Version: @VERSION@
-Libs: -r:${libdir}/libproxy/${Version}/libproxy-sharp.dll  
+Libs: -r:${libdir}/libproxy/@VERSION@/libproxy-sharp.dll  

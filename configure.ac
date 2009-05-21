@@ -192,20 +192,21 @@ AC_ARG_WITH([dotnet],
             [PKG_CHECK_MODULES(MONO,mono >= 2.0.0, have_dotnet=yes, have_dotnet=no)],
             [test x$have_dotnet = xyes && with_dotnet=yes])
 if test x$with_dotnet = xyes; then
-	if test x$have_dotnet = xyes; then
+    if test x$have_dotnet = xyes; then
 	    AC_PATH_PROG(MCS, gmcs)
-	    ASSEMBLY_NAME="$PACKAGE"
+        AC_PATH_PROG(GACUTIL, gacutil)
+        ASSEMBLY_NAME="$PACKAGE-sharp"
         ASSEMBLY_VERSION="$VERSION"
-		DOTNET_CFLAGS="$dotnet_CFLAGS"
-		DOTNET_LIBS="$dotnet_LIBS"
-		AC_SUBST(DOTNET_CFLAGS)
-		AC_SUBST(DOTNET_LIBS)
-		AC_SUBST(ASSEMBLY_NAME)
-		AC_SUBST(ASSEMBLY_VERSION)
-	else
-		echo ".Net / Mono mindings requires: mono!"
-		exit 1
-	fi
+        DOTNET_CFLAGS="$dotnet_CFLAGS"
+        DOTNET_LIBS="$dotnet_LIBS"
+        AC_SUBST(DOTNET_CFLAGS)
+        AC_SUBST(DOTNET_LIBS)
+        AC_SUBST(ASSEMBLY_NAME)
+        AC_SUBST(ASSEMBLY_VERSION)
+    else
+        echo ".Net / Mono mindings requires: mono!"
+        exit 1
+    fi
 else
 	with_dotnet=no
 fi
@@ -231,7 +232,8 @@ AC_SEARCH_LIBS([dlopen], [dl])
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile
-                 src/bindings/dotnet/Makefile])
+                 src/bindings/dotnet/Makefile src/bindings/dotnet/libproxy-sharp-1.0.pc
+                 src/bindings/dotnet/AssemblyInfo.cs])
 AC_OUTPUT
 
 ### Print build summary
