@@ -33,8 +33,7 @@ typedef unsigned short int sa_family_t;
 #endif
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_ignore.h>
+#include <modules.h>
 
 static bool
 _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)
@@ -133,7 +132,7 @@ _sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
 }
 
 static bool
-_ignore(struct _pxIgnorePlugin *self, pxURL *url, const char *ignore)
+_ignore(struct _pxIgnoreModule *self, pxURL *url, const char *ignore)
 {
     if (!url || !ignore) return false;
 
@@ -202,15 +201,16 @@ _ignore(struct _pxIgnorePlugin *self, pxURL *url, const char *ignore)
             return port != 0 ? (port == px_url_get_port(url) && result): result;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxIgnorePlugin *) self)->ignore = _ignore;
-	return true;
+	pxIgnoreModule *self = px_malloc0(sizeof(pxIgnoreModule));
+	self->ignore = _ignore;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add(self, "ignore_ip", pxIgnorePlugin, _constructor);
+	return px_module_manager_register_module(self, pxIgnoreModule, "ignore_ip", _constructor, px_free);
 }

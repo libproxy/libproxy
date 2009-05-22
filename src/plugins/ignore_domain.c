@@ -22,8 +22,7 @@
 #include <string.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_ignore.h>
+#include <modules.h>
 
 static inline bool
 _endswith(char *string, char *suffix)
@@ -35,7 +34,7 @@ _endswith(char *string, char *suffix)
 }
 
 static bool
-_ignore(struct _pxIgnorePlugin *self, pxURL *url, const char *ignore)
+_ignore(pxIgnoreModule *self, pxURL *url, const char *ignore)
 {
 	if (!url || !ignore)
 			return false;
@@ -83,15 +82,16 @@ _ignore(struct _pxIgnorePlugin *self, pxURL *url, const char *ignore)
 			return true;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxIgnorePlugin *) self)->ignore = _ignore;
-	return true;
+	pxIgnoreModule *self = px_malloc0(sizeof(pxIgnoreModule));
+	self->ignore = _ignore;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add(self, "ignore_domain", pxIgnorePlugin, _constructor);
+	return px_module_manager_register_module(self, pxIgnoreModule, "ignore_domain", _constructor, px_free);
 }

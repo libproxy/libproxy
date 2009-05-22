@@ -21,19 +21,18 @@
 #include <string.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_wpad.h>
+#include <modules.h>
 #include <pac.h>
 
-typedef struct _pxDNSWPADPlugin {
-	PX_PLUGIN_SUBCLASS(pxWPADPlugin);
-	bool  rewound;
-} pxDNSWPADPlugin;
+typedef struct _pxDNSWPADModule {
+	PX_MODULE_SUBCLASS(pxWPADModule);
+	bool rewound;
+} pxDNSWPADModule;
 
 static pxPAC *
-_next(pxWPADPlugin *self)
+_next(pxWPADModule *self)
 {
-	if (((pxDNSWPADPlugin *) self)->rewound)
+	if (((pxDNSWPADModule *) self)->rewound)
 	{
 		pxPAC *pac = px_pac_new_from_string("http://wpad/wpad.dat");
 		self->found = pac != NULL;
@@ -44,24 +43,24 @@ _next(pxWPADPlugin *self)
 }
 
 static void
-_rewind(pxWPADPlugin *self)
+_rewind(pxWPADModule *self)
 {
-	((pxDNSWPADPlugin *) self)->rewound = true;
+	((pxDNSWPADModule *) self)->rewound = true;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxDNSWPADPlugin *) self)->rewound = true;
-	((pxWPADPlugin *) self)->found      = false;
-	((pxWPADPlugin *) self)->next       = _next;
-	((pxWPADPlugin *) self)->rewind     = _rewind;
-
-	return true;
+	pxDNSWPADModule *self = px_malloc0(sizeof(pxDNSWPADModule));
+	self->rewound           = true;
+	self->__parent__.found  = false;
+	self->__parent__.next   = _next;
+	self->__parent__.rewind = _rewind;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add_subtype(self, "wpad_dns", pxWPADPlugin, pxDNSWPADPlugin, _constructor);
+	px_module_manager_register_module(self, pxWPADModule, "wpad_dns", _constructor, px_free);
 }

@@ -3,14 +3,9 @@ libproxy_la_SOURCES = \
 						array.c array.h \
 						config_file.c config_file.h \
 						misc.c misc.h \
+						module_manager.c module_manager.h \
+						modules.h \
 						pac.c pac.h \
-						plugin_config.c plugin_config.h \
-						plugin_ignore.h \
-						plugin_manager.c plugin_manager.h \
-						plugin_network.h \
-						plugin_pacrunner.c plugin_pacrunner.h \
-						plugin_wpad.c plugin_wpad.h \
-						plugin.c plugin.h \
 						proxy.c proxy.h \
 						strdict.c strdict.h \
 						url.c url.h

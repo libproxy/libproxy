@@ -21,85 +21,94 @@
 #include <string.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_config.h>
+#include <modules.h>
 #include <config_file.h>
 
-typedef struct _pxFileConfigPlugin {
-	PX_PLUGIN_SUBCLASS(pxConfigPlugin);
+typedef struct _pxFileConfigModule {
+	PX_MODULE_SUBCLASS(pxConfigModule);
 	char          *filename;
 	pxConfigFile  *cf;
-	void         (*old_destructor)(pxPlugin *);
-} pxFileConfigPlugin;
+} pxFileConfigModule;
 
 static void
-_destructor(pxPlugin *self)
+_destructor(void *s)
 {
-	px_free(((pxFileConfigPlugin *) self)->filename);
-	px_config_file_free(((pxFileConfigPlugin *) self)->cf);
-	((pxFileConfigPlugin *) self)->old_destructor(self);
+	pxFileConfigModule *self = (pxFileConfigModule *) self;
+
+	px_config_file_free(self->cf);
+	px_free(self->filename);
+	px_free(self);
 }
 
 static char *
-_get_config(pxConfigPlugin *self, pxURL *url)
+_get_config(pxConfigModule *ss, pxURL *url)
 {
-	if (!((pxFileConfigPlugin *) self)->cf)
-		((pxFileConfigPlugin *) self)->cf = px_config_file_new(((pxFileConfigPlugin *) self)->filename);
-	if (!((pxFileConfigPlugin *) self)->cf)
+	pxFileConfigModule *self = (pxFileConfigModule *) self;
+
+	if (!self->cf)
+		self->cf = px_config_file_new(self->filename);
+	if (!self->cf)
 		return NULL;
-	return px_config_file_get_value(((pxFileConfigPlugin *) self)->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy");
+	return px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy");
 }
 
 static char *
-_get_ignore(pxConfigPlugin *self, pxURL *url)
+_get_ignore(pxConfigModule *s, pxURL *url)
 {
-	if (!((pxFileConfigPlugin *) self)->cf)
-		((pxFileConfigPlugin *) self)->cf = px_config_file_new(((pxFileConfigPlugin *) self)->filename);
-	if (!((pxFileConfigPlugin *) self)->cf)
+	pxFileConfigModule *self = (pxFileConfigModule *) self;
+
+	if (!self->cf)
+		self->cf = px_config_file_new(self->filename);
+	if (!self->cf)
 		return NULL;
-	return px_config_file_get_value(((pxFileConfigPlugin *) self)->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore");
+	return px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore");
 }
 
 static bool
-_get_credentials(pxConfigPlugin *self, pxURL *proxy, char **username, char **password)
+_get_credentials(pxConfigModule *s, pxURL *proxy, char **username, char **password)
 {
+	pxFileConfigModule *self = (pxFileConfigModule *) self;
+
 	return false;
 }
 
 static bool
-_set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const char *password)
+_set_credentials(pxConfigModule *s, pxURL *proxy, const char *username, const char *password)
 {
+	pxFileConfigModule *self = (pxFileConfigModule *) self;
+
 	return false;
 }
 
-static bool
-_system_constructor(pxPlugin *self)
+static void *
+_system_constructor()
 {
-	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_SYSTEM, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	((pxFileConfigPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                              = _destructor;
+	pxFileConfigModule *self = px_malloc0(sizeof(pxFileConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SYSTEM, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	self->filename = px_strdup(SYSCONFDIR "/proxy.conf");
 
-	((pxFileConfigPlugin *) self)->filename = px_strdup(SYSCONFDIR "/proxy.conf");
-	return true;
+	return self;
 }
 
-static bool
-_user_constructor(pxPlugin *self)
+static void *
+_user_constructor()
 {
-	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_USER, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	((pxFileConfigPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                              = _destructor;
+	pxFileConfigModule *self = px_malloc0(sizeof(pxFileConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_USER, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	self->filename = px_strcat(getenv("HOME"), "/", ".proxy.conf", NULL);
 
-	((pxFileConfigPlugin *) self)->filename = px_strcat(getenv("HOME"), "/", ".proxy.conf", NULL);
-	if (!((pxFileConfigPlugin *) self)->filename || !strcmp(((pxFileConfigPlugin *) self)->filename, ""))
-		return false;
-	return true;
+	if (!self->filename || !strcmp(self->filename, ""))
+	{
+		_destructor((void *) self);
+		return NULL;
+	}
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	bool a = px_plugin_manager_constructor_add_subtype(self, "config_file_system", pxConfigPlugin, pxFileConfigPlugin, _system_constructor);
-	bool b = px_plugin_manager_constructor_add_subtype(self, "config_file_user",   pxConfigPlugin, pxFileConfigPlugin, _user_constructor);
+	bool a = px_module_manager_register_module(self, pxConfigFile, "config_file_system", _system_constructor, _destructor);
+	bool b = px_module_manager_register_module(self, pxConfigFile, "config_file_user",   _user_constructor,   _destructor);
 	return (a || b);
 }
