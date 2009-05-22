@@ -21,8 +21,7 @@
 #include <string.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_config.h>
+#include <modules.h>
 
 #include <glib.h>
 #include <gconf/gconf-client.h>
@@ -30,8 +29,8 @@
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
-typedef struct _pxGConfConfigPlugin {
-	PX_PLUGIN_SUBCLASS(pxConfigPlugin);
+typedef struct _pxGConfConfigModule {
+	PX_MODULE_SUBCLASS(pxConfigModule);
 	GConfClient  *client;
 #ifdef G_THREADS_ENABLED
 	GMutex       *mutex;
@@ -47,8 +46,7 @@ typedef struct _pxGConfConfigPlugin {
 	char         *socks_host;
 	int           socks_port;
 	char         *ignore_hosts;
-	void        (*old_destructor)(pxPlugin *);
-} pxGConfConfigPlugin;
+} pxGConfConfigModule;
 
 static const char *_all_keys[] = {
         "/system/proxy/mode",       "/system/proxy/autoconfig_url",
@@ -62,7 +60,7 @@ static const char *_all_keys[] = {
 static void
 _on_key_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer user_data)
 {
-	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) user_data;
+	pxGConfConfigModule *self = (pxGConfConfigModule *) user_data;
 
 #ifdef G_THREADS_ENABLED
 	if (self->mutex)
@@ -128,9 +126,9 @@ _on_key_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer u
 }
 
 static void
-_destructor(pxPlugin *s)
+_destructor(void *s)
 {
-	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 
 #ifdef G_THREADS_ENABLED
 	if (self->mutex)
@@ -144,11 +142,11 @@ _destructor(pxPlugin *s)
 	g_free(self->ftp_host);
 	g_free(self->socks_host);
 	g_free(self->ignore_hosts);
-	self->old_destructor(s);
+	px_free(self);
 }
 
 static inline void
-_conditional_update(pxGConfConfigPlugin *self)
+_conditional_update(pxGConfConfigModule *self)
 {
 	if (g_main_depth() > 0) return;
 
@@ -165,9 +163,9 @@ _conditional_update(pxGConfConfigPlugin *self)
 }
 
 static char *
-_get_config(pxConfigPlugin *s, pxURL *url)
+_get_config(pxConfigModule *s, pxURL *url)
 {
-	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 	_conditional_update(self);
 
 #ifdef G_THREADS_ENABLED
@@ -253,9 +251,9 @@ _get_config(pxConfigPlugin *s, pxURL *url)
 }
 
 static char *
-_get_ignore(pxConfigPlugin *s, pxURL *url)
+_get_ignore(pxConfigModule *s, pxURL *url)
 {
-	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
+	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 	_conditional_update(self);
 
 #ifdef G_THREADS_ENABLED
@@ -271,22 +269,22 @@ _get_ignore(pxConfigPlugin *s, pxURL *url)
 }
 
 static bool
-_get_credentials(pxConfigPlugin *self, pxURL *proxy, char **username, char **password)
+_get_credentials(pxConfigModule *self, pxURL *proxy, char **username, char **password)
 {
 	return false;
 }
 
 static bool
-_set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const char *password)
+_set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const char *password)
 {
 	return false;
 }
 
-static bool
-_constructor(pxPlugin *s)
+static void *
+_constructor()
 {
-	pxGConfConfigPlugin *self = (pxGConfConfigPlugin *) s;
-	PX_CONFIG_PLUGIN_BUILD(s, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	pxGConfConfigModule *self = px_malloc0(sizeof(pxGConfConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
 
 	/* Get the default gconf client */
 	self->client = gconf_client_get_default();
@@ -312,20 +310,15 @@ _constructor(pxPlugin *s)
 		gconf_client_notify(self->client, _all_keys[i]);
 	}
 
-	self->old_destructor = s->destructor;
-	s->destructor        = _destructor;
-
-	return true;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
-	if (x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
-	{
-		g_type_init();
-		return px_plugin_manager_constructor_add_subtype(self, "config_gnome", pxConfigPlugin, pxGConfConfigPlugin, _constructor);
-	}
-	return false;
+	if (!x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
+		return  false;
+	g_type_init();
+	return px_module_manager_register_module(self, pxConfigModule, "config_gnome", _constructor, _destructor);
 }

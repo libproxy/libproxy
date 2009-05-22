@@ -31,8 +31,7 @@
 
 #include <misc.h>
 #include <array.h>
-#include <plugin_manager.h>
-#include <plugin_wpad.h>
+#include <modules.h>
 #include <pac.h>
 
 /* The top-level domain blacklist */
@@ -72,11 +71,11 @@ static char *tld[] = {
 	NULL
 };
 
-typedef struct _pxDNSDevolutionWPADPlugin {
-	PX_PLUGIN_SUBCLASS(pxWPADPlugin);
+typedef struct _pxDNSDevolutionWPADModule {
+	PX_MODULE_SUBCLASS(pxWPADModule);
 	pxArray *urls;
 	int      next;
-} pxDNSDevolutionWPADPlugin;
+} pxDNSDevolutionWPADModule;
 
 static char *
 _get_domain_name()
@@ -133,9 +132,9 @@ _get_urls()
 }
 
 static pxPAC *
-_next(pxWPADPlugin *self)
+_next(pxWPADModule *self)
 {
-	pxDNSDevolutionWPADPlugin *dnsd = (pxDNSDevolutionWPADPlugin *) self;
+	pxDNSDevolutionWPADModule *dnsd = (pxDNSDevolutionWPADModule *) self;
 	if (!dnsd->urls)
 		dnsd->urls = _get_urls();
 	if (!dnsd->urls)
@@ -148,25 +147,35 @@ _next(pxWPADPlugin *self)
 }
 
 static void
-_rewind(pxWPADPlugin *self)
+_rewind(pxWPADModule *s)
 {
-	px_array_free(((pxDNSDevolutionWPADPlugin *) self)->urls);
-	((pxDNSDevolutionWPADPlugin *) self)->urls = NULL;
-	((pxDNSDevolutionWPADPlugin *) self)->next = 0;
-	self->found = false;
+	pxDNSDevolutionWPADModule * self = (pxDNSDevolutionWPADModule *) s;
+
+	px_array_free(self->urls);
+	self->urls             = NULL;
+	self->next             = 0;
+	self->__parent__.found = false;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void
+_destructor(void *s)
 {
-	((pxWPADPlugin *) self)->next   = _next;
-	((pxWPADPlugin *) self)->rewind = _rewind;
-    _rewind((pxWPADPlugin *) self);
-	return true;
+	_rewind(s);
+	px_free(s);
+}
+
+static void *
+_constructor()
+{
+	pxDNSDevolutionWPADModule *self = px_malloc0(sizeof(pxDNSDevolutionWPADModule));
+	self->__parent__.next   = _next;
+	self->__parent__.rewind = _rewind;
+    _rewind((pxWPADModule *) self);
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add_subtype(self, "wpad_dnsdevolution", pxWPADPlugin, pxDNSDevolutionWPADPlugin, _constructor);
+	return px_module_manager_register_module(self, pxWPADModule, "wpad_dnsdevolution", _constructor, _destructor);
 }

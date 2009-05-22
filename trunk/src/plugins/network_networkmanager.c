@@ -22,30 +22,32 @@
 #include <stdint.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_network.h>
+#include <modules.h>
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>
 
-typedef struct _pxNetworkManagerNetworkPlugin {
-	PX_PLUGIN_SUBCLASS(pxNetworkPlugin);
-	void          (*old_destructor)(pxPlugin *);
+typedef struct _pxNetworkManagerNetworkModule {
+	PX_MODULE_SUBCLASS(pxNetworkModule);
 	DBusConnection *conn;
-} pxNetworkManagerNetworkPlugin;
+} pxNetworkManagerNetworkModule;
 
 static void
-_destructor(pxPlugin *self)
+_destructor(void *s)
 {
-	dbus_connection_close(((pxNetworkManagerNetworkPlugin *) self)->conn);
-	((pxNetworkManagerNetworkPlugin *) self)->old_destructor(self);
+	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule *) s;
+
+	dbus_connection_close(self->conn);
+	px_free(self);
 }
 
 static bool
-_changed(pxNetworkPlugin *self)
+_changed(pxNetworkModule *s)
 {
+	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule *) s;
+
 	// Make sure we have a valid connection with a proper match
-	DBusConnection *conn = ((pxNetworkManagerNetworkPlugin *) self)->conn;
+	DBusConnection *conn = self->conn;
 	if (!conn || !dbus_connection_get_is_connected(conn))
 	{
 		// If the connection was disconnected,
@@ -59,7 +61,7 @@ _changed(pxNetworkPlugin *self)
 
 		// Create a new connections
 		conn = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
-		((pxNetworkManagerNetworkPlugin *) self)->conn = conn;
+		self->conn = conn;
 		if (!conn) return false;
 
 		// If connection was successful, set it up
@@ -93,17 +95,16 @@ _changed(pxNetworkPlugin *self)
 	return changed;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxNetworkPlugin *) self)->changed                      = _changed;
-	((pxNetworkManagerNetworkPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                                         = _destructor;
-	return true;
+	pxNetworkManagerNetworkModule *self = px_malloc0(sizeof(pxNetworkManagerNetworkModule));
+	self->__parent__.changed = _changed;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add_subtype(self, "network_networkmanager", pxNetworkPlugin, pxNetworkManagerNetworkPlugin, _constructor);
+	return px_module_manager_register_module(self, pxNetworkModule, "network_networkmanager", _constructor, _destructor);
 }

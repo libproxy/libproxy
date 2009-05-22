@@ -28,8 +28,7 @@
 #include <unistd.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_pacrunner.h>
+#include <modules.h>
 
 #include <jsapi.h>
 #include "pacutils.h"
@@ -41,11 +40,10 @@ typedef struct {
 	char      *pac;
 } ctxStore;
 
-typedef struct _pxMozillaPACRunnerPlugin {
-	PX_PLUGIN_SUBCLASS(pxPACRunnerPlugin);
-	void    (*old_destructor)(pxPlugin *);
+typedef struct _pxMozillaPACRunnerModule {
+	PX_MODULE_SUBCLASS(pxPACRunnerModule);
 	ctxStore *ctxs;
-} pxMozillaPACRunnerPlugin;
+} pxMozillaPACRunnerModule;
 
 static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
 	// Get hostname argument
@@ -153,14 +151,16 @@ error:
 }
 
 static void
-_destructor(pxPlugin *self)
+_destructor(void *s)
 {
-	ctxs_free(((pxMozillaPACRunnerPlugin *) self)->ctxs);
-	((pxMozillaPACRunnerPlugin *) self)->old_destructor(self);
+	pxMozillaPACRunnerModule * self = (pxMozillaPACRunnerModule *) s;
+
+	ctxs_free(self->ctxs);
+	px_free(self);
 }
 
 static char *
-_run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
+_run(pxPACRunnerModule *self, pxPAC *pac, pxURL *url)
 {
 	// Make sure we have the pac file and url
 	if (!pac) return NULL;
@@ -168,21 +168,21 @@ _run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 	if (!px_pac_to_string(pac) && !px_pac_reload(pac)) return NULL;
 
 	// Get the cached context
-	ctxStore *ctxs = ((pxMozillaPACRunnerPlugin *) self)->ctxs;
+	ctxStore *ctxs = ((pxMozillaPACRunnerModule *) self)->ctxs;
 
 	// If there is a cached context, make sure it is the same pac
 	if (ctxs && strcmp(ctxs->pac, px_pac_to_string(pac)))
 	{
 		ctxs_free(ctxs);
 		ctxs = NULL;
-		((pxMozillaPACRunnerPlugin *) self)->ctxs = NULL;
+		((pxMozillaPACRunnerModule *) self)->ctxs = NULL;
 	}
 
 	// If no context exists (or if the pac was changed), create one
 	if (!ctxs)
 	{
 		if ((ctxs = ctxs_new(pac)))
-			((pxMozillaPACRunnerPlugin *) self)->ctxs = ctxs;
+			((pxMozillaPACRunnerModule *) self)->ctxs = ctxs;
 		else
 			return NULL;
 	}
@@ -207,17 +207,16 @@ _run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 	return answer;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxPACRunnerPlugin *) self)->run                   = _run;
-	((pxMozillaPACRunnerPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                                    = _destructor;
-	return true;
+	pxMozillaPACRunnerModule *self = px_malloc0(sizeof(pxMozillaPACRunnerModule));
+	self->__parent__.run = _run;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add_subtype(self, "pacrunner_mozjs", pxPACRunnerPlugin, pxMozillaPACRunnerPlugin, _constructor);
+	return px_module_manager_register_module(self, pxPACRunnerModule, "pacrunner_mozjs", _constructor, _destructor);
 }

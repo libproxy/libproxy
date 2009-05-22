@@ -21,11 +21,10 @@
 #include <string.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_config.h>
+#include <modules.h>
 
 static char *
-_get_config(pxConfigPlugin *self, pxURL *url)
+_get_config(pxConfigModule *self, pxURL *url)
 {
 	char *proxy = NULL;
 
@@ -45,32 +44,33 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 }
 
 static char *
-_get_ignore(pxConfigPlugin *self, pxURL *url)
+_get_ignore(pxConfigModule *self, pxURL *url)
 {
 	return px_strdup(getenv("no_proxy"));
 }
 
 static bool
-_get_credentials(pxConfigPlugin *self, pxURL *url, char **username, char **password)
+_get_credentials(pxConfigModule *self, pxURL *url, char **username, char **password)
 {
 	return false;
 }
 
 static bool
-_set_credentials(pxConfigPlugin *self, pxURL *url, const char *username, const char *password)
+_set_credentials(pxConfigModule *self, pxURL *url, const char *username, const char *password)
 {
 	return false;
 }
 
-static bool
-_constructor(pxPlugin *plugin)
+static void *
+_constructor()
 {
-	PX_CONFIG_PLUGIN_BUILD(plugin, PX_CONFIG_PLUGIN_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	return true;
+	pxConfigModule *self = px_malloc0(sizeof(pxConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add(self, "config_envvar", pxConfigPlugin, _constructor);
+	return px_module_manager_register_module(self, pxConfigModule, "config_envvar", _constructor, px_free);
 }

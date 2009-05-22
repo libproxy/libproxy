@@ -22,42 +22,44 @@
 #include <stdarg.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_config.h>
+#include <modules.h>
 #include <config_file.h>
 
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
-typedef struct _pxKConfigConfigPlugin {
-	PX_PLUGIN_SUBCLASS(pxConfigPlugin);
+typedef struct _pxKConfigConfigModule {
+	PX_MODULE_SUBCLASS(pxConfigModule);
 	pxConfigFile  *cf;
-	void         (*old_destructor)(pxPlugin *);
-} pxKConfigConfigPlugin;
+} pxKConfigConfigModule;
 
 static void
-_destructor(pxPlugin *self)
+_destructor(void *s)
 {
-	px_config_file_free(((pxKConfigConfigPlugin *) self)->cf);
-	((pxKConfigConfigPlugin *) self)->old_destructor(self);
+	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
+
+	px_config_file_free(self->cf);
+	px_free(self);
 }
 
 static char *
-_get_config(pxConfigPlugin *self, pxURL *url)
+_get_config(pxConfigModule *s, pxURL *url)
 {
+	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
+
 	// TODO: make ignores work w/ KDE
 	char *curl = NULL, *tmp = getenv("HOME");
 	if (!tmp) return NULL;
 
 	// Open the config file
-	pxConfigFile *cf = ((pxKConfigConfigPlugin *) self)->cf;
+	pxConfigFile *cf = self->cf;
 	if (!cf || px_config_file_is_stale(cf))
 	{
 		if (cf) px_config_file_free(cf);
 		tmp = px_strcat(getenv("HOME"), "/.kde/share/config/kioslaverc", NULL);
 		cf = px_config_file_new(tmp);
 		px_free(tmp);
-		((pxKConfigConfigPlugin *) self)->cf = cf;
+		self->cf = cf;
 	}
 	if (!cf)  goto out;
 
@@ -98,37 +100,36 @@ _get_config(pxConfigPlugin *self, pxURL *url)
 }
 
 static char *
-_get_ignore(pxConfigPlugin *self, pxURL *url)
+_get_ignore(pxConfigModule *self, pxURL *url)
 {
 	return px_strdup("");
 }
 
 static bool
-_get_credentials(pxConfigPlugin *self, pxURL *proxy, char **username, char **password)
+_get_credentials(pxConfigModule *self, pxURL *proxy, char **username, char **password)
 {
 	return false;
 }
 
 static bool
-_set_credentials(pxConfigPlugin *self, pxURL *proxy, const char *username, const char *password)
+_set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const char *password)
 {
 	return false;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	PX_CONFIG_PLUGIN_BUILD(self, PX_CONFIG_PLUGIN_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	((pxKConfigConfigPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                                 = _destructor;
-	return true;
+	pxKConfigConfigModule *self = px_malloc0(sizeof(pxKConfigConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
 	// If we are running in KDE, then make sure this plugin is registered.
-	if (x_has_client("kicker", NULL))
-		return px_plugin_manager_constructor_add_subtype(self, "config_kde", pxConfigPlugin, pxKConfigConfigPlugin, _constructor);
-	return false;
+	if (!x_has_client("kicker", NULL))
+		return false;
+	return px_module_manager_register_module(self, pxConfigModule, "config_kde", _constructor, _destructor);
 }

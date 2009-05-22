@@ -28,8 +28,7 @@
 #include <unistd.h>
 
 #include <misc.h>
-#include <plugin_manager.h>
-#include <plugin_pacrunner.h>
+#include <modules.h>
 
 #include <JavaScriptCore/JavaScript.h>
 #include "pacutils.h"
@@ -39,11 +38,10 @@ typedef struct {
 	char              *pac;
 } ctxStore;
 
-typedef struct _pxWebKitPACRunnerPlugin {
-	PX_PLUGIN_SUBCLASS(pxPACRunnerPlugin);
-	void    (*old_destructor)(pxPlugin *);
+typedef struct _pxWebKitPACRunnerModule {
+	PX_MODULE_SUBCLASS(pxPACRunnerModule);
 	ctxStore *ctxs;
-} pxWebKitPACRunnerPlugin;
+} pxWebKitPACRunnerModule;
 
 static char *jstr2str(JSStringRef str, bool release)
 {
@@ -157,14 +155,16 @@ error:
 }
 
 static void
-_destructor(pxPlugin *self)
+_destructor(void *s)
 {
-	ctxs_free(((pxWebKitPACRunnerPlugin *) self)->ctxs);
-	((pxWebKitPACRunnerPlugin *) self)->old_destructor(self);
+	pxWebKitPACRunnerModule *self = (pxWebKitPACRunnerModule *) s;
+
+	ctxs_free(self->ctxs);
+	px_free(self);
 }
 
 static char *
-_run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
+_run(pxPACRunnerModule *self, pxPAC *pac, pxURL *url)
 {
 	JSStringRef str = NULL;
 	JSValueRef  val = NULL;
@@ -176,7 +176,7 @@ _run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 	if (!px_pac_to_string(pac) && !px_pac_reload(pac)) return NULL;
 
 	// Get the cached context
-	ctxStore *ctxs = ((pxWebKitPACRunnerPlugin *) self)->ctxs;
+	ctxStore *ctxs = ((pxWebKitPACRunnerModule *) self)->ctxs;
 
 	// If there is a cached context, make sure it is the same pac
 	if (ctxs && strcmp(ctxs->pac, px_pac_to_string(pac)))
@@ -189,7 +189,7 @@ _run(pxPACRunnerPlugin *self, pxPAC *pac, pxURL *url)
 	if (!ctxs)
 	{
 		if ((ctxs = ctxs_new(pac)))
-			((pxWebKitPACRunnerPlugin *) self)->ctxs = ctxs;
+			((pxWebKitPACRunnerModule *) self)->ctxs = ctxs;
 		else
 			return NULL;
 	}
@@ -212,17 +212,16 @@ error:
 	return tmp;
 }
 
-static bool
-_constructor(pxPlugin *self)
+static void *
+_constructor()
 {
-	((pxPACRunnerPlugin *) self)->run                  = _run;
-	((pxWebKitPACRunnerPlugin *) self)->old_destructor = self->destructor;
-	self->destructor                                   = _destructor;
-	return true;
+	pxWebKitPACRunnerModule *self = px_malloc0(sizeof(pxWebKitPACRunnerModule));
+	self->__parent__.run = _run;
+	return self;
 }
 
 bool
-px_module_load(pxPluginManager *self)
+px_module_load(pxModuleManager *self)
 {
-	return px_plugin_manager_constructor_add_subtype(self, "pacrunner_webkit", pxPACRunnerPlugin, pxWebKitPACRunnerPlugin, _constructor);
+	return px_module_manager_register_module(self, pxPACRunnerModule, "pacrunner_webkit", _constructor, _destructor);
 }
