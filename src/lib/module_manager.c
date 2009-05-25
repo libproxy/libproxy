@@ -24,9 +24,17 @@
 #include <math.h>
 
 #ifdef _WIN32
-#error "TODO: Write Windows dll support"
+#include <windows.h>
+#define pdlmtype HMODULE
+#define pdlopen(filename) LoadLibrary(filename)
+#define pdlsym GetProcAddress
+#define pdlclose FreeLibrary
 #else
 #include <dlfcn.h>
+#define pdlmtype void *
+#define pdlopen(filename) dlopen(filename, RTLD_NOW | RTLD_LOCAL)
+#define pdlsym dlsym
+#define pdlclose dlclose
 #endif
 
 #include "module_manager.h"
@@ -59,12 +67,7 @@ pxModuleManager *
 px_module_manager_new()
 {
 	pxModuleManager *self = px_malloc0(sizeof(pxModuleManager));
-#ifdef _WIN32
-#error "TODO: fixme!"
-	self->dlmodules     = px_array_new(NULL, NULL, true, false);
-#else
-	self->dlmodules     = px_array_new(NULL, (void *) dlclose, true, false);
-#endif
+	self->dlmodules     = px_array_new(NULL, (void *) pdlclose, true, false);
 	self->registrations = px_strdict_new((void *) px_array_free);
 	self->types         = px_strdict_new(NULL);
 	return self;
@@ -86,28 +89,23 @@ px_module_manager_load(pxModuleManager *self, char *filename)
 	if (!self)     return false;
 	if (!filename) return false;
 
-#ifdef _WIN32
-#error "TODO: fixme!"
-	return false;
-#else
 	/* Load the module */
-	void *module = dlopen(filename, RTLD_NOW | RTLD_LOCAL);
-	if (!module) return false;
+	pdlmtype module = pdlopen(filename);
+	if (!module) goto error;
 
 	/* Make sure this module is unique */
 	if (px_array_find(self->dlmodules, module) >= 0) goto error;
 
 	/* Call the px_module_load() function */
-	bool (*load)(pxModuleManager *) = dlsym(module, "px_module_load");
+	bool (*load)(pxModuleManager *) = pdlsym(module, "px_module_load");
 	if (!load || !load(self)) goto error;
 
-	px_array_add(self->dlmodules, module);
+	if (!px_array_add(self->dlmodules, module)) goto error;
 	return true;
 
 	error:
-		dlclose(module);
+		if (module) pdlclose(module);
 		return false;
-#endif
 }
 
 bool
