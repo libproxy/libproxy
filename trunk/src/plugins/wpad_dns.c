@@ -62,5 +62,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	px_module_manager_register_module(self, pxWPADModule, "wpad_dns", _constructor, px_free);
+	return px_module_manager_register_module(self, pxWPADModule, "wpad_dns", _constructor, px_free);
 }
