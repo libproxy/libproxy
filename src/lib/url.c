@@ -26,6 +26,7 @@
 #include <fcntl.h>
 
 #ifdef _WIN32
+#define _WIN32_WINNT 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
@@ -102,7 +103,7 @@ px_url_get(pxURL *self, const char **headers)
 		return open(self->path, O_RDONLY);
 
 	/* DNS lookup of host */
-	if (!px_url_get_ips(self)) goto error;
+	if (!px_url_get_ips(self, true)) goto error;
 
 	/* Iterate through each pxIP trying to make a connection */
 	for (int i = 0 ;  self->ips && self->ips[i] && sock < 0 ; i++)
@@ -172,53 +173,12 @@ px_url_get_host(pxURL *self)
 }
 
 /**
- * Get the IP address of the hostname in this pxURL without using DNS.
- * @return IP address of the host in the pxURL.
- */
-const struct sockaddr *
-px_url_get_ip_no_dns(pxURL *self)
-{
-	if (!self) return NULL;
-
-	/* Check the cache */
-	if (self->ips && self->ips[0])
-		return (const struct sockaddr *) self->ips[0];
-	px_free(self->ips);
-
-	/* Try for IPv4 first */
-	struct sockaddr *ip = px_malloc0(sizeof(struct sockaddr_in));
-	if (inet_pton(AF_INET, px_url_get_host(self), &((struct sockaddr_in *) ip)->sin_addr) > 0)
-	{
-		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
-		self->ips[0] = ip;
-		self->ips[0]->sa_family = AF_INET;
-		((struct sockaddr_in *) self->ips[0])->sin_port = htons(self->port);
-		return (const struct sockaddr *) self->ips[0];
-	}
-	px_free(ip);
-
-	/* Try for IPv6 next */
-	ip = px_malloc0(sizeof(struct sockaddr_in6));
-	if (inet_pton(AF_INET6, px_url_get_host(self), &((struct sockaddr_in6 *) ip)->sin6_addr) > 0)
-	{
-		self->ips = px_malloc0(sizeof(struct sockaddr *) * 2);
-		self->ips[0] = ip;
-		self->ips[0]->sa_family = AF_INET6;
-		((struct sockaddr_in6 *) self->ips[0])->sin6_port = htons(self->port);
-		return (const struct sockaddr *) self->ips[0];
-	}
-	px_free(ip);
-
-	/* The hostname was not an IP address */
-	return NULL;
-}
-
-/**
- * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
+ * Get the IP addresses of the hostname in this pxURL.
+ * @usedns Should we look up hostnames in DNS?
  * @return IP addresses of the host in the pxURL.
  */
 const struct sockaddr **
-px_url_get_ips(pxURL *self)
+px_url_get_ips(pxURL *self, bool usedns)
 {
 	if (!self) return NULL;
 
@@ -226,11 +186,16 @@ px_url_get_ips(pxURL *self)
 	if (self->ips) return (const struct sockaddr **) self->ips;
 
 	/* Check without DNS first */
-	if (px_url_get_ip_no_dns(self)) return (const struct sockaddr **) self->ips;
+	if (px_url_get_ips(self, false)) return (const struct sockaddr **) self->ips;
 
 	/* Check DNS for IPs */
 	struct addrinfo *info;
-	if (!getaddrinfo(px_url_get_host(self), NULL, NULL, &info))
+	struct addrinfo flags;
+    flags.ai_family   = AF_UNSPEC;
+    flags.ai_socktype = 0;
+    flags.ai_protocol = 0;
+    flags.ai_flags    = AI_NUMERICHOST;
+    if (!getaddrinfo(px_url_get_host(self), NULL, usedns ? NULL : &flags, &info))
 	{
 		struct addrinfo *first = info;
 		int count;

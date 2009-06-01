@@ -97,7 +97,7 @@ px_module_manager_load(pxModuleManager *self, char *filename)
 	if (px_array_find(self->dlmodules, module) >= 0) goto error;
 
 	/* Call the px_module_load() function */
-	bool (*load)(pxModuleManager *) = pdlsym(module, "px_module_load");
+	pxModuleLoadFunction load = (pxModuleLoadFunction) pdlsym(module, "px_module_load");
 	if (!load || !load(self)) goto error;
 
 	if (!px_array_add(self->dlmodules, module)) goto error;

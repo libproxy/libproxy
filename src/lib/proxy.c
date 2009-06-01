@@ -24,6 +24,11 @@
 #include <sys/types.h>
 #include <pthread.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
+#endif
+
 #include "misc.h"
 #include "proxy.h"
 #include "config_file.h"

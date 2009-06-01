@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -44,7 +44,7 @@ dict_free(void *item)
 	char *key = (char *) ((void **) item)[0];
 	void **realitem = ((void **) item)[1];
 	pxStrDictItemCallback do_free = ((void **) item)[2];
-	
+
 	do_free(realitem);
 	px_free(key);
 	px_free(item);
@@ -77,19 +77,19 @@ bool
 px_strdict_set(pxStrDict *self, const char *key, void *value)
 {
 	if (!self || !key) return false;
-	
+
 	/* We are unseting the value */
 	if (!value)
 	{
 		void *item[3] = { (void *) key, value, self->free };
 		return px_array_del(self->data, item);
 	}
-	
+
 	void **item = px_malloc0(sizeof(void *) * 3);
 	item[0] = px_strdup(key);
 	item[1] = value;
 	item[2] = self->free;
-	
+
 	if (px_array_add(self->data, item))
 		return true;
 
@@ -106,14 +106,14 @@ px_strdict_get(pxStrDict *self, const char *key)
 	void *v[3] = { (void *) key, NULL, NULL }, **ret;
 	int i = px_array_find(self->data, v);
 	if (i < 0) return NULL;
-	ret = px_array_get(self->data, i);
+	ret = (void **) px_array_get(self->data, i);
 	return ret[1];
 }
 
 void
 px_strdict_foreach(pxStrDict *self, pxStrDictForeachCallback *cb, void *arg)
 {
-	void *v[2] = { cb, arg }; 
+	void *v[2] = { cb, arg };
 	px_array_foreach(self->data, dict_foreach, v);
 }
 
