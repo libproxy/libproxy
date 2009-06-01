@@ -49,18 +49,12 @@ int px_url_get(pxURL *self, const char **headers);
  * @return Host portion of the pxURL
  */
 const char *px_url_get_host(pxURL *self);
-
 /**
- * Get the IP addresses of the hostname in this pxURL without using DNS.
+ * Get the IP addresses of the hostname in this pxURL.
+ * @usedns Should we look up hostnames in DNS?
  * @return IP addresses of the host in the pxURL.
  */
-const struct sockaddr *px_url_get_ip_no_dns(pxURL *self);
-
-/**
- * Get the IP addresses of the hostname in this pxURL.  Use DNS if necessary.
- * @return IP addresses of the host in the pxURL.
- */
-const struct sockaddr **px_url_get_ips(pxURL *self);
+const struct sockaddr **px_url_get_ips(pxURL *self, bool usedns);
 
 /**
  * @return Password portion of the pxURL

@@ -30,6 +30,10 @@ typedef struct _pxModuleManager pxModuleManager;
 typedef void *(*pxModuleConstructor)();
 typedef void  (*pxModuleDestructor) (void *module);
 
+typedef bool (*pxModuleLoadFunction)(pxModuleManager *);
+typedef void (*pxModuleFreeFunction)(pxModuleManager *);
+
+
 /*
  * Define the pxModuleRegistration object
  */

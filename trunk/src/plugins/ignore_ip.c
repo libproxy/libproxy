@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 #ifdef _WIN32
+#define _WIN32_WINNT 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef unsigned short int sa_family_t;
@@ -83,22 +84,19 @@ _sockaddr_from_string(const char *ip, int len)
         else
                 ip = px_strdup(ip);
 
-        /* Try to parse IPv4 */
-        result = px_malloc0(sizeof(struct sockaddr_in));
-        result->sa_family = AF_INET;
-        if (inet_pton(AF_INET, ip, &((struct sockaddr_in *) result)->sin_addr) > 0)
-                goto out;
+        /* Try to parse */
+        struct addrinfo *info = NULL;
+        struct addrinfo flags;
+        flags.ai_family = AF_UNSPEC;
+        flags.ai_socktype = 0;
+        flags.ai_protocol = 0;
+        flags.ai_flags = AI_NUMERICHOST;
+        if (getaddrinfo(ip, NULL, &flags, &info) != 0 || !info) goto out;
 
-        /* Try to parse IPv6 */
-        px_free(result);
-        result = px_malloc0(sizeof(struct sockaddr_in6));
-        result->sa_family = AF_INET6;
-        if (inet_pton(AF_INET6, ip, &((struct sockaddr_in6 *) result)->sin6_addr) > 0)
-                goto out;
+        /* Copy the results into our buffer */
+        result = px_malloc0(info->ai_addrlen);
+        memcpy(result, info->ai_addr, info->ai_addrlen);
 
-        /* No address found */
-        px_free(result);
-        result = NULL;
         out:
                 px_free((char *) ip);
                 return result;
@@ -139,8 +137,9 @@ _ignore(struct _pxIgnoreModule *self, pxURL *url, const char *ignore)
 
     bool result   = false;
     uint32_t port = 0;
-    const struct sockaddr *dst_ip = px_url_get_ip_no_dns(url);
-          struct sockaddr *ign_ip = NULL, *net_ip = NULL;
+    const struct sockaddr **dst_ips = px_url_get_ips(url, false);
+    const struct sockaddr *dst_ip   = dst_ips && dst_ips[0] ? dst_ips[0] : NULL;
+          struct sockaddr *ign_ip   = NULL, *net_ip = NULL;
 
     /*
      * IPv4

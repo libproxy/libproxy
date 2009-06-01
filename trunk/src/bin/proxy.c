@@ -1,17 +1,17 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
@@ -27,7 +27,19 @@
 /* Import libproxy API */
 #include <proxy.h>
 
-#define STDIN fileno(stdin)
+#ifndef _WIN32
+#define STDIN_FILENO fileno(stdin)
+#endif
+
+char *
+pstrndup(const char *s)
+{
+	if (!s) return NULL;
+	char *tmp = malloc(strlen(s)+1);
+	if (!tmp) return NULL;
+	strncpy(tmp, s, strlen(s));
+	return tmp;
+}
 
 /**
  * Reads a single line of text from the specified file descriptor
@@ -48,12 +60,12 @@ readline(int fd, char *buffer, size_t bufsize)
 	if (read(fd, &c, 1) != 1) return buffer;
 
 	/* If we are at the end of the line, return. */
-	if (c == '\n') return buffer ? buffer : strdup("");
+	if (c == '\n') return buffer ? buffer : pstrndup("");
 
 	/* We have a character, make sure we have a buffer. */
 	if (!buffer)
 	{
-		assert((buffer = strdup("")));
+		assert((buffer = pstrndup("")));
 		bufsize = 0;
 	}
 
@@ -103,9 +115,9 @@ main(int argc, char **argv)
 		return 1;
 	}
 	/* User entered some arguments on startup. skip interactive */
-	if (argc > 1) 
-	{ 
-		for(int i = 1; i < argc ; i++) 
+	if (argc > 1)
+	{
+		for(int i = 1; i < argc ; i++)
 		{
 			/*
 			 * Get an array of proxies to use. These should be used
@@ -113,13 +125,13 @@ main(int argc, char **argv)
 			 * if the first one fails (etc).
 			 */
 			print_proxies(px_proxy_factory_get_proxies(pf, argv[i]));
-		}	
+		}
 	}
 	/* Interactive mode */
 	else
-	{ 
+	{
 		/* For each URL we read on STDIN, get the proxies to use */
-		for (char *url = NULL ; url = readline(STDIN, NULL, 0) ; free(url))
+		for (char *url = NULL ; (url = readline(STDIN_FILENO, NULL, 0)) ; free(url))
 		{
 			/*
 			 * Get an array of proxies to use. These should be used
