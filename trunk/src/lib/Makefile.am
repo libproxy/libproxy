@@ -11,7 +11,10 @@ libproxy_la_SOURCES = \
 						url.c url.h
 
 libproxy_la_CFLAGS  = -Wall
-libproxy_la_LDFLAGS = -lpthread -lm -ldl
+libproxy_la_LDFLAGS = -lpthread -lm -ldl -no-undefined
+if MINGW32
+  libproxy_la_LDFLAGS += -lws2_32
+endif
 
 include_HEADERS     = proxy.h
 
