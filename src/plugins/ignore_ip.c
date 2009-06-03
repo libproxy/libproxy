@@ -28,7 +28,9 @@
 #include <ws2tcpip.h>
 typedef unsigned short int sa_family_t;
 #else
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif

@@ -27,10 +27,6 @@
 /* Import libproxy API */
 #include <proxy.h>
 
-#ifndef _WIN32
-#define STDIN_FILENO fileno(stdin)
-#endif
-
 char *
 pstrndup(const char *s)
 {

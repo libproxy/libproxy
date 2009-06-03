@@ -11,7 +11,7 @@ libproxy_la_SOURCES = \
 						url.c url.h
 
 libproxy_la_CFLAGS  = -Wall
-libproxy_la_LDFLAGS = -lpthread -lm
+libproxy_la_LDFLAGS = -lpthread -lm -ldl
 
 include_HEADERS     = proxy.h
 
