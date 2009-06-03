@@ -18,6 +18,7 @@ AC_CHECK_FUNCS(pthread_mutex_init)
 
 ### Check for socket functions (opensolaris requires -lsocket for example)
 AC_SEARCH_LIBS([socket],[socket inet])
+AC_SEARCH_LIBS([dlopen],[dl])
 
 ### Checks for libraries for plugins.
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
@@ -226,7 +227,6 @@ CFLAGS="-g -std=c99 -Werror $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=
 
 ### Checks for library functions.
 #AC_FUNC_MALLOC
-AC_SEARCH_LIBS([dlopen], [dl])
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
 ### Checking for mingw32
