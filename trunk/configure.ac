@@ -223,14 +223,22 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 PLUGINDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/plugins
 AC_SUBST(PLUGINDIR)
-CFLAGS="-g -std=c99 -Werror $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sysconfdir\\\" -D_POSIX_C_SOURCE=200112L"
 
 ### Checks for library functions.
 #AC_FUNC_MALLOC
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
-### Checking for mingw32
+### OS Specific checks
 AM_CONDITIONAL([MINGW32], [test "x$host_os" = xmingw32])
+case $host in
+  *-*-mingw*)
+     AC_CHECK_LIB(ws2_32, main)
+esac
+
+# This has to be at the very end, as all tests after this line
+# fail due to the extensive \\\ escaping. This in turn is required
+# for the .ac -> configure -> Makefile conversions to survive.
+CFLAGS="-g -std=c99 -Werror $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sysconfdir\\\" -D_POSIX_C_SOURCE=200112L"
 
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
