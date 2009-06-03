@@ -229,6 +229,9 @@ CFLAGS="-g -std=c99 -Werror $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=
 AC_SEARCH_LIBS([dlopen], [dl])
 #AC_CHECK_FUNCS([gethostbyname gethostname memset socket strdup strstr])
 
+### Checking for mingw32
+AM_CONDITIONAL([MINGW32], [test "x$host_os" = xmingw32])
+
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile
