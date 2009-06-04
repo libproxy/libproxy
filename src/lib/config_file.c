@@ -46,7 +46,7 @@ px_config_file_new(char *filename)
 	pxConfigFile *self      = px_malloc0(sizeof(pxConfigFile));
 	self->filename          = px_strdup(filename);
 	self->mtime             = st.st_mtime;
-	self->sections          = px_strdict_new((void *) px_strdict_free);
+	self->sections          = px_strdict_new((pxStrDictItemCallback) px_strdict_free);
 
 	/* Add one section (PX_CONFIG_FILE_DEFAULT_SECTION) */
 	px_strdict_set(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION, px_strdict_new(free));
