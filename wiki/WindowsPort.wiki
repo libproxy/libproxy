@@ -11,14 +11,14 @@ There were several requests to offer libproxy also on Windows. This page shall g
 As the main developers of libproxy actually don't work or use Windows, the way we compile it is by using cross compilation on Linux. All instructions are based on mingw32 cross compilation.
 
 == how to build for windows ==
-The tests are done on openSUSE 11.1)
-required packages:
+The tests are done on openSUSE 11.1, required packages:
  * mingw32-runtime-devel-3.15.2-1.11
  * mingw32-w32api-3.13-1.7
  * mingw32-pthreads-devel-2.8.0-2.7
  * mingw32-gcc-4.3.3-6.1
  * mingw32-binutils-2.19.1-1.5
  * mingw32-pthreads-2.8.0-2.7
+ * compat-libtool-1.5.26 (we have issues so far with libtool 2.2.6)
 
 Check out the source (svn rev 366 or later) and then build with the following instructions:
 
