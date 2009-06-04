@@ -23,7 +23,7 @@ The tests are done on openSUSE 11.1, required packages:
 Check out the source (svn rev 366 or later) and then build with the following instructions:
 
 {{{  
-mingw32-configure
+CPPFLAGS=-I/usr/i686-pc-mingw32/sys-root/mingw/include/pthread/ mingw32-configure
 mingw32-make
 }}}
 
