@@ -10,7 +10,7 @@ libproxy_la_SOURCES = \
 						strdict.c strdict.h \
 						url.c url.h
 
-libproxy_la_CFLAGS  = -Wall
+libproxy_la_CFLAGS  = -DMODULEDIR=\"@MODULEDIR@@DIR_SEPARATOR@\" -DSYSCONFDIR=\"@SYSCONFDIR@@DIR_SEPARATOR@\" -std=c99 -D_POSIX_C_SOURCE=200112L
 libproxy_la_LDFLAGS = -lpthread -lm -no-undefined
 
 include_HEADERS     = proxy.h
