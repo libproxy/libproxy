@@ -239,7 +239,7 @@ esac
 
 CFLAGS="-g -Wall -Werror $CFLAGS"
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
-                 src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
+                 src/modules/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile
                  src/bindings/dotnet/Makefile src/bindings/dotnet/libproxy-sharp-1.0.pc
                  src/bindings/dotnet/AssemblyInfo.cs])
