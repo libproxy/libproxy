@@ -237,7 +237,7 @@ case $host in
      AC_CHECK_LIB(ws2_32, main)
 esac
 
-CFLAGS="-g -Wall -Werror $CFLAGS"
+CFLAGS="-g -Wall -pedantic $CFLAGS"
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/modules/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile

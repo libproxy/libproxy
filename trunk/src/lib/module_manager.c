@@ -67,8 +67,8 @@ pxModuleManager *
 px_module_manager_new()
 {
 	pxModuleManager *self = px_malloc0(sizeof(pxModuleManager));
-	self->dlmodules     = px_array_new(NULL, (void *) pdlclose, true, false);
-	self->registrations = px_strdict_new((void *) px_array_free);
+	self->dlmodules     = px_array_new(NULL, (pxArrayItemCallback) pdlclose, true, false);
+	self->registrations = px_strdict_new((pxStrDictItemCallback) px_array_free);
 	self->types         = px_strdict_new(NULL);
 	return self;
 }
@@ -151,7 +151,7 @@ _px_module_manager_register_module_full(pxModuleManager *self,
 
 	// Create a new empty array if there is no registrations for this id
 	if (!px_strdict_get(self->registrations, id))
-		px_strdict_set(self->registrations, id, px_array_new((void *) regeq, (void *) regfree, true, true));
+		px_strdict_set(self->registrations, id, px_array_new((pxArrayItemsEqual) regeq, (pxArrayItemCallback) regfree, true, true));
 
 	// Add the module to the registrations for this id
 	pxArray *registrations = (pxArray *) px_strdict_get(self->registrations, id);
