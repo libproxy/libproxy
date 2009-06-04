@@ -28,7 +28,7 @@ BuildRequires: libwebkit-devel
 libproxy offers the following features:
 
     * extremely small core footprint (< 35K)
-    * no external dependencies within libproxy core (libproxy plugins may have dependencies)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
     * only 3 functions in the stable external API
     * dynamic adjustment to changing network topology
     * a standard way of dealing with proxy settings across all scenarios
@@ -51,7 +51,7 @@ Requires: %{name}0 = %{version}
 libproxy offers the following features:
 
     * extremely small core footprint (< 35K)
-    * no external dependencies within libproxy core (libproxy plugins may have dependencies)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
     * only 3 functions in the stable external API
     * dynamic adjustment to changing network topology
     * a standard way of dealing with proxy settings across all scenarios
@@ -65,42 +65,42 @@ Group: System/Libraries
 libproxy offers the following features:
 
     * extremely small core footprint (< 35K)
-    * no external dependencies within libproxy core (libproxy plugins may have dependencies)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
     * only 3 functions in the stable external API
     * dynamic adjustment to changing network topology
     * a standard way of dealing with proxy settings across all scenarios
     * a sublime sense of joy and accomplishment
 
-This package offers, next to the library, the base plugins envvar and file
+This package offers, next to the library, the base modules envvar and file
 
 %package -n %{name}0-gnome
-Summary: Libproxy plugin for gnome configuration
+Summary: Libproxy module for gnome configuration
 Group: System/Libraries
 
 %description -n %{name}0-gnome
-A plugin to extend libproxy with capabilities to query gnome/gconf about the proxy settings.
+A module to extend libproxy with capabilities to query gnome/gconf about the proxy settings.
 
 %package -n %{name}0-kde
-Summary: Libproxy plugin for kde configuration
+Summary: Libproxy module for kde configuration
 Group: System/Libraries
 
 %description -n %{name}0-kde
-A plugin to extend libproxy with capabilities to query KDE about proxy settings
+A module to extend libproxy with capabilities to query KDE about proxy settings
 
 %package -n %{name}0-mozjs
-Summary: Libproxy plugin to support wpad/pac parsing via Mozilla JavaScript Engine
+Summary: Libproxy module to support wpad/pac parsing via Mozilla JavaScript Engine
 Group: System/Libraries
 
 %description -n %{name}0-mozjs
-A plugin to extend libproxy with capabilities to pass addresses to a WPAD/PAC Script
+A module to extend libproxy with capabilities to pass addresses to a WPAD/PAC Script
 to have it parse for the correct proxy. PAC requires JavaScript Engine in the back.
 
 %package -n %{name}0-networkmanager
-Summary: Libproxy plugin for networkmanager configuration
+Summary: Libproxy module for networkmanager configuration
 Group: System/Libraries
 
 %description -n %{name}0-networkmanager
-A plugin to extend libproxy with capabilities to query NetworkManager about proxy settings
+A module to extend libproxy with capabilities to query NetworkManager about proxy settings
 
 %package -n python-%{name}
 Summary: Python bindings for libproxy
@@ -137,9 +137,9 @@ rm $RPM_BUILD_ROOT%{_libdir}/%{name}.la
 %{_libdir}/%{name}.so.*
 %dir %{_libdir}/%{name}/
 %dir %{_libdir}/%{name}/%{version}
-%dir %{_libdir}/%{name}/%{version}/plugins
-%{_libdir}/%{name}/%{version}/plugins/envvar.so
-%{_libdir}/%{name}/%{version}/plugins/file.so
+%dir %{_libdir}/%{name}/%{version}/modules
+%{_libdir}/%{name}/%{version}/modules/envvar.so
+%{_libdir}/%{name}/%{version}/modules/file.so
 
 %files devel
 %defattr(-, root, root)
@@ -150,21 +150,21 @@ rm $RPM_BUILD_ROOT%{_libdir}/%{name}.la
 
 %files -n %{name}0-kde
 %defattr(-, root, root)
-%{_libdir}/%{name}/%{version}/plugins/kde.so
+%{_libdir}/%{name}/%{version}/modules/kde.so
 
 %files -n %{name}0-gnome
 %defattr(-, root, root)
-%{_libdir}/%{name}/%{version}/plugins/gnome.so
+%{_libdir}/%{name}/%{version}/modules/gnome.so
 
 %if 0%{build_nm}
 %files -n %{name}0-networkmanager
 %defattr(-, root, root)
-%{_libdir}/%{name}/%{version}/plugins/networkmanager.so
+%{_libdir}/%{name}/%{version}/modules/networkmanager.so
 %endif
 
 %files -n %{name}0-mozjs
 %defattr(-, root, root)
-%{_libdir}/%{name}/%{version}/plugins/mozjs.so
+%{_libdir}/%{name}/%{version}/modules/mozjs.so
 
 
 %files -n python-%{name}
@@ -175,6 +175,6 @@ rm $RPM_BUILD_ROOT%{_libdir}/%{name}.la
 * Fri Jun 6 2008 - dominique-rpm@leuenberger.net
 - Updated to version 0.2.3
 * Wed Jun 4 2008 - dominique-rpm@leuenberger.net
-- Extended spec file to build all available plugins
+- Extended spec file to build all available modules
 * Tue Jun 3 2008 - dominique-rpm@leuenberger.net
 - Initial spec file for Version 0.2.2

@@ -162,7 +162,7 @@ px_proxy_factory_new ()
 
     /* If we have a config file, load the config order from it */
     setenv("_PX_CONFIG_ORDER", "", 1);
-	pxConfigFile *cf = px_config_file_new(SYSCONFDIR "/proxy.conf");
+	pxConfigFile *cf = px_config_file_new(SYSCONFDIR "proxy.conf");
     if (cf)
     {
     	char *tmp = px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "config_order");
@@ -175,7 +175,7 @@ px_proxy_factory_new ()
     }
 
 	/* Load all modules */
-	if (!px_module_manager_load_dir(self->mm, PLUGINDIR)) goto error;
+	if (!px_module_manager_load_dir(self->mm, MODULEDIR)) goto error;
 
 	pthread_mutex_init(&self->mutex, NULL);
 	return self;

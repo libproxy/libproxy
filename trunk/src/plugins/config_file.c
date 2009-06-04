@@ -85,7 +85,7 @@ _system_constructor()
 {
 	pxFileConfigModule *self = px_malloc0(sizeof(pxFileConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SYSTEM, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	self->filename = px_strdup(SYSCONFDIR "/proxy.conf");
+	self->filename = px_strdup(SYSCONFDIR "proxy.conf");
 
 	return self;
 }

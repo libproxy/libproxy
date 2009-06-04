@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([libproxy],[0.2.3],[nathaniel@natemccallum.com])
+AC_INIT([libproxy],[0.3.0],[nathaniel@natemccallum.com])
 AC_CONFIG_SRCDIR([src/lib/proxy.c])
 AM_INIT_AUTOMAKE
 
@@ -20,7 +20,7 @@ AC_CHECK_FUNCS(pthread_mutex_init)
 AC_SEARCH_LIBS([socket],[socket inet])
 AC_SEARCH_LIBS([dlopen],[dl])
 
-### Checks for libraries for plugins.
+### Checks for libraries for modules.
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
 PKG_CHECK_MODULES(gconf, gconf-2.0, have_gconf=yes, have_gconf=no)
@@ -35,28 +35,28 @@ PKG_CHECK_MODULES(NetworkManager, NetworkManager dbus-1,
 # Direct
 AC_ARG_WITH([direct],
             [AS_HELP_STRING([--with-direct],
-            [build direct configuration plugin @<:@default=yes@:>@])],
+            [build direct configuration module @<:@default=yes@:>@])],
             [], [with_direct=yes])
 AM_CONDITIONAL([WITH_DIRECT], [test x$with_direct = xyes])
 
 # Environmental Variable
 AC_ARG_WITH([envvar],
             [AS_HELP_STRING([--with-envvar],
-            [build environmental variable configuration plugin @<:@default=yes@:>@])],
+            [build environmental variable configuration module @<:@default=yes@:>@])],
             [], [with_envvar=yes])
 AM_CONDITIONAL([WITH_ENVVAR], [test x$with_envvar = xyes])
 
 # File
 AC_ARG_WITH([file],
             [AS_HELP_STRING([--with-file],
-            [build file-based configuration plugin @<:@default=yes@:>@])],
+            [build file-based configuration module @<:@default=yes@:>@])],
             [], [with_file=yes])
 AM_CONDITIONAL([WITH_FILE], [test x$with_envvar = xyes])
             
 # GNOME
 AC_ARG_WITH([gnome],
             [AS_HELP_STRING([--with-gnome],
-            [build GNOME configuration plugin @<:@automatic@:>@])],
+            [build GNOME configuration module @<:@automatic@:>@])],
             [],
             [test x$have_gconf = xyes && 
              test x$have_x11   = xyes &&
@@ -71,7 +71,7 @@ if test x$with_gnome = xyes; then
 		AC_SUBST(GNOME_CFLAGS)
 		AC_SUBST(GNOME_LIBS)
 	else
-		echo "GNOME plugin requires: x11, xmu and gconf!"
+		echo "GNOME module requires: x11, xmu and gconf!"
 		exit 1
 	fi
 else
@@ -82,7 +82,7 @@ AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 # KDE
 AC_ARG_WITH([kde],
             [AS_HELP_STRING([--with-kde],
-            [build KDE configuration plugin @<:@automatic@:>@])],
+            [build KDE configuration module @<:@automatic@:>@])],
             [],
             [test x$have_x11   = xyes &&
              test x$have_xmu   = xyes &&
@@ -95,7 +95,7 @@ if test x$with_kde = xyes; then
 		AC_SUBST(KDE_CFLAGS)
 		AC_SUBST(KDE_LIBS)
 	else
-		echo "KDE plugin requires: x11 and xmu!"
+		echo "KDE module requires: x11 and xmu!"
 		exit 1
 	fi
 else
@@ -106,14 +106,14 @@ AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
 # WPAD
 AC_ARG_WITH([wpad],
             [AS_HELP_STRING([--with-wpad],
-            [build WPAD configuration plugin @<:@default=yes@:>@])],
+            [build WPAD configuration module @<:@default=yes@:>@])],
             [], [with_wpad=yes])
 AM_CONDITIONAL([WITH_WPAD], [test x$with_wpad = xyes])
 
 # NetworkManager
 AC_ARG_WITH([networkmanager],
             [AS_HELP_STRING([--with-networkmanager],
-            [build NetworkManager plugin @<:@automatic@:>@])],
+            [build NetworkManager module @<:@automatic@:>@])],
             [],
             [test x$have_networkmanager = xyes && with_networkmanager=yes])
 if test x$with_networkmanager = xyes; then
@@ -123,7 +123,7 @@ if test x$with_networkmanager = xyes; then
 		AC_SUBST(NETWORKMANAGER_CFLAGS)
 		AC_SUBST(NETWORKMANAGER_LIBS)
 	else
-		echo "NetworkManager plugin requires: NetworkManager!"
+		echo "NetworkManager module requires: NetworkManager!"
 		exit 1
 	fi
 else
@@ -134,7 +134,7 @@ AM_CONDITIONAL([WITH_NETWORKMANAGER], [test x$with_networkmanager = xyes])
 # Mozilla Javascript
 AC_ARG_WITH([mozjs],
             [AS_HELP_STRING([--with-mozjs],
-            [build Mozilla JavaScript PAC runner plugin @<:@automatic@:>@])],
+            [build Mozilla JavaScript PAC runner module @<:@automatic@:>@])],
             [],
             [test x$have_mozjs = xyes && with_mozjs=yes])
 if test x$with_mozjs = xyes; then
@@ -144,7 +144,7 @@ if test x$with_mozjs = xyes; then
 		AC_SUBST(MOZJS_CFLAGS)
 		AC_SUBST(MOZJS_LIBS)
 	else
-		echo "Mozilla JavaScript plugin requires: mozjs!"
+		echo "Mozilla JavaScript module requires: mozjs!"
 		exit 1
 	fi
 else
@@ -155,7 +155,7 @@ AM_CONDITIONAL([WITH_MOZJS], [test x$with_mozjs = xyes])
 # WebKit Javascript
 AC_ARG_WITH([webkit],
             [AS_HELP_STRING([--with-webkit],
-            [build WebKit JavaScriptCore PAC runner plugin @<:@automatic@:>@])],
+            [build WebKit JavaScriptCore PAC runner module @<:@automatic@:>@])],
             [],
             [test x$have_webkit = xyes && with_webkit=yes])
 if test x$with_webkit = xyes; then
@@ -165,7 +165,7 @@ if test x$with_webkit = xyes; then
 		AC_SUBST(WEBKIT_CFLAGS)
 		AC_SUBST(WEBKIT_LIBS)
 	else
-		echo "WebKit JavaScriptCore plugin requires: WebKit!"
+		echo "WebKit JavaScriptCore module requires: WebKit!"
 		exit 1
 	fi
 else
@@ -221,8 +221,10 @@ AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_TYPE_SIZE_T
-PLUGINDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/plugins
-AC_SUBST(PLUGINDIR)
+MODULEDIR=$libdir/$PACKAGE_NAME/$PACKAGE_VERSION/modules
+AC_SUBST(MODULEDIR)
+AC_SUBST(SYSCONFDIR)
+AC_SUBST(DIR_SEPARATOR)
 
 ### Checks for library functions.
 #AC_FUNC_MALLOC
@@ -235,11 +237,7 @@ case $host in
      AC_CHECK_LIB(ws2_32, main)
 esac
 
-# This has to be at the very end, as all tests after this line
-# fail due to the extensive \\\ escaping. This in turn is required
-# for the .ac -> configure -> Makefile conversions to survive.
-CFLAGS="-g -std=c99 -Werror $CFLAGS -DPLUGINDIR=\\\"$PLUGINDIR\\\" -DSYSCONFDIR=\\\"$sysconfdir\\\" -D_POSIX_C_SOURCE=200112L"
-
+CFLAGS="-g -Wall -Werror $CFLAGS"
 AC_CONFIG_FILES([libproxy-1.0.pc Makefile libproxy.spec src/Makefile src/lib/Makefile
                  src/plugins/Makefile src/bin/Makefile src/bindings/Makefile
                  src/bindings/python/Makefile src/bindings/java/Makefile
@@ -250,7 +248,7 @@ AC_OUTPUT
 ### Print build summary
 echo
 echo "------------------------------------------------------"
-echo -e "\tPlugins to build..."
+echo -e "\tModules to build..."
 echo -e "\t\tdirect          : $with_direct"
 echo -e "\t\tenvvar          : $with_envvar"
 echo -e "\t\tfile            : $with_file"
