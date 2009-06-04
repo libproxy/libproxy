@@ -1,0 +1,45 @@
+#summary Porting libproxy to the Windows platform
+
+= Introduction =
+
+Libproxy is showing it's advantages and get's a wieder adoption almost daily (almost).
+There were several requests to offer libproxy also on Windows. This page shall give an overview of what is working, what has been tested and what for sure does not work yet.
+
+
+= Compilation =
+
+As the main developers of libproxy actually don't work or use Windows, the way we compile it is by using cross compilation on Linux. All instructions are based on mingw32 cross compilation.
+
+== how to build for windows ==
+The tests are done on openSUSE 11.1)
+required packages:
+ * mingw32-runtime-devel-3.15.2-1.11
+ * mingw32-w32api-3.13-1.7
+ * mingw32-pthreads-devel-2.8.0-2.7
+ * mingw32-gcc-4.3.3-6.1
+ * mingw32-binutils-2.19.1-1.5
+ * mingw32-pthreads-2.8.0-2.7
+
+Check out the source (svn rev 366 or later) and then build with the following instructions:
+
+{{{  
+mingw32-configure
+mingw32-make
+}}}
+
+Both are actually shell scripts which take care of the entire environment being properly setup for cross-compilation.
+
+= Status =
+An overview of where we are at the moment
+
+== Completed ==
+ * autoconf scripts are adjusted to build the linux and windows ports
+ * libproxy-0.dll is successfully built and linked
+ * the plugins are successfully built and linked
+ * bin/proxy, our test application, is built and linked
+
+
+== pending == 
+ * *TESTING*: No testing done whatsoever. We're not even sure if the app crashes, deletes your OS, has negative side effects on your health.
+ * The plugin system won't find any plugin, as it has a hard coded path at this time.
+ * many many more
