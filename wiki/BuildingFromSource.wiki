@@ -1,6 +1,7 @@
 #summary Building the latest version of libproxy
 #labels Featured
 
+This site deals with compilation for Linux and similiar systems. If you're interested in a windows version, please have a look at [WindowsPort].
 
 = Get the Code =
 {{{
