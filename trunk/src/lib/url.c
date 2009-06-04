@@ -30,8 +30,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
-#include <netdb.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
@@ -191,11 +191,11 @@ px_url_get_ips(pxURL *self, bool usedns)
 	/* Check DNS for IPs */
 	struct addrinfo *info;
 	struct addrinfo flags;
-    flags.ai_family   = AF_UNSPEC;
-    flags.ai_socktype = 0;
-    flags.ai_protocol = 0;
-    flags.ai_flags    = AI_NUMERICHOST;
-    if (!getaddrinfo(px_url_get_host(self), NULL, usedns ? NULL : &flags, &info))
+	flags.ai_family   = AF_UNSPEC;
+	flags.ai_socktype = 0;
+	flags.ai_protocol = 0;
+	flags.ai_flags    = AI_NUMERICHOST;
+	if (!getaddrinfo(px_url_get_host(self), NULL, usedns ? NULL : &flags, &info))
 	{
 		struct addrinfo *first = info;
 		int count;
