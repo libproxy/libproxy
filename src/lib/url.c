@@ -340,9 +340,10 @@ px_url_new(const char *url)
 	else
 		snprintf(self->url, strlen(url) + 1, "%s://%s", self->scheme, self->host);
 	if (port_specified)
-		snprintf(self->url, strlen(url) + 1, "%s:%d%s", self->url, self->port, self->path);
+		snprintf(self->url + strlen(self->url), strlen(url) + 1 - strlen(self->url), ":%d%s", self->port, self->path);
 	else
-		snprintf(self->url, strlen(url) + 1, "%s%s", self->url, self->path);
+		snprintf(self->url + strlen(self->url), strlen(url) + 1 - strlen(self->url), "%s", self->path);
+	printf("%s =?= %s\n", self->url, url);
 	if (strcmp(self->url, url)) goto error;
 
 	return self;
