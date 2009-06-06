@@ -174,10 +174,7 @@ _px_module_manager_instantiate_type_full(pxModuleManager *self,
 	{
 		pxModuleRegistration *reg = (pxModuleRegistration *) px_array_get(regs, i);
 		if (!reg->instance)
-		{
-			puts(reg->name);
 			reg->instance = reg->new();
-		}
 	}
 
 	// Sort the instances
