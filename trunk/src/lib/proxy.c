@@ -172,6 +172,7 @@ px_proxy_factory_new ()
     		px_free(tmp);
     		goto error;
     	}
+    	px_free(tmp);
     }
 
 	/* Load all modules */
