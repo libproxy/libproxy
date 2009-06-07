@@ -132,8 +132,12 @@ px_array_free(pxArray *self)
 {
 	if (!self) return;
 
-	for (int i=0 ; i < self->length ; i++)
+	// NOTE: We free in the reverse order of allocation
+	// This fixes an odd bug where dlopen()'d modules need
+	// to be dlclose()'d in the reverse order of their opening
+	for (int i=self->length-1 ; i >= 0 ; i--)
 		self->free(self->data[i]);
+	px_free(self->data);
 	px_free(self);
 }
 
