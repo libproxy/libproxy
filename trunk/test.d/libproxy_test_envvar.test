@@ -6,7 +6,7 @@ testurl="http://www.google.com"
 proxy_bin="src/bin/proxy"
 
 if [ -x $proxy_bin ]; then
-    result=$(PX_CONFIG_ORDER=envvar http_proxy="http://proxy:1234" $proxy_bin $testurl)
+    result=$(PX_CONFIG_ORDER=config_envvar http_proxy="http://proxy:1234" $proxy_bin $testurl)
 else
     result="N/A"
 fi

@@ -1,7 +1,7 @@
 #!/bin/sh
 # $Id$
 
-lib=$(ldconfig -p 2>/dev/null | awk '/libproxy.so /{print $NF}')
+lib=$(/sbin/ldconfig -p 2>/dev/null | awk '/libproxy.so /{print $NF}')
 proxy=$(which proxy 2>/dev/null)
 build=src/bin/proxy
 
