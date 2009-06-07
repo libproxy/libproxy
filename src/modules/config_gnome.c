@@ -320,5 +320,5 @@ px_module_load(pxModuleManager *self)
 	if (!x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
 		return  false;
 	g_type_init();
-	return px_module_manager_register_module(self, pxConfigModule, "config_gnome", _constructor, _destructor);
+	return px_module_manager_register_module(self, pxConfigModule, _constructor, _destructor);
 }
