@@ -9,8 +9,8 @@ proxy_bin="src/bin/proxy"
 pac_url="http://libproxy.googlecode.com/files/proxy.pac"
 
 if [ -x $proxy_bin ]; then
-    result1=$(PX_CONFIG_ORDER=envvar http_proxy="pac+$pac_url" $proxy_bin $testurl1)
-    result2=$(PX_CONFIG_ORDER=envvar http_proxy="pac+$pac_url" $proxy_bin $testurl2)
+    result1=$(PX_CONFIG_ORDER=config_envvar http_proxy="pac+$pac_url" $proxy_bin $testurl1)
+    result2=$(PX_CONFIG_ORDER=config_envvar http_proxy="pac+$pac_url" $proxy_bin $testurl2)
 else
     result="N/A"
 fi
