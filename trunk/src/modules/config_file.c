@@ -108,7 +108,7 @@ _user_constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	bool a = px_module_manager_register_module(self, pxConfigFile, "config_file_system", _system_constructor, _destructor);
-	bool b = px_module_manager_register_module(self, pxConfigFile, "config_file_user",   _user_constructor,   _destructor);
+	bool a = px_module_manager_register_module_with_name(self, pxConfigFile, "config_file_system", _system_constructor, _destructor);
+	bool b = px_module_manager_register_module_with_name(self, pxConfigFile, "config_file_user",   _user_constructor,   _destructor);
 	return (a || b);
 }

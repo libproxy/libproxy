@@ -177,5 +177,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	return px_module_manager_register_module(self, pxWPADModule, "wpad_dnsdevolution", _constructor, _destructor);
+	return px_module_manager_register_module(self, pxWPADModule, _constructor, _destructor);
 }

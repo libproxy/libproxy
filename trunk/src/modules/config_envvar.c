@@ -72,5 +72,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	return px_module_manager_register_module(self, pxConfigModule, "config_envvar", _constructor, px_free);
+	return px_module_manager_register_module(self, pxConfigModule, _constructor, px_free);
 }

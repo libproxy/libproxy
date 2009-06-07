@@ -213,5 +213,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	return px_module_manager_register_module(self, pxIgnoreModule, "ignore_ip", _constructor, px_free);
+	return px_module_manager_register_module(self, pxIgnoreModule, _constructor, px_free);
 }

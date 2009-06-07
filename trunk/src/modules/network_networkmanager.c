@@ -106,5 +106,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	return px_module_manager_register_module(self, pxNetworkModule, "network_networkmanager", _constructor, _destructor);
+	return px_module_manager_register_module(self, pxNetworkModule, _constructor, _destructor);
 }

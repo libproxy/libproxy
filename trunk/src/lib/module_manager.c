@@ -136,6 +136,7 @@ bool
 _px_module_manager_register_module_full(pxModuleManager *self,
                                         const char *id,
                                         const char *name,
+                                        size_t namelen,
                                         pxModuleConstructor new,
                                         pxModuleDestructor free)
 {
@@ -145,7 +146,7 @@ _px_module_manager_register_module_full(pxModuleManager *self,
 	if (!new)  return false;
 
 	pxModuleRegistration *reg = px_malloc0(sizeof(pxModuleRegistration));
-	reg->name = px_strdup(name);
+	reg->name = px_strndup(name, namelen);
 	reg->new  = new;
 	reg->free = free;
 

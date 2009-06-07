@@ -223,5 +223,5 @@ _constructor()
 bool
 px_module_load(pxModuleManager *self)
 {
-	return px_module_manager_register_module(self, pxPACRunnerModule, "pacrunner_webkit", _constructor, _destructor);
+	return px_module_manager_register_module(self, pxPACRunnerModule, _constructor, _destructor);
 }
