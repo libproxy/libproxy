@@ -241,7 +241,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 	/* Check to see if our network has changed */
 	pxNetworkModule **networks = px_module_manager_instantiate_type(self->mm, pxNetworkModule);
-	for (int i=0 ; networks[i] ; i++)
+	for (int i=0 ; networks && networks[i] ; i++)
 	{
 		if (networks[i]->changed(networks[i]))
 		{
@@ -260,7 +260,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 
 	/* Attempt to load a valid config */
 	pxConfigModule **configs = px_module_manager_instantiate_type(self->mm, pxConfigModule);
-	for (int i=0 ; configs[i] ; i++)
+	for (int i=0 ; configs && configs[i] ; i++)
 	{
 		config  = configs[i];
 		confurl = config->get_config(config, realurl);
@@ -299,7 +299,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	px_free(confign); confign = NULL;
 	for (int i=0 ; ignore_split && ignore_split[i] ; i++)
 	{
-		for (int j=0 ; ignores[j] ; j++)
+		for (int j=0 ; ignores && ignores[j] ; j++)
 		{
 			if (ignores[j]->ignore(ignores[j], realurl, ignore_split[i]))
 			{
@@ -428,7 +428,7 @@ px_proxy_factory_free (pxProxyFactory *self)
 
 	pthread_mutex_lock(&self->mutex);
 
-	/* Free the plugin manager */
+	/* Free the module manager */
 	px_module_manager_free(self->mm);
 
 	/* Free everything else */
