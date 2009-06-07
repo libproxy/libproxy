@@ -186,7 +186,7 @@ px_url_get_ips(pxURL *self, bool usedns)
 	if (self->ips) return (const struct sockaddr **) self->ips;
 
 	/* Check without DNS first */
-	if (px_url_get_ips(self, false)) return (const struct sockaddr **) self->ips;
+	if (usedns && px_url_get_ips(self, false)) return (const struct sockaddr **) self->ips;
 
 	/* Check DNS for IPs */
 	struct addrinfo *info;
