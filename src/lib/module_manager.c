@@ -190,7 +190,7 @@ _px_module_manager_instantiate_type_full(pxModuleManager *self,
 
 	// Sort the instances
 	if (px_strdict_get(self->types, id))
-		px_array_sort(regs, px_strdict_get(self->types, id));
+		px_array_sort(regs, ((pxModuleTypeRegistration *) px_strdict_get(self->types, id))->cmp);
 
 	// Allocate our instances array
 	void **instances = px_malloc0(sizeof(void *) * (px_array_length(regs) + 1));
