@@ -141,9 +141,11 @@ px_array_free(pxArray *self)
 	px_free(self);
 }
 
-unsigned int
+int
 px_array_length(pxArray *self)
 {
+	if (!self) return -1;
+
 	return self->length;
 }
 

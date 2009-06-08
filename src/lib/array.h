@@ -40,7 +40,7 @@ const void *px_array_get(pxArray *self, int index);
 
 void px_array_free(pxArray *self);
 
-unsigned int px_array_length(pxArray *self);
+int px_array_length(pxArray *self);
 
 void px_array_sort(pxArray *self, int (*compare)(const void *, const void *));
 
