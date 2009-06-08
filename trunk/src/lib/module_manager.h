@@ -67,9 +67,9 @@ void **_px_module_manager_instantiate_type_full(pxModuleManager *self, const cha
 #define px_module_manager_instantiate_type(self, type) \
 	(type **) _px_module_manager_instantiate_type_full(self, __px_module_manager_get_id(type, type ## Version))
 
-bool   _px_module_manager_register_type_full(pxModuleManager *self, const char *id, pxModuleRegistrationComparison cmp);
-#define px_module_manager_register_type(self, type, cmp) \
-	_px_module_manager_register_type_full(self, __px_module_manager_get_id(type, type ## Version), cmp)
+bool   _px_module_manager_register_type_full(pxModuleManager *self, const char *id, pxModuleRegistrationComparison cmp, bool singleton);
+#define px_module_manager_register_type(self, type, cmp, sngl) \
+	_px_module_manager_register_type_full(self, __px_module_manager_get_id(type, type ## Version), cmp, sngl)
 
 #define PX_MODULE_SUBCLASS(type) type __parent__
 

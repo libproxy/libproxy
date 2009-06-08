@@ -157,8 +157,9 @@ px_proxy_factory_new ()
 	self->mm             = px_module_manager_new();
 
 	/* Register our module types */
-	if (!px_module_manager_register_type(self->mm, pxConfigModule, _px_config_module_cmp)) goto error;
-	if (!px_module_manager_register_type(self->mm, pxWPADModule,   _px_wpad_module_cmp))   goto error;
+	if (!px_module_manager_register_type(self->mm, pxConfigModule,    _px_config_module_cmp, false)) goto error;
+	if (!px_module_manager_register_type(self->mm, pxPACRunnerModule, NULL,                   true)) goto error;
+	if (!px_module_manager_register_type(self->mm, pxWPADModule,      _px_wpad_module_cmp,   false)) goto error;
 
     /* If we have a config file, load the config order from it */
     setenv("_PX_CONFIG_ORDER", "", 1);
