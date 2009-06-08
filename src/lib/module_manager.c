@@ -48,6 +48,11 @@ struct _pxModuleManager {
 	pxStrDict *types;
 };
 
+typedef struct _pxModuleTypeRegistration {
+	pxModuleRegistrationComparison cmp;
+	bool                           sngl;
+} pxModuleTypeRegistration;
+
 static void
 regfree(pxModuleRegistration *self)
 {
@@ -69,7 +74,7 @@ px_module_manager_new()
 	pxModuleManager *self = px_malloc0(sizeof(pxModuleManager));
 	self->dlmodules     = px_array_new(NULL, (pxArrayItemCallback) pdlclose, true, false);
 	self->registrations = px_strdict_new((pxStrDictItemCallback) px_array_free);
-	self->types         = px_strdict_new(NULL);
+	self->types         = px_strdict_new((pxStrDictItemCallback) px_free);
 	return self;
 }
 
@@ -145,6 +150,11 @@ _px_module_manager_register_module_full(pxModuleManager *self,
 	if (!name) return false;
 	if (!new)  return false;
 
+	// Ensure only a single registration in the case of a singleton
+	pxModuleTypeRegistration *tr = (pxModuleTypeRegistration *) px_strdict_get(self->types, id);
+	if (tr && tr->sngl && px_array_length((pxArray *) px_strdict_get(self->registrations, id)) > 0)
+		return false;
+
 	pxModuleRegistration *reg = px_malloc0(sizeof(pxModuleRegistration));
 	reg->name = px_strndup(name, namelen);
 	reg->new  = new;
@@ -192,10 +202,15 @@ _px_module_manager_instantiate_type_full(pxModuleManager *self,
 bool
 _px_module_manager_register_type_full(pxModuleManager *self,
                                       const char *id,
-                                      pxModuleRegistrationComparison cmp)
+                                      pxModuleRegistrationComparison cmp,
+                                      bool singleton)
 {
 	if (!self) return false;
 	if (!id)   return false;
+	if (!cmp && !singleton) return true;
 
-	return px_strdict_set(self->types, id, cmp);
+	pxModuleTypeRegistration *tr = px_malloc0(sizeof(pxModuleTypeRegistration));
+	tr->cmp  = cmp;
+	tr->sngl = singleton;
+	return px_strdict_set(self->types, id, tr);
 }
