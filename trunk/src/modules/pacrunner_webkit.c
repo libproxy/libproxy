@@ -20,10 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0501
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#endif
 #define __USE_BSD
 #include <unistd.h>
 
