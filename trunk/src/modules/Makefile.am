@@ -50,7 +50,7 @@ config_file_la_LIBADD              = ../lib/libproxy.la
 
 # GConf/GNOME Config Module
 config_gnome_la_SOURCES            = config_gnome.c xhasclient.c
-config_gnome_la_CFLAGS             = -I$(top_srcdir)/src/lib @GNOME_CFLAGS@
+config_gnome_la_CFLAGS             = -I$(top_srcdir)/src/lib -D_POSIX_C_SOURCE=200112L @GNOME_CFLAGS@
 config_gnome_la_LIBADD             = ../lib/libproxy.la
 config_gnome_la_LDFLAGS            = @GNOME_LIBS@
 

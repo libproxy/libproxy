@@ -120,6 +120,7 @@ px_strdict_foreach(pxStrDict *self, pxStrDictForeachCallback *cb, void *arg)
 void
 px_strdict_free(pxStrDict *self)
 {
+	if (!self) return;
 	px_array_free(self->data);
 	px_free(self);
 }
