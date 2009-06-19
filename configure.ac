@@ -20,7 +20,8 @@ AC_CHECK_FUNCS(pthread_mutex_init)
 AC_SEARCH_LIBS([socket],[socket inet])
 AC_SEARCH_LIBS([dlopen],[dl])
 
-### Checks for libraries for modules.
+### Checks for module dependencies.
+AC_PATH_PROG(GCONFTOOLBIN, gconftool-2)
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
 PKG_CHECK_MODULES(xmu, xmu, have_xmu=yes, have_xmu=no)
 PKG_CHECK_MODULES(webkit, webkit-1.0, have_webkit=yes, have_webkit=no)
@@ -61,14 +62,16 @@ AC_ARG_WITH([gnome],
              test x$have_xmu   = xyes &&
              with_gnome=yes])
 if test x$with_gnome = xyes; then
-	if test x$have_x11 = xyes && \
+	if test x$GCONFTOOLBIN != x && \
+           test x$have_x11 = xyes && \
 	   test x$have_xmu = xyes; then
 		GNOME_CFLAGS="$x11_CFLAGS $xmu_CFLAGS"
 		GNOME_LIBS="$x11_LIBS $xmu_LIBS"
+		AC_SUBST(GCONFTOOLBIN)
 		AC_SUBST(GNOME_CFLAGS)
 		AC_SUBST(GNOME_LIBS)
 	else
-		echo "GNOME module requires: x11, xmu and gconf!"
+		echo "GNOME module requires: x11, xmu and gconftool-2!"
 		exit 1
 	fi
 else
