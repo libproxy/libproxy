@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <misc.h>
 #include <modules.h>
@@ -29,13 +30,14 @@
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
-#define GCONFTOOLBIN "/usr/bin/gconftool-2"
 #define BUFFERSIZE 10240
+#define CACHETIME 5
 
 typedef struct _pxGConfConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
 	FILE      *pipe;
 	pxStrDict *data;
+	time_t     last;
 } pxGConfConfigModule;
 
 static const char *_all_keys[] = {
@@ -128,12 +130,16 @@ _get_config(pxConfigModule *s, pxURL *url)
 	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 
 	// Update our config if possible
-	pxStrDict *tmp = _finish_get_config(self->pipe);
-	self->pipe = NULL;
-	if (tmp)
+	if (self->pipe)
 	{
-		px_strdict_free(self->data);
-		self->data = tmp;
+		pxStrDict *tmp = _finish_get_config(self->pipe);
+		self->pipe = NULL;
+		if (tmp)
+		{
+			px_strdict_free(self->data);
+			self->data = tmp;
+			self->last = time(NULL);
+		}
 	}
 
 	if (!px_strdict_get(self->data, "/system/proxy/mode"))
@@ -207,8 +213,9 @@ _get_config(pxConfigModule *s, pxURL *url)
 		px_free(port);
 	}
 
-	// Start a refresh in the backgroun
-	self->pipe = _start_get_config();
+	// Start a refresh in the background
+	if (time(NULL) - self->last > CACHETIME)
+		self->pipe = _start_get_config();
 
 	return curl;
 }
