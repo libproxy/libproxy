@@ -33,6 +33,14 @@
 #include <jsapi.h>
 #include "pacutils.h"
 
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN 16
+#endif
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
 typedef struct {
 	JSRuntime *run;
 	JSContext *ctx;
