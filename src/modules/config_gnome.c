@@ -18,111 +18,98 @@
  ******************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <misc.h>
 #include <modules.h>
-
-#include <glib.h>
-#include <gconf/gconf-client.h>
+#include <strdict.h>
 
 // From xhasclient.c
 bool x_has_client(char *prog, ...);
 
+#define GCONFTOOLBIN "/usr/bin/gconftool-2"
+#define BUFFERSIZE 10240
+
 typedef struct _pxGConfConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
-	GConfClient  *client;
-#ifdef G_THREADS_ENABLED
-	GMutex       *mutex;
-#endif
-	char         *mode;
-	char         *autoconfig_url;
-	char         *http_host;
-	int           http_port;
-	char         *https_host;
-	int           https_port;
-	char         *ftp_host;
-	int           ftp_port;
-	char         *socks_host;
-	int           socks_port;
-	char         *ignore_hosts;
+	FILE      *pipe;
+	pxStrDict *data;
 } pxGConfConfigModule;
 
 static const char *_all_keys[] = {
-        "/system/proxy/mode",       "/system/proxy/autoconfig_url",
-        "/system/http_proxy/host",  "/system/http_proxy/port",
-        "/system/https_proxy/host", "/system/https_proxy/port",
-        "/system/ftp_proxy/host",   "/system/ftp_proxy/port",
-        "/system/socks_proxy/host", "/system/socks_proxy/port",
-        "/system/http_proxy/ignore_hosts", NULL
-      };
+	"/system/proxy/mode",       "/system/proxy/autoconfig_url",
+	"/system/http_proxy/host",  "/system/http_proxy/port",
+	"/system/proxy/secure_host", "/system/proxy/secure_port",
+	"/system/proxy/ftp_host",   "/system/proxy/ftp_port",
+	"/system/proxy/socks_host", "/system/proxy/socks_port",
+	"/system/http_proxy/ignore_hosts", NULL
+};
 
-static void
-_on_key_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, gpointer user_data)
+static FILE *
+_start_get_config()
 {
-	pxGConfConfigModule *self = (pxGConfConfigModule *) user_data;
+	char buffer[BUFFERSIZE] = "";
 
-#ifdef G_THREADS_ENABLED
-	if (self->mutex)
-		g_mutex_lock(self->mutex);
-#endif
-
-	if (!strcmp(entry->key, "/system/proxy/mode")) {
-		g_free(self->mode);
-		self->mode = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/proxy/autoconfig_url")) {
-		g_free(self->autoconfig_url);
-		self->autoconfig_url = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/http_proxy/host")) {
-		g_free(self->http_host);
-		self->http_host = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/http_proxy/port"))
-		self->http_port = entry->value ? gconf_value_get_int(entry->value) : 0;
-	else if (!strcmp(entry->key, "/system/https_proxy/host")) {
-		g_free(self->https_host);
-		self->https_host = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/https_proxy/port"))
-		self->https_port = entry->value ? gconf_value_get_int(entry->value) : 0;
-	else if (!strcmp(entry->key, "/system/ftp_proxy/host")) {
-		g_free(self->ftp_host);
-		self->ftp_host = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/ftp_proxy/port"))
-		self->ftp_port = entry->value ? gconf_value_get_int(entry->value) : 0;
-	else if (!strcmp(entry->key, "/system/socks_proxy/host")) {
-		g_free(self->socks_host);
-		self->socks_host = entry->value ? g_strdup(gconf_value_get_string(entry->value)) : NULL;
-	}
-	else if (!strcmp(entry->key, "/system/socks_proxy/port"))
-		self->socks_port = entry->value ? gconf_value_get_int(entry->value) : 0;
-	else if (!strcmp(entry->key, "/system/http_proxy/ignore_hosts"))
+	// Build our command
+	if (strlen(GCONFTOOLBIN " -g") + 1 > BUFFERSIZE)
+		return NULL;
+	strcpy(buffer, GCONFTOOLBIN " -g");
+	for (int i=0 ; _all_keys[i] ; i++)
 	{
-		g_free(self->ignore_hosts);
-		GSList *ignores = gconf_value_get_list(entry->value);
-		if (!ignores || g_slist_length(ignores) == 0)
-			self->ignore_hosts = px_strdup("");
-		else
-		{
-			GString *ignore_str = g_string_new(NULL);
-			for ( ; ignores ; ignores = ignores->next)
-			{
-				if (ignore_str->len)
-					g_string_append(ignore_str, ",");
-				g_string_append(ignore_str, ignores->data);
-			}
+		if (strlen(buffer) + strlen(_all_keys[i]) + 2 > BUFFERSIZE)
+			return NULL;
+		strcat(buffer, " ");
+		strcat(buffer, _all_keys[i]);
+	}
+	if (strlen(buffer) + strlen(" 2>&1") + 1 > BUFFERSIZE)
+		return NULL;
+	strcat(buffer, " 2>&1");
 
-			self->ignore_hosts = g_string_free(ignore_str, FALSE);
-		}
+	// Open our pipe
+	return popen(buffer, "r");
+}
+
+static pxStrDict *
+_finish_get_config(FILE *pipe)
+{
+	char buffer[BUFFERSIZE] = "";
+	char **values = NULL;
+	pxStrDict *kv = NULL;
+
+	if (!pipe) return NULL;
+
+	// Read the output and split it into its separate values (one per line)
+	if (fread(buffer, sizeof(char), BUFFERSIZE, pipe) == 0) goto error;
+	if (!(values = px_strsplit(buffer, "\n")))              goto error;
+
+	// Build up our dictionary with the values
+	kv = px_strdict_new((pxStrDictItemCallback) px_free);
+	for (int i=0 ; _all_keys[i] ; i++)
+	{
+		if (!values[i])
+			goto error;
+		if (strchr(values[i], ' '))
+			strcpy(values[i], "");
+		if (!px_strdict_set(kv, _all_keys[i], px_strdup(values[i])))
+			goto error;
 	}
 
-#ifdef G_THREADS_ENABLED
-	if (self->mutex)
-		g_mutex_unlock(self->mutex);
-#endif
+	// Cleanup
+	px_strfreev(values);
+	if (pclose(pipe) < 0)
+	{
+		px_strdict_free(kv);
+		return NULL;
+	}
+	return kv;
+
+	error:
+		pclose(pipe);
+		px_strfreev(values);
+		px_strdict_free(kv);
+		return NULL;
 }
 
 static void
@@ -130,141 +117,115 @@ _destructor(void *s)
 {
 	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 
-#ifdef G_THREADS_ENABLED
-	if (self->mutex)
-		g_mutex_free(self->mutex);
-#endif
-	g_object_unref(self->client);
-	g_free(self->mode);
-	g_free(self->autoconfig_url);
-	g_free(self->http_host);
-	g_free(self->https_host);
-	g_free(self->ftp_host);
-	g_free(self->socks_host);
-	g_free(self->ignore_hosts);
+	if (self->pipe) pclose(self->pipe);
+	px_strdict_free(self->data);
 	px_free(self);
-}
-
-static inline void
-_conditional_update(pxGConfConfigModule *self)
-{
-	if (g_main_depth() > 0) return;
-
-	/* We are not in a main loop */
-	for (int i=0 ; _all_keys[i] ; i++)
-	{
-		/* Get the defaults */
-		GConfEntry ignores;
-		ignores.key = (char *) _all_keys[i];
-		ignores.value = gconf_client_get(self->client, ignores.key, NULL);
-		_on_key_change(self->client, 0, &ignores, self);
-		if (ignores.value) gconf_value_free(ignores.value);
-	}
 }
 
 static char *
 _get_config(pxConfigModule *s, pxURL *url)
 {
 	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
-	_conditional_update(self);
 
-#ifdef G_THREADS_ENABLED
-	if (self->mutex) g_mutex_lock(self->mutex);
-#endif
-	GConfClient *client = self->client;
+	// Update our config if possible
+	pxStrDict *tmp = _finish_get_config(self->pipe);
+	self->pipe = NULL;
+	if (tmp)
+	{
+		px_strdict_free(self->data);
+		self->data = tmp;
+	}
 
-	// Make sure we have a mode
-	if (!self->mode)
+	if (!px_strdict_get(self->data, "/system/proxy/mode"))
 		return NULL;
 
 	char *curl = NULL;
 
 	// Mode is direct://
-	if (!strcmp(self->mode, "none"))
+	if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "none"))
 		curl = px_strdup("direct://");
 
 	// Mode is wpad:// or pac+http://...
-	else if (!strcmp(self->mode, "auto"))
+	else if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "auto"))
 	{
-		if (px_url_is_valid(self->autoconfig_url))
-			curl = g_strdup_printf("pac+%s", self->autoconfig_url);
+		if (px_url_is_valid(px_strdict_get(self->data, "/system/proxy/autoconfig_url")))
+			curl = px_strcat("pac+", px_strdict_get(self->data, "/system/proxy/autoconfig_url"), NULL);
 		else
-			curl = g_strdup("wpad://");
+			curl = px_strdup("wpad://");
 	}
 
 	// Mode is http://... or socks://...
-	else if (!strcmp(self->mode, "manual"))
+	else if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "manual"))
 	{
-		char *type = g_strdup("http");
+		char *type = px_strdup("http");
 		char *host = NULL;
-		int   port = 0;
+		char *port = NULL;
+		uint16_t p = 0;
 
 		// Get the per-scheme proxy settings
 		if (!strcmp(px_url_get_scheme(url), "https"))
 		{
-			host = self->https_host;
-			port = self->https_port;
+			host = px_strdup(px_strdict_get(self->data, "/system/proxy/secure_host"));
+			port = px_strdup(px_strdict_get(self->data, "/system/proxy/secure_port"));
+			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 		else if (!strcmp(px_url_get_scheme(url), "ftp"))
 		{
-			host = self->ftp_host;
-			port = self->ftp_port;
+			host = px_strdup(px_strdict_get(self->data, "/system/proxy/ftp_host"));
+			port = px_strdup(px_strdict_get(self->data, "/system/proxy/ftp_port"));
+			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
-		if (!host || !strcmp(host, "") || !port)
+		if (!host || !strcmp(host, "") || !p)
 		{
-			if (host) g_free(host);
+			px_free(host);
+			px_free(port);
 
-			host = self->http_host;
-			port = self->http_port;
+			host = px_strdup(px_strdict_get(self->data, "/system/http_proxy/host"));
+			port = px_strdup(px_strdict_get(self->data, "/system/http_proxy/port"));
+			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
-		if (port < 0 || port > 65535) port = 0;
 
 		// If http(s)/ftp proxy is not set, try socks
-		if (!host || !strcmp(host, "") || !port)
+		if (!host || !strcmp(host, "") || !p)
 		{
-			if (type) g_free(type);
-			if (host) g_free(host);
+			px_free(type);
+			px_free(host);
+			px_free(port);
 
-			type = g_strdup("socks");
-			host = self->socks_host;
-			port = self->socks_port;
-			if (port < 0 || port > 65535) port = 0;
+			type = px_strdup("socks");
+			host = px_strdup(px_strdict_get(self->data, "/system/proxy/socks_host"));
+			port = px_strdup(px_strdict_get(self->data, "/system/proxy/socks_port"));
+			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 
 		// If host and port were found, build config url
-		if (host && strcmp(host, "") && port)
-			curl = g_strdup_printf("%s://%s:%d", type, host, port);
+		if (host && strcmp(host, "") && p)
+			curl = px_strcat(type, "://", host, ":", port, NULL);
 
-		g_free(type);
-		g_free(host);
+		px_free(type);
+		px_free(host);
+		px_free(port);
 	}
 
-	char *tmp = px_strdup(curl);
-	if (curl)
-		g_free(curl);
+	// Start a refresh in the backgroun
+	self->pipe = _start_get_config();
 
-#ifdef G_THREADS_ENABLED
-		if (self->mutex) g_mutex_unlock(self->mutex);
-#endif
-
-	return tmp;
+	return curl;
 }
 
 static char *
 _get_ignore(pxConfigModule *s, pxURL *url)
 {
 	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
-	_conditional_update(self);
 
-#ifdef G_THREADS_ENABLED
-	if (self->mutex) g_mutex_lock(self->mutex);
-#endif
+	char *ignores = px_strdup(px_strdict_get(self->data, "/system/http_proxy/ignore_hosts"));
+	if (ignores && ignores[strlen(ignores)-1] == ']' && ignores[0] == '[')
+	{
+		char *tmp = px_strndup(ignores+1, strlen(ignores+1)-1);
+		px_free(ignores);
+		ignores = tmp;
+	}
 
-	char *ignores = px_strdup(self->ignore_hosts);
-
-#ifdef G_THREADS_ENABLED
-		if (self->mutex) g_mutex_unlock(self->mutex);
-#endif
 	return ignores ? ignores : px_strdup("");
 }
 
@@ -285,31 +246,7 @@ _constructor()
 {
 	pxGConfConfigModule *self = px_malloc0(sizeof(pxGConfConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
-
-	/* Get the default gconf client */
-	self->client = gconf_client_get_default();
-	if (!self->client)
-		return false;
-
-    /* Enable our mutex */
-#ifdef G_THREADS_ENABLED
-	if (g_thread_get_initialized())
-		self->mutex = g_mutex_new();
-#endif
-
-	/* Get our default values */
-	for (int i=0 ; _all_keys[i] ; i++)
-	{
-		/* Setup our notifications for change */
-		char *dir = g_strndup(_all_keys[i], strrchr(_all_keys[i], '/') - _all_keys[i]);
-		gconf_client_add_dir(self->client, dir, GCONF_CLIENT_PRELOAD_NONE, NULL);
-		g_free(dir);
-		gconf_client_notify_add(self->client, _all_keys[i], _on_key_change, self, NULL, NULL);
-
-		/* Do a first read of the values */
-		gconf_client_notify(self->client, _all_keys[i]);
-	}
-
+	self->pipe = _start_get_config();
 	return self;
 }
 
@@ -318,7 +255,6 @@ px_module_load(pxModuleManager *self)
 {
 	// If we are running in GNOME, then make sure this plugin is registered.
 	if (!x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
-		return  false;
-	g_type_init();
+		return false;
 	return px_module_manager_register_module(self, pxConfigModule, _constructor, _destructor);
 }

@@ -27,13 +27,12 @@
 /* Import libproxy API */
 #include <proxy.h>
 
-char *
-pstrndup(const char *s)
+void *
+malloc0(size_t s)
 {
-	if (!s) return NULL;
-	char *tmp = malloc(strlen(s)+1);
+	void *tmp = malloc(s);
 	if (!tmp) return NULL;
-	strncpy(tmp, s, strlen(s));
+	memset(tmp, '\0', s);
 	return tmp;
 }
 
@@ -56,12 +55,12 @@ readline(int fd, char *buffer, size_t bufsize)
 	if (read(fd, &c, 1) != 1) return buffer;
 
 	/* If we are at the end of the line, return. */
-	if (c == '\n') return buffer ? buffer : pstrndup("");
+	if (c == '\n') return buffer ? buffer : malloc0(1);
 
 	/* We have a character, make sure we have a buffer. */
 	if (!buffer)
 	{
-		assert((buffer = pstrndup("")));
+		assert((buffer = malloc0(1)));
 		bufsize = 0;
 	}
 
