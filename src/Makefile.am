@@ -1,1 +1,1 @@
-SUBDIRS = lib modules bin bindings
+SUBDIRS = platform lib modules bin bindings

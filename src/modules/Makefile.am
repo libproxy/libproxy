@@ -79,6 +79,9 @@ ignore_ip_la_LIBADD                = ../lib/libproxy.la
 pacrunner_webkit_la_SOURCES        = pacrunner_webkit.c
 pacrunner_webkit_la_CFLAGS         = -I$(top_srcdir)/src/lib @WEBKIT_CFLAGS@ -D_POSIX_C_SOURCE=200112L
 pacrunner_webkit_la_LIBADD         = ../lib/libproxy.la
+if MINGW32
+pacrunner_webkit_la_LIBADD	  += ../platform/win32/libwinutils.la
+endif
 pacrunner_webkit_la_LDFLAGS        = @WEBKIT_LIBS@
 nodist_pacrunner_webkit_la_SOURCES = pacutils.h
 
