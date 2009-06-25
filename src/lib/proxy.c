@@ -390,7 +390,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 		pxPACRunnerModule **pacrunners = px_module_manager_instantiate_type(self->mm, pxPACRunnerModule);
 
 		/* No PAC runner found, fall back to direct */
-		if (!pacrunners[0])
+		if (!pacrunners)
 		{
 			px_free(pacrunners);
 			goto do_return;
