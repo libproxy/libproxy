@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <string.h>
 #include <dirent.h>
 #include <math.h>
@@ -68,13 +69,61 @@ regeq(pxModuleRegistration *self, pxModuleRegistration *other)
 	return !strcmp(self->name, other->name);
 }
 
+static char *
+basename_noext(const char *filename)
+{
+	char *tmp = px_strdup(filename);
+	filename = px_strdup(basename(tmp));
+	px_free(tmp);
+	if (strrchr(filename, '.'))
+		strrchr(filename, '.')[0] = '\0';
+	return (char *) filename;
+}
+
+static bool
+globmatch(const char *glob, const char *string)
+{
+	if (!glob)   return false;
+	if (!string) return false;
+
+	char **segments = px_strsplit(glob, "*");
+	for (int i=0 ; segments[i] ; i++)
+	{
+		// Search for this segment in this string
+		char *offset = strstr(string, segments[i]);
+
+		// If the segment isn't found at all, its not a match
+		if (!offset)
+			goto nomatch;
+
+		// Handle when the glob does not start with '*'
+		// (insist the segment match the start of the string)
+		if (i == 0 && strcmp(segments[i], "") && offset != string)
+			goto nomatch;
+
+		// Increment further into the string
+		string = offset + strlen(segments[i]);
+
+		// Handle when the glob does not end with '*'
+		// (insist the segment match the end of the string)
+		if (!segments[i+1] && strcmp(segments[i], "") && string[0])
+			goto nomatch;
+	}
+	px_strfreev(segments);
+	return true;
+
+	nomatch:
+		px_strfreev(segments);
+		return false;
+}
+
 pxModuleManager *
 px_module_manager_new()
 {
 	pxModuleManager *self = px_malloc0(sizeof(pxModuleManager));
-	self->dlmodules     = px_array_new(NULL, (pxArrayItemCallback) pdlclose, true, false);
-	self->registrations = px_strdict_new((pxStrDictItemCallback) px_array_free);
-	self->types         = px_strdict_new((pxStrDictItemCallback) px_free);
+	self->dlmodules       = px_array_new(NULL, (pxArrayItemCallback) pdlclose, true, false);
+	self->registrations   = px_strdict_new((pxStrDictItemCallback) px_array_free);
+	self->types           = px_strdict_new((pxStrDictItemCallback) px_free);
 	return self;
 }
 
@@ -87,12 +136,33 @@ px_module_manager_free(pxModuleManager *self)
 	px_free(self);
 }
 
-
 bool
 px_module_manager_load(pxModuleManager *self, char *filename)
 {
 	if (!self)     return false;
 	if (!filename) return false;
+
+	// Prepare for blacklist check
+	char **blacklist = px_strsplit(getenv("PX_MODULE_BLACKLIST"), ",");
+	char **whitelist = px_strsplit(getenv("PX_MODULE_WHITELIST"), ",");
+	char  *modname   = basename_noext(filename);
+	bool   doload    = true;
+
+	// Check our whitelist/blacklist to see if we should load this module
+	for (int i=0 ; blacklist && blacklist[i]; i++)
+		if (globmatch(blacklist[i], modname))
+			doload = false;
+	for (int i=0 ; whitelist && whitelist[i]; i++)
+		if (globmatch(whitelist[i], modname))
+			doload = true;
+
+	// Cleanup
+	px_strfreev(blacklist);
+	px_strfreev(whitelist);
+	px_free(modname);
+
+	if (!doload)
+		return false;
 
 	/* Load the module */
 	pdlmtype module = pdlopen(filename);
