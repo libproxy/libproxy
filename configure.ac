@@ -2,6 +2,7 @@ AC_PREREQ(2.61)
 AC_INIT([libproxy],[0.3.0],[nathaniel@natemccallum.com])
 AC_CONFIG_SRCDIR([src/lib/proxy.c])
 AM_INIT_AUTOMAKE
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 ### Checks for programs.
 AC_PROG_CC
