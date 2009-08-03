@@ -121,8 +121,8 @@ static JSValueRef myIpAddress(JSContextRef ctx, JSObjectRef func, JSObjectRef se
 static void ctxs_free(ctxStore *self)
 {
 	if (!self) return;
-	JSGlobalContextRelease(self->ctx);
 	JSGarbageCollect(self->ctx);
+	JSGlobalContextRelease(self->ctx);
 	px_free(self->pac);
 	px_free(self);
 }
