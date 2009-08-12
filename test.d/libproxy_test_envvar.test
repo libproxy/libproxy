@@ -3,7 +3,7 @@
 
 result_ok="http://proxy:1234"
 testurl="http://www.google.com"
-proxy_bin="src/bin/proxy"
+proxy_bin="$( test -x src/bin/proxy && echo src/bin/proxy || which proxy)"
 
 if [ -x $proxy_bin ]; then
     result=$(PX_CONFIG_ORDER=config_envvar http_proxy="http://proxy:1234" $proxy_bin $testurl)

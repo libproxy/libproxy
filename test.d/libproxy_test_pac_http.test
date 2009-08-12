@@ -5,7 +5,7 @@ result1_ok="http://1.2.3.4:1234"
 result2_ok="direct://"
 testurl1="http://code.google.com"
 testurl2="http://www.google.com"
-proxy_bin="src/bin/proxy"
+proxy_bin="$( test -x src/bin/proxy && echo src/bin/proxy || which proxy)"
 pac_url="http://libproxy.googlecode.com/files/proxy.pac"
 
 if [ -x $proxy_bin ]; then
