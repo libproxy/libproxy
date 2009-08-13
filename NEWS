@@ -1,13 +1,12 @@
 New in version 0.3.0
 ====================
-- A compelte rewrite of the module manager
+- A complete rewrite of the module manager
 - file:// as valid PAC URLs
+- Mono bindings are installed system-wide
 - Sample Mono application
 - Automake 1.11 shaved output
 - gnome backend rewrite
 - Test suite base functionality exists
-- May solaris build fixes
+- Many solaris build fixes
 - Seamonkey support as JS pacrunner
 - Bugfixes
-
-
