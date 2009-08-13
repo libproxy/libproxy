@@ -1,10 +1,10 @@
 moduledir = @MODULEDIR@
-CFLAGS    = -std=c99
-LDFLAGS   = -module -avoid-version -no-undefined
+AM_CFLAGS    = -std=c99
+AM_LDFLAGS   = -module -avoid-version -no-undefined
 
 
 # Which modules to build
-module_LTLIBRARIES  = ignore_domain.la ignore_ip.la config_w32reg.la
+module_LTLIBRARIES  = ignore_domain.la ignore_ip.la # config_w32reg.la
 if WITH_DIRECT
 module_LTLIBRARIES += config_direct.la
 endif
@@ -61,9 +61,9 @@ config_kde_la_LIBADD               = ../lib/libproxy.la
 config_kde_la_LDFLAGS              = @KDE_LIBS@
 
 # Windows Registry Config Module
-config_w32reg_la_SOURCES           = config_w32reg.c
-config_w32reg_la_CPPFLAGS          = -I$(top_srcdir)/src/lib
-config_w32reg_la_LIBADD            = ../lib/libproxy.la
+#config_w32reg_la_SOURCES           = config_w32reg.c
+#config_w32reg_la_CPPFLAGS          = -I$(top_srcdir)/src/lib
+#config_w32reg_la_LIBADD            = ../lib/libproxy.la
 
 # WPAD Config Module
 config_wpad_la_SOURCES             = config_wpad.c
