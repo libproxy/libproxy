@@ -52,18 +52,18 @@ config_file_la_LIBADD              = ../lib/libproxy.la
 config_gnome_la_SOURCES            = config_gnome.c xhasclient.c
 config_gnome_la_CPPFLAGS           = -I$(top_srcdir)/src/lib -D_POSIX_C_SOURCE=200112L -DGCONFTOOLBIN='"@GCONFTOOLBIN@"' @GNOME_CFLAGS@
 config_gnome_la_LIBADD             = ../lib/libproxy.la
-config_gnome_la_LDFLAGS            = @GNOME_LIBS@ -module -avoid-version -no-undefined
+config_gnome_la_LDFLAGS            = $(AM_LDFLAGS) @GNOME_LIBS@
 
 # KDE Config Module
 config_kde_la_SOURCES              = config_kde.c xhasclient.c
 config_kde_la_CPPFLAGS             = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
 config_kde_la_LIBADD               = ../lib/libproxy.la
-config_kde_la_LDFLAGS              = @KDE_LIBS@ -module -avoid-version -no-undefined
+config_kde_la_LDFLAGS              = $(AM_LDFLAGS) @KDE_LIBS@
 
 # Windows Registry Config Module
-#config_w32reg_la_SOURCES           = config_w32reg.c
-#config_w32reg_la_CPPFLAGS          = -I$(top_srcdir)/src/lib
-#config_w32reg_la_LIBADD            = ../lib/libproxy.la
+config_w32reg_la_SOURCES           = config_w32reg.c
+config_w32reg_la_CPPFLAGS          = -I$(top_srcdir)/src/lib
+config_w32reg_la_LIBADD            = ../lib/libproxy.la
 
 # WPAD Config Module
 config_wpad_la_SOURCES             = config_wpad.c
@@ -87,21 +87,21 @@ pacrunner_webkit_la_LIBADD         = ../lib/libproxy.la
 if MINGW32
 pacrunner_webkit_la_LIBADD	  += ../platform/win32/libwinutils.la
 endif
-pacrunner_webkit_la_LDFLAGS        = @WEBKIT_LIBS@ -module -avoid-version -no-undefined
+pacrunner_webkit_la_LDFLAGS        = $(AM_LDFLAGS) @WEBKIT_LIBS@
 nodist_pacrunner_webkit_la_SOURCES = pacutils.h
 
 # Mozilla (Spidermonkey) based PAC runner
 pacrunner_mozjs_la_SOURCES         = pacrunner_mozjs.c
 pacrunner_mozjs_la_CPPFLAGS        = -I$(top_srcdir)/src/lib @MOZJS_CFLAGS@ -D_POSIX_C_SOURCE=200112L
 pacrunner_mozjs_la_LIBADD          = ../lib/libproxy.la
-pacrunner_mozjs_la_LDFLAGS         = @MOZJS_LIBS@  -module -avoid-version -no-undefined
+pacrunner_mozjs_la_LDFLAGS         = $(AM_LDFLAGS) @MOZJS_LIBS@
 nodist_pacrunner_mozjs_la_SOURCES  = pacutils.h
 
 # NetworkManager Module
 network_networkmanager_la_SOURCES  = network_networkmanager.c
 network_networkmanager_la_CPPFLAGS = -I$(top_srcdir)/src/lib @NETWORKMANAGER_CFLAGS@
 network_networkmanager_la_LIBADD   = ../lib/libproxy.la
-network_networkmanager_la_LDFLAGS  = @NETWORKMANAGER_LIBS@ -module -avoid-version -no-undefined
+network_networkmanager_la_LDFLAGS  = $(AM_LDFLAGS) @NETWORKMANAGER_LIBS@
 
 # DNS WPAD Module
 wpad_dns_la_SOURCES                = wpad_dns.c
