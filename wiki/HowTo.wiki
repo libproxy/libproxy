@@ -1,7 +1,8 @@
 #summary This page shows how to use libproxy in various different applications/languages
 #labels Featured,Phase-Design,Phase-Deploy
 
-= C(++) =
+= Programming =
+== C(++) ==
 === API ===
 There are only three functions in the external API:
 {{{
@@ -98,7 +99,7 @@ int main()
 }
 }}}
 
-= Python =
+== Python ==
 
 {{{
 import libproxy
@@ -111,3 +112,59 @@ for proxy in pf.getProxies(URL):
   if fetch_url(URL, proxy):
     break
 }}}
+
+= Controlling libproxy =
+== Module System ==
+*DISCLAIMER: The following has not been declared stable and may change or go away*
+
+In order to provide a wide variety of functionality while keeping the core of libproxy small, we use a module system.  Most of our functionality is provided directly from the backend modules.  There are 5 types of modules, each which provide a certain function:
+  # config - reads configuration
+  # ignore - determines whether or not a given ignore pattern matches the current URL
+  # network - determines whether or not the network topology has changed
+  # pacrunner - evaluates a PAC file in a given javascript interpreter
+  # wpad - implements the "guts" of the wpad detection
+
+All modules will be loaded at px_proxy_factory_new() and will remain loaded until px_proxy_factory_free() is called.  There are two exceptions to this.  The first is if the plugin type is declared as a singleton.  This is only true in the case of pacrunners and allows us to have only the first javascript engine loaded in memory.  The second case is a SESSION config module (discussed below).  SESSION config modules MUST NOT allow instantiation if the application is not being loaded in the correct session.  Thus, if you are running in GNOME, the KDE SESSION config module will not be loaded.
+
+=== Blaclist/Whitelist ===
+*ATTENTION! USE THE FOLLOWING FEATURE WITH GREAT CARE! DO NOT USE IT FOR CONFIG MODULES!*
+
+If you want to blacklist certain modules you can use the PX_MODULE_BLACKLIST and/or PX_MODULE_WHITELIST environmental variables.  For instance, if you are using libproxy in a webkit based browser, you will probably want to force the usage of the webkit pacrunner.  This is done as follows:
+{{{
+export PX_MODULE_BLACKLIST=pacrunner_*
+export PX_MODULE_WHITELIST=pacrunner_webkit
+}}}
+
+This functionality exists primarily for our internal testing and for the web-browser case I listed above.  For config modules use the PX_CONFIG_ORDER functionality described below.
+
+=== Config Modules ===
+Config modules read proxy configuration from a source. Every config module has a type.  There are three confnig types: 
+  # SYSTEM  - Defines configuration on a system-wide basis
+  # USER    - Defines configuration on a user-wide basis
+  # SESSION - Defines configuration for this current login session only
+A module can also choose to have no config type.  
+
+The config module sources (as of 0.3.0) are:
+  # direct - always return "direct://", this is the global fallback
+  # envvar - reads http_proxy, https_proxy, ftp_proxy and no_proxy environment variables
+  # file - reads /etc/proxy.conf (SYSTEM) and/or ~/.proxy.conf (USER)
+  # gnome - reads gconf (SESSION)
+  # kde - reads kconfig (SESSION)
+  # wpad - always returns "wpad://", this is used to fall back on autodetect if desired
+
+By default, modules are called in the following order:
+  # USER
+  # SESSION
+  # SYSTEM
+  # envvar
+  # wpad
+  # direct
+
+The order _within_ the categories is undefined and could be random. If a module says it can't find the configuration, the next module is tried.
+
+The module order can be manually specified through an environmental variable (PX_CONFIG_ORDER).  The order indicated in this variable *does not replace* the internal order, but prepends to it.  Thus, if you wanted to prefer (for forcing a module, see whitelist/blacklist above) the usage of envvar, you would specify the following which would put envvar first in the list:
+{{{
+export PX_CONFIG_ORDER=config_envvar
+}}}
+
+You can also lock-down the module order for all users on a system using /etc/proxy.conf.  This feature is not yet documented (any volunteers!?).
