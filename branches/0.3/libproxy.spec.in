@@ -1,0 +1,180 @@
+%define build_nm 0%{suse_version} < 1030
+%define build_webkit 0%{suse_version} > 1100
+
+Name:           libproxy
+Group:          System/Libraries
+Summary:        A library handling all the details of proxy configuration
+Version:        @VERSION@
+Release:        1.1
+Source:         %name-%version.tar.bz2
+License:        GPL v2 or later; LGPL v2.1 or later
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+BuildRequires: xorg-x11-libXmu-devel
+BuildRequires: gconf2-devel
+%if 0%{build_nm}
+# never versions contain NM 0.7, which is not compatible
+BuildRequires: NetworkManager-devel
+%endif
+BuildRequires: python-devel
+BuildRequires: gecko-sdk
+BuildRequires: dbus-1-devel
+# Up to openSUSE 11.0, libwebkit was not available
+%if 0%{build_webkit}
+BuildRequires: libwebkit-devel
+%endif
+
+%description
+libproxy offers the following features:
+
+    * extremely small core footprint (< 35K)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
+    * only 3 functions in the stable external API
+    * dynamic adjustment to changing network topology
+    * a standard way of dealing with proxy settings across all scenarios
+    * a sublime sense of joy and accomplishment 
+
+%package tools
+Summary: A sample & test application to test what libproxy will reply
+Group: Productivity/Network/Diagnostic
+
+%description tools
+A simple application that will use libproxy to give the results you can expect from 
+other applications. Great to debug what would happen.
+
+%package devel 
+Summary: A library handling all the details of proxy configurationa - development headers
+Group: Development/Libraries/C and C++
+Requires: %{name}0 = %{version}
+
+%description devel
+libproxy offers the following features:
+
+    * extremely small core footprint (< 35K)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
+    * only 3 functions in the stable external API
+    * dynamic adjustment to changing network topology
+    * a standard way of dealing with proxy settings across all scenarios
+    * a sublime sense of joy and accomplishment
+
+%package -n %{name}0           
+Summary: A library handling all the details of proxy configuration
+Group: System/Libraries
+
+%description -n %{name}0
+libproxy offers the following features:
+
+    * extremely small core footprint (< 35K)
+    * no external dependencies within libproxy core (libproxy modules may have dependencies)
+    * only 3 functions in the stable external API
+    * dynamic adjustment to changing network topology
+    * a standard way of dealing with proxy settings across all scenarios
+    * a sublime sense of joy and accomplishment
+
+This package offers, next to the library, the base modules envvar and file
+
+%package -n %{name}0-gnome
+Summary: Libproxy module for gnome configuration
+Group: System/Libraries
+
+%description -n %{name}0-gnome
+A module to extend libproxy with capabilities to query gnome/gconf about the proxy settings.
+
+%package -n %{name}0-kde
+Summary: Libproxy module for kde configuration
+Group: System/Libraries
+
+%description -n %{name}0-kde
+A module to extend libproxy with capabilities to query KDE about proxy settings
+
+%package -n %{name}0-mozjs
+Summary: Libproxy module to support wpad/pac parsing via Mozilla JavaScript Engine
+Group: System/Libraries
+
+%description -n %{name}0-mozjs
+A module to extend libproxy with capabilities to pass addresses to a WPAD/PAC Script
+to have it parse for the correct proxy. PAC requires JavaScript Engine in the back.
+
+%package -n %{name}0-networkmanager
+Summary: Libproxy module for networkmanager configuration
+Group: System/Libraries
+
+%description -n %{name}0-networkmanager
+A module to extend libproxy with capabilities to query NetworkManager about proxy settings
+
+%package -n python-%{name}
+Summary: Python bindings for libproxy
+Group: System/Libraries
+
+%description -n python-%{name}
+Allows for the usage of libproxy from python applications
+
+%debug_package
+%prep
+%setup -q
+# %patch0 -p1
+
+%build
+CFLAGS="-fPIC" %configure --with-python
+make
+
+%install
+%makeinstall
+rm $RPM_BUILD_ROOT%{_libdir}/%{name}.la
+
+%post -n %{name}0
+/sbin/ldconfig
+
+%postun -n %{name}0
+/sbin/ldconfig
+
+%files tools
+%defattr(-, root, root)
+%{_bindir}/proxy
+
+%files -n %{name}0
+%defattr(-, root, root)
+%{_libdir}/%{name}.so.*
+%dir %{_libdir}/%{name}/
+%dir %{_libdir}/%{name}/%{version}
+%dir %{_libdir}/%{name}/%{version}/modules
+%{_libdir}/%{name}/%{version}/modules/envvar.so
+%{_libdir}/%{name}/%{version}/modules/file.so
+
+%files devel
+%defattr(-, root, root)
+%{_includedir}/proxy.h
+%{_libdir}/%{name}.a
+%{_libdir}/%{name}.so
+%{_libdir}/pkgconfig/%{name}-1.0.pc
+
+%files -n %{name}0-kde
+%defattr(-, root, root)
+%{_libdir}/%{name}/%{version}/modules/kde.so
+
+%files -n %{name}0-gnome
+%defattr(-, root, root)
+%{_libdir}/%{name}/%{version}/modules/gnome.so
+
+%if 0%{build_nm}
+%files -n %{name}0-networkmanager
+%defattr(-, root, root)
+%{_libdir}/%{name}/%{version}/modules/networkmanager.so
+%endif
+
+%files -n %{name}0-mozjs
+%defattr(-, root, root)
+%{_libdir}/%{name}/%{version}/modules/mozjs.so
+
+
+%files -n python-%{name}
+%defattr(-, root, root)
+%{py_sitedir}/%{name}.py
+
+%changelog
+* Fri Jun 6 2008 - dominique-rpm@leuenberger.net
+- Updated to version 0.2.3
+* Wed Jun 4 2008 - dominique-rpm@leuenberger.net
+- Extended spec file to build all available modules
+* Tue Jun 3 2008 - dominique-rpm@leuenberger.net
+- Initial spec file for Version 0.2.2
