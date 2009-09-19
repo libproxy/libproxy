@@ -22,7 +22,7 @@
 || Java || http://iced-tea.org/ || http://mail.openjdk.java.net/mailman/listinfo/distro-pkg-dev || || no || no ||
 || Python || http://www.python.org || http://www.python.org/community/lists/ || || no || no ||
 || .NET/Mono || || || || no || no ||
-|| Firefox || || || || no || no ||
+|| Firefox || || || https://bugzilla.mozilla.org/show_bug.cgi?id=517655 || no || no ||
 ||||||||||||  _*Distributions*_ -- A list of operating systems that should provide libproxy: ||
 || *Name* || *Website* || *Mailing list* || *Bug URL* || *Contacted?* || *Packaged?* ||
 || Ubuntu || http://www.ubuntu.com || || || no || yes / jaunty ||
