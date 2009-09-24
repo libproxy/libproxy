@@ -20,21 +20,20 @@ libproxy_build_sources = $(addprefix $(srcdir)/, $(libproxy_sources))
 
 install-data-local:
 	@if test -n '$(ASSEMBLY_NAME).dll'; then						\
-	  echo "$(GACUTIL) /i $(ASSEMBLY_NAME).dll /f $(GACUTIL_FLAGS)";    \
-	  $(GACUTIL) /i $(ASSEMBLY_NAME).dll /f $(GACUTIL_FLAGS) || exit 1;          \
+	  echo "$(GACUTIL) /i $(ASSEMBLY_NAME).dll /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib";    \
+	  $(GACUTIL) /i $(ASSEMBLY_NAME).dll /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib || exit 1;          \
 	  for POLICY in $(POLICIES);                                        \
-	    do echo "$(GACUTIL) /i $$POLICY /f $(GACUTIL_POLICY_FLAGS)";    \
-	    $(GACUTIL) /i $$POLICY /f $(GACUTIL_POLICY_FLAGS) || exit 1;    \
+	    do echo "$(GACUTIL) /i $$POLICY /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib";    \
+	    $(GACUTIL) /i $$POLICY /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib || exit 1;    \
 	  done									\
 	fi
 
 uninstall-local:
 	@if test -n '$(ASSEMBLY_NAME).dll'; then						\
-	  echo "$(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS)";		\
-	  $(GACUTIL) /u $(ASSEMBLY_NAME) $(GACUTIL_FLAGS) || exit 1;		\
+	  echo "$(GACUTIL) /u $(ASSEMBLY_NAME)  /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib";		\
+	  $(GACUTIL) /u $(ASSEMBLY_NAME) /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib || exit 1;		\
 	  for POLICY in $(taglib_policy_names);					\
-	    do echo "$(GACUTIL) /u $$POLICY /f $(GACUTIL_POLICY_FLAGS)";	\
-	    $(GACUTIL) /u $$POLICY /f $(GACUTIL_POLICY_FLAGS) || exit 1;	\
+	    do echo "$(GACUTIL) /u $$POLICY /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib";	\
+	    $(GACUTIL) /u $$POLICY /f /package $(ASSEMBLY_NAME) /root $(DESTDIR)$(prefix)/lib || exit 1;	\
 	  done									\
 	fi
-
