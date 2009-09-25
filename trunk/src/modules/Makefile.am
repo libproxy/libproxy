@@ -55,7 +55,7 @@ config_gnome_la_LIBADD             = ../lib/libproxy.la
 config_gnome_la_LDFLAGS            = $(AM_LDFLAGS) @GNOME_LIBS@
 
 # KDE Config Module
-config_kde_la_SOURCES              = config_kde.c xhasclient.c
+config_kde_la_SOURCES              = config_kde.c
 config_kde_la_CPPFLAGS             = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
 config_kde_la_LIBADD               = ../lib/libproxy.la
 config_kde_la_LDFLAGS              = $(AM_LDFLAGS) @KDE_LIBS@
