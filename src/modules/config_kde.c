@@ -25,9 +25,6 @@
 #include <modules.h>
 #include <config_file.h>
 
-// From xhasclient.c
-bool x_has_client(char *prog, ...);
-
 typedef struct _pxKConfigConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
 	pxConfigFile  *cf;
@@ -129,7 +126,9 @@ bool
 px_module_load(pxModuleManager *self)
 {
 	// If we are running in KDE, then make sure this plugin is registered.
-	if (!x_has_client("kicker", NULL))
+	char *tmp = getenv("KDE_FULL_SESSION");
+	if (tmp == NULL) {
 		return false;
+	}
 	return px_module_manager_register_module(self, pxConfigModule, _constructor, _destructor);
 }
