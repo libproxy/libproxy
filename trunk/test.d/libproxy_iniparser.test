@@ -8,7 +8,7 @@ if [ -x "$parser" ]; then
 fi
 
 echo 'name="libproxy_iniparser"'
-if [ "$result" == "inivalue1 / inivalue2" ]; then
+if [ "$result" == "val1 -> 'default1' / val2 -> 'inivalue2'" ]; then
     echo pass=True
 else
     echo pass=False
