@@ -71,7 +71,11 @@ px_config_file_new(char *filename)
 				if (px_strdict_get(self->sections, line))
 					current = (pxStrDict *) px_strdict_get(self->sections, line);
 				else
+				{
 					px_strdict_set(self->sections, line, px_strdict_new(free));
+					current = (pxStrDict *) px_strdict_get(self->sections, line);
+				}
+					
 			}
 
 			/* If this is a key/val line, get the key/val. */
