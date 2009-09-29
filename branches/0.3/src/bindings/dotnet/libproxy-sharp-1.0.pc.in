@@ -1,8 +1,8 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
+libdir=${exec_prefix}/lib
 
 Name: Libproxy#
 Description: Libproxy# - .NET Binding to libproxy
 Version: @VERSION@
-Libs: -r:${libdir}/libproxy/@VERSION@/libproxy-sharp.dll  
+Libs: -r:${libdir}/mono/@ASSEMBLY_NAME@/@ASSEMBLY_NAME@.dll

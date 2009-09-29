@@ -53,38 +53,41 @@ px_config_file_new(char *filename)
 	pxStrDict *current = (pxStrDict *) px_strdict_get(self->sections, PX_CONFIG_FILE_DEFAULT_SECTION);
 
 	/* Parse our file */
-	for (char *line=NULL ; (line = px_readline(fd, NULL, 0)) ; px_free(line))
-	{
-		/* Strip */
-		char *tmp = px_strstrip(line);
-		px_free(line); line = tmp;
-
-		/* Check for comment and/or empty line */
-		if (*line == '#' || !strcmp(line, "")) continue;
-
-		/* If we have a new section */
-		if (*line == '[' || line[strlen(line)-1] == ']')
+	for (char *line=NULL ; (line = px_readline(fd, NULL, 0)) ; px_free(line) )
+	{	
+		if (*line) 
 		{
-			/* Get just the section name */
-			memmove(line, line+1, strlen(line)-1);
-			line[strlen(line)-2] = '\0';
+			/* Strip */
+			char *tmp = px_strstrip(line);
+			px_free(line); line = tmp;
+			/* Check for comment and/or empty line */
+			if (*line == '#' || !strcmp(line, "")) continue;
+			/* If we have a new section */
+			if (*line == '[' || line[strlen(line)-1] == ']')
+			{
+				/* Get just the section name */
+				memmove(line, line+1, strlen(line)-1);
+				line[strlen(line)-2] = '\0';
+				if (px_strdict_get(self->sections, line))
+					current = (pxStrDict *) px_strdict_get(self->sections, line);
+				else
+				{
+					px_strdict_set(self->sections, line, px_strdict_new(free));
+					current = (pxStrDict *) px_strdict_get(self->sections, line);
+				}
+					
+			}
 
-			if (px_strdict_get(self->sections, line))
-				current = (pxStrDict *) px_strdict_get(self->sections, line);
-			else
-				px_strdict_set(self->sections, line, px_strdict_new(free));
-		}
-
-		/* If this is a key/val line, get the key/val. */
-		else if ((tmp = strchr(line, '=')) && tmp[1])
-		{
-			*tmp = '\0';
-			char *key = px_strstrip(line);
-			px_strdict_set(current, key, px_strstrip(tmp+1));
-			px_free(key);
+			/* If this is a key/val line, get the key/val. */
+			else if ((tmp = strchr(line, '=')) && tmp[1])
+			{
+				*tmp = '\0';
+				char *key = px_strstrip(line);
+				px_strdict_set(current, key, px_strstrip(tmp+1));
+				px_free(key); 
+			}
 		}
 	}
-
 	close(fd);
 	return self;
 }
