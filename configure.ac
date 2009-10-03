@@ -23,6 +23,8 @@ AC_CHECK_FUNCS(pthread_mutex_init)
 AC_SEARCH_LIBS([socket],[socket inet])
 AC_SEARCH_LIBS([dlopen],[dl])
 
+AC_CHECK_LIB([kdecore], [main], have_kdecore=yes, have_kdecore=no)
+
 ### Checks for module dependencies.
 AC_PATH_PROG(GCONFTOOLBIN, gconftool-2)
 PKG_CHECK_MODULES(x11, x11, have_x11=yes, have_x11=no)
@@ -88,22 +90,22 @@ AC_ARG_WITH([kde4],
             [AS_HELP_STRING([--with-kde4],
             [build KDE4 configuration module @<:@automatic@:>@])],
             [],
-            [test x$have_qtcore = xyes &&
-             test x$have_xmu    = xyes &&
+            [test x$have_qtcore  = xyes &&
+             test x$have_kdecore = xyes &&
              with_kde4=yes])
 if test x$with_kde4 = xyes; then
-	if test x$have_qtcore = xyes && \
-	   test x$have_xmu = xyes; then
+	if test x$have_qtcore  = xyes && \
+	   test x$have_kdecore = xyes; then
 		KDE4_CFLAGS="$QtCore_CFLAGS"
-		KDE4_LIBS="$QtCore_LIBS"
+		KDE4_LIBS="$QtCore_LIBS -lkdecore"
 		AC_SUBST(KDE4_CFLAGS)
 		AC_SUBST(KDE4_LIBS)
 	else
-		echo "KDE4 module requires: QtCore and libkdecore"
+		echo "KDE4 module requires: QtCore and KDE-Core"
 		exit 1
 	fi
 else
-	with_kde=no
+	with_kde4=no
 fi
 AM_CONDITIONAL([WITH_KDE4], [test x$with_kde4 = xyes])
 
