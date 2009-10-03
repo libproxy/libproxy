@@ -34,6 +34,7 @@ PKG_CHECK_MODULES(mozjs, xulrunner-js, have_mozjs=yes,
 		[PKG_CHECK_MODULES(mozjs, seamonkey-js, have_mozjs=yes,have_mozjs=no)])])])
 PKG_CHECK_MODULES(NetworkManager, NetworkManager dbus-1, 
 					have_networkmanager=yes, have_networkmanager=no)
+PKG_CHECK_MODULES(QtCore, QtCore, have_qtcore=yes, have_qtcore=no)
 
 # Direct
 AC_ARG_WITH([direct],
@@ -83,28 +84,28 @@ fi
 AM_CONDITIONAL([WITH_GNOME], [test x$with_gnome = xyes])
 
 # KDE
-AC_ARG_WITH([kde],
-            [AS_HELP_STRING([--with-kde],
-            [build KDE configuration module @<:@automatic@:>@])],
+AC_ARG_WITH([kde4],
+            [AS_HELP_STRING([--with-kde4],
+            [build KDE4 configuration module @<:@automatic@:>@])],
             [],
-            [test x$have_x11   = xyes &&
-             test x$have_xmu   = xyes &&
-             with_kde=yes])
-if test x$with_kde = xyes; then
-	if test x$have_x11 = xyes && \
+            [test x$have_qtcore = xyes &&
+             test x$have_xmu    = xyes &&
+             with_kde4=yes])
+if test x$with_kde4 = xyes; then
+	if test x$have_qtcore = xyes && \
 	   test x$have_xmu = xyes; then
-		KDE_CFLAGS="$x11_CFLAGS $xmu_CFLAGS"
-		KDE_LIBS="$x11_LIBS $xmu_LIBS"
-		AC_SUBST(KDE_CFLAGS)
-		AC_SUBST(KDE_LIBS)
+		KDE4_CFLAGS="$QtCore_CFLAGS"
+		KDE4_LIBS="$QtCore_LIBS"
+		AC_SUBST(KDE4_CFLAGS)
+		AC_SUBST(KDE4_LIBS)
 	else
-		echo "KDE module requires: x11 and xmu!"
+		echo "KDE4 module requires: QtCore and libkdecore"
 		exit 1
 	fi
 else
 	with_kde=no
 fi
-AM_CONDITIONAL([WITH_KDE], [test x$with_kde = xyes])
+AM_CONDITIONAL([WITH_KDE4], [test x$with_kde4 = xyes])
 
 # WPAD
 AC_ARG_WITH([wpad],
@@ -257,7 +258,7 @@ echo -e "\t\tdirect          : $with_direct"
 echo -e "\t\tenvvar          : $with_envvar"
 echo -e "\t\tfile            : $with_file"
 echo -e "\t\tgnome           : $with_gnome"
-echo -e "\t\tkde             : $with_kde"
+echo -e "\t\tkde4            : $with_kde4"
 echo -e "\t\twpad            : $with_wpad"
 echo -e "\t\tnetworkmanager  : $with_networkmanager"
 echo -e "\t\tmozjs           : $with_mozjs"

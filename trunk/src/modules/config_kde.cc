@@ -20,10 +20,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <misc.h>
 #include <modules.h>
 #include <config_file.h>
+#include <QtGui/QApplication>
+#include <kstandarddirs.h>
+
 
 typedef struct _pxKConfigConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
@@ -42,6 +46,8 @@ _destructor(void *s)
 static char *
 _get_config(pxConfigModule *s, pxURL *url)
 {
+//	QApplication *app = new QApplication(0,NULL,0);
+//	KGlobal::dirs();
 	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
 
 	// TODO: make ignores work w/ KDE
@@ -53,7 +59,10 @@ _get_config(pxConfigModule *s, pxURL *url)
 	if (!cf || px_config_file_is_stale(cf))
 	{
 		if (cf) px_config_file_free(cf);
-		tmp = px_strcat(getenv("HOME"), "/.kde/share/config/kioslaverc", NULL);
+//		QString localdir = KGlobal::dirs()->localkdedir();
+		QString localdir = KStandardDirs().localkdedir();
+		QByteArray ba = localdir.toLatin1();
+		tmp = px_strcat(ba.data(), "/share/config/kioslaverc", NULL);
 		cf = px_config_file_new(tmp);
 		px_free(tmp);
 		self->cf = cf;
@@ -117,12 +126,12 @@ _set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const
 static void *
 _constructor()
 {
-	pxKConfigConfigModule *self = px_malloc0(sizeof(pxKConfigConfigModule));
+	pxKConfigConfigModule *self = (pxKConfigConfigModule *)px_malloc0(sizeof(pxKConfigConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	return self;
 }
 
-bool
+extern "C" bool
 px_module_load(pxModuleManager *self)
 {
 	// If we are running in KDE, then make sure this plugin is registered.
