@@ -25,7 +25,6 @@
 #include <misc.h>
 #include <modules.h>
 #include <config_file.h>
-#include <QtGui/QApplication>
 #include <kstandarddirs.h>
 
 
@@ -46,20 +45,16 @@ _destructor(void *s)
 static char *
 _get_config(pxConfigModule *s, pxURL *url)
 {
-//	QApplication *app = new QApplication(0,NULL,0);
-//	KGlobal::dirs();
 	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
 
 	// TODO: make ignores work w/ KDE
-	char *curl = NULL, *tmp = getenv("HOME");
-	if (!tmp) return NULL;
+	char *curl = NULL, *tmp = NULL;
 
 	// Open the config file
 	pxConfigFile *cf = self->cf;
 	if (!cf || px_config_file_is_stale(cf))
 	{
 		if (cf) px_config_file_free(cf);
-//		QString localdir = KGlobal::dirs()->localkdedir();
 		QString localdir = KStandardDirs().localkdedir();
 		QByteArray ba = localdir.toLatin1();
 		tmp = px_strcat(ba.data(), "/share/config/kioslaverc", NULL);
