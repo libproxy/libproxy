@@ -17,8 +17,8 @@ endif
 if WITH_GNOME
 module_LTLIBRARIES += config_gnome.la
 endif
-if WITH_KDE
-module_LTLIBRARIES += config_kde.la
+if WITH_KDE4
+module_LTLIBRARIES += config_kde4.la
 endif
 if WITH_WPAD
 module_LTLIBRARIES += config_wpad.la wpad_dns.la wpad_dnsdevolution.la
@@ -54,11 +54,11 @@ config_gnome_la_CPPFLAGS           = -I$(top_srcdir)/src/lib -D_POSIX_C_SOURCE=2
 config_gnome_la_LIBADD             = ../lib/libproxy.la
 config_gnome_la_LDFLAGS            = $(AM_LDFLAGS) @GNOME_LIBS@
 
-# KDE Config Module
-config_kde_la_SOURCES              = config_kde.c
-config_kde_la_CPPFLAGS             = -I$(top_srcdir)/src/lib @KDE_CFLAGS@
-config_kde_la_LIBADD               = ../lib/libproxy.la
-config_kde_la_LDFLAGS              = $(AM_LDFLAGS) @KDE_LIBS@
+# KDE4 Config Module
+config_kde4_la_SOURCES              = config_kde.cc
+config_kde4_la_CPPFLAGS             = -I$(top_srcdir)/src/lib @KDE4_CFLAGS@
+config_kde4_la_LIBADD               = ../lib/libproxy.la
+config_kde4_la_LDFLAGS              = $(AM_LDFLAGS) @KDE4_LIBS@ -lkdecore
 
 # Windows Registry Config Module
 config_w32reg_la_SOURCES           = config_w32reg.c

@@ -1,3 +1,16 @@
+New in version 0.3.1
+====================
+- Bugfixes
+  + config file parser reads all sections
+  + KDE session detection based on environment varibales,
+    as suggested by KDE upstream.
+- KDE configuration module is the first module in C++ and
+  now links to libkdecore4 in order to properly detec the
+  configuration folder for kde.
+- At the moment we're not compatible with KDE3. Sorry.
+- .NET bindings can now properly be installed and it should
+  be possible for packagers to provide them.
+
 New in version 0.3.0
 ====================
 * WARNING!!! Slight API change!!! see docs 
