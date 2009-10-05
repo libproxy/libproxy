@@ -22,6 +22,11 @@
 
 #include <stdlib.h> /* For type size_t */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * Allocates memory and always returns valid memory.
  * @size Amount of memory to allocate in bytes
@@ -114,5 +119,9 @@ char *px_strrstrip(char *string);
  * @return A newly allocated copy of string without all the leading and trailing whitespace
  */
 char *px_strstrip(char *string);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*MISC_H_*/

@@ -227,7 +227,7 @@ _px_module_manager_register_module_full(pxModuleManager *self,
 
 	pxModuleRegistration *reg = px_malloc0(sizeof(pxModuleRegistration));
 	reg->name = px_strndup(name, namelen);
-	reg->new  = new;
+	reg->pxnew  = new;
 	reg->free = free;
 
 	// Create a new empty array if there is no registrations for this id
@@ -255,7 +255,7 @@ _px_module_manager_instantiate_type_full(pxModuleManager *self,
 	{
 		pxModuleRegistration *reg = (pxModuleRegistration *) px_array_get(regs, i);
 		if (!reg->instance)
-			reg->instance = reg->new();
+			reg->instance = reg->pxnew();
 	}
 
 	// Sort the instances

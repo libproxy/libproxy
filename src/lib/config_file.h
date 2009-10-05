@@ -24,11 +24,20 @@
 
 #define PX_CONFIG_FILE_DEFAULT_SECTION "__DEFAULT__"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct _pxConfigFile pxConfigFile;
 
 pxConfigFile *px_config_file_new         (char *filename);
 bool          px_config_file_is_stale    (pxConfigFile *self);
 char         *px_config_file_get_value   (pxConfigFile *self, char *section, char *key);
 void          px_config_file_free        (pxConfigFile *self);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*CONFIG_FILE_H_*/

@@ -20,10 +20,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <misc.h>
 #include <modules.h>
 #include <config_file.h>
+#include <kstandarddirs.h>
+
 
 typedef struct _pxKConfigConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
@@ -45,15 +48,16 @@ _get_config(pxConfigModule *s, pxURL *url)
 	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
 
 	// TODO: make ignores work w/ KDE
-	char *curl = NULL, *tmp = getenv("HOME");
-	if (!tmp) return NULL;
+	char *curl = NULL, *tmp = NULL;
 
 	// Open the config file
 	pxConfigFile *cf = self->cf;
 	if (!cf || px_config_file_is_stale(cf))
 	{
 		if (cf) px_config_file_free(cf);
-		tmp = px_strcat(getenv("HOME"), "/.kde/share/config/kioslaverc", NULL);
+		QString localdir = KStandardDirs().localkdedir();
+		QByteArray ba = localdir.toLatin1();
+		tmp = px_strcat(ba.data(), "/share/config/kioslaverc", NULL);
 		cf = px_config_file_new(tmp);
 		px_free(tmp);
 		self->cf = cf;
@@ -117,12 +121,12 @@ _set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const
 static void *
 _constructor()
 {
-	pxKConfigConfigModule *self = px_malloc0(sizeof(pxKConfigConfigModule));
+	pxKConfigConfigModule *self = (pxKConfigConfigModule *)px_malloc0(sizeof(pxKConfigConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	return self;
 }
 
-bool
+extern "C" bool
 px_module_load(pxModuleManager *self)
 {
 	// If we are running in KDE, then make sure this plugin is registered.

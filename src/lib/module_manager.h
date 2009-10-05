@@ -23,6 +23,11 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*
  * Define the pxModuleManager object
  */
@@ -40,7 +45,7 @@ typedef void (*pxModuleFreeFunction)(pxModuleManager *);
 struct _pxModuleRegistration {
 	char               *name;
 	void               *instance;
-	pxModuleConstructor new;
+	pxModuleConstructor pxnew;
 	pxModuleDestructor  free;
 };
 typedef struct _pxModuleRegistration pxModuleRegistration;
@@ -55,13 +60,13 @@ bool             px_module_manager_load_dir  (pxModuleManager *self, char *dirna
 #define __str__(s) #s
 #define __px_module_manager_get_id(type, version) #type "__" __str__(version)
 
-bool   _px_module_manager_register_module_full(pxModuleManager *self, const char *id, const char *name, size_t namelen, pxModuleConstructor new, pxModuleDestructor free);
-#define px_module_manager_register_module(self, type, new, free) \
+bool   _px_module_manager_register_module_full(pxModuleManager *self, const char *id, const char *name, size_t namelen, pxModuleConstructor pxnew, pxModuleDestructor free);
+#define px_module_manager_register_module(self, type, pxnew, free) \
 	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), \
                                             __FILE__, strrchr(__FILE__, '.') ? strrchr(__FILE__, '.') - __FILE__ : strlen(__FILE__), \
-                                            new, free)
-#define px_module_manager_register_module_with_name(self, type, name, new, free) \
-	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), name, strlen(name), new, free)
+                                            pxnew, free)
+#define px_module_manager_register_module_with_name(self, type, name, pxnew, free) \
+	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), name, strlen(name), pxnew, free)
 
 void **_px_module_manager_instantiate_type_full(pxModuleManager *self, const char *id);
 #define px_module_manager_instantiate_type(self, type) \
@@ -72,5 +77,9 @@ bool   _px_module_manager_register_type_full(pxModuleManager *self, const char *
 	_px_module_manager_register_type_full(self, __px_module_manager_get_id(type, type ## Version), cmp, sngl)
 
 #define PX_MODULE_SUBCLASS(type) type __parent__
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MODULE_MANAGER_H_ */
