@@ -5,7 +5,7 @@ New in version 0.3.1
   + KDE session detection based on environment varibales,
     as suggested by KDE upstream.
 - KDE configuration module is the first module in C++ and
-  now links to libkdecore4 in order to properly detec the
+  now links to libkdecore4 in order to properly detect the
   configuration folder for kde.
 - At the moment we're not compatible with KDE3. Sorry.
 - .NET bindings can now properly be installed and it should
