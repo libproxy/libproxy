@@ -46,7 +46,10 @@ static const char *_all_keys[] = {
 	"/system/proxy/secure_host", "/system/proxy/secure_port",
 	"/system/proxy/ftp_host",   "/system/proxy/ftp_port",
 	"/system/proxy/socks_host", "/system/proxy/socks_port",
-	"/system/http_proxy/ignore_hosts", NULL
+	"/system/http_proxy/ignore_hosts",
+	"/system/http_proxy/use_authentication",
+	"/system/http_proxy/authentication_user",
+	"/system/http_proxy/authentication_password", NULL
 };
 
 static FILE *
@@ -166,6 +169,9 @@ _get_config(pxConfigModule *s, pxURL *url)
 		char *type = px_strdup("http");
 		char *host = NULL;
 		char *port = NULL;
+		char *username = NULL;
+		char *password = NULL;
+
 		uint16_t p = 0;
 
 		// Get the per-scheme proxy settings
@@ -188,6 +194,10 @@ _get_config(pxConfigModule *s, pxURL *url)
 
 			host = px_strdup(px_strdict_get(self->data, "/system/http_proxy/host"));
 			port = px_strdup(px_strdict_get(self->data, "/system/http_proxy/port"));
+			if (!strcmp(px_strdict_get(self->data, "/system/http_proxy/use_authentication"), "true")) {
+				username = px_strdup(px_strdict_get(self->data, "/system/http_proxy/authentication_user"));
+				password = px_strdup(px_strdict_get(self->data, "/system/http_proxy/authentication_password"));
+			}
 			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 
@@ -206,11 +216,13 @@ _get_config(pxConfigModule *s, pxURL *url)
 
 		// If host and port were found, build config url
 		if (host && strcmp(host, "") && p)
-			curl = px_strcat(type, "://", host, ":", port, NULL);
+			curl = px_strcat(type, "://", username && password ? px_strcat(username, ":", password, "@", NULL) : "", host, ":", port, NULL);
 
 		px_free(type);
 		px_free(host);
 		px_free(port);
+		px_free(username);
+		px_free(password);
 	}
 
 	// Start a refresh in the background
