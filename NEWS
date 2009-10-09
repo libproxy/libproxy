@@ -1,3 +1,7 @@
+New in unreleased trunk version
+===============================
+- Gnome config module reads username / password from gconf.
+
 New in version 0.3.1
 ====================
 - Bugfixes
