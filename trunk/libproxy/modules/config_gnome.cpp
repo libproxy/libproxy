@@ -25,7 +25,23 @@
 #include <signal.h>       // For kill()
 #include "xhasclient.cpp" // For xhasclient(...)
 
-static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
+
+static const char *_all_keys[] = {
+	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
+	"/system/http_proxy/host",   "/system/http_proxy/port",
+	"/system/proxy/secure_host", "/system/proxy/secure_port",
+	"/system/proxy/ftp_host",    "/system/proxy/ftp_port",
+	"/system/proxy/socks_host",  "/system/proxy/socks_port",
+	"/system/http_proxy/ignore_hosts",
+	"/system/http_proxy/use_authentication",
+	"/system/http_proxy/authentication_user",
+	"/system/http_proxy/authentication_password",
+	NULL
+};
+
+static int popen2(const char *program, int* read, int* write, pid_t* pid) {
 	if (!read || !write || !pid || !program || !*program)
 		return EINVAL;
 	*read  = NULL;
@@ -71,38 +87,11 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 	default: // Parent
 		close(rpipe[1]);
 		close(wpipe[0]);
-
-		if (!(*read  = fdopen(rpipe[0], "r"))) {
-			kill(*pid, SIGTERM);
-			close(rpipe[0]);
-			close(wpipe[1]);
-			return errno;
-		}
-		if (!(*write = fdopen(wpipe[1], "w"))) {
-			kill(*pid, SIGTERM);
-			fclose(*read);
-			close(wpipe[1]);
-			return errno;
-		}
+		*read  = rpipe[0];
+		*write = wpipe[1];
 		return 0;
 	}
 }
-
-#include "../module_types.hpp"
-using namespace com::googlecode::libproxy;
-
-static const char *_all_keys[] = {
-	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
-	"/system/http_proxy/host",   "/system/http_proxy/port",
-	"/system/proxy/secure_host", "/system/proxy/secure_port",
-	"/system/proxy/ftp_host",    "/system/proxy/ftp_port",
-	"/system/proxy/socks_host",  "/system/proxy/socks_port",
-	"/system/http_proxy/ignore_hosts",
-	"/system/http_proxy/use_authentication",
-	"/system/http_proxy/authentication_user",
-	"/system/http_proxy/authentication_password",
-	NULL
-};
 
 class gnome_config_module : public config_module {
 public:
@@ -120,10 +109,10 @@ public:
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
 			throw io_error("Unable to open gconf helper!");
 
-		// Set the write pipe to non-blocking
-		if (fcntl(fileno(this->write), F_SETFL, FNONBLOCK) == -1) {
-			fclose(this->read);
-			fclose(this->write);
+		// Set the read pipe to non-blocking
+		if (fcntl(this->read, F_SETFL, FNONBLOCK) == -1) {
+			close(this->read);
+			close(this->write);
 			kill(this->pid, SIGTERM);
 			throw io_error("Unable to set pipe to non-blocking!");
 		}
@@ -133,10 +122,8 @@ public:
 	}
 
 	~gnome_config_module() {
-		if (this->read)
-			fclose(this->read);
-		if (this->write)
-			fclose(this->write);
+		close(this->read);
+		close(this->write);
 		kill(this->pid, SIGTERM);
 	}
 
@@ -202,9 +189,19 @@ public:
 		return this->data["/system/http_proxy/ignore_hosts"];
 	}
 
+	bool set_creds(url /*proxy*/, string username, string password) {
+		string auth = "/system/http_proxy/use_authentication\ttrue\n";
+		string user = string("/system/http_proxy/authentication_user\t") + username + "\n";
+		string pass = string("/system/http_proxy/authentication_password\t") + password + "\n";
+
+		return (::write(this->write, auth.c_str(), auth.size()) == (ssize_t) auth.size() &&
+				::write(this->write, user.c_str(), user.size()) == (ssize_t) user.size() &&
+				::write(this->write, pass.c_str(), pass.size()) == (ssize_t) pass.size());
+	}
+
 private:
-	FILE* read;
-	FILE* write;
+	int   read;
+	int   write;
 	pid_t pid;
 	map<string, string> data;
 
@@ -213,7 +210,7 @@ private:
 
 		// If the fread() call would block, an error occurred or
 		// we are at the end of the line, we're done
-		if (fread(&c, sizeof(char), 1, this->read) != 1 || c == '\n')
+		if (::read(this->read, &c, 1) != 1 || c == '\n')
 			return buffer;
 
 		// Process the next character
@@ -238,8 +235,8 @@ private:
 		fd_set rfds;
 		struct timeval timeout = { 0, 1000 }; // select() for 1/1000th of a second
 		FD_ZERO(&rfds);
-		FD_SET(fileno(this->read), &rfds);
-		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) < 1)
+		FD_SET(this->read, &rfds);
+		if (select(this->read+1, &rfds, NULL, NULL, &timeout) < 1)
 			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
 			                                                        // our req quota, try again
 
@@ -248,7 +245,7 @@ private:
 			string key = line.substr(0, line.find("\t"));
 			string val = line.substr(line.find("\t")+1);
 			this->data[key] = val;
-			retval = ++found > req;
+			retval = ++found >= req;
 		}
 
 		return (this->update_data(req, found) || retval);
