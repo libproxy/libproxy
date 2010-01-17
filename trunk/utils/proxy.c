@@ -55,12 +55,12 @@ readline(int fd, char *buffer, size_t bufsize)
 	if (read(fd, &c, 1) != 1) return buffer;
 
 	/* If we are at the end of the line, return. */
-	if (c == '\n') return buffer ? buffer : malloc0(1);
+	if (c == '\n') return buffer ? buffer : (char *) malloc0(1);
 
 	/* We have a character, make sure we have a buffer. */
 	if (!buffer)
 	{
-		assert((buffer = malloc0(1)));
+		assert((buffer = (char *) malloc0(1)));
 		bufsize = 0;
 	}
 
@@ -68,7 +68,7 @@ readline(int fd, char *buffer, size_t bufsize)
 	if (bufsize <= strlen(buffer))
 	{
 		char *tmp = NULL;
-		assert((tmp = malloc(1024 + strlen(buffer) + 1)));
+		assert((tmp = (char *) malloc(1024 + strlen(buffer) + 1)));
 		memset(tmp, 0, 1024 + strlen(buffer) + 1);
 		strcpy(tmp, buffer);
 		free(buffer);
@@ -87,7 +87,14 @@ readline(int fd, char *buffer, size_t bufsize)
 void
 print_proxies(char **proxies)
 {
-	for (int j = 0; proxies[j] ; j++)
+	int j;
+
+	if (!proxies) {
+		printf("\n");
+		return;
+	}
+
+	for (j=0; proxies[j] ; j++)
 	{
 		printf(proxies[j]);
 		if (proxies[j+1])
@@ -102,6 +109,9 @@ print_proxies(char **proxies)
 int
 main(int argc, char **argv)
 {
+	int i;
+	char *url;
+
 	/* Create the proxy factory object */
 	pxProxyFactory *pf = px_proxy_factory_new();
 	if (!pf)
@@ -112,7 +122,7 @@ main(int argc, char **argv)
 	/* User entered some arguments on startup. skip interactive */
 	if (argc > 1)
 	{
-		for(int i = 1; i < argc ; i++)
+		for (i=1; i < argc ; i++)
 		{
 			/*
 			 * Get an array of proxies to use. These should be used
@@ -126,7 +136,7 @@ main(int argc, char **argv)
 	else
 	{
 		/* For each URL we read on STDIN, get the proxies to use */
-		for (char *url = NULL ; (url = readline(STDIN_FILENO, NULL, 0)) ; free(url))
+		for (url = NULL ; (url = readline(STDIN_FILENO, NULL, 0)) ; free(url))
 		{
 			/*
 			 * Get an array of proxies to use. These should be used
