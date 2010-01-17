@@ -17,261 +17,220 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <time.h>
+#include <cstdio>         // For fileno(), fread(), pclose(), popen(), sscanf()
+#include <sys/select.h>   // For select(...)
+#include <fcntl.h>        // For fcntl(...)
+#include "xhasclient.cpp" // For xhasclient(...)
 
-#include "../misc.hpp"
-#include "../modules.hpp"
-#include "../strdict.hpp"
-#include "xhasclient.cpp"
+/*
+int popen2(const char *program, FILE **read, FILE **write) {
+	int wpipe[2];
 
-#define BUFFERSIZE 10240
-#define CACHETIME 5
+	if (!read || !write || !program || !*program)
+		return EINVAL;
 
-typedef struct _pxGConfConfigModule {
-	PX_MODULE_SUBCLASS(pxConfigModule);
-	FILE      *pipe;
-	pxStrDict *data;
-	time_t     last;
-} pxGConfConfigModule;
+	*read  = NULL;
+	*write = NULL;
+
+	if (pipe(wpipe) < 0)
+		return errno;
+
+	switch (pid = vfork()) {
+	case -1: // Error
+		close(wpipe[0]);
+		close(wpipe[1]);
+		return ASOIMWE;
+	case 0:  // Child
+		close(wpipe[1]);
+		dup2(wpipe[0], STDIN_FILENO);
+		close(wpipe[0]);
+
+
+
+		execl(_PATH_BSHELL, "sh", "-c", program, (char *)NULL);
+			_exit(127);
+			// NOTREACHED
+		}
+	}
+
+	// Parent; assume fdopen can't fail.
+	if (*type == 'r') {
+			iop = fdopen(pdes[0], type);
+			(void)close(pdes[1]);
+	} else {
+			iop = fdopen(pdes[1], type);
+			(void)close(pdes[0]);
+	}
+
+	// Link into list of file descriptors.
+	cur->fp = iop;
+	cur->pid =  pid;
+	cur->next = pidlist;
+	pidlist = cur;
+
+	return (iop);
+}*/
+
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
 static const char *_all_keys[] = {
-	"/system/proxy/mode",       "/system/proxy/autoconfig_url",
-	"/system/http_proxy/host",  "/system/http_proxy/port",
+	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
+	"/system/http_proxy/host",   "/system/http_proxy/port",
 	"/system/proxy/secure_host", "/system/proxy/secure_port",
-	"/system/proxy/ftp_host",   "/system/proxy/ftp_port",
-	"/system/proxy/socks_host", "/system/proxy/socks_port",
+	"/system/proxy/ftp_host",    "/system/proxy/ftp_port",
+	"/system/proxy/socks_host",  "/system/proxy/socks_port",
 	"/system/http_proxy/ignore_hosts",
 	"/system/http_proxy/use_authentication",
 	"/system/http_proxy/authentication_user",
-	"/system/http_proxy/authentication_password", NULL
+	"/system/http_proxy/authentication_password",
+	NULL
 };
 
-static FILE *
-_start_get_config()
-{
-	char buffer[BUFFERSIZE] = "";
+class gnome_config_module : public config_module {
+public:
+	PX_MODULE_ID(NULL);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
-	// Build our command
-	if (strlen(GCONFTOOLBIN " -g") + 1 > BUFFERSIZE)
-		return NULL;
-	strcpy(buffer, GCONFTOOLBIN " -g");
-	for (int i=0 ; _all_keys[i] ; i++)
-	{
-		if (strlen(buffer) + strlen(_all_keys[i]) + 2 > BUFFERSIZE)
-			return NULL;
-		strcat(buffer, " ");
-		strcat(buffer, _all_keys[i]);
-	}
-	if (strlen(buffer) + strlen(" 2>&1") + 1 > BUFFERSIZE)
-		return NULL;
-	strcat(buffer, " 2>&1");
+	gnome_config_module() {
+		int count;
+		string cmd = LIBEXECDIR "pxgconf";
+		for (count=0 ; _all_keys[count] ; count++)
+			cmd += string(" ", 1) + _all_keys[count];
 
-	// Open our pipe
-	return popen(buffer, "r");
-}
-
-static pxStrDict *
-_finish_get_config(FILE *pipe)
-{
-	char buffer[BUFFERSIZE] = "";
-	char **values = NULL;
-	pxStrDict *kv = NULL;
-
-	if (!pipe) return NULL;
-
-	// Read the output and split it into its separate values (one per line)
-	if (fread(buffer, sizeof(char), BUFFERSIZE, pipe) == 0) goto error;
-	if (!(values = px_strsplit(buffer, "\n")))              goto error;
-
-	// Build up our dictionary with the values
-	kv = px_strdict_new((pxStrDictItemCallback) px_free);
-	for (int i=0 ; _all_keys[i] ; i++)
-	{
-		if (!values[i])
-			goto error;
-		if (strchr(values[i], ' '))
-			strcpy(values[i], "");
-		if (!px_strdict_set(kv, _all_keys[i], px_strdup(values[i])))
-			goto error;
-	}
-
-	// Cleanup
-	px_strfreev(values);
-	if (pclose(pipe) < 0)
-	{
-		px_strdict_free(kv);
-		return NULL;
-	}
-	return kv;
-
-	error:
-		pclose(pipe);
-		px_strfreev(values);
-		px_strdict_free(kv);
-		return NULL;
-}
-
-static void
-_destructor(void *s)
-{
-	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
-
-	if (self->pipe) pclose(self->pipe);
-	px_strdict_free(self->data);
-	px_free(self);
-}
-
-static char *
-_get_config(pxConfigModule *s, pxURL *url)
-{
-	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
-
-	// Update our config if possible
-	if (self->pipe)
-	{
-		pxStrDict *tmp = _finish_get_config(self->pipe);
-		self->pipe = NULL;
-		if (tmp)
-		{
-			px_strdict_free(self->data);
-			self->data = tmp;
-			self->last = time(NULL);
+		this->pipe = popen(cmd.c_str(), "r");
+		if (!this->pipe)
+			throw io_error("Unable to open gconf helper!");
+		if (fcntl(fileno(this->pipe), F_SETFL, FNONBLOCK) == -1) {
+			pclose(this->pipe);
+			throw io_error("Unable to set pipe to non-blocking!");
 		}
+
+		this->update_data(count);
 	}
 
-	if (!px_strdict_get(self->data, "/system/proxy/mode"))
-		return NULL;
-
-	char *curl = NULL;
-
-	// Mode is direct://
-	if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "none"))
-		curl = px_strdup("direct://");
-
-	// Mode is wpad:// or pac+http://...
-	else if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "auto"))
-	{
-		if (px_url_is_valid((const char *) px_strdict_get(self->data, "/system/proxy/autoconfig_url")))
-			curl = px_strcat("pac+", px_strdict_get(self->data, "/system/proxy/autoconfig_url"), NULL);
-		else
-			curl = px_strdup("wpad://");
+	~gnome_config_module() {
+		if (this->pipe)
+			pclose(this->pipe);
 	}
 
-	// Mode is http://... or socks://...
-	else if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "manual"))
-	{
-		char *type = px_strdup("http");
-		char *host = NULL;
-		char *port = NULL;
-		char *username = NULL;
-		char *password = NULL;
+	url get_config(url dest) throw (runtime_error) {
+		// Check for changes in the config
+		if (this->pipe) this->update_data();
 
-		uint16_t p = 0;
-
-		// Get the per-scheme proxy settings
-		if (!strcmp(px_url_get_scheme(url), "https"))
-		{
-			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/secure_host"));
-			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/secure_port"));
-			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
+		// Mode is wpad:// or pac+http://...
+		if (this->data["/system/proxy/mode"] == "auto") {
+			string pac = this->data["/system/proxy/autoconfig_url"];
+			return url::is_valid(pac) ? url(string("pac+") + pac) : url("wpad://");
 		}
-		else if (!strcmp(px_url_get_scheme(url), "ftp"))
-		{
-			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/ftp_host"));
-			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/ftp_port"));
-			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
-		}
-		if (!host || !strcmp(host, "") || !p)
-		{
-			px_free(host);
-			px_free(port);
 
-			host = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/host"));
-			port = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/port"));
-			if (!strcmp((const char *) px_strdict_get(self->data, "/system/http_proxy/use_authentication"), "true")) {
-				username = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/authentication_user"));
-				password = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/authentication_password"));
+		// Mode is http://... or socks://...
+		else if (this->data["/system/proxy/mode"] == "manual") {
+			string type = "http", host, port;
+			bool   auth     = this->data["/system/http_proxy/use_authentication"] == "true";
+			string username = this->data["/system/http_proxy/authentication_user"];
+			string password = this->data["/system/http_proxy/authentication_password"];
+			uint16_t p = 0;
+
+			// Get the per-scheme proxy settings
+			if (dest.get_scheme() == "https") {
+				host = this->data["/system/proxy/secure_host"];
+				port = this->data["/system/proxy/secure_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
 			}
-			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
+			else if (dest.get_scheme() == "ftp") {
+				host = this->data["/system/proxy/ftp_host"];
+				port = this->data["/system/proxy/ftp_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			}
+			if (host == "" || p == 0)
+			{
+				host = this->data["/system/http_proxy/host"];
+				port = this->data["/system/http_proxy/port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			}
+
+			// If http(s)/ftp proxy is not set, try socks
+			if (host == "" || p == 0)
+			{
+				host = this->data["/system/proxy/socks_host"];
+				port = this->data["/system/proxy/socks_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			}
+
+			// If host and port were found, build config url
+			if (host != "" && p != 0) {
+				string tmp = type + "://";
+				if (auth)
+					tmp += username + ":" + password + "@";
+				tmp += host + ":" + port;
+				return url(tmp);
+			}
 		}
 
-		// If http(s)/ftp proxy is not set, try socks
-		if (!host || !strcmp(host, "") || !p)
-		{
-			px_free(type);
-			px_free(host);
-			px_free(port);
+		// Mode is direct://
+		return url("direct://");
+	}
 
-			type = px_strdup("socks");
-			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/socks_host"));
-			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/socks_port"));
-			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
+	string get_ignore(url url) {
+		return this->data["/system/http_proxy/ignore_hosts"];
+	}
+
+private:
+	FILE               *pipe;
+	map<string, string> data;
+
+	string readline(string buffer="") {
+		char c;
+
+		// If the fread() call would block, an error occurred or
+		// we are at the end of the line, we're done
+		if (fread(&c, sizeof(char), 1, this->pipe) != 1 || c == '\n')
+			return buffer;
+
+		// Process the next character
+		return this->readline(buffer + string(&c, 1));
+	}
+
+	// This method attempts to update data
+	// If called with no arguments, it will check for new data (sleeping for <=1000
+	// useconds) and returning true or false depending on if at least one line of
+	// data was found.
+	// However, if req > 0, we will keep checking for new lines (at 1000 usec ivals)
+	// until enough lines are found.  This allows us to wait for *all* the initial
+	// values to be read in before we start processing gconf requests.
+	bool update_data(int req=0, int found=0) {
+		// If we have collected the correct number of lines, return true
+		if (req > 0 && found >= req)
+			return true;
+
+		// We need the pipe to be open
+		if (!this->pipe) return false;
+
+		fd_set rfds;
+		struct timeval timeout = { 0, 1000 };
+		FD_ZERO(&rfds);
+		FD_SET(fileno(this->pipe), &rfds);
+		if (select(fileno(this->pipe)+1, &rfds, NULL, NULL, &timeout) < 1)
+			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
+			                                                        // our req quota, try again
+
+		bool retval = false;
+		for (string line = this->readline() ; line != "" ; line = this->readline()) {
+			string key = line.substr(0, line.find("\t"));
+			string val = line.substr(line.find("\t")+1);
+			this->data[key] = val;
+			retval = ++found > req;
 		}
 
-		// If host and port were found, build config url
-		if (host && strcmp(host, "") && p)
-			curl = px_strcat(type, "://", username && password ? px_strcat(username, ":", password, "@", NULL) : "", host, ":", port, NULL);
-
-		px_free(type);
-		px_free(host);
-		px_free(port);
-		px_free(username);
-		px_free(password);
+		return (this->update_data(req, found) || retval);
 	}
+};
 
-	// Start a refresh in the background
-	if (time(NULL) - self->last > CACHETIME)
-		self->pipe = _start_get_config();
-
-	return curl;
-}
-
-static char *
-_get_ignore(pxConfigModule *s, pxURL *url)
-{
-	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
-
-	char *ignores = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/ignore_hosts"));
-	if (ignores && ignores[strlen(ignores)-1] == ']' && ignores[0] == '[')
-	{
-		char *tmp = px_strndup(ignores+1, strlen(ignores+1)-1);
-		px_free(ignores);
-		ignores = tmp;
+// If we are running in GNOME, then make sure this plugin is registered.
+extern "C" bool px_module_load(module_manager& mm) {
+	if (xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL)) {
+		try { return mm.register_module<config_module>(new gnome_config_module); }
+		catch (io_error) { return false; }
 	}
-
-	return ignores ? ignores : px_strdup("");
-}
-
-static bool
-_get_credentials(pxConfigModule *self, pxURL *proxy, char **username, char **password)
-{
-	return false;
-}
-
-static bool
-_set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const char *password)
-{
-	return false;
-}
-
-static void *
-_constructor()
-{
-	pxGConfConfigModule *self = (pxGConfConfigModule *) px_malloc0(sizeof(pxGConfConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	self->pipe = _start_get_config();
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	// If we are running in GNOME, then make sure this plugin is registered.
-	if (!x_has_client("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL))
-		return false;
-	return px_module_manager_register_module(self, pxConfigModule, _constructor, _destructor);
 }

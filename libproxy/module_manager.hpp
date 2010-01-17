@@ -17,61 +17,103 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_MANAGER_H_
-#define MODULE_MANAGER_H_
+#ifndef MODULEMANAGER_HPP_
+#define MODULEMANAGER_HPP_
 
-#include <stdbool.h>
-#include <assert.h>
+#include <map>
+#include <set>
+#include <vector>
+#include <typeinfo>
+#include <algorithm>
 
-/*
- * Define the pxModuleManager object
- */
-typedef struct _pxModuleManager pxModuleManager;
-typedef void *(*pxModuleConstructor)();
-typedef void  (*pxModuleDestructor) (void *module);
+#include "dl_module.hpp"
 
-typedef bool (*pxModuleLoadFunction)(pxModuleManager *);
-typedef void (*pxModuleFreeFunction)(pxModuleManager *);
+#define PX_MODULE_ID(name) virtual string get_id() const { return this->_bnne(name ? name : __FILE__); }
+#define PX_MODULE_LOAD(basetype, name, cond) \
+	extern "C" bool px_module_load(module_manager& mm) { \
+		if (cond) return mm.register_module<basetype>(new name ## _ ## basetype); \
+		return false; \
+	}
 
+namespace com {
+namespace googlecode {
+namespace libproxy {
+using namespace std;
 
-/*
- * Define the pxModuleRegistration object
- */
-struct _pxModuleRegistration {
-	char               *name;
-	void               *instance;
-	pxModuleConstructor pxnew;
-	pxModuleDestructor  free;
+class module {
+public:
+	virtual ~module() {}
+	virtual bool operator<(const module& other) const { return false; }
+	virtual string get_id() const=0;
+
+protected:
+	string _bnne(const string fn) const;
 };
-typedef struct _pxModuleRegistration pxModuleRegistration;
-typedef int   (*pxModuleRegistrationComparison)(pxModuleRegistration **self, pxModuleRegistration **other);
 
-pxModuleManager *px_module_manager_new       ();
-void             px_module_manager_free      (pxModuleManager *self);
+class module_manager {
+public:
+	typedef       bool (*INIT_TYPE)(module_manager&);
+	static  const char*  INIT_NAME() { return "px_module_load"; }
 
-bool             px_module_manager_load      (pxModuleManager *self, char *filename);
-bool             px_module_manager_load_dir  (pxModuleManager *self, char *dirname);
+	~module_manager();
 
-#define __str__(s) #s
-#define __px_module_manager_get_id(type, version) #type "__" __str__(version)
+	template <class T> vector<T*> get_modules() const {
+		vector<module*> modlist = this->modules.find(&typeid(T))->second;
+		vector<T*>      retlist;
 
-__attribute__ ((visibility("default")))
-bool   _px_module_manager_register_module_full(pxModuleManager *self, const char *id, const char *name, size_t namelen, pxModuleConstructor pxnew, pxModuleDestructor free);
-#define px_module_manager_register_module(self, type, pxnew, free) \
-	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), \
-                                            __FILE__, strrchr(__FILE__, '.') ? strrchr(__FILE__, '.') - __FILE__ : strlen(__FILE__), \
-                                            pxnew, free)
-#define px_module_manager_register_module_with_name(self, type, name, pxnew, free) \
-	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), name, strlen(name), pxnew, free)
+		for (int i=0 ; i < modlist.size() ; i++)
+			retlist.push_back(dynamic_cast<T*>(modlist[i]));
 
-void **_px_module_manager_instantiate_type_full(pxModuleManager *self, const char *id);
-#define px_module_manager_instantiate_type(self, type) \
-	(type **) _px_module_manager_instantiate_type_full(self, __px_module_manager_get_id(type, type ## Version))
+		return retlist;
+	}
 
-bool   _px_module_manager_register_type_full(pxModuleManager *self, const char *id, pxModuleRegistrationComparison cmp, bool singleton);
-#define px_module_manager_register_type(self, type, cmp, sngl) \
-	_px_module_manager_register_type_full(self, __px_module_manager_get_id(type, type ## Version), cmp, sngl)
+	template <class T> bool register_module(T* module)  {
+		  struct pcmp {
+		    static bool cmp(T* x, T* y) { return *x < *y; }
+		  };
 
-#define PX_MODULE_SUBCLASS(type) type __parent__
+		// If the class for this module is a singleton...
+		if (this->singletons.find(&typeid(T)) != this->singletons.end()) {
+			// ... and we already have an instance of this class ...
+			if (this->modules[&typeid(T)].size() > 0) {
+				// ... free the module and return
+				delete module;
+				return false;
+			}
+		}
 
-#endif /* MODULE_MANAGER_H_ */
+		// Otherwise we just add the module and sort
+		vector<T*> modlist = this->get_modules<T>();
+		modlist.push_back(module);
+		sort(modlist.begin(), modlist.end(), &pcmp::cmp);
+
+		// Insert to our store
+		this->modules[&typeid(T)].clear();
+		for (int i=0 ; i < modlist.size() ; i++)
+			this->modules[&typeid(T)].push_back(modlist[i]);
+
+		return true;
+
+	}
+
+	template <class T> bool set_singleton(bool singleton) 	{
+		if (singleton)
+			return this->singletons.insert(&typeid(T)).second;
+		this->singletons.erase(&typeid(T));
+		return true;
+	}
+
+	bool load_file(const string filename);
+	bool load_dir(const string dirname);
+
+private:
+	set<dl_module*>                         dl_modules;
+	map<const type_info*, vector<module*> > modules;
+	set<const type_info*>                   singletons;
+};
+
+}
+}
+}
+
+#endif /* MODULEMANAGER_HPP_ */

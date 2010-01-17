@@ -17,98 +17,48 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "../misc.hpp"
-#include "../modules.hpp"
 #include "../config_file.hpp"
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
-typedef struct _pxFileConfigModule {
-	PX_MODULE_SUBCLASS(pxConfigModule);
-	char          *filename;
-	pxConfigFile  *cf;
-} pxFileConfigModule;
+class system_file_config_module : public config_module {
+public:
+	PX_MODULE_ID("config_file_system");
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SYSTEM);
 
-static void
-_destructor(void *s)
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) self;
-
-	px_config_file_free(self->cf);
-	px_free(self->filename);
-	px_free(self);
-}
-
-static char *
-_get_config(pxConfigModule *ss, pxURL *url)
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) self;
-
-	if (!self->cf)
-		self->cf = px_config_file_new(self->filename);
-	if (!self->cf)
-		return NULL;
-	return px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "proxy");
-}
-
-static char *
-_get_ignore(pxConfigModule *s, pxURL *url)
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) self;
-
-	if (!self->cf)
-		self->cf = px_config_file_new(self->filename);
-	if (!self->cf)
-		return NULL;
-	return px_config_file_get_value(self->cf, PX_CONFIG_FILE_DEFAULT_SECTION, "ignore");
-}
-
-static bool
-_get_credentials(pxConfigModule *s, pxURL *proxy, char **username, char **password)
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) self;
-
-	return false;
-}
-
-static bool
-_set_credentials(pxConfigModule *s, pxURL *proxy, const char *username, const char *password)
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) self;
-
-	return false;
-}
-
-static void *
-_system_constructor()
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) px_malloc0(sizeof(pxFileConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SYSTEM, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	self->filename = px_strdup(SYSCONFDIR "proxy.conf");
-
-	return self;
-}
-
-static void *
-_user_constructor()
-{
-	pxFileConfigModule *self = (pxFileConfigModule *) px_malloc0(sizeof(pxFileConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_USER, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	self->filename = px_strcat(getenv("HOME"), "/", ".proxy.conf", NULL);
-
-	if (!self->filename || !strcmp(self->filename, ""))
-	{
-		_destructor((void *) self);
-		return NULL;
+	system_file_config_module() {
+		this->cf.load(this->get_filename());
 	}
-	return self;
-}
 
-bool
-px_module_load(pxModuleManager *self)
-{
-	bool a = px_module_manager_register_module_with_name(self, pxConfigFile, "config_file_system", _system_constructor, _destructor);
-	bool b = px_module_manager_register_module_with_name(self, pxConfigFile, "config_file_user",   _user_constructor,   _destructor);
-	return (a || b);
+	url get_config(url url) throw (runtime_error) {
+		if (this->cf.is_stale())
+			this->cf.load(this->get_filename());
+		return this->cf.get_value("proxy");
+	}
+
+	string get_ignore(url& url) {
+		if (this->cf.is_stale())
+			this->cf.load(this->get_filename());
+		return this->cf.get_value("ignore");
+	}
+
+protected:
+	virtual string get_filename() { return SYSCONFDIR "proxy.conf"; }
+
+private:
+	config_file cf;
+};
+
+class user_file_config_module : public system_file_config_module {
+public:
+	PX_MODULE_ID("config_file_user");
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_USER);
+
+protected:
+	virtual string get_filename() { return string(getenv("HOME")) + string("/.proxy.conf"); }
+};
+
+extern "C" bool px_module_load(module_manager& mm) {
+	bool success = mm.register_module<config_module>(new user_file_config_module);
+	return mm.register_module<config_module>(new system_file_config_module) || success;
 }

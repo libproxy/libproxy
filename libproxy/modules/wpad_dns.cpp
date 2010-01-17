@@ -17,50 +17,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
+#include "../module_types.hpp"
 
-#include "../misc.hpp"
-#include "../modules.hpp"
-#include "../pac.hpp"
+using namespace com::googlecode::libproxy;
 
-typedef struct _pxDNSWPADModule {
-	PX_MODULE_SUBCLASS(pxWPADModule);
-	bool rewound;
-} pxDNSWPADModule;
+class dns_wpad_module : public wpad_module {
+public:
+	PX_MODULE_ID(NULL);
 
-static pxPAC *
-_next(pxWPADModule *self)
-{
-	if (((pxDNSWPADModule *) self)->rewound)
-	{
-		pxPAC *pac = px_pac_new_from_string("http://wpad/wpad.dat");
-		self->found = pac != NULL;
-		return pac;
+	dns_wpad_module() {
+		this->last = NULL;
 	}
-	else
-		return NULL;
-}
 
-static void
-_rewind(pxWPADModule *self)
-{
-	((pxDNSWPADModule *) self)->rewound = true;
-}
+	bool found() {
+		return this->last != NULL;
+	}
 
-static void *
-_constructor()
-{
-	pxDNSWPADModule *self = (pxDNSWPADModule*) px_malloc0(sizeof(pxDNSWPADModule));
-	self->rewound           = true;
-	self->__parent__.found  = false;
-	self->__parent__.next   = _next;
-	self->__parent__.rewind = _rewind;
-	return self;
-}
+	pac* next() {
+		if (this->last) return NULL;
 
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxWPADModule, _constructor, px_free);
-}
+		try { this->last = new pac(url("http://wpad/wpad.dat")); }
+		catch (io_error& e) { }
+
+		return this->last;
+	}
+
+	void rewind() {
+		this->last = NULL;
+	}
+
+private:
+	pac* last;
+};
+
+PX_MODULE_LOAD(wpad_module, dns, true);

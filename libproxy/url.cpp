@@ -17,105 +17,203 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
+#include <fcntl.h> // For ::open()
+#include <cstring> // For memcpy()
+#include <sstream> // For int/string conversion (using stringstream)
+#include <cstdio>  // For sscanf()
 
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0501
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#endif
-
-#include "misc.hpp"
 #include "url.hpp"
 
-/**
- * pxURL object. All fields are private.
- */
-struct _pxURL {
-	char             *url;
-	char             *scheme;
-	char             *username;
-	char             *password;
-	char             *host;
-	int               port;
-	char             *path;
-	struct sockaddr **ips;
-};
+namespace com {
+namespace googlecode {
+namespace libproxy {
+using namespace std;
 
-/**
- * @return Frees the pxURL
- */
-void
-px_url_free(pxURL *self)
-{
-	if (!self) return;
-	px_free(self->url);
-	px_free(self->scheme);
-	px_free(self->host);
-	px_free(self->path);
-	if (self->ips)
-	{
-		for (int i=0 ; self->ips[i] ; i++)
-			px_free(self->ips[i]);
-		px_free(self->ips);
+static inline int _get_default_port(string scheme) {
+        struct servent *serv;
+        if ((serv = getservbyname(scheme.c_str(), NULL))) return ntohs(serv->s_port);
+        return 0;
+}
+
+template <class T>
+static inline string _to_string (const T& t) {
+	stringstream ss;
+	ss << t;
+	return ss.str();
+}
+
+#define _copyaddr_t(type, addr) (sockaddr*) memcpy(new type, &(addr), sizeof(type))
+static inline sockaddr* _copyaddr(const struct sockaddr& addr) {
+	switch (addr.sa_family) {
+	case (AF_INET):
+		return _copyaddr_t(sockaddr_in, addr);
+	case (AF_INET6):
+		return _copyaddr_t(sockaddr_in6, addr);
+	default:
+		return NULL;
 	}
-	px_free(self);
 }
 
-/**
- * Tells whether or not a pxURL string has valid syntax
- * @return true if the pxURL is valid, otherwise false
- */
-bool
-px_url_is_valid(const char *url)
-{
-	pxURL *tmp = px_url_new(url);
-	if (!tmp) return false;
-	px_url_free(tmp);
-	return true;
+bool url::is_valid(const string __url) {
+	url* tmp;
+	try                     { tmp = new url(__url); }
+	catch (parse_error& pe) { return false; }
+    delete tmp;
+    return true;
 }
 
-/**
- * Sends a get request for the pxURL.
- * @headers A list of headers to be included in the request.
- * @return Socket to read the response on.
- */
-int
-px_url_get(pxURL *self, const char **headers)
-{
-	char *request = NULL;
+url::url(const string url) throw(parse_error, logic_error) {
+	char *schm = new char[url.size()];
+	char *auth = new char[url.size()];
+	char *host = new char[url.size()];
+	char *path = new char[url.size()];
+	bool port_specified = false;
+	this->ips = NULL;
+
+	// Break apart our url into 4 sections: scheme, auth (user/pass), host and path
+	// We'll do further parsing of auth and host a bit later
+	// NOTE: reset the unused variable after each scan or we get bleed-through
+	if (sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]/%s", schm, auth, host, path) != 4                && !((*path = NULL)) &&  // URL with auth, host and path
+		sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]",    schm, auth, host) != 3                      && !((*auth = NULL)) &&  // URL with auth, host
+		sscanf(url.c_str(),   "%[^:]://%[^/]/%s",       schm, host, path) != 3                      && !((*path = NULL)) &&  // URL with host, path
+		sscanf(url.c_str(),   "%[^:]://%[^/]",          schm, host) != 2                            && !((*host = NULL)) &&  // URL with host
+		!(sscanf(url.c_str(), "%[^:]://%s",             schm, path) == 2 && string("file") == schm) && !((*path = NULL)) &&  // URL with path (ex: file:///foo)
+		!(sscanf(url.c_str(), "%[^:]://",               schm) == 1 && (string("direct") == schm || string("wpad") == schm))) // URL with scheme-only (ex: wpad://, direct://)
+	{
+		delete schm;
+		delete auth;
+		delete host;
+		delete path;
+		throw parse_error("Invalid URL: " + url);
+	}
+
+	// Set scheme and path
+	this->scheme   = schm;
+	this->path     = *path ? string("/") + path : "";
+	*schm = NULL;
+	*path = NULL;
+
+	// Parse auth further
+	if (*auth) {
+		this->user = auth;
+		if (string(auth).find(":") != string:: npos) {
+			this->pass = this->user.substr(this->user.find(":")+1);
+			this->user = this->user.substr(0, this->user.find(":"));
+		}
+		*auth = NULL;
+	}
+
+	// Parse host further. Basically, we're looking for a port.
+	if (*host) {
+		this->host = host;
+		port_specified = sscanf(host, "%*[^:]:%d", &this->port) == 1;
+		if (port_specified)
+			this->host = this->host.substr(0, this->host.rfind(':'));
+		else
+			this->port = _get_default_port(this->scheme);
+		*host = NULL;
+	}
+
+	// Cleanup
+	delete schm;
+	delete auth;
+	delete host;
+	delete path;
+
+	// Verify by re-assembly
+	if (this->user != "" && this->pass != "")
+		this->orig = this->scheme + "://" + this->user + ":" + this->pass + "@" + this->host;
+	else
+		this->orig = this->scheme + "://" + this->host;
+	if (port_specified)
+		this->orig = this->orig + ":" + _to_string<int>(this->port) + this->path;
+	else
+		this->orig = this->orig + this->path;
+	if (this->orig != url)
+		throw logic_error("Re-assembly failed!");
+}
+
+url::url(const url &url) {
+	this->ips = NULL;
+	*this = url;
+}
+
+url::~url() {
+	if (this->ips) {
+		for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++)
+			delete *i;
+		delete this->ips;
+	}
+}
+
+bool url::operator==(const url& url) const {
+	return this->orig == url.to_string();
+}
+
+url& url::operator=(const url& url) {
+	// Ensure these aren't the same objects
+	if (&url == this)
+		return *this;
+
+	this->host   = url.host;
+	this->orig   = url.orig;
+	this->pass   = url.pass;
+	this->path   = url.path;
+	this->port   = url.port;
+	this->scheme = url.scheme;
+	this->user   = url.user;
+
+	if (this->ips) {
+		// Free any existing ip cache
+		for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++)
+			delete *i;
+		delete this->ips;
+		this->ips = NULL;
+	}
+
+	if (url.ips) {
+		// Copy the new ip cache
+		this->ips = new vector<const sockaddr*>();
+		for (vector<const sockaddr*>::iterator i = url.ips->begin() ; i != url.ips->end() ; i++)
+			this->ips->push_back(_copyaddr(**i));
+	}
+	return *this;
+}
+
+url& url::operator=(string strurl) throw (parse_error) {
+	url* tmp = new url(strurl);
+	*this = *tmp;
+	delete tmp;
+	return *this;
+}
+
+int url::open() {
+	map<string, string> headers;
+	return this->open(headers);
+}
+
+int url::open(map<string, string> headers) {
 	char *joined_headers = NULL;
+	string request;
 	int sock = -1;
 
-	/* in case of a file:// url we open the file and return a hande to it */
-	if (!strcmp(self->scheme,"file"))
-		return open(self->path, O_RDONLY);
+	// In case of a file:// url we open the file and return a handle to it
+	if (this->scheme == "file")
+		return ::open(this->path.c_str(), O_RDONLY);
 
-	/* DNS lookup of host */
-	if (!px_url_get_ips(self, true)) goto error;
+	// DNS lookup of host
+	if (!this->get_ips(true)) goto error;
 
-	/* Iterate through each pxIP trying to make a connection */
-	for (int i = 0 ;  self->ips && self->ips[i] && sock < 0 ; i++)
-	{
-		sock = socket(self->ips[i]->sa_family, SOCK_STREAM, 0);
+	// Iterate through each IP trying to make a connection
+	for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++) {
+		sock = socket((*i)->sa_family, SOCK_STREAM, 0);
 		if (sock < 0) continue;
 
-		if (self->ips[i]->sa_family == AF_INET &&
-			!connect(sock, self->ips[i], sizeof(struct sockaddr_in)))
+		if ((*i)->sa_family == AF_INET &&
+			!connect(sock, *i, sizeof(struct sockaddr_in)))
 			break;
-		else if (self->ips[i]->sa_family == AF_INET6 &&
-			!connect(sock, self->ips[i], sizeof(struct sockaddr_in6)))
+		else if ((*i)->sa_family == AF_INET6 &&
+			!connect(sock, *i, sizeof(struct sockaddr_in6)))
 			break;
 
 		close(sock);
@@ -123,252 +221,90 @@ px_url_get(pxURL *self, const char **headers)
 	}
 	if (sock < 0) goto error;
 
-	/* Merge optional headers */
-	if (headers)
-	{
-		joined_headers = px_strjoin(headers, "\r\n");
-		if (!joined_headers) goto error;
-	}
-	else
-		joined_headers = px_strdup("");
+	// Set any required headers
+	headers["Host"] = this->host;
 
-	/* Create request header */
-	request = px_strcat("GET ", px_url_get_path(self),
-						" HTTP/1.1\r\nHost: ", px_url_get_host(self),
-						"\r\n", joined_headers, "\r\n\r\n", NULL);
-	px_free(joined_headers);
+	// Build the request string
+	request = "GET " + this->path + " HTTP/1.1\r\n";
+	for (map<string, string>::iterator it = headers.begin() ; it != headers.end() ; it++)
+		request += it->first + ": " + it->second + "\r\n";
+	request += "\r\n";
 
-	/* Send HTTP request */
-	if (send(sock, request, strlen(request), 0) != strlen(request)) goto error;
-	px_free(request); request = NULL;
+	// Send HTTP request
+	if (send(sock, request.c_str(), request.size(), 0) != request.size()) goto error;
 
-	/* Return the socket, which is ready for reading the response */
+	// Return the socket, which is ready for reading the response
 	return sock;
 
 	error:
 		if (sock >= 0) close(sock);
-		px_free(request);
 		return -1;
 }
 
-/**
- * @return The default port for this type of pxURL
- */
-static int
-px_url_get_default_port(pxURL *self)
-{
-	struct servent *serv;
-	if ((serv = getservbyname(self->scheme, NULL))) return ntohs(serv->s_port);
-	return 0;
+string url::get_host() const {
+	return this->host;
 }
 
-/**
- * @return Host portion of the pxURL
- */
-const char *
-px_url_get_host(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->host;
-}
+const vector<const sockaddr*>* url::get_ips(bool usedns) {
+	// Check the cache
+	if (this->ips) return (const vector<const sockaddr*>*) this->ips;
 
-/**
- * Get the IP addresses of the hostname in this pxURL.
- * @usedns Should we look up hostnames in DNS?
- * @return IP addresses of the host in the pxURL.
- */
-const struct sockaddr **
-px_url_get_ips(pxURL *self, bool usedns)
-{
-	if (!self) return NULL;
+	// Check without DNS first
+	if (usedns && this->get_ips(false)) return (const vector<const sockaddr*>*) this->ips;
 
-	/* Check the cache */
-	if (self->ips) return (const struct sockaddr **) self->ips;
-
-	/* Check without DNS first */
-	if (usedns && px_url_get_ips(self, false)) return (const struct sockaddr **) self->ips;
-
-	/* Check DNS for IPs */
-	struct addrinfo *info;
+	// Check DNS for IPs
+	struct addrinfo* info;
 	struct addrinfo flags;
 	flags.ai_family   = AF_UNSPEC;
 	flags.ai_socktype = 0;
 	flags.ai_protocol = 0;
 	flags.ai_flags    = AI_NUMERICHOST;
-	if (!getaddrinfo(px_url_get_host(self), NULL, usedns ? NULL : &flags, &info))
-	{
-		struct addrinfo *first = info;
-		int count;
+	if (!getaddrinfo(this->host.c_str(), NULL, usedns ? NULL : &flags, &info)) {
+		struct addrinfo* first = info;
 
-		/* Count how many IPs we got back */
-		for (count=0 ; info ; info = info->ai_next)
-			count++;
+		// Create our vector since we actually have a result
+		this->ips = new vector<const sockaddr*>();
 
-		/* Copy the sockaddr's into self->ips */
-		info = first;
-		self->ips = (struct sockaddr **) px_malloc0(sizeof(struct sockaddr *) * ++count);
-		for (int i=0 ; info ; info = info->ai_next)
-		{
-			if (info->ai_addr->sa_family == AF_INET)
-			{
-				self->ips[i] = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in));
-				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in));
-				((struct sockaddr_in *) self->ips[i++])->sin_port = htons(self->port);
-			}
-			else if (info->ai_addr->sa_family == AF_INET6)
-			{
-				self->ips[i] = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in6));
-				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in6));
-				((struct sockaddr_in6 *) self->ips[i++])->sin6_port = htons(self->port);
+		// Copy the sockaddr's into this->ips
+		for ( ; info ; info = info->ai_next) {
+			if (info->ai_addr->sa_family == AF_INET || info->ai_addr->sa_family == AF_INET6) {
+				this->ips->push_back(_copyaddr(*(info->ai_addr)));
+				((sockaddr_in*)(*(this->ips))[this->ips->size()-1])->sin_port = htons(this->port);
 			}
 		}
 
 		freeaddrinfo(first);
-		return (const struct sockaddr **) self->ips;
+		return (const vector<const sockaddr*>*) this->ips;
 	}
 
-	/* No addresses found */
+	// No addresses found
 	return NULL;
 }
 
-/**
- * @return Password portion of the pxURL
- */
-const char *
-px_url_get_password(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->password;
+string url::get_password() const {
+	return this->pass;
 }
 
-/**
- * @return Path portion of the pxURL
- */
-const char *
-px_url_get_path(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->path;
+string url::get_path() const {
+	return this->path;
 }
 
-/**
- * @return Port portion of the pxURL
- */
-int
-px_url_get_port(pxURL *self)
-{
-	if (!self) return 0;
-	return self->port;
+int url::get_port() const {
+	return this->port;
 }
 
-/**
- * @return Scheme portion of the pxURL
- */
-__attribute__ ((visibility("default")))
-const char *
-px_url_get_scheme(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->scheme;
+string url::get_scheme() const {
+	return this->scheme;
 }
 
-/**
- * @return Username portion of the pxURL
- */
-const char *
-px_url_get_username(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->username;
+string url::get_username() const {
+	return this->user;
 }
 
-/**
- * @url String used to create the new pxURL object
- * @return New pxURL object
- */
-pxURL *
-px_url_new(const char *url)
-{
-	bool port_specified;
-	if (!url) return NULL;
-	const char *start = url;
-
-	/* Allocate pxURL */
-	pxURL *self  = (pxURL *) px_malloc0(sizeof(pxURL));
-
-	/* Get scheme */
-	if (!strstr(start, "://")) goto error;
-	self->scheme = px_strndup(start, strstr(start, "://") - start);
-	start += strlen(self->scheme) + 3;
-
-	/* If we have a username and password */
-	if (strchr(start, '@') && (strchr(start, '/') > strchr(start, '@') || strchr(start, '/') == NULL))
-	{
-		if (!strchr(start, ':')) goto error; // Can't find user/pass delimiter
-		self->username = px_strndup(start, strchr(start, ':') - start);
-		start += strlen(self->username) + 1;
-		self->password = px_strndup(start, strchr(start, '@') - start);
-		start += strlen(self->password) + 1;
-	}
-
-	/* Get host */
-	self->host   = px_strdup(start);
-
-	/* Get path */
-	self->path   = px_strdup(strchr(self->host, '/'));
-	if (self->path)
-		self->host[strlen(self->host) - strlen(self->path)] = 0;
-	else
-		self->path = px_strdup("");
-
-	/* Get the port */
-	port_specified = false;
-	if (strchr(self->host, ':')) {
-		if (!atoi(strchr(self->host, ':')+1)) goto error;
-		self->port = atoi(strchr(self->host, ':')+1);
-		*(strchr(self->host, ':')) = 0;
-		port_specified = true;
-	}
-	else
-		self->port = px_url_get_default_port(self);
-
-	/* Make sure we have a real host */
-	if (!strcmp(self->host, "") && strcmp(self->scheme, "file")) goto error;
-
-	/* Verify by re-assembly */
-	self->url = (char *) px_malloc0(strlen(url) + 1);
-	if (self->username && self->password)
-		snprintf(self->url, strlen(url) + 1, "%s://%s:%s@%s", self->scheme, self->username, self->password, self->host);
-	else
-		snprintf(self->url, strlen(url) + 1, "%s://%s", self->scheme, self->host);
-	if (port_specified)
-		snprintf(self->url + strlen(self->url), strlen(url) + 1 - strlen(self->url), ":%d%s", self->port, self->path);
-	else
-		snprintf(self->url + strlen(self->url), strlen(url) + 1 - strlen(self->url), "%s", self->path);
-	if (strcmp(self->url, url)) goto error;
-
-	return self;
-
-	error:
-		px_url_free(self);
-		return NULL;
+string url::to_string() const {
+	return this->orig;
 }
 
-/**
- * @return String representation of the pxURL
- */
-const char *
-px_url_to_string(pxURL *self)
-{
-	if (!self) return NULL;
-	return self->url;
 }
-
-/**
- * @return true if the URLs are the same, else false
- */
-bool
-px_url_equals(pxURL *self, const pxURL *other)
-{
-	return !strcmp(px_url_to_string(self), px_url_to_string((pxURL*) other));
+}
 }

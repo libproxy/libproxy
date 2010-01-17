@@ -17,91 +17,72 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef URL_H_
-#define URL_H_
+#ifndef URL_HPP_
+#define URL_HPP_
 
-#include "stdbool.h" /* For type bool */
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0501
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
 
-/**
- * WPAD object. All fields are private.
- */
-typedef struct _pxURL pxURL;
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-/**
- * @return Frees the pxURL
- */
-void px_url_free(pxURL *self);
+namespace com {
+namespace googlecode {
+namespace libproxy {
 
-/**
- * Tells whether or not a pxURL string has valid syntax
- * @return true if the pxURL is valid, otherwise false
- */
-__attribute__ ((visibility("default")))
-bool px_url_is_valid(const char *url);
+using namespace std;
 
-/**
- * Sends a get request for the pxURL.
- * @headers A list of headers to be included in the request.
- * @return Socket to read the response on.
- */
-int px_url_get(pxURL *self, const char **headers);
+class parse_error : public runtime_error {
+public:
+	parse_error(const string& __arg): runtime_error(__arg) {}
+};
 
-/**
- * @return Host portion of the pxURL
- */
-__attribute__ ((visibility("default")))
-const char *px_url_get_host(pxURL *self);
+class url {
+public:
+	static bool is_valid(const string url);
 
-/**
- * Get the IP addresses of the hostname in this pxURL.
- * @usedns Should we look up hostnames in DNS?
- * @return IP addresses of the host in the pxURL.
- */
-__attribute__ ((visibility("default")))
-const struct sockaddr **px_url_get_ips(pxURL *self, bool usedns);
+	~url();
+	url(const url& url);
+	url(string url) throw (parse_error, logic_error);
+	bool operator==(const url& url) const;
+	url& operator=(const url& url);
+	url& operator=(string url) throw (parse_error);
 
-/**
- * @return Password portion of the pxURL
- */
-const char *px_url_get_password(pxURL *self);
+	int open();
+	int open(map<string, string> headers);
 
-/**
- * @return Path portion of the pxURL
- */
-const char *px_url_get_path(pxURL *self);
+	string get_host()     const;
+	const vector<const sockaddr*>* get_ips(bool usedns);
+	string get_password() const;
+	string get_path()     const;
+	int    get_port()     const;
+	string get_scheme()   const;
+	string get_username() const;
+	string to_string()    const;
 
-/**
- * @return Port portion of the pxURL
- */
-__attribute__ ((visibility("default")))
-int px_url_get_port(pxURL *self);
+private:
+	string                   host;
+	vector<const sockaddr*>* ips;
+	string                   pass;
+	string                   path;
+	int                      port;
+	string                   scheme;
+	string                   orig;
+	string                   user;
+};
 
-/**
- * @return Scheme portion of the pxURL
- */
-__attribute__ ((visibility("default")))
-const char *px_url_get_scheme(pxURL *self);
+}
+}
+}
 
-/**
- * @return Username portion of the pxURL
- */
-const char *px_url_get_username(pxURL *self);
-
-/**
- * @url String used to create the new pxURL object
- * @return New pxURL object
- */
-pxURL *px_url_new(const char *url);
-
-/**
- * @return String representation of the pxURL
- */
-__attribute__ ((visibility("default")))
-const char *px_url_to_string(pxURL *self);
-
-/**
- * @return true if the URLs are the same, else false
- */
-bool px_url_equals(pxURL *self, const pxURL *other);
-
-#endif /*URL_H_*/
+#endif /*URL_HPP_*/

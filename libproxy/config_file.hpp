@@ -1,38 +1,53 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef CONFIG_FILE_H_
-#define CONFIG_FILE_H_
+#ifndef CONFIG_FILE_HPP_
+#define CONFIG_FILE_HPP_
 
-#include <stdbool.h>
+#include <stdexcept>
+#include <map>
+using namespace std;
 
-#define PX_CONFIG_FILE_DEFAULT_SECTION "__DEFAULT__"
+namespace com {
+namespace googlecode {
+namespace libproxy {
 
-typedef struct _pxConfigFile pxConfigFile;
+class key_error : public runtime_error {
+public:
+	key_error(const string& __arg): runtime_error(__arg) {}
+};
 
-__attribute__ ((visibility("default")))
-pxConfigFile *px_config_file_new         (char *filename);
-__attribute__ ((visibility("default")))
-bool          px_config_file_is_stale    (pxConfigFile *self);
-__attribute__ ((visibility("default")))
-char         *px_config_file_get_value   (pxConfigFile *self, char *section, char *key);
-__attribute__ ((visibility("default")))
-void          px_config_file_free        (pxConfigFile *self);
+class config_file {
+public:
+	string get_value(const string key) throw (key_error);
+	string get_value(const string section, const string key) throw (key_error);
+	bool   is_stale();
+	bool   load(string filename);
 
-#endif /*CONFIG_FILE_H_*/
+private:
+	string                            filename;
+	time_t                            mtime;
+	map<string, map<string, string> > sections;
+};
+
+}
+}
+}
+
+#endif /*CONFIG_FILE_HPP_*/

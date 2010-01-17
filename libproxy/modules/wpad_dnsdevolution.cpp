@@ -17,165 +17,88 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
-#define __USE_BSD
-#include <unistd.h>
+#include <cstring>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#endif
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
-#include "../misc.hpp"
-#include "../array.hpp"
-#include "../modules.hpp"
-#include "../pac.hpp"
-
-/* The top-level domain blacklist */
+/* The domain blacklist */
 /* TODO: Make this not suck */
-static char *tld[] = {
-	/* General top-level domains */
-	"arpa", "root", "aero", "biz", "cat", "com", "coop", "edu", "gov", "info",
-	"int", "jobs", "mil", "mobi", "museum", "name", "net", "org", "pro", "travel",
-
-	/* Country codes */
-	"ac", "ad", "ae", "af", "ag", "ai", "al", "am", "an", "ao", "aq", "ar",
-	"as", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg",
-	"bh", "bi", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bv", "bw", "by",
-	"bz", "ca", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn",
-	"co", "cr", "cu", "cv", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do",
-	"dz", "ec", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm",
-	"fo", "fr", "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm",
-	"gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn",
-	"hr", "ht", "hu", "id", "ie", "il", "im", "in", "io", "iq", "ir", "is",
-	"it", "je", "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kr",
-	"kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu",
-	"lv", "ly", "ma", "mc", "md", "mg", "mh", "mk", "ml", "mm", "mn", "mo",
-	"mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz", "na",
-	"nc", "ne", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om",
-	"pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt",
-	"pw", "py", "qa", "re", "ro", "ru", "rw", "sa", "sb", "sc", "sd", "se",
-	"sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "sr", "st", "su", "sv",
-	"sy", "sz", "tc", "td", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn",
-	"to", "tp", "tr", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "um", "us",
-	"uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "ye",
-	"yt", "yu", "za", "zm", "zw",
-
-	/* Other domains to blacklist */
+/* Is there a list of 'public' domains somewhere? */
+static const char *blacklist[] = {
 	"co.uk", "com.au",
 
 	/* Terminator */
 	NULL
 };
 
-typedef struct _pxDNSDevolutionWPADModule {
-	PX_MODULE_SUBCLASS(pxWPADModule);
-	pxArray *urls;
-	int      next;
-} pxDNSDevolutionWPADModule;
-
-static char *
-_get_domain_name()
+static string
+_get_fqdn()
 {
-	/* Get the hostname */
-	char *hostname = (char *) px_malloc0(128);
-	for (int i = 0 ; gethostname(hostname, (i + 1) * 128) && errno == ENAMETOOLONG ; )
-		hostname = (char *) px_malloc0((++i + 1) * 128);
+#define BUFLEN 512
+	char hostname[BUFLEN];
+
+	// Zero out the buffer
+	memset(hostname, 0, BUFLEN);
+
+	// Get the hostname
+	if (gethostname(hostname, BUFLEN)) return "";
 
 	/* Lookup the hostname */
 	/* TODO: Make this whole process not suck */
 	struct hostent *host_info = gethostbyname(hostname);
 	if (host_info)
-	{
-		px_free(hostname);
-		hostname = px_strdup(host_info->h_name);
+		strncpy(hostname, host_info->h_name, BUFLEN-1);
+
+	try { return string(hostname).substr(string(hostname).find(".")).substr(1); }
+	catch (out_of_range& e) { return ""; }
+}
+
+class dnsdevolution_wpad_module : public wpad_module {
+public:
+	PX_MODULE_ID(NULL);
+
+	dnsdevolution_wpad_module() {
+		this->rewind();
 	}
 
-	/* Get domain portion */
-	if (!strchr(hostname, '.')) return NULL;
-	if (!strcmp(".", strchr(hostname, '.'))) return NULL;
-	char *tmp = px_strdup(strchr(hostname, '.') + 1);
-	px_free(hostname);
-	return tmp;
-}
-
-static pxArray *
-_get_urls()
-{
-	char *domain = _get_domain_name();
-	if (!domain) return NULL;
-
-	/* Split up the domain */
-	char **domainv = px_strsplit(domain, ".");
-	px_free(domain);
-	if (!domainv) return NULL;
-
-	pxArray *urls = px_array_new(NULL, px_free, false, false);
-	for (int i=1 ; domainv[i] ; i++)
-	{
-		/* Check the domain against the blacklist */
-		domain = px_strjoin((const char **) (domainv + i), ".");
-		for (int k=0; tld[k] ; k++)
-			if (!strcmp(domain, tld[k])) { px_free(domain); domain = NULL; break; }
-		if (!domain) continue;
-
-		/* Create a URL */
-		char *url = px_strcat("http://wpad.", domain, "/wpad.dat", NULL);
-		px_array_add(urls, url);
-		px_free(domain);
+	bool found() {
+		return this->lpac != NULL;
 	}
 
-	return urls;
-}
+	pac* next() {
+		// If we have rewound start the new count
+		if (this->last == "")
+			this->last = _get_fqdn();
 
-static pxPAC *
-_next(pxWPADModule *self)
-{
-	pxDNSDevolutionWPADModule *dnsd = (pxDNSDevolutionWPADModule *) self;
-	if (!dnsd->urls)
-		dnsd->urls = _get_urls();
-	if (!dnsd->urls)
-		return NULL;
+		// Get the 'next' segment
+		if (this->last.find(".") == string::npos) return NULL;
+		this->last = this->last.substr(this->last.find(".")+1);
 
-	pxPAC *pac = px_pac_new_from_string((char *) px_array_get(dnsd->urls, dnsd->next++));
-	if (pac)
-		self->found = true;
-	return pac;
-}
+		// Don't do TLD's
+		if (this->last.find(".") == string::npos) return NULL;
 
-static void
-_rewind(pxWPADModule *s)
-{
-	pxDNSDevolutionWPADModule * self = (pxDNSDevolutionWPADModule *) s;
+		// Process blacklist
+		for (int i=0 ; blacklist[i] ; i++)
+			if (this->last == blacklist[i])
+				return NULL;
 
-	px_array_free(self->urls);
-	self->urls             = NULL;
-	self->next             = 0;
-	self->__parent__.found = false;
-}
+		// Try to load
+		try { this->lpac = new pac(url(string("http://wpad.") + this->last + "/wpad.dat")); }
+		catch (parse_error& e) { }
+		catch (io_error& e) { }
 
-static void
-_destructor(void *s)
-{
-	_rewind((pxWPADModule *) s);
-	px_free(s);
-}
+		return this->lpac;
+	}
 
-static void *
-_constructor()
-{
-	pxDNSDevolutionWPADModule *self = (pxDNSDevolutionWPADModule*) px_malloc0(sizeof(pxDNSDevolutionWPADModule));
-	self->__parent__.next   = _next;
-	self->__parent__.rewind = _rewind;
-    _rewind((pxWPADModule *) self);
-	return self;
-}
+	void rewind() {
+		this->last = "";
+	}
 
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxWPADModule, _constructor, _destructor);
-}
+
+private:
+	string last;
+	pac*   lpac;
+};
+
+PX_MODULE_LOAD(wpad_module, dnsdevolution, true);
