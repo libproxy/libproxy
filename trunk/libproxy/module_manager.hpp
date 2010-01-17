@@ -23,11 +23,6 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /*
  * Define the pxModuleManager object
  */
@@ -60,6 +55,7 @@ bool             px_module_manager_load_dir  (pxModuleManager *self, char *dirna
 #define __str__(s) #s
 #define __px_module_manager_get_id(type, version) #type "__" __str__(version)
 
+__attribute__ ((visibility("default")))
 bool   _px_module_manager_register_module_full(pxModuleManager *self, const char *id, const char *name, size_t namelen, pxModuleConstructor pxnew, pxModuleDestructor free);
 #define px_module_manager_register_module(self, type, pxnew, free) \
 	_px_module_manager_register_module_full(self, __px_module_manager_get_id(type, type ## Version), \
@@ -77,9 +73,5 @@ bool   _px_module_manager_register_type_full(pxModuleManager *self, const char *
 	_px_module_manager_register_type_full(self, __px_module_manager_get_id(type, type ## Version), cmp, sngl)
 
 #define PX_MODULE_SUBCLASS(type) type __parent__
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* MODULE_MANAGER_H_ */

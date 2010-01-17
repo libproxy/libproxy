@@ -34,8 +34,8 @@
 #define __USE_BSD
 #include <unistd.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 #include <JavaScriptCore/JavaScript.h>
 #include "pacutils.h"
@@ -60,7 +60,7 @@ typedef struct _pxWebKitPACRunnerModule {
 
 static char *jstr2str(JSStringRef str, bool release)
 {
-	char *tmp = px_malloc0(JSStringGetMaximumUTF8CStringSize(str)+1);
+	char *tmp = (char*) px_malloc0(JSStringGetMaximumUTF8CStringSize(str)+1);
 	JSStringGetUTF8CString(str, tmp, JSStringGetMaximumUTF8CStringSize(str)+1);
 	if (release) JSStringRelease(str);
 	return tmp;
@@ -81,7 +81,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef func, JSObjectRef sel
 	px_free(tmp);
 
 	// Try for IPv4
-	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
+	tmp = (char*) px_malloc0(INET6_ADDRSTRLEN+1);
 	if (!inet_ntop(info->ai_family,
 					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
 					tmp, INET_ADDRSTRLEN+1) > 0)
@@ -133,7 +133,7 @@ static ctxStore *ctxs_new(pxPAC *pac)
 	JSObjectRef func = NULL;
 
 	// Create the basic context
-	ctxStore *self = px_malloc0(sizeof(ctxStore));
+	ctxStore *self = (ctxStore*) px_malloc0(sizeof(ctxStore));
 	self->pac = px_strdup(px_pac_to_string(pac));
 	if (!(self->ctx = JSGlobalContextCreate(NULL))) goto error;
 
@@ -230,7 +230,7 @@ error:
 static void *
 _constructor()
 {
-	pxWebKitPACRunnerModule *self = px_malloc0(sizeof(pxWebKitPACRunnerModule));
+	pxWebKitPACRunnerModule *self = (pxWebKitPACRunnerModule*) px_malloc0(sizeof(pxWebKitPACRunnerModule));
 	self->__parent__.run = _run;
 	return self;
 }

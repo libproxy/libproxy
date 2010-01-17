@@ -23,9 +23,9 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include "misc.h"
-#include "strdict.h"
-#include "config_file.h"
+#include "misc.hpp"
+#include "strdict.hpp"
+#include "config_file.hpp"
 
 struct _pxConfigFile {
 	char      *filename;
@@ -43,7 +43,7 @@ px_config_file_new(char *filename)
 	fstat(fd, &st);
 
 	/* Allocate our structure; get mtime and filename */
-	pxConfigFile *self      = px_malloc0(sizeof(pxConfigFile));
+	pxConfigFile *self      = (pxConfigFile *) px_malloc0(sizeof(pxConfigFile));
 	self->filename          = px_strdup(filename);
 	self->mtime             = st.st_mtime;
 	self->sections          = px_strdict_new((pxStrDictItemCallback) px_strdict_free);
@@ -102,7 +102,7 @@ px_config_file_is_stale(pxConfigFile *self)
 char *
 px_config_file_get_value(pxConfigFile *self, char *section, char *key)
 {
-	return px_strdup(px_strdict_get((pxStrDict *) px_strdict_get(self->sections, section), key));
+	return px_strdup((const char *) px_strdict_get((pxStrDict *) px_strdict_get(self->sections, section), key));
 }
 
 void

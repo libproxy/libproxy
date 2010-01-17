@@ -20,9 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../misc.h"
-#include "../modules.h"
-#include "../config_file.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
+#include "../config_file.hpp"
 
 typedef struct _pxFileConfigModule {
 	PX_MODULE_SUBCLASS(pxConfigModule);
@@ -83,7 +83,7 @@ _set_credentials(pxConfigModule *s, pxURL *proxy, const char *username, const ch
 static void *
 _system_constructor()
 {
-	pxFileConfigModule *self = px_malloc0(sizeof(pxFileConfigModule));
+	pxFileConfigModule *self = (pxFileConfigModule *) px_malloc0(sizeof(pxFileConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SYSTEM, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	self->filename = px_strdup(SYSCONFDIR "proxy.conf");
 
@@ -93,7 +93,7 @@ _system_constructor()
 static void *
 _user_constructor()
 {
-	pxFileConfigModule *self = px_malloc0(sizeof(pxFileConfigModule));
+	pxFileConfigModule *self = (pxFileConfigModule *) px_malloc0(sizeof(pxFileConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_USER, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	self->filename = px_strcat(getenv("HOME"), "/", ".proxy.conf", NULL);
 

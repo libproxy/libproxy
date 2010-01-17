@@ -23,10 +23,10 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "../misc.h"
-#include "../modules.h"
-#include "../strdict.h"
-#include "xhasclient.c"
+#include "../misc.hpp"
+#include "../modules.hpp"
+#include "../strdict.hpp"
+#include "xhasclient.cpp"
 
 #define BUFFERSIZE 10240
 #define CACHETIME 5
@@ -149,20 +149,20 @@ _get_config(pxConfigModule *s, pxURL *url)
 	char *curl = NULL;
 
 	// Mode is direct://
-	if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "none"))
+	if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "none"))
 		curl = px_strdup("direct://");
 
 	// Mode is wpad:// or pac+http://...
-	else if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "auto"))
+	else if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "auto"))
 	{
-		if (px_url_is_valid(px_strdict_get(self->data, "/system/proxy/autoconfig_url")))
+		if (px_url_is_valid((const char *) px_strdict_get(self->data, "/system/proxy/autoconfig_url")))
 			curl = px_strcat("pac+", px_strdict_get(self->data, "/system/proxy/autoconfig_url"), NULL);
 		else
 			curl = px_strdup("wpad://");
 	}
 
 	// Mode is http://... or socks://...
-	else if (!strcmp(px_strdict_get(self->data, "/system/proxy/mode"), "manual"))
+	else if (!strcmp((const char *) px_strdict_get(self->data, "/system/proxy/mode"), "manual"))
 	{
 		char *type = px_strdup("http");
 		char *host = NULL;
@@ -175,14 +175,14 @@ _get_config(pxConfigModule *s, pxURL *url)
 		// Get the per-scheme proxy settings
 		if (!strcmp(px_url_get_scheme(url), "https"))
 		{
-			host = px_strdup(px_strdict_get(self->data, "/system/proxy/secure_host"));
-			port = px_strdup(px_strdict_get(self->data, "/system/proxy/secure_port"));
+			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/secure_host"));
+			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/secure_port"));
 			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 		else if (!strcmp(px_url_get_scheme(url), "ftp"))
 		{
-			host = px_strdup(px_strdict_get(self->data, "/system/proxy/ftp_host"));
-			port = px_strdup(px_strdict_get(self->data, "/system/proxy/ftp_port"));
+			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/ftp_host"));
+			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/ftp_port"));
 			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 		if (!host || !strcmp(host, "") || !p)
@@ -190,11 +190,11 @@ _get_config(pxConfigModule *s, pxURL *url)
 			px_free(host);
 			px_free(port);
 
-			host = px_strdup(px_strdict_get(self->data, "/system/http_proxy/host"));
-			port = px_strdup(px_strdict_get(self->data, "/system/http_proxy/port"));
-			if (!strcmp(px_strdict_get(self->data, "/system/http_proxy/use_authentication"), "true")) {
-				username = px_strdup(px_strdict_get(self->data, "/system/http_proxy/authentication_user"));
-				password = px_strdup(px_strdict_get(self->data, "/system/http_proxy/authentication_password"));
+			host = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/host"));
+			port = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/port"));
+			if (!strcmp((const char *) px_strdict_get(self->data, "/system/http_proxy/use_authentication"), "true")) {
+				username = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/authentication_user"));
+				password = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/authentication_password"));
 			}
 			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
@@ -207,8 +207,8 @@ _get_config(pxConfigModule *s, pxURL *url)
 			px_free(port);
 
 			type = px_strdup("socks");
-			host = px_strdup(px_strdict_get(self->data, "/system/proxy/socks_host"));
-			port = px_strdup(px_strdict_get(self->data, "/system/proxy/socks_port"));
+			host = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/socks_host"));
+			port = px_strdup((const char *) px_strdict_get(self->data, "/system/proxy/socks_port"));
 			if (!port || sscanf(port, "%hu", &p) != 1) p = 0;
 		}
 
@@ -235,7 +235,7 @@ _get_ignore(pxConfigModule *s, pxURL *url)
 {
 	pxGConfConfigModule *self = (pxGConfConfigModule *) s;
 
-	char *ignores = px_strdup(px_strdict_get(self->data, "/system/http_proxy/ignore_hosts"));
+	char *ignores = px_strdup((const char *) px_strdict_get(self->data, "/system/http_proxy/ignore_hosts"));
 	if (ignores && ignores[strlen(ignores)-1] == ']' && ignores[0] == '[')
 	{
 		char *tmp = px_strndup(ignores+1, strlen(ignores+1)-1);
@@ -261,7 +261,7 @@ _set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const
 static void *
 _constructor()
 {
-	pxGConfConfigModule *self = px_malloc0(sizeof(pxGConfConfigModule));
+	pxGConfConfigModule *self = (pxGConfConfigModule *) px_malloc0(sizeof(pxGConfConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	self->pipe = _start_get_config();
 	return self;

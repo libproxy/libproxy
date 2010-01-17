@@ -29,10 +29,10 @@
 #include <netdb.h>
 #endif
 
-#include "../misc.h"
-#include "../array.h"
-#include "../modules.h"
-#include "../pac.h"
+#include "../misc.hpp"
+#include "../array.hpp"
+#include "../modules.hpp"
+#include "../pac.hpp"
 
 /* The top-level domain blacklist */
 /* TODO: Make this not suck */
@@ -81,9 +81,9 @@ static char *
 _get_domain_name()
 {
 	/* Get the hostname */
-	char *hostname = px_malloc0(128);
+	char *hostname = (char *) px_malloc0(128);
 	for (int i = 0 ; gethostname(hostname, (i + 1) * 128) && errno == ENAMETOOLONG ; )
-		hostname = px_malloc0((++i + 1) * 128);
+		hostname = (char *) px_malloc0((++i + 1) * 128);
 
 	/* Lookup the hostname */
 	/* TODO: Make this whole process not suck */
@@ -160,14 +160,14 @@ _rewind(pxWPADModule *s)
 static void
 _destructor(void *s)
 {
-	_rewind(s);
+	_rewind((pxWPADModule *) s);
 	px_free(s);
 }
 
 static void *
 _constructor()
 {
-	pxDNSDevolutionWPADModule *self = px_malloc0(sizeof(pxDNSDevolutionWPADModule));
+	pxDNSDevolutionWPADModule *self = (pxDNSDevolutionWPADModule*) px_malloc0(sizeof(pxDNSDevolutionWPADModule));
 	self->__parent__.next   = _next;
 	self->__parent__.rewind = _rewind;
     _rewind((pxWPADModule *) self);

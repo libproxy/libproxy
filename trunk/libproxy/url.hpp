@@ -36,6 +36,7 @@ void px_url_free(pxURL *self);
  * Tells whether or not a pxURL string has valid syntax
  * @return true if the pxURL is valid, otherwise false
  */
+__attribute__ ((visibility("default")))
 bool px_url_is_valid(const char *url);
 
 /**
@@ -48,12 +49,15 @@ int px_url_get(pxURL *self, const char **headers);
 /**
  * @return Host portion of the pxURL
  */
+__attribute__ ((visibility("default")))
 const char *px_url_get_host(pxURL *self);
+
 /**
  * Get the IP addresses of the hostname in this pxURL.
  * @usedns Should we look up hostnames in DNS?
  * @return IP addresses of the host in the pxURL.
  */
+__attribute__ ((visibility("default")))
 const struct sockaddr **px_url_get_ips(pxURL *self, bool usedns);
 
 /**
@@ -69,11 +73,13 @@ const char *px_url_get_path(pxURL *self);
 /**
  * @return Port portion of the pxURL
  */
+__attribute__ ((visibility("default")))
 int px_url_get_port(pxURL *self);
 
 /**
  * @return Scheme portion of the pxURL
  */
+__attribute__ ((visibility("default")))
 const char *px_url_get_scheme(pxURL *self);
 
 /**
@@ -90,6 +96,7 @@ pxURL *px_url_new(const char *url);
 /**
  * @return String representation of the pxURL
  */
+__attribute__ ((visibility("default")))
 const char *px_url_to_string(pxURL *self);
 
 /**

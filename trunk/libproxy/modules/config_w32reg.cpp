@@ -21,8 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 #define W32REG_OFFSET_PAC  (1 << 2)
 #define W32REG_OFFSET_WPAD (1 << 3)

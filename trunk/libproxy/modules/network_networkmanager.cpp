@@ -21,8 +21,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>
@@ -98,7 +98,7 @@ _changed(pxNetworkModule *s)
 static void *
 _constructor()
 {
-	pxNetworkManagerNetworkModule *self = px_malloc0(sizeof(pxNetworkManagerNetworkModule));
+	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule*) px_malloc0(sizeof(pxNetworkManagerNetworkModule));
 	self->__parent__.changed = _changed;
 	return self;
 }

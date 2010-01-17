@@ -17,31 +17,46 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef ARRAY_H_
-#define ARRAY_H_
-#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
-typedef bool (*pxArrayItemsEqual)(void *, void *);
-typedef void (*pxArrayItemCallback)(void *);
-typedef void (*pxArrayItemCallbackWithArg)(void *, void *);
-typedef struct _pxArray pxArray;
+#include "../misc.hpp"
+#include "../modules.hpp"
 
-pxArray *px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bool replace);
+static char *
+_get_config(pxConfigModule *self, pxURL *url)
+{
+	return px_strdup("wpad://");
+}
 
-bool px_array_add(pxArray *self, void *item);
+static char *
+_get_ignore(pxConfigModule *self, pxURL *url)
+{
+	return px_strdup("");
+}
 
-bool px_array_del(pxArray *self, const void *item);
+static bool
+_get_credentials(pxConfigModule *self, pxURL *url, char **username, char **password)
+{
+	return false;
+}
 
-void px_array_foreach(pxArray *self, pxArrayItemCallbackWithArg cb, void *arg);
+static bool
+_set_credentials(pxConfigModule *self, pxURL *url, const char *username, const char *password)
+{
+	return false;
+}
 
-int px_array_find(pxArray *self, const void *item);
+static void *
+_constructor()
+{
+	pxConfigModule *self = (pxConfigModule *) px_malloc0(sizeof(pxConfigModule));
+	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
+	return self;
+}
 
-const void *px_array_get(pxArray *self, int index);
-
-void px_array_free(pxArray *self);
-
-int px_array_length(pxArray *self);
-
-void px_array_sort(pxArray *self, int (*compare)(const void *, const void *));
-
-#endif /* ARRAY_H_ */
+bool
+px_module_load(pxModuleManager *self)
+{
+	return px_module_manager_register_module(self, pxConfigModule, _constructor, px_free);
+}

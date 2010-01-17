@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "misc.h"
-#include "array.h"
+#include "misc.hpp"
+#include "array.hpp"
 
 struct _pxArray {
 	pxArrayItemsEqual   equals;
@@ -47,7 +47,7 @@ nothing(void *a)
 pxArray *
 px_array_new(pxArrayItemsEqual equals, pxArrayItemCallback free, bool unique, bool replace)
 {
-	pxArray *self = px_malloc0(sizeof(pxArray));
+	pxArray *self = (pxArray *) px_malloc0(sizeof(pxArray));
 	self->equals  = equals ? equals : &identity;
 	self->free    = free   ? free   : &nothing;
 	self->unique  = unique;
@@ -74,7 +74,7 @@ px_array_add(pxArray *self, void *item)
 		return true;
 	}
 
-	void **data = px_malloc0(sizeof(void *) * (self->length + 1));
+	void **data = (void **) px_malloc0(sizeof(void *) * (self->length + 1));
 	memcpy(data, self->data, sizeof(void *) * self->length);
 	data[self->length++] = item;
 	px_free(self->data);

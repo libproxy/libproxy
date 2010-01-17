@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 static inline bool
 _endswith(char *string, char *suffix)
@@ -85,7 +85,7 @@ _ignore(pxIgnoreModule *self, pxURL *url, const char *ignore)
 static void *
 _constructor()
 {
-	pxIgnoreModule *self = px_malloc0(sizeof(pxIgnoreModule));
+	pxIgnoreModule *self = (pxIgnoreModule *) px_malloc0(sizeof(pxIgnoreModule));
 	self->ignore = _ignore;
 	return self;
 }
