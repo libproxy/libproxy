@@ -172,7 +172,7 @@ public:
 		return url("direct://");
 	}
 
-	string get_ignore(url url) {
+	string get_ignore(url) {
 		return this->data["/system/http_proxy/ignore_hosts"];
 	}
 
@@ -231,6 +231,7 @@ private:
 extern "C" bool px_module_load(module_manager& mm) {
 	if (xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL)) {
 		try { return mm.register_module<config_module>(new gnome_config_module); }
-		catch (io_error) { return false; }
+		catch (io_error) {}
 	}
+	return false;
 }

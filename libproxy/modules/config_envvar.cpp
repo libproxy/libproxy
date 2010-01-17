@@ -53,7 +53,7 @@ public:
 		return com::googlecode::libproxy::url(proxy);
 	}
 
-	string get_ignore(url dst) {
+	string get_ignore(url) {
 		char *ignore = getenv("no_proxy");
 		      ignore = ignore ? ignore : getenv("NO_PROXY");
 		return string(ignore ? ignore : "");

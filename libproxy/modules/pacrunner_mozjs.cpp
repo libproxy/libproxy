@@ -22,6 +22,10 @@
 #include "../module_types.hpp"
 using namespace com::googlecode::libproxy;
 
+// Work around a mozjs include bug
+#ifndef JS_HAS_FILE_OBJECT
+#define JS_HAS_FILE_OBJECT 0
+#endif
 #include <jsapi.h>
 #include "pacutils.h"
 
@@ -33,7 +37,7 @@ using namespace com::googlecode::libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
+static JSBool dnsResolve(JSContext *cx, JSObject */*obj*/, uintN /*argc*/, jsval *argv, jsval *rval) {
 	// Get hostname argument
 	char *tmp = JS_strdup(cx, JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
 
@@ -69,7 +73,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 		return true;
 }
 
-static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
+static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval */*argv*/, jsval *rval) {
 	char *hostname = (char *) JS_malloc(cx, 1024);
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewString(cx, hostname, strlen(hostname));
@@ -94,7 +98,8 @@ public:
 		JSClass cls = {
 				"global", JSCLASS_GLOBAL_FLAGS,
 				JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-				JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+				JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 		};
 
 		// Initialize Javascript runtime environment

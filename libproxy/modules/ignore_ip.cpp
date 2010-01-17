@@ -126,7 +126,7 @@ public:
 
 	virtual bool ignore(url& url, string ignore) {
 		bool result   = false;
-		uint32_t port = 0;
+		uint16_t port = 0;
 		const struct sockaddr *dst_ip = url.get_ips(false)->size() > 0 ? (*url.get_ips(false))[0] : NULL;
 		struct sockaddr *ign_ip   = NULL, *net_ip = NULL;
 
@@ -169,7 +169,7 @@ public:
 		 * IPv4:port
 		 * [IPv6]:port
 		 */
-		if (ignore.rfind(':') != string::npos && sscanf(ignore.substr(ignore.rfind(':')).c_str(), ":%u", &port) == 1 && port > 0)
+		if (ignore.rfind(':') != string::npos && sscanf(ignore.substr(ignore.rfind(':')).c_str(), ":%hu", &port) == 1 && port > 0)
 		{
 			ign_ip = _sockaddr_from_string(ignore.substr(ignore.rfind(':')).c_str());
 

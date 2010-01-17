@@ -29,7 +29,7 @@ public:
 	PX_MODULE_ID(NULL);
 	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
-	url get_config(url url) throw (runtime_error) {
+	url get_config(url) throw (runtime_error) {
 		// Open the config file
 		if (this->cf.is_stale())
 		{
