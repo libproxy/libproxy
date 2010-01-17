@@ -17,46 +17,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
-#include "../misc.hpp"
-#include "../modules.hpp"
+class wpad_config_module : public config_module {
+public:
+	PX_MODULE_ID(NULL);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
 
-static char *
-_get_config(pxConfigModule *self, pxURL *url)
-{
-	return px_strdup("wpad://");
-}
+	url get_config(url dst) throw (runtime_error) {
+		return url("wpad://");
+	}
+};
 
-static char *
-_get_ignore(pxConfigModule *self, pxURL *url)
-{
-	return px_strdup("");
-}
-
-static bool
-_get_credentials(pxConfigModule *self, pxURL *url, char **username, char **password)
-{
-	return false;
-}
-
-static bool
-_set_credentials(pxConfigModule *self, pxURL *url, const char *username, const char *password)
-{
-	return false;
-}
-
-static void *
-_constructor()
-{
-	pxConfigModule *self = (pxConfigModule *) px_malloc0(sizeof(pxConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxConfigModule, _constructor, px_free);
-}
+PX_MODULE_LOAD(config_module, wpad, true);

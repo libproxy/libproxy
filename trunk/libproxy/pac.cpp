@@ -17,177 +17,125 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <unistd.h>
-#include <string.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <cstdlib>    // For atoi(...)
+#include <sys/stat.h> // For stat(...)
+#include <cstdio>     // For sscanf(...)
 
 #ifdef _WIN32
 #include <winsock2.h>
+#define pfsize(st) (st.st_size)
 #else
 #include <sys/socket.h>
+#define pfsize(st) (st.st_blksize * st.st_blocks)
 #endif
 
-#include "url.hpp"
-#include "misc.hpp"
 #include "pac.hpp"
 
+// This mime type should be reported by the web server
 #define PAC_MIME_TYPE "application/x-ns-proxy-autoconfig"
+// Fall back to checking for this mime type, which servers often report wrong
+#define PAC_MIME_TYPE_FB "text/plain"
 
-/**
- * ProxyAutoConfig object.  All fields are private.
- */
-struct _pxPAC {
-	pxURL     *url;
-	char      *cache;
-	time_t     expires;
-};
+// This is the maximum pac size (to avoid memory attacks)
+#define PAC_MAX_SIZE 102400
 
-/**
- * Frees memory used by the ProxyAutoConfig.
- */
-void
-px_pac_free(pxPAC *self)
+namespace com {
+namespace googlecode {
+namespace libproxy {
+using namespace std;
+
+static inline string _readline(int fd)
 {
-	if (!self) return;
-	px_url_free(self->url);
-	px_free(self->cache);
-	px_free(self);
+	// Read a character.
+	// If we don't get a character, return empty string.
+	// If we are at the end of the line, return empty string.
+	char c = '\0';
+	if (read(fd, &c, 1) != 1 || c == '\n') return "";
+	return string(1, c) + _readline(fd);
 }
 
-/**
- * Get the URL which the pxPAC uses.
- * @return The URL that the pxPAC came from
- */
-const pxURL *
-px_pac_get_url(pxPAC *self)
-{
-	return self->url;
+pac::~pac() {
+	delete this->pacurl;
 }
 
-/**
- * Create a new ProxyAutoConfig.
- * @url The URL where the PAC file is found
- * @return A new ProxyAutoConfig or NULL on error
- */
-pxPAC *
-px_pac_new(pxURL *url)
-{
-	if (!url) return NULL;
-
-	/* Allocate the object */
-	pxPAC *self = (pxPAC *) px_malloc0(sizeof(pxPAC));
-
-	/* Copy the given URL */
-	self->url = px_url_new(px_url_to_string(url)); /* Always returns valid value */
-
-	/* Make sure we have a real pxPAC */
-	if (!px_pac_reload(self)) { px_pac_free(self); return NULL; }
-
-	return self;
+pac::pac(const pac& pac) {
+	this->pacurl = new libproxy::url(*pac.pacurl);
+	this->cache  = pac.cache;
 }
 
-/**
- * Create a new ProxyAutoConfig (from a string for convenience).
- * @url The url (string) where the PAC file is found
- * @return A new ProxyAutoConfig or NULL on error
- */
-pxPAC *
-px_pac_new_from_string(char *url)
-{
-	/* Create temporary URL */
-	pxURL *tmpurl = px_url_new(url);
-	if (!tmpurl) return NULL;
-
-	/* Create pac */
-	pxPAC *self = px_pac_new(tmpurl);
-	px_url_free(tmpurl); /* Free no longer used URL */
-	if (!self) return NULL;
-	return self;
-}
-
-/**
- * Returns the Javascript code which the pxPAC uses.
- * @return The Javascript code used by the pxPAC
- */
-const char *
-px_pac_to_string(pxPAC *self)
-{
-	return self->cache;
-}
-
-/**
- * Download the latest version of the pxPAC file
- * @return Whether the download was successful or not
- */
-bool
-px_pac_reload(pxPAC *self)
-{
+pac::pac(const url& url) throw (io_error) {
 	int sock;
-	char *line = NULL;
-	const char *headers[3] = { "Accept: " PAC_MIME_TYPE, "Connection: close", NULL };
 	bool correct_mime_type;
-	unsigned long int content_length = 0;
+	unsigned long int content_length = 0, status = 0;
+
+	this->pacurl = new libproxy::url(url.to_string().find("pac+") == 0 ? url.to_string().substr(4) : url);
 
 	/* Get the pxPAC */
-	sock = px_url_get(self->url, headers);
-	if (sock < 0) return false;
+	map<string, string> headers;
+	headers["Accept"]     = PAC_MIME_TYPE;
+	headers["Connection"] = "close";
+	sock = this->pacurl->open(headers);
+	if (sock < 0) throw io_error("Unable to connect: " + url.to_string());
 
-	if (strcmp(px_url_get_scheme(self->url),"file"))
+	if (url.get_scheme() != "file")
 	{
 		/* Verify status line */
-		line = px_readline(sock, NULL, 0);
-		if (!line)                                                    goto error;
-		if (strncmp(line, "HTTP", strlen("HTTP")))                    goto error; /* Check valid HTTP response */
-		if (!strchr(line, ' ') || atoi(strchr(line, ' ') + 1) != 200) goto error; /* Check status code */
+		string line = _readline(sock);
+		if (sscanf(line.c_str(), "HTTP/1.%*d %d", &status) != 1 || status != 200) goto error;
 
 		/* Check for correct mime type and content length */
-		while (strcmp(line, "\r")) {
-			/* Check for content type */
-			if (strstr(line, "Content-Type: ") == line && strstr(line, PAC_MIME_TYPE))
+		for (line = _readline(sock) ; line != "\r" && line != "" ; line = _readline(sock)) {
+			// Check for content type
+			if (line.find("Content-Type: ") == 0 &&
+				line.find(PAC_MIME_TYPE) != string::npos ||
+				line.find(PAC_MIME_TYPE_FB) != string::npos)
 				correct_mime_type = true;
 
-			/* Check for content length */
-			else if (strstr(line, "Content-Length: ") == line)
-				content_length = atoi(line + strlen("Content-Length: "));
-
-			/* Get new line */
-			px_free(line);
-			line = px_readline(sock, NULL, 0);
-			if (!line) goto error;
+			// Check for content length
+			else if (content_length == 0)
+				sscanf(line.c_str(), "Content-Length: %lu", &content_length);
 		}
 
-		/* Get content */
-		if (!content_length || !correct_mime_type) goto error;
-		px_free(line); line = NULL;
-		px_free(self->cache);
-		self->cache = (char *) px_malloc0(content_length+1);
-		for (int recvd=0 ; recvd != content_length ; )
-			recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
+		// Get content
+		if (!content_length || content_length > PAC_MAX_SIZE || !correct_mime_type) goto error;
+		char *buffer = new char[content_length];
+		for (int recvd=0 ; recvd < content_length ; )
+			recvd += recv(sock, buffer + recvd, content_length - recvd, 0);
+		this->cache = buffer;
+		delete buffer;
 	}
 	else
 	{ /* file:// url */
-		struct stat buffer;
+		struct stat st;
 		int status;
 
-		if (fstat(sock, &buffer)) goto error;
-#ifdef _WIN32
-		self->cache = (char *) px_malloc0(buffer.st_size + 1);
-		status = read(sock, self->cache, buffer.st_size);
-#else
-		self->cache = (char *) px_malloc0(buffer.st_blksize * buffer.st_blocks + 1);
-		status = read(sock, self->cache, buffer.st_blksize * buffer.st_blocks);
-#endif
+		if (fstat(sock, &st) || pfsize(st) > PAC_MAX_SIZE) goto error;
+		char *buffer = new char[pfsize(st)+1];
+		if (read(sock, buffer, pfsize(st)) == 0) {
+			delete buffer;
+			goto error;
+		}
+		this->cache = buffer;
+		delete buffer;
 	}
 
-	/* Clean up */
+	// Clean up
 	close(sock);
-	return true;
+	return;
 
-	error:
-		px_free(self->cache); self->cache = NULL;
-		if (sock >= 0) close(sock);
-		px_free(line);
-		return false;
+error:
+	if (sock >= 0) close(sock);
+	throw io_error("Unable to read PAC from " + url.to_string());
+}
+
+url pac::get_url() const {
+	return *(this->pacurl);
+}
+
+string pac::to_string() const {
+	return this->cache;
+}
+
+}
+}
 }

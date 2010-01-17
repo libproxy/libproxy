@@ -17,94 +17,77 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
-#include "../misc.hpp"
-#include "../modules.hpp"
+#include "../module_types.hpp"
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>
 
-typedef struct _pxNetworkManagerNetworkModule {
-	PX_MODULE_SUBCLASS(pxNetworkModule);
-	DBusConnection *conn;
-} pxNetworkManagerNetworkModule;
+using namespace com::googlecode::libproxy;
 
-static void
-_destructor(void *s)
-{
-	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule *) s;
+class networkmanager_network_module : public network_module {
+public:
+	PX_MODULE_ID(NULL);
 
-	dbus_connection_close(self->conn);
-	px_free(self);
-}
+	networkmanager_network_module() {
+		this->conn = NULL;
+	}
 
-static bool
-_changed(pxNetworkModule *s)
-{
-	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule *) s;
+	~networkmanager_network_module() {
+		if (this->conn) dbus_connection_close(this->conn);
+	}
 
-	// Make sure we have a valid connection with a proper match
-	DBusConnection *conn = self->conn;
-	if (!conn || !dbus_connection_get_is_connected(conn))
-	{
-		// If the connection was disconnected,
-		// close it an clear the queue
-		if (conn)
+	bool changed() {
+		// Make sure we have a valid connection with a proper match
+		DBusConnection *conn = this->conn;
+		if (!conn || !dbus_connection_get_is_connected(conn))
 		{
-			dbus_connection_close(conn);
-			dbus_connection_read_write(conn, 0);
-			for (DBusMessage *msg=NULL ; (msg = dbus_connection_pop_message(conn)) ; dbus_message_unref(msg));
+			// If the connection was disconnected,
+			// close it an clear the queue
+			if (conn)
+			{
+				dbus_connection_close(conn);
+				dbus_connection_read_write(conn, 0);
+				for (DBusMessage *msg=NULL ; (msg = dbus_connection_pop_message(conn)) ; dbus_message_unref(msg));
+			}
+
+			// Create a new connections
+			conn = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
+			this->conn = conn;
+			if (!conn) return false;
+
+			// If connection was successful, set it up
+			dbus_connection_set_exit_on_disconnect(conn, false);
+			dbus_bus_add_match(conn, "type='signal',interface='" NM_DBUS_INTERFACE "',member='StateChange'", NULL);
+			dbus_connection_flush(conn);
 		}
 
-		// Create a new connections
-		conn = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
-		self->conn = conn;
-		if (!conn) return false;
+		// We are guaranteed a connection,
+		// so check for incoming messages
+		bool changed = false;
+		while (true)
+		{
+			DBusMessage *msg = NULL;
+			uint32_t state;
 
-		// If connection was successful, set it up
-		dbus_connection_set_exit_on_disconnect(conn, false);
-		dbus_bus_add_match(conn, "type='signal',interface='" NM_DBUS_INTERFACE "',member='StateChange'", NULL);
-		dbus_connection_flush(conn);
+			// Pull messages off the queue
+			dbus_connection_read_write(conn, 0);
+			if (!(msg = dbus_connection_pop_message(conn)))
+				break;
+
+			// If a message is the right type and value,
+			// we'll reset the network
+			if (dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &state, DBUS_TYPE_INVALID))
+				if (state == NM_STATE_CONNECTED)
+					changed = true;
+
+			dbus_message_unref(msg);
+		}
+
+		return changed;
 	}
 
-	// We are guaranteed a connection,
-	// so check for incoming messages
-	bool changed = false;
-	while (true)
-	{
-		DBusMessage *msg = NULL;
-		uint32_t state;
+private:
+	DBusConnection *conn;
+};
 
-		// Pull messages off the queue
-		dbus_connection_read_write(conn, 0);
-		if (!(msg = dbus_connection_pop_message(conn)))
-			break;
-
-		// If a message is the right type and value,
-		// we'll reset the network
-		if (dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &state, DBUS_TYPE_INVALID))
-			if (state == NM_STATE_CONNECTED)
-				changed = true;
-
-		dbus_message_unref(msg);
-	}
-
-	return changed;
-}
-
-static void *
-_constructor()
-{
-	pxNetworkManagerNetworkModule *self = (pxNetworkManagerNetworkModule*) px_malloc0(sizeof(pxNetworkManagerNetworkModule));
-	self->__parent__.changed = _changed;
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxNetworkModule, _constructor, _destructor);
-}
+PX_MODULE_LOAD(network_module, networkmanager, true);

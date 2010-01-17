@@ -17,81 +17,46 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
 
-#include "../misc.hpp"
-#include "../modules.hpp"
+#include "../module_types.hpp"
 
-static inline bool
-_endswith(char *string, char *suffix)
-{
-        int st_len = strlen(string);
-        int su_len = strlen(suffix);
+using namespace com::googlecode::libproxy;
 
-        return (st_len >= su_len && !strcmp(string + (st_len-su_len), suffix));
-}
+class domain_ignore_module : public ignore_module {
+public:
+	PX_MODULE_ID(NULL);
 
-static bool
-_ignore(pxIgnoreModule *self, pxURL *url, const char *ignore)
-{
-	if (!url || !ignore)
-			return false;
+	virtual bool ignore(url& url, string ignorestr) {
+		/* Get our URL's hostname and port */
+		string host = url.get_host();
+		int    port = url.get_port();
 
-	/* Get our URL's hostname and port */
-	char *host = px_strdup(px_url_get_host(url));
-	int   port = px_url_get_port(url);
+		/* Get our ignore pattern's hostname and port */
+		string ihost = ignorestr;
+		int    iport = 0;
+		if (ihost.find(':') != string::npos) {
+				if (sscanf(ignorestr.substr(ihost.find(':')+1).c_str(), "%d", &iport) == 1)
+						ihost = ihost.substr(0, ihost.find(':'));
+				else
+						iport = 0;
+		}
 
-	/* Get our ignore pattern's hostname and port */
-	char *ihost = px_strdup(ignore);
-	int   iport = 0;
-	if (strchr(ihost, ':'))
-	{
-			char *tmp = strchr(ihost, ':');
-			if (sscanf(tmp+1, "%d", &iport) == 1)
-					*tmp  = '\0';
-			else
-					iport = 0;
+		/* Hostname match (domain.com or domain.com:80) */
+		if (host == ihost)
+			return (iport == 0 || port == iport);
+
+		/* Endswith (.domain.com or .domain.com:80) */
+		if (ihost[0] == '.' && host.find(ihost) == host.size() - ihost.size())
+			return (iport == 0 || port == iport);
+
+		/* Glob (*.domain.com or *.domain.com:80) */
+		if (ihost[0] == '*' && host.find(ihost.substr(1)) == host.size() - ihost.substr(1).size())
+			return (iport == 0 || port == iport);
+
+		/* No match was found */
+		return false;
 	}
+};
 
-	/* Hostname match (domain.com or domain.com:80) */
-	if (!strcmp(host, ihost))
-			if (!iport || port == iport)
-					goto match;
-
-	/* Endswith (.domain.com or .domain.com:80) */
-	if (ihost[0] == '.' && _endswith(host, ihost))
-			if (!iport || port == iport)
-					goto match;
-
-	/* Glob (*.domain.com or *.domain.com:80) */
-	if (ihost[0] == '*' && _endswith(host, ihost+1))
-			if (!iport || port == iport)
-					goto match;
-
-	/* No match was found */
-	px_free(host);
-	px_free(ihost);
-	return false;
-
-	/* A match was found */
-	match:
-			px_free(host);
-			px_free(ihost);
-			return true;
-}
-
-static void *
-_constructor()
-{
-	pxIgnoreModule *self = (pxIgnoreModule *) px_malloc0(sizeof(pxIgnoreModule));
-	self->ignore = _ignore;
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxIgnoreModule, _constructor, px_free);
-}
+PX_MODULE_LOAD(ignore_module, domain, true);

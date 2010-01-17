@@ -18,19 +18,14 @@
 
 #include <windows.h>
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "../misc.hpp"
-#include "../modules.hpp"
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
 #define W32REG_OFFSET_PAC  (1 << 2)
 #define W32REG_OFFSET_WPAD (1 << 3)
 #define W32REG_BASEKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
 
-static bool
-_get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, uint32_t *ival)
-{
+static bool _get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, uint32_t *ival) {
 	HKEY  hkey;
 	LONG  result;
 	DWORD type;
@@ -40,7 +35,7 @@ _get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, u
 	// Don't allow the caller to specify both sval and ival
 	if (sval && ival)
 		return false;
-	
+
 	// Open the key
 	if (RegOpenKeyExA(HKEY_CURRENT_USER, key, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
 		return false;
@@ -61,7 +56,7 @@ _get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, u
 		case REG_SZ:
 			if (!sval) return false;
 			if (slen) *slen = buflen;
-			*sval = px_malloc(buflen);
+			*sval = new char[buflen];
 			return !memcpy_s(*sval, buflen, buffer, buflen);
 		case REG_DWORD:
 			if (ival) return !memcpy_s(ival, sizeof(uint32_t), buffer, buflen);
@@ -69,10 +64,7 @@ _get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, u
 	return false;
 }
 
-
-static bool
-_is_enabled(uint8_t type)
-{
+static bool _is_enabled(uint8_t type) {
 	uchar    *data   = NULL;
 	uint32_t  dlen   = 0;
 	bool      result = false;
@@ -85,127 +77,81 @@ _is_enabled(uint8_t type)
 	if (dlen >= 9)
 		result = data[8] & type == type; // Check to see if the bit is set
 
-	px_free(data);
+	delete data;
 	return result;
 }
 
-static char *
-_get_pac()
-{
-	char *pac = NULL;
-	char *url = NULL;
-
-	if (!_is_enabled(W32REG_OFFSET_PAC)) return NULL;
-	if (!_get_registry(W32REG_BASEKEY, "AutoConfigURL", &pac, NULL, NULL)) return NULL;
-
-	url = px_strcat("pac+", pac, NULL);
-	px_free(pac);
-	return url;
-}
-
-static char *
-_get_manual(pxURL *url)
-{
-	char      *val     = NULL;
-	char      *url     = NULL;
-	char     **vals    = NULL;
-	uint32_t   enabled = 0;
-
-	// Check to see if we are enabled
-	if (!_get_registry(W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) || !enabled) return NULL;
-
-	// Get the value of ProxyServer
-	if (!_get_registry(W32REG_BASEKEY, "ProxyServer", &val, NULL, NULL)) return NULL;
-
+static map<string, string> _parse_manual(string data) {
 	// ProxyServer comes in two formats:
 	//   1.2.3.4:8080 or ftp=1.2.3.4:8080;https=1.2.3.4:8080...
-	// If we have the first format, just prepend "http://" and we're done
-	if (!strchr(val, ';'))
-	{
-		url = px_strcat("http://", val, NULL);
-		px_free(val);
-		return url;
+	map<string, url> rval;
+
+	// If we have the second format, do recursive parsing,
+	// then handle just the first entry
+	if (data.find(";") != string::npos) {
+		rval = _parse_manual(data.substr(data.find(";")+1));
+		data = data.substr(0, data.find(";"));
 	}
 
-	// Ok, now we have the more difficult format...
-	// ... so split up all the various proxies
-	vals = px_strsplit(val, ";");
-	px_free(val);
-
-	// First we look for an exact match
-	for (int i=0 ; !url && vals[i] ; i++)
-	{
-		char *tmp = px_strcat(px_url_get_scheme(url), "=", NULL);
-
-		// If we've found an exact match, use it
-		if (!strncmp(tmp, vals[i], strlen(tmp)))
-			url = px_strcat(px_url_get_scheme(url), "://", vals[i]+strlen(tmp), NULL);
-
-		px_free(tmp);
+	// If we have the first format, just assign HTTP and we're done
+	if (data.find("=") == string::npos) {
+		rval["http"] = data;
+		return rval;
 	}
 
-	// Second we look for http=
-	for (int i=0 ; !url && vals[i] ; i++)
-		if (!strncmp("http=", vals[i], strlen("http=")))
-			url = px_strcat("http://", vals[i]+strlen("http="), NULL);
+	// Otherwise set the value for this single entry and return
+	string protocol = data.substr(0, data.find("="));
+	try { rval[protocol] = url(protocol + "://" + data.substr(data.find("=")+1)); }
+	catch (parse_error&) {}
 
-	// Last we look for socks=
-	for (int i=0 ; !url && vals[i] ; i++)
-		if (!strncmp("socks=", vals[i], strlen("socks=")))
-			url = px_strcat("socks://", vals[i]+strlen("socks="), NULL);
-
-	return url;
+	return rval;
 }
 
-static char *
-_get_config(pxConfigModule *self, pxURL *url)
-{
-	char *config = NULL;
+class w32reg_config_module : public config_module {
+public:
+	PX_MODULE_ID(NULL);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SYSTEM);
 
-	// WPAD
-	if (_is_enabled(W32REG_OFFSET_WPAD))
-		return px_strdup("wpad://");
+	url get_config(url dst) throw (runtime_error) {
+		char        *tmp = NULL;
+		uint32_t enabled = 0;
 
-	// PAC
-	if ((config = _get_pac()))
-		return config;
+		// WPAD
+		if (_is_enabled(W32REG_OFFSET_WPAD))
+			return url("wpad://");
 
-	// Manual proxy
-	if ((config = _get_manual(url)))
-		return config;
+		// PAC
+		if (_is_enabled(W32REG_OFFSET_PAC) &&
+			_get_registry(W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL) &&
+			url::is_valid(string("pac+") + tmp)) {
+			url cfg(string("pac+") + tmp);
+			delete tmp;
+			return cfg;
+		}
 
-	// Direct
-	return px_strdup("direct://");
+		// Manual proxy
+		// Check to see if we are enabled and get the value of ProxyServer
+		if (_get_registry(W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled &&
+			_get_registry(W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
+			map<string, string> manual = _parse_manual(tmp);
+			delete tmp;
+
+			// First we look for an exact match
+			if (manual.find(dst.get_scheme()) != map<string, url>::end)
+				return manual[dst.get_scheme()];
+
+			// Next we look for http
+			else if (manual.find("http") != map<string, url>::end)
+				return manual["http"];
+
+			// Last we look for socks
+			else if (manual.find("socks") != map<string, url>::end)
+				return manual["socks"];
+		}
+
+		// Direct
+		return url("direct://");
+	}
 }
 
-static char *
-_get_ignore(pxConfigModule *self, pxURL *url)
-{
-	return px_strdup("");
-}
-
-static bool
-_get_credentials(pxConfigModule *self, pxURL *url, char **username, char **password)
-{
-	return false;
-}
-
-static bool
-_set_credentials(pxConfigModule *self, pxURL *url, const char *username, const char *password)
-{
-	return false;
-}
-
-static void *
-_constructor()
-{
-	pxConfigModule *self = px_malloc0(sizeof(pxConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_USER, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxConfigModule, _constructor, px_free);
-}
+PX_MODULE_LOAD(config_module, w32reg, true);

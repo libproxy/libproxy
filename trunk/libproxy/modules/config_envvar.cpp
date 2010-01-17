@@ -17,60 +17,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
 
-#include "../misc.hpp"
-#include "../modules.hpp"
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
-static char *
-_get_config(pxConfigModule *self, pxURL *url)
-{
-	char *proxy = NULL;
+class envvar_config_module : public config_module {
+public:
+	PX_MODULE_ID(NULL);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
 
-	// If the URL is an ftp url, try to read the ftp proxy
-	if (!strcmp(px_url_get_scheme(url), "ftp"))
-		proxy = getenv("ftp_proxy");
+	url get_config(url url) throw (runtime_error) {
+		char *proxy = NULL;
 
-	// If the URL is an https url, try to read the https proxy
-	else if (!strcmp(px_url_get_scheme(url), "https"))
-		proxy = getenv("https_proxy");
+		// If the URL is an ftp url, try to read the ftp proxy
+		if (url.get_scheme() == "ftp") {
+			if (!(proxy = getenv("ftp_proxy")))
+				proxy = getenv("FTP_PROXY");
+		}
 
-	// If the URL is not ftp or no ftp_proxy was found, get the http_proxy
-	if (!proxy)
-		proxy = getenv("http_proxy");
+		// If the URL is an https url, try to read the https proxy
+		if (url.get_scheme() == "https") {
+			if (!(proxy = getenv("https_proxy")))
+				proxy = getenv("HTTPS_PROXY");
+		}
 
-	return px_strdup(proxy);
-}
+		// If the URL is not ftp or no ftp_proxy was found, get the http_proxy
+		if (!proxy) {
+			if (!(proxy = getenv("http_proxy")))
+				proxy = getenv("HTTP_PROXY");
+		}
 
-static char *
-_get_ignore(pxConfigModule *self, pxURL *url)
-{
-	return px_strdup(getenv("no_proxy"));
-}
+		if (!proxy)
+			throw runtime_error("Unable to read configuration");
+		return com::googlecode::libproxy::url(proxy);
+	}
 
-static bool
-_get_credentials(pxConfigModule *self, pxURL *url, char **username, char **password)
-{
-	return false;
-}
+	string get_ignore(url dst) {
+		char *ignore = getenv("no_proxy");
+		      ignore = ignore ? ignore : getenv("NO_PROXY");
+		return string(ignore ? ignore : "");
+	}
+};
 
-static bool
-_set_credentials(pxConfigModule *self, pxURL *url, const char *username, const char *password)
-{
-	return false;
-}
-
-static void *
-_constructor()
-{
-	pxConfigModule *self = (pxConfigModule *) px_malloc0(sizeof(pxConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	return self;
-}
-
-bool
-px_module_load(pxModuleManager *self)
-{
-	return px_module_manager_register_module(self, pxConfigModule, _constructor, px_free);
-}
+PX_MODULE_LOAD(config_module, envvar, true);

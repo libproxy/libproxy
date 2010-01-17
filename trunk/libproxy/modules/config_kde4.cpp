@@ -17,122 +17,63 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <kstandarddirs.h> // For KStandardDirs
+#include "xhasclient.cpp"  // For xhasclient(...)
 
-#include "../misc.hpp"
-#include "../modules.hpp"
 #include "../config_file.hpp"
+#include "../module_types.hpp"
+using namespace com::googlecode::libproxy;
 
-#include <kstandarddirs.h>
+class kde_config_module : public config_module {
+public:
+	PX_MODULE_ID(NULL);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
-typedef struct _pxKConfigConfigModule {
-	PX_MODULE_SUBCLASS(pxConfigModule);
-	pxConfigFile  *cf;
-} pxKConfigConfigModule;
+	url get_config(url url) throw (runtime_error) {
+		// Open the config file
+		if (this->cf.is_stale())
+		{
+			QString localdir = KStandardDirs().localkdedir();
+			QByteArray ba = localdir.toLatin1();
+			if (!cf.load(string(ba.data()) + "/share/config/kioslaverc"))
+				throw runtime_error("Unable to load kde config file!");
+		}
 
-static void
-_destructor(void *s)
-{
-	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
+		try {
+			// Read the config file to find out what type of proxy to use
+			string ptype = this->cf.get_value("Proxy Settings", "ProxyType");
 
-	px_config_file_free(self->cf);
-	px_free(self);
-}
+			// Use a manual proxy
+			if (ptype == "1")
+				return com::googlecode::libproxy::url(this->cf.get_value("Proxy Settings", "httpProxy"));
 
-static char *
-_get_config(pxConfigModule *s, pxURL *url)
-{
-	pxKConfigConfigModule *self = (pxKConfigConfigModule *) s;
+			// Use a manual PAC
+			else if (ptype == "2")
+			{
+				string tmp = "";
+				try { tmp = this->cf.get_value("Proxy Settings", "Proxy Config Script"); }
+				catch (key_error&) {}
 
-	// TODO: make ignores work w/ KDE
-	char *curl = NULL, *tmp = NULL;
+				if (tmp != "") return com::googlecode::libproxy::url(string("pac+") + tmp);
+				else           return com::googlecode::libproxy::url("wpad://");
+			}
 
-	// Open the config file
-	pxConfigFile *cf = self->cf;
-	if (!cf || px_config_file_is_stale(cf))
-	{
-		if (cf) px_config_file_free(cf);
-		QString localdir = KStandardDirs().localkdedir();
-		QByteArray ba = localdir.toLatin1();
-		tmp = px_strcat(ba.data(), "/share/config/kioslaverc", NULL);
-		cf = px_config_file_new(tmp);
-		px_free(tmp);
-		self->cf = cf;
-	}
-	if (!cf)  goto out;
+			// Use WPAD
+			else if (ptype == "3")
+				return com::googlecode::libproxy::url("wpad://");
 
-	// Read the config file to find out what type of proxy to use
-	tmp = px_config_file_get_value(cf, "Proxy Settings", "ProxyType");
-	if (!tmp) goto out;
+			// Use envvar
+			else if (ptype == "4")
+				throw runtime_error("User config_envvar"); // We'll bypass this config plugin and let the envvar plugin work
+		}
+		catch (key_error&) { }
 
-	// Don't use any proxy
-	if (!strcmp(tmp, "0"))
-		curl = px_strdup("direct://");
-
-	// Use a manual proxy
-	else if (!strcmp(tmp, "1"))
-		curl = px_config_file_get_value(cf, "Proxy Settings", "httpProxy");
-
-	// Use a manual PAC
-	else if (!strcmp(tmp, "2"))
-	{
-		px_free(tmp);
-		tmp = px_config_file_get_value(cf, "Proxy Settings", "Proxy Config Script");
-		if (tmp) curl = px_strcat("pac+", tmp);
-		else     curl = px_strdup("wpad://");
+		// Don't use any proxy
+		return com::googlecode::libproxy::url("direct://");
 	}
 
-	// Use WPAD
-	else if (!strcmp(tmp, "3"))
-		curl = px_strdup("wpad://");
+private:
+	config_file cf;
+};
 
-	// Use envvar
-	else if (!strcmp(tmp, "4"))
-		curl = NULL; // We'll bypass this config plugin and let the envvar plugin work
-
-	// Cleanup
-	px_free(tmp);
-
-	out:
-		return curl;
-}
-
-static char *
-_get_ignore(pxConfigModule *self, pxURL *url)
-{
-	return px_strdup("");
-}
-
-static bool
-_get_credentials(pxConfigModule *self, pxURL *proxy, char **username, char **password)
-{
-	return false;
-}
-
-static bool
-_set_credentials(pxConfigModule *self, pxURL *proxy, const char *username, const char *password)
-{
-	return false;
-}
-
-static void *
-_constructor()
-{
-	pxKConfigConfigModule *self = (pxKConfigConfigModule *)px_malloc0(sizeof(pxKConfigConfigModule));
-	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_SESSION, _get_config, _get_ignore, _get_credentials, _set_credentials);
-	return self;
-}
-
-extern "C" bool
-px_module_load(pxModuleManager *self)
-{
-	// If we are running in KDE, then make sure this plugin is registered.
-	char *tmp = getenv("KDE_FULL_SESSION");
-	if (tmp == NULL) {
-		return false;
-	}
-	return px_module_manager_register_module(self, pxConfigModule, _constructor, _destructor);
-}
+PX_MODULE_LOAD(config_module, kde, xhasclient("kicker", NULL));

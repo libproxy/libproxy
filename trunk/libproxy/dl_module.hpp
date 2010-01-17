@@ -1,39 +1,54 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * 
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <stdbool.h>
+#ifndef DLOBJECT_HPP_
+#define DLOBJECT_HPP_
 
-typedef void (*pxStrDictItemCallback)(void *);
-typedef void (*pxStrDictForeachCallback)(const char *, void *, void *);
+#include <string>
+#include <stdexcept>
 
-typedef struct _pxStrDict pxStrDict;
+namespace com {
+namespace googlecode {
+namespace libproxy {
 
-__attribute__ ((visibility("default")))
-pxStrDict *px_strdict_new(pxStrDictItemCallback free);
+using namespace std;
 
-__attribute__ ((visibility("default")))
-bool px_strdict_set(pxStrDict *self, const char *key, void *value);
+class dl_error : public runtime_error {
+public:
+	dl_error(const string& __arg): runtime_error(__arg) {}
+};
 
-__attribute__ ((visibility("default")))
-const void *px_strdict_get(pxStrDict *self, const char *key);
+class dl_module {
+	public:
+		~dl_module();
+		dl_module(const string filename) throw (dl_error);
+		bool operator==(const dl_module& module) const;
+		template <class T> T get_symbol(const string symbolname) const throw (dl_error) {
+			return (T) this->getsym(symbolname);
+		}
 
-void px_strdict_foreach(pxStrDict *self, pxStrDictForeachCallback *cb, void *arg);
+	private:
+		void* getsym(const string symbolname) const throw (dl_error);
+		void* dlobject;
+	};
+}
+}
+}
 
-__attribute__ ((visibility("default")))
-void px_strdict_free(pxStrDict *self);
+#endif /* DLOBJECT_HPP_ */
