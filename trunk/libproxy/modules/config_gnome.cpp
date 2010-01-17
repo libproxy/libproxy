@@ -208,7 +208,7 @@ private:
 	string readline(string buffer="") {
 		char c;
 
-		// If the fread() call would block, an error occurred or
+		// If the read() call would block, an error occurred or
 		// we are at the end of the line, we're done
 		if (::read(this->read, &c, 1) != 1 || c == '\n')
 			return buffer;
