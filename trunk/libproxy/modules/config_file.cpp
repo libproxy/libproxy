@@ -30,13 +30,13 @@ public:
 		this->cf.load(this->get_filename());
 	}
 
-	url get_config(url url) throw (runtime_error) {
+	url get_config(url) throw (runtime_error) {
 		if (this->cf.is_stale())
 			this->cf.load(this->get_filename());
 		return this->cf.get_value("proxy");
 	}
 
-	string get_ignore(url& url) {
+	string get_ignore(url) {
 		if (this->cf.is_stale())
 			this->cf.load(this->get_filename());
 		return this->cf.get_value("ignore");

@@ -53,7 +53,9 @@ public:
 	// Final methods
 	        bool     get_valid();
 	        void     set_valid(bool valid);
-	        bool     operator<(const config_module& module) const;
+	virtual bool     operator<(const config_module& module) const;
+	using module::operator<;
+
 private:
 	bool valid;
 };
@@ -77,6 +79,7 @@ public:
 // PACRunner module
 class pacrunner {
 public:
+	virtual ~pacrunner() {};
 	virtual string run(const url url) throw (bad_alloc)=0;
 };
 
@@ -85,10 +88,13 @@ public:
 	// Abstract methods
 	virtual pacrunner* get_pacrunner(const pac pac) throw (bad_alloc)=0;
 
+	// Virtual methods
+	virtual ~pacrunner_module();
+
 	// Final methods
 	pacrunner_module();
-	~pacrunner_module();
 	string run(const pac pac, const url dst) throw (bad_alloc);
+
 private:
 	pacrunner* pr;
 	string     last;
@@ -114,6 +120,7 @@ public:
 
 	// Virtual methods
 	virtual bool operator<(const wpad_module& module) const;
+	using module::operator<;
 };
 
 }

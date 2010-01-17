@@ -193,7 +193,6 @@ int url::open() {
 }
 
 int url::open(map<string, string> headers) {
-	char *joined_headers = NULL;
 	string request;
 	int sock = -1;
 
@@ -231,7 +230,7 @@ int url::open(map<string, string> headers) {
 	request += "\r\n";
 
 	// Send HTTP request
-	if (send(sock, request.c_str(), request.size(), 0) != request.size()) goto error;
+	if ((size_t) send(sock, request.c_str(), request.size(), 0) != request.size()) goto error;
 
 	// Return the socket, which is ready for reading the response
 	return sock;
@@ -289,7 +288,7 @@ string url::get_path() const {
 	return this->path;
 }
 
-int url::get_port() const {
+uint16_t url::get_port() const {
 	return this->port;
 }
 

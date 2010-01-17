@@ -81,14 +81,14 @@ pac::pac(const url& url) throw (io_error) {
 	{
 		/* Verify status line */
 		string line = _readline(sock);
-		if (sscanf(line.c_str(), "HTTP/1.%*d %d", &status) != 1 || status != 200) goto error;
+		if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) != 1 || status != 200) goto error;
 
 		/* Check for correct mime type and content length */
 		for (line = _readline(sock) ; line != "\r" && line != "" ; line = _readline(sock)) {
 			// Check for content type
 			if (line.find("Content-Type: ") == 0 &&
-				line.find(PAC_MIME_TYPE) != string::npos ||
-				line.find(PAC_MIME_TYPE_FB) != string::npos)
+				(line.find(PAC_MIME_TYPE) != string::npos ||
+				 line.find(PAC_MIME_TYPE_FB) != string::npos))
 				correct_mime_type = true;
 
 			// Check for content length
@@ -99,7 +99,7 @@ pac::pac(const url& url) throw (io_error) {
 		// Get content
 		if (!content_length || content_length > PAC_MAX_SIZE || !correct_mime_type) goto error;
 		char *buffer = new char[content_length];
-		for (int recvd=0 ; recvd < content_length ; )
+		for (size_t recvd=0 ; recvd < content_length ; )
 			recvd += recv(sock, buffer + recvd, content_length - recvd, 0);
 		this->cache = buffer;
 		delete buffer;
@@ -107,7 +107,6 @@ pac::pac(const url& url) throw (io_error) {
 	else
 	{ /* file:// url */
 		struct stat st;
-		int status;
 
 		if (fstat(sock, &st) || pfsize(st) > PAC_MAX_SIZE) goto error;
 		char *buffer = new char[pfsize(st)+1];

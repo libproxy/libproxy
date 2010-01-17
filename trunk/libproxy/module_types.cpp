@@ -57,11 +57,11 @@ static inline int _config_module_findpos(config_module::category category, strin
     return 1 + _config_module_findpos(category, id, order.substr(next == string::npos ? string::npos : next+1));
 }
 
-string config_module::get_ignore(url url) {
+string config_module::get_ignore(url /*url*/) {
 	return "";
 }
 
-bool config_module::set_creds(url proxy, string username, string password) {
+bool config_module::set_creds(url /*proxy*/, string /*username*/, string /*password*/) {
 	return false;
 }
 

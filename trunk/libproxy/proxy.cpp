@@ -16,8 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
-#define _BSD_SOURCE
-
 #include <algorithm>
 #include <iostream>
 #include <cstring>
@@ -189,7 +187,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_modules<ignore_module>();
-	for (int i=-1 ; i < confign.size() ; i=confign.find(',')) {
+	for (size_t i=-1 ; i < confign.size() ; i=confign.find(',')) {
 		for (vector<ignore_module*>::iterator it=ignores.begin() ; it != ignores.end() ; it++)
 			if ((*it)->ignore(*realurl, confign.substr(i+1, confign.find(','))))
 				goto do_return;
@@ -255,7 +253,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	}
 
 	/* In case of either PAC or WPAD, we'll run the PAC */
-	if (this->pac && confurl.get_scheme() == "wpad" || confurl.get_scheme().substr(0, 4) == "pac+" ) {
+	if ((this->pac && confurl.get_scheme() == "wpad") || (confurl.get_scheme().substr(0, 4) == "pac+") ) {
 		vector<pacrunner_module*> pacrunners = this->mm.get_modules<pacrunner_module>();
 
 		/* No PAC runner found, fall back to direct */
@@ -313,7 +311,7 @@ extern "C" char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, con
 	// Copy the results into an array
 	// Return NULL on memory allocation failure
 	retval[proxies.size()] = NULL;
-	for (int i=0 ; i < proxies.size() ; i++) {
+	for (size_t i=0 ; i < proxies.size() ; i++) {
 		retval[i] = strdup(proxies[i].c_str());
 		if (retval[i] == NULL) {
 			for (int j=i-1 ; j >= 0 ; j--)

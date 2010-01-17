@@ -31,7 +31,7 @@ static vector<string> strsplit(const char* cstr, string delimiter) {
 	vector<string> v;
 	string str = cstr ? cstr : "";
 
-	for (int i=str.find(delimiter) ; i != string::npos ; i=str.find(delimiter)) {
+	for (size_t i=str.find(delimiter) ; i != string::npos ; i=str.find(delimiter)) {
 		v.push_back(str.substr(0, i));
 		str = str.substr(i+delimiter.size());
 	}
@@ -63,7 +63,7 @@ static bool globmatch(string glob, string str)
 			return false;
 
 		// Search for this segment in this string
-		int offset = str.find(*i);
+		size_t offset = str.find(*i);
 
 		// If the segment isn't found at all, its not a match
 		if (offset == string::npos)

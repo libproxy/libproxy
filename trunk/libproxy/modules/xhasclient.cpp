@@ -55,7 +55,7 @@ bool xhasclient(const char *prog, ...) {
 			continue;
 
 		// For each child on the screen...
-	    for (int j=0; j < nchildren; j++) {
+	    for (size_t j=0; j < nchildren; j++) {
 	    	// If we can get their client info...
 	    	Window client;
 	    	if ((client = XmuClientWindow(display, children[j])) != None) {

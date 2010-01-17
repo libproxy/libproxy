@@ -25,7 +25,7 @@ public:
 	PX_MODULE_ID(NULL);
 	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
 
-	url get_config(url dst) throw (runtime_error) {
+	url get_config(url) throw (runtime_error) {
 		return url("wpad://");
 	}
 };

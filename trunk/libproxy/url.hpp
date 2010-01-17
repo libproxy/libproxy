@@ -61,14 +61,14 @@ public:
 	int open();
 	int open(map<string, string> headers);
 
-	string get_host()     const;
+	string   get_host()     const;
 	const vector<const sockaddr*>* get_ips(bool usedns);
-	string get_password() const;
-	string get_path()     const;
-	int    get_port()     const;
-	string get_scheme()   const;
-	string get_username() const;
-	string to_string()    const;
+	string   get_password() const;
+	string   get_path()     const;
+	uint16_t get_port()     const;
+	string   get_scheme()   const;
+	string   get_username() const;
+	string   to_string()    const;
 
 private:
 	string                   host;

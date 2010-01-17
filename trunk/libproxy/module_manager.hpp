@@ -43,7 +43,7 @@ using namespace std;
 class module {
 public:
 	virtual ~module() {}
-	virtual bool operator<(const module& other) const { return false; }
+	virtual bool operator<(const module&) const { return false; }
 	virtual string get_id() const=0;
 
 protected:
@@ -61,7 +61,7 @@ public:
 		vector<module*> modlist = this->modules.find(&typeid(T))->second;
 		vector<T*>      retlist;
 
-		for (int i=0 ; i < modlist.size() ; i++)
+		for (size_t i=0 ; i < modlist.size() ; i++)
 			retlist.push_back(dynamic_cast<T*>(modlist[i]));
 
 		return retlist;
@@ -89,7 +89,7 @@ public:
 
 		// Insert to our store
 		this->modules[&typeid(T)].clear();
-		for (int i=0 ; i < modlist.size() ; i++)
+		for (size_t i=0 ; i < modlist.size() ; i++)
 			this->modules[&typeid(T)].push_back(modlist[i]);
 
 		return true;

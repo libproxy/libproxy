@@ -39,7 +39,7 @@ static char *jstr2str(JSStringRef str, bool release) throw (bad_alloc)
 	return tmp;
 }
 
-static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef func, JSObjectRef self, size_t argc, const JSValueRef argv[], JSValueRef* exception)
+static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef /*self*/, size_t argc, const JSValueRef argv[], JSValueRef* /*exception*/)
 {
 	if (argc != 1)                         return NULL;
 	if (!JSValueIsString(ctx, argv[0]))    return NULL;
@@ -78,7 +78,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef func, JSObjectRef sel
 	return ret;
 }
 
-static JSValueRef myIpAddress(JSContextRef ctx, JSObjectRef func, JSObjectRef self, size_t argc, const JSValueRef argv[], JSValueRef* exception)
+static JSValueRef myIpAddress(JSContextRef ctx, JSObjectRef func, JSObjectRef self, size_t /*argc*/, const JSValueRef[] /*argv*/, JSValueRef* /*exception*/)
 {
 	char hostname[1024];
 	if (!gethostname(hostname, 1023)) {

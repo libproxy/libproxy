@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <signal.h>
+#include <stdexcept>
 
 #include <glib.h>
 #include <gconf/gconf.h>
@@ -35,20 +36,24 @@ static int _print_value(const GConfValue *value, const char *suffix) {
 	case GCONF_VALUE_PAIR:
 		return  _print_value(gconf_value_get_car(value), ",") +
 			_print_value(gconf_value_get_cdr(value), suffix);
+	default:
+		throw exception();
 	}
+
+
 	return 0;
 }
 
-static void _on_value_change(GConfClient *client, guint cnxn_id, GConfEntry *entry, void *user_data) {
+static void _on_value_change(GConfClient* /*client*/, guint /*cnxn_id*/, GConfEntry* entry, void* /*user_data*/) {
 	printf("%s\t", gconf_entry_get_key(entry));
 	_print_value(gconf_entry_get_value(entry), "\n");
 }
 
-static void _on_sig(int signal) {
+static void _on_sig(int /*signal*/) {
 	g_main_loop_quit(loop);
 }
 
-static gboolean _error(GIOChannel *source, GIOCondition condition, gpointer data) {
+static gboolean _error(GIOChannel* /*source*/, GIOCondition /*condition*/, gpointer /*data*/) {
 	g_main_loop_quit(loop);
 	return false;
 }
@@ -70,7 +75,7 @@ static gboolean _set_key(const char *key, const char *val) {
 			error = error || !gconf_client_set_int(client, key, ival, NULL);
 			break;
 		case GCONF_VALUE_FLOAT:
-			int fval;
+			float fval;
 			error = sscanf(val, "%f", &fval) != 1;
 			error = error || !gconf_client_set_float(client, key, fval, NULL);
 			break;
