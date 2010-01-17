@@ -18,12 +18,12 @@
  ******************************************************************************/
 
 #include <cstdio>         // For fileno(), fread(), pclose(), popen(), sscanf()
-#include <sys/select.h>   // For select(...)
-#include <fcntl.h>        // For fcntl(...)
+#include <sys/select.h>   // For select()
+#include <fcntl.h>        // For fcntl()
 #include <errno.h>        // For errno stuff
-#include <unistd.h>       // For pipe(), close(), fork(), dup(), execl(), _exit()
+#include <unistd.h>       // For pipe(), close(), vfork(), dup(), execl(), _exit()
 #include <signal.h>       // For kill()
-#include "xhasclient.cpp" // For xhasclient(...)
+#include "xhasclient.cpp" // For xhasclient()
 
 #include "../module_types.hpp"
 using namespace com::googlecode::libproxy;
@@ -59,7 +59,7 @@ static int popen2(const char *program, int* read, int* write, pid_t* pid) {
 		return errno;
 	}
 
-	switch (*pid = fork()) {
+	switch (*pid = vfork()) {
 	case -1: // Error
 		close(rpipe[0]);
 		close(rpipe[1]);
