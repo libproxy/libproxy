@@ -29,9 +29,9 @@
 #include <sys/socket.h>
 #endif
 
-#include "url.h"
-#include "misc.h"
-#include "pac.h"
+#include "url.hpp"
+#include "misc.hpp"
+#include "pac.hpp"
 
 #define PAC_MIME_TYPE "application/x-ns-proxy-autoconfig"
 
@@ -77,7 +77,7 @@ px_pac_new(pxURL *url)
 	if (!url) return NULL;
 
 	/* Allocate the object */
-	pxPAC *self = px_malloc0(sizeof(pxPAC));
+	pxPAC *self = (pxPAC *) px_malloc0(sizeof(pxPAC));
 
 	/* Copy the given URL */
 	self->url = px_url_new(px_url_to_string(url)); /* Always returns valid value */
@@ -162,7 +162,7 @@ px_pac_reload(pxPAC *self)
 		if (!content_length || !correct_mime_type) goto error;
 		px_free(line); line = NULL;
 		px_free(self->cache);
-		self->cache = px_malloc0(content_length+1);
+		self->cache = (char *) px_malloc0(content_length+1);
 		for (int recvd=0 ; recvd != content_length ; )
 			recvd += recv(sock, self->cache + recvd, content_length - recvd, 0);
 	}
@@ -173,10 +173,10 @@ px_pac_reload(pxPAC *self)
 
 		if (fstat(sock, &buffer)) goto error;
 #ifdef _WIN32
-		self->cache = px_malloc0(buffer.st_size + 1);
+		self->cache = (char *) px_malloc0(buffer.st_size + 1);
 		status = read(sock, self->cache, buffer.st_size);
 #else
-		self->cache = px_malloc0(buffer.st_blksize * buffer.st_blocks + 1);
+		self->cache = (char *) px_malloc0(buffer.st_blksize * buffer.st_blocks + 1);
 		status = read(sock, self->cache, buffer.st_blksize * buffer.st_blocks);
 #endif
 	}

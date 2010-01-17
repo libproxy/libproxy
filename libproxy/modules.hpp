@@ -19,8 +19,8 @@
 
 #ifndef MODULE_H_
 #define MODULE_H_
-#include "module_manager.h"
-#include "pac.h"
+#include "module_manager.hpp"
+#include "pac.hpp"
 
 /*
  * Config module

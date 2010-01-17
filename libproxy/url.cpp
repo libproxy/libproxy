@@ -36,8 +36,8 @@
 #include <netinet/in.h>
 #endif
 
-#include "misc.h"
-#include "url.h"
+#include "misc.hpp"
+#include "url.hpp"
 
 /**
  * pxURL object. All fields are private.
@@ -206,18 +206,18 @@ px_url_get_ips(pxURL *self, bool usedns)
 
 		/* Copy the sockaddr's into self->ips */
 		info = first;
-		self->ips = px_malloc0(sizeof(struct sockaddr *) * ++count);
+		self->ips = (struct sockaddr **) px_malloc0(sizeof(struct sockaddr *) * ++count);
 		for (int i=0 ; info ; info = info->ai_next)
 		{
 			if (info->ai_addr->sa_family == AF_INET)
 			{
-				self->ips[i] = px_malloc0(sizeof(struct sockaddr_in));
+				self->ips[i] = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in));
 				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in));
 				((struct sockaddr_in *) self->ips[i++])->sin_port = htons(self->port);
 			}
 			else if (info->ai_addr->sa_family == AF_INET6)
 			{
-				self->ips[i] = px_malloc0(sizeof(struct sockaddr_in6));
+				self->ips[i] = (struct sockaddr *) px_malloc0(sizeof(struct sockaddr_in6));
 				memcpy(self->ips[i], info->ai_addr, sizeof(struct sockaddr_in6));
 				((struct sockaddr_in6 *) self->ips[i++])->sin6_port = htons(self->port);
 			}
@@ -264,6 +264,7 @@ px_url_get_port(pxURL *self)
 /**
  * @return Scheme portion of the pxURL
  */
+__attribute__ ((visibility("default")))
 const char *
 px_url_get_scheme(pxURL *self)
 {
@@ -288,11 +289,12 @@ px_url_get_username(pxURL *self)
 pxURL *
 px_url_new(const char *url)
 {
+	bool port_specified;
 	if (!url) return NULL;
 	const char *start = url;
 
 	/* Allocate pxURL */
-	pxURL *self  = px_malloc0(sizeof(pxURL));
+	pxURL *self  = (pxURL *) px_malloc0(sizeof(pxURL));
 
 	/* Get scheme */
 	if (!strstr(start, "://")) goto error;
@@ -320,7 +322,7 @@ px_url_new(const char *url)
 		self->path = px_strdup("");
 
 	/* Get the port */
-	bool port_specified = false;
+	port_specified = false;
 	if (strchr(self->host, ':')) {
 		if (!atoi(strchr(self->host, ':')+1)) goto error;
 		self->port = atoi(strchr(self->host, ':')+1);
@@ -334,7 +336,7 @@ px_url_new(const char *url)
 	if (!strcmp(self->host, "") && strcmp(self->scheme, "file")) goto error;
 
 	/* Verify by re-assembly */
-	self->url = px_malloc0(strlen(url) + 1);
+	self->url = (char *) px_malloc0(strlen(url) + 1);
 	if (self->username && self->password)
 		snprintf(self->url, strlen(url) + 1, "%s://%s:%s@%s", self->scheme, self->username, self->password, self->host);
 	else

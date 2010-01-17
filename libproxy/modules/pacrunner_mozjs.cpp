@@ -27,8 +27,8 @@
 #define __USE_BSD
 #include <unistd.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 #include <jsapi.h>
 #include "pacutils.h"
@@ -67,7 +67,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 	// Allocate the IP address
 	px_free(tmp);
-	tmp = px_malloc0(INET6_ADDRSTRLEN+1);
+	tmp = (char *) px_malloc0(INET6_ADDRSTRLEN+1);
 
 	// Try for IPv4 and IPv6
 	if (!inet_ntop(info->ai_family,
@@ -89,7 +89,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 }
 
 static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
-	char *hostname = JS_malloc(cx, 1024);
+	char *hostname = (char *) JS_malloc(cx, 1024);
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewString(cx, hostname, strlen(hostname));
 		jsval arg = STRING_TO_JSVAL(myhost);
@@ -116,10 +116,10 @@ static ctxStore *ctxs_new(pxPAC *pac)
 	jsval     rval;
 
 	// Create the basic context
-	ctxStore *self = px_malloc0(sizeof(ctxStore));
+	ctxStore *self = (ctxStore*) px_malloc0(sizeof(ctxStore));
 
 	// Setup Javascript global class
-	self->cls     = px_malloc0(sizeof(JSClass));
+	self->cls     = (JSClass*) px_malloc0(sizeof(JSClass));
 	self->cls->name        = "global";
 	self->cls->flags       = 0;
 	self->cls->addProperty = JS_PropertyStub;
@@ -218,7 +218,7 @@ _run(pxPACRunnerModule *self, pxPAC *pac, pxURL *url)
 static void *
 _constructor()
 {
-	pxMozillaPACRunnerModule *self = px_malloc0(sizeof(pxMozillaPACRunnerModule));
+	pxMozillaPACRunnerModule *self = (pxMozillaPACRunnerModule*) px_malloc0(sizeof(pxMozillaPACRunnerModule));
 	self->__parent__.run = _run;
 	return self;
 }

@@ -29,13 +29,13 @@
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
 #endif
 
-#include "misc.h"
+#include "misc.hpp"
 #include "proxy.h"
-#include "config_file.h"
-#include "array.h"
-#include "strdict.h"
-#include "module_manager.h"
-#include "modules.h"
+#include "config_file.hpp"
+#include "array.hpp"
+#include "strdict.hpp"
+#include "module_manager.hpp"
+#include "modules.hpp"
 
 struct _pxProxyFactory {
 	pthread_mutex_t     mutex;
@@ -153,8 +153,10 @@ _px_config_module_cmp(pxModuleRegistration **a, pxModuleRegistration **b)
 pxProxyFactory *
 px_proxy_factory_new ()
 {
-	pxProxyFactory *self = px_malloc0(sizeof(pxProxyFactory));
+	pxProxyFactory *self = (pxProxyFactory *) px_malloc0(sizeof(pxProxyFactory));
 	self->mm             = px_module_manager_new();
+	pxConfigFile     *cf = NULL;
+	char *tmp;
 
 	/* Register our module types */
 	if (!px_module_manager_register_type(self->mm, pxConfigModule,    _px_config_module_cmp, false)) goto error;
@@ -163,10 +165,10 @@ px_proxy_factory_new ()
 
     /* If we have a config file, load the config order from it */
     setenv("_PX_CONFIG_ORDER", "", 1);
-	pxConfigFile *cf = px_config_file_new(SYSCONFDIR "proxy.conf");
+	cf = px_config_file_new(SYSCONFDIR "proxy.conf");
     if (cf)
     {
-    	char *tmp = px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "config_order");
+    	tmp = px_config_file_get_value(cf, PX_CONFIG_FILE_DEFAULT_SECTION, "config_order");
     	px_config_file_free(cf);
     	if (tmp && setenv("_PX_CONFIG_ORDER", tmp, 1))
     	{
@@ -231,6 +233,10 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	char           *confurl  = NULL;
 	char           *confign  = NULL;
 	pxConfigModule *config   = NULL;
+	pxIgnoreModule **ignores = NULL;
+	pxConfigModule **configs = NULL;
+	pxNetworkModule **networks = NULL;
+	char **ignore_split = NULL;
 
 	/* Verify some basic stuff */
 	if (!self) return response;
@@ -241,7 +247,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	if (!realurl) goto do_return;
 
 	/* Check to see if our network has changed */
-	pxNetworkModule **networks = px_module_manager_instantiate_type(self->mm, pxNetworkModule);
+	networks = px_module_manager_instantiate_type(self->mm, pxNetworkModule);
 	for (int i=0 ; networks && networks[i] ; i++)
 	{
 		if (networks[i]->changed(networks[i]))
@@ -260,7 +266,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	px_free(networks);
 
 	/* Attempt to load a valid config */
-	pxConfigModule **configs = px_module_manager_instantiate_type(self->mm, pxConfigModule);
+	configs = px_module_manager_instantiate_type(self->mm, pxConfigModule);
 	for (int i=0 ; configs && configs[i] ; i++)
 	{
 		config  = configs[i];
@@ -295,8 +301,8 @@ px_proxy_factory_get_proxies (pxProxyFactory *self, char *url)
 	if (!config) goto do_return;
 
 	/* Check our ignore patterns */
-	pxIgnoreModule **ignores = px_module_manager_instantiate_type(self->mm, pxIgnoreModule);
-	char **ignore_split    = px_strsplit(confign, ",");
+	ignores = px_module_manager_instantiate_type(self->mm, pxIgnoreModule);
+	ignore_split    = px_strsplit(confign, ",");
 	px_free(confign); confign = NULL;
 	for (int i=0 ; ignore_split && ignore_split[i] ; i++)
 	{

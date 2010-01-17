@@ -35,8 +35,8 @@ typedef unsigned short int sa_family_t;
 #include <netinet/in.h>
 #endif
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 static bool
 _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)
@@ -96,7 +96,7 @@ _sockaddr_from_string(const char *ip, int len)
         if (getaddrinfo(ip, NULL, &flags, &info) != 0 || !info) goto out;
 
         /* Copy the results into our buffer */
-        result = px_malloc0(info->ai_addrlen);
+        result = (struct sockaddr *) px_malloc0(info->ai_addrlen);
         memcpy(result, info->ai_addr, info->ai_addrlen);
 
         out:
@@ -110,7 +110,7 @@ _sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
         /* IPv4 */
         if (af == AF_INET)
         {
-                struct sockaddr_in *mask = px_malloc0(sizeof(struct sockaddr_in));
+                struct sockaddr_in *mask = (sockaddr_in *) px_malloc0(sizeof(struct sockaddr_in));
                 mask->sin_family = af;
                 mask->sin_addr.s_addr = htonl(~0 << (32 - (cidr > 32 ? 32 : cidr)));
 
@@ -120,7 +120,7 @@ _sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
         /* IPv6 */
         else if (af == AF_INET6)
         {
-                struct sockaddr_in6 *mask = px_malloc0(sizeof(struct sockaddr_in6));
+                struct sockaddr_in6 *mask = (sockaddr_in6 *) px_malloc0(sizeof(struct sockaddr_in6));
                 mask->sin6_family = af;
                 for (uint8_t i=0 ; i < sizeof(mask->sin6_addr) ; i++)
                         mask->sin6_addr.s6_addr[i] = ~0 << (8 - (8*i > cidr ? 0 : cidr-8*i < 8 ? cidr-8*i : 8) );
@@ -205,7 +205,7 @@ _ignore(struct _pxIgnoreModule *self, pxURL *url, const char *ignore)
 static void *
 _constructor()
 {
-	pxIgnoreModule *self = px_malloc0(sizeof(pxIgnoreModule));
+	pxIgnoreModule *self = (pxIgnoreModule*) px_malloc0(sizeof(pxIgnoreModule));
 	self->ignore = _ignore;
 	return self;
 }

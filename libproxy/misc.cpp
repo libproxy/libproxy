@@ -25,13 +25,14 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#include "misc.h"
+#include "misc.hpp"
 
 /**
  * Allocates memory and always returns valid memory.
  * @size Amount of memory to allocate in bytes
  * @return Pointer to the allocated memory
  */
+__attribute__ ((visibility("default")))
 void *
 px_malloc0(size_t size)
 {
@@ -45,6 +46,7 @@ px_malloc0(size_t size)
  * Frees memory and doesn't crash if that memory is NULL
  * @mem Memory to free or NULL
  */ 
+__attribute__ ((visibility("default")))
 void
 px_free(void *mem)
 {
@@ -62,7 +64,7 @@ char *
 px_strndup(const char *s, size_t n)
 {
 	if (!s) return NULL;
-	char *tmp = px_malloc0(n+1);
+	char *tmp = (char *) px_malloc0(n+1);
 	strncpy(tmp, s, n);
 	return tmp;	
 }
@@ -92,7 +94,7 @@ px_strdupv(const char **sv)
 	if (!sv) return NULL;
 	for (count=0 ; sv[count] ; count++); 
 	
-	char **output = px_malloc0(sizeof(char *) * ++count);
+	char **output = (char **) px_malloc0(sizeof(char *) * ++count);
 	for (int i=0 ; sv[i] ; i++)
 		output[i] = px_strdup(sv[i]);
 		
@@ -117,7 +119,7 @@ px_strcat(const char *s, ...)
 	va_end(args);
 	
 	/* Build our output string */
-	char *output = px_malloc0(count + 1);
+	char *output = (char *) px_malloc0(count + 1);
 	strcat(output, s);
 	va_start(args, s);
 	for (char *tmp = NULL ; (tmp = va_arg(args, char *)) ; )
@@ -146,7 +148,7 @@ px_strjoin(const char **strv, const char *delimiter)
 	if (!length) return NULL;
 	
 	/* Do the join */
-	char *str = px_malloc0(length);
+	char *str = (char *) px_malloc0(length);
 	for (int i=0 ; strv[i]; i++)
 	{
 		strcat(str, strv[i]);
@@ -173,13 +175,13 @@ px_strsplit(const char *string, const char *delimiter)
 		count++;
 		
 	/* Allocate the vector */
-	char **strv = px_malloc0(sizeof(char *) * (count + 1));
+	char **strv = (char **) px_malloc0(sizeof(char *) * (count + 1));
 	
 	/* Fill the vector */
 	const char *last = string;
 	for (int i=0 ; i < count ; i++)
 	{
-		char *tmp = strstr(last, delimiter);
+		const char *tmp = strstr(last, delimiter);
 		if (!tmp)
 			strv[i] = px_strdup(last);
 		else
@@ -236,7 +238,7 @@ px_readline(int fd, char *buffer, size_t bufsize)
 	/* If our buffer is full, add more to the buffer. */
 	if (bufsize <= strlen(buffer))
 	{
-		char *tmp = px_malloc0(1024 + strlen(buffer) + 1);
+		char *tmp = (char *) px_malloc0(1024 + strlen(buffer) + 1);
 		strcpy(tmp, buffer);
 		free(buffer);
 		buffer = tmp;

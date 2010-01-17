@@ -38,10 +38,10 @@
 #define pdlclose dlclose
 #endif
 
-#include "module_manager.h"
-#include "misc.h"
-#include "array.h"
-#include "strdict.h"
+#include "module_manager.hpp"
+#include "misc.hpp"
+#include "array.hpp"
+#include "strdict.hpp"
 
 struct _pxModuleManager {
 	pxArray   *dlmodules;
@@ -76,7 +76,7 @@ basename_noext(const char *filename)
 	filename = px_strdup(basename(tmp));
 	px_free(tmp);
 	if (strrchr(filename, '.'))
-		strrchr(filename, '.')[0] = '\0';
+		((char *) strrchr(filename, '.'))[0] = '\0';
 	return (char *) filename;
 }
 
@@ -90,7 +90,7 @@ globmatch(const char *glob, const char *string)
 	for (int i=0 ; segments[i] ; i++)
 	{
 		// Search for this segment in this string
-		char *offset = strstr(string, segments[i]);
+		const char *offset = strstr(string, segments[i]);
 
 		// If the segment isn't found at all, its not a match
 		if (!offset)
@@ -120,7 +120,7 @@ globmatch(const char *glob, const char *string)
 pxModuleManager *
 px_module_manager_new()
 {
-	pxModuleManager *self = px_malloc0(sizeof(pxModuleManager));
+	pxModuleManager *self = (pxModuleManager *) px_malloc0(sizeof(pxModuleManager));
 	self->dlmodules       = px_array_new(NULL, (pxArrayItemCallback) pdlclose, true, false);
 	self->registrations   = px_strdict_new((pxStrDictItemCallback) px_array_free);
 	self->types           = px_strdict_new((pxStrDictItemCallback) px_free);
@@ -139,6 +139,7 @@ px_module_manager_free(pxModuleManager *self)
 bool
 px_module_manager_load(pxModuleManager *self, char *filename)
 {
+	pxModuleLoadFunction load;
 	if (!self)     return false;
 	if (!filename) return false;
 
@@ -172,15 +173,15 @@ px_module_manager_load(pxModuleManager *self, char *filename)
 	if (px_array_find(self->dlmodules, module) >= 0) goto error;
 
 	/* Call the px_module_load() function */
-	pxModuleLoadFunction load = (pxModuleLoadFunction) pdlsym(module, "px_module_load");
+	load = (pxModuleLoadFunction) pdlsym(module, "px_module_load");
 	if (!load || !load(self)) goto error;
 
 	if (!px_array_add(self->dlmodules, module)) goto error;
 	return true;
 
-	error:
-		if (module) pdlclose(module);
-		return false;
+error:
+	if (module) pdlclose(module);
+	return false;
 }
 
 bool
@@ -212,22 +213,22 @@ _px_module_manager_register_module_full(pxModuleManager *self,
                                         const char *id,
                                         const char *name,
                                         size_t namelen,
-                                        pxModuleConstructor new,
+                                        pxModuleConstructor _new,
                                         pxModuleDestructor free)
 {
 	if (!self) return false;
 	if (!id)   return false;
 	if (!name) return false;
-	if (!new)  return false;
+	if (!_new)  return false;
 
 	// Ensure only a single registration in the case of a singleton
 	pxModuleTypeRegistration *tr = (pxModuleTypeRegistration *) px_strdict_get(self->types, id);
 	if (tr && tr->sngl && px_array_length((pxArray *) px_strdict_get(self->registrations, id)) > 0)
 		return false;
 
-	pxModuleRegistration *reg = px_malloc0(sizeof(pxModuleRegistration));
+	pxModuleRegistration *reg = (pxModuleRegistration *) px_malloc0(sizeof(pxModuleRegistration));
 	reg->name = px_strndup(name, namelen);
-	reg->pxnew  = new;
+	reg->pxnew  = _new;
 	reg->free = free;
 
 	// Create a new empty array if there is no registrations for this id
@@ -260,10 +261,10 @@ _px_module_manager_instantiate_type_full(pxModuleManager *self,
 
 	// Sort the instances
 	if (px_strdict_get(self->types, id))
-		px_array_sort(regs, ((pxModuleTypeRegistration *) px_strdict_get(self->types, id))->cmp);
+		px_array_sort(regs, (int (*)(const void*, const void*)) ((pxModuleTypeRegistration *) px_strdict_get(self->types, id))->cmp);
 
 	// Allocate our instances array
-	void **instances = px_malloc0(sizeof(void *) * (px_array_length(regs) + 1));
+	void **instances = (void **) px_malloc0(sizeof(void *) * (px_array_length(regs) + 1));
 	for (int i=0 ; i < px_array_length(regs) ; i++)
 		instances[i] = ((pxModuleRegistration *) px_array_get(regs, i))->instance;
 	return instances;
@@ -279,7 +280,7 @@ _px_module_manager_register_type_full(pxModuleManager *self,
 	if (!id)   return false;
 	if (!cmp && !singleton) return true;
 
-	pxModuleTypeRegistration *tr = px_malloc0(sizeof(pxModuleTypeRegistration));
+	pxModuleTypeRegistration *tr = (pxModuleTypeRegistration *) px_malloc0(sizeof(pxModuleTypeRegistration));
 	tr->cmp  = cmp;
 	tr->sngl = singleton;
 	return px_strdict_set(self->types, id, tr);

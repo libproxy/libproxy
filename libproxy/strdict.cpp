@@ -20,9 +20,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "misc.h"
-#include "array.h"
-#include "strdict.h"
+#include "misc.hpp"
+#include "array.hpp"
+#include "strdict.hpp"
 
 struct _pxStrDict {
 	pxStrDictItemCallback free;
@@ -42,8 +42,8 @@ static void
 dict_free(void *item)
 {
 	char *key = (char *) ((void **) item)[0];
-	void **realitem = ((void **) item)[1];
-	pxStrDictItemCallback do_free = ((void **) item)[2];
+	void **realitem = (void **) ((void **) item)[1];
+	pxStrDictItemCallback do_free = (pxStrDictItemCallback) ((void **) item)[2];
 
 	do_free(realitem);
 	px_free(key);
@@ -53,8 +53,8 @@ dict_free(void *item)
 static void
 dict_foreach(void *item, void *misc)
 {
-	pxStrDictForeachCallback foreach = ((void **) misc)[0];
-	char *key = ((void **) item)[0];
+	pxStrDictForeachCallback foreach = (pxStrDictForeachCallback) ((void **) misc)[0];
+	char *key = (char *) ((void **) item)[0];
 	void *val = ((void **) item)[1];
 	void *arg = ((void **) misc)[1];
 	foreach(key, val, arg);
@@ -67,7 +67,7 @@ do_nothing(void *item)
 
 pxStrDict *px_strdict_new(pxStrDictItemCallback free)
 {
-	pxStrDict *self = px_malloc0(sizeof(pxStrDict));
+	pxStrDict *self = (pxStrDict*) px_malloc0(sizeof(pxStrDict));
 	self->free      = free ? free : do_nothing;
 	self->data      = px_array_new(dict_equals, dict_free, true, false);
 	return self;
@@ -81,14 +81,14 @@ px_strdict_set(pxStrDict *self, const char *key, void *value)
 	/* We are unseting the value */
 	if (!value)
 	{
-		void *item[3] = { (void *) key, value, self->free };
+		void *item[3] = { (void *) key, (void *) value, (void *) self->free };
 		return px_array_del(self->data, item);
 	}
 
-	void **item = px_malloc0(sizeof(void *) * 3);
+	void **item = (void **) px_malloc0(sizeof(void *) * 3);
 	item[0] = px_strdup(key);
 	item[1] = value;
-	item[2] = self->free;
+	item[2] = (void *) self->free;
 
 	if (px_array_add(self->data, item))
 		return true;

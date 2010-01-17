@@ -22,9 +22,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "../misc.h"
-#include "../modules.h"
-#include "../config_file.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
+#include "../config_file.hpp"
 
 #include <kstandarddirs.h>
 

@@ -21,7 +21,7 @@
 #ifndef PAC_H_
 #define PAC_H_
 
-#include "url.h"
+#include "url.hpp"
 
 /**
  * pxPAC object.  All fields are private.
@@ -37,6 +37,7 @@ void px_pac_free(pxPAC *self);
  * Get the URL which the pxPAC uses.
  * @return The URL that the pxPAC came from
  */
+__attribute__ ((visibility("default")))
 const pxURL *px_pac_get_url(pxPAC *self);
 
 /**
@@ -51,18 +52,21 @@ pxPAC *px_pac_new(pxURL *url);
  * @url The url (string) where the PAC file is found
  * @return A new ProxyAutoConfig or NULL on error
  */
+__attribute__ ((visibility("default")))
 pxPAC *px_pac_new_from_string(char *url);
 
 /**
  * Returns the Javascript code which the pxPAC uses.
  * @return The Javascript code used by the pxPAC
  */
+__attribute__ ((visibility("default")))
 const char *px_pac_to_string(pxPAC *self);
 
 /**
  * Download the latest version of the pxPAC file
  * @return Whether the download was successful or not
  */
+__attribute__ ((visibility("default")))
 bool px_pac_reload(pxPAC *self);
 
 #endif /*PAC_H_*/

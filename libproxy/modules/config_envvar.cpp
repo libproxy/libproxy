@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../misc.h"
-#include "../modules.h"
+#include "../misc.hpp"
+#include "../modules.hpp"
 
 static char *
 _get_config(pxConfigModule *self, pxURL *url)
@@ -64,7 +64,7 @@ _set_credentials(pxConfigModule *self, pxURL *url, const char *username, const c
 static void *
 _constructor()
 {
-	pxConfigModule *self = px_malloc0(sizeof(pxConfigModule));
+	pxConfigModule *self = (pxConfigModule *) px_malloc0(sizeof(pxConfigModule));
 	PX_CONFIG_MODULE_BUILD(self, PX_CONFIG_MODULE_CATEGORY_NONE, _get_config, _get_ignore, _get_credentials, _set_credentials);
 	return self;
 }
