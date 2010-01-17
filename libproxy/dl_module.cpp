@@ -61,7 +61,10 @@ dl_module::~dl_module() {
 }
 
 dl_module::dl_module(const string filename) throw (dl_error) {
-	this->dlobject = pdlopen(filename.c_str());
+	if (filename == "")
+		this->dlobject = pdlopen(NULL);
+	else
+		this->dlobject = pdlopen(filename.c_str());
 	if (!this->dlobject)
 		throw dl_error(pdlerror());
 }

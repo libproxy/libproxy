@@ -21,6 +21,7 @@
 #include <dirent.h>   // For opendir(), readdir(), closedir()
 
 #include "module_manager.hpp"
+#include "builtin_modules.hpp"
 
 namespace com {
 namespace googlecode {
@@ -82,6 +83,17 @@ static bool globmatch(string glob, string str)
 
 string module::_bnne(const string fn) const {
 	return basename_noext(fn);
+}
+
+module_manager::module_manager() {
+	dl_module* thisprog = new dl_module();
+	this->dl_modules.insert(thisprog);
+
+	for (unsigned int i=0 ; _builtins[i] ; i++) {
+		module_manager::INIT_TYPE load = thisprog->get_symbol<module_manager::INIT_TYPE>(string(_builtins[i]) + "_module_load");
+		if (load)
+			load(*this);
+	}
 }
 
 module_manager::~module_manager() {

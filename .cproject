@@ -244,34 +244,6 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[lib] config_envvar" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>config_envvar</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] config_envvar/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>config_envvar/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] config_file" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>config_file</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] config_file/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>config_file/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
 <target name="[lib] config_gnome" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
@@ -311,34 +283,6 @@
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
 <buildTarget>config_wpad/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] ignore_domain" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>ignore_domain</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] ignore_domain/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>ignore_domain/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] ignore_ip" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>ignore_ip</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] ignore_ip/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>ignore_ip/fast</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
@@ -416,20 +360,6 @@
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
 <buildTarget>uninstall</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] wpad_dns" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>wpad_dns</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] wpad_dns/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>wpad_dns/fast</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>

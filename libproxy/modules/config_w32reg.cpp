@@ -154,4 +154,4 @@ public:
 	}
 }
 
-PX_MODULE_LOAD(config_module, w32reg, true);
+PX_MODULE_LOAD(config, w32reg, true);

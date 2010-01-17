@@ -50,4 +50,4 @@ private:
 	pac* last;
 };
 
-PX_MODULE_LOAD(wpad_module, dns, true);
+PX_MODULE_LOAD(wpad, dns, true);
