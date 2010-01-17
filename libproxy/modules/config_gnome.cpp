@@ -20,56 +20,73 @@
 #include <cstdio>         // For fileno(), fread(), pclose(), popen(), sscanf()
 #include <sys/select.h>   // For select(...)
 #include <fcntl.h>        // For fcntl(...)
+#include <errno.h>        // For errno stuff
+#include <unistd.h>       // For pipe(), close(), fork(), dup(), execl(), _exit()
+#include <signal.h>       // For kill()
 #include "xhasclient.cpp" // For xhasclient(...)
 
-/*
-int popen2(const char *program, FILE **read, FILE **write) {
-	int wpipe[2];
-
-	if (!read || !write || !program || !*program)
+static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
+	if (!read || !write || !pid || !program || !*program)
 		return EINVAL;
-
 	*read  = NULL;
 	*write = NULL;
+	*pid   = 0;
 
-	if (pipe(wpipe) < 0)
+	// Open the pipes
+	int rpipe[2];
+	int wpipe[2];
+	if (pipe(rpipe) < 0)
+		return errno;
+	if (pipe(wpipe) < 0) {
+		close(rpipe[0]);
+		close(rpipe[1]);
+		return errno;
+	}
+
+	switch (*pid = fork()) {
+	case -1: // Error
+		close(rpipe[0]);
+		close(rpipe[1]);
+		close(wpipe[0]);
+		close(wpipe[1]);
 		return errno;
 
-	switch (pid = vfork()) {
-	case -1: // Error
+	case 0: // Child
+		close(STDIN_FILENO);  // Close stdin
+		close(STDOUT_FILENO); // Close stdout
+
+		dup(wpipe[0]); // Dup the read end of the write pipe to stdin
+		dup(rpipe[1]); // Dup the write end of the read pipe to stdout
+
+		// Close unneeded fds
+		close(rpipe[0]);
+		close(rpipe[1]);
 		close(wpipe[0]);
 		close(wpipe[1]);
-		return ASOIMWE;
-	case 0:  // Child
-		close(wpipe[1]);
-		dup2(wpipe[0], STDIN_FILENO);
+
+		// Exec
+		execl("/bin/sh", "sh", "-c", program, (char*) NULL);
+		_exit(127);  // Whatever we do, don't return
+
+	default: // Parent
+		close(rpipe[1]);
 		close(wpipe[0]);
 
-
-
-		execl(_PATH_BSHELL, "sh", "-c", program, (char *)NULL);
-			_exit(127);
-			// NOTREACHED
+		if (!(*read  = fdopen(rpipe[0], "r"))) {
+			kill(*pid, SIGTERM);
+			close(rpipe[0]);
+			close(wpipe[1]);
+			return errno;
 		}
+		if (!(*write = fdopen(wpipe[1], "w"))) {
+			kill(*pid, SIGTERM);
+			fclose(*read);
+			close(wpipe[1]);
+			return errno;
+		}
+		return 0;
 	}
-
-	// Parent; assume fdopen can't fail.
-	if (*type == 'r') {
-			iop = fdopen(pdes[0], type);
-			(void)close(pdes[1]);
-	} else {
-			iop = fdopen(pdes[1], type);
-			(void)close(pdes[0]);
-	}
-
-	// Link into list of file descriptors.
-	cur->fp = iop;
-	cur->pid =  pid;
-	cur->next = pidlist;
-	pidlist = cur;
-
-	return (iop);
-}*/
+}
 
 #include "../module_types.hpp"
 using namespace com::googlecode::libproxy;
@@ -93,30 +110,39 @@ public:
 	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
 	gnome_config_module() {
+		// Build the command
 		int count;
 		string cmd = LIBEXECDIR "pxgconf";
 		for (count=0 ; _all_keys[count] ; count++)
 			cmd += string(" ", 1) + _all_keys[count];
 
-		this->pipe = popen(cmd.c_str(), "r");
-		if (!this->pipe)
+		// Get our pipes
+		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
 			throw io_error("Unable to open gconf helper!");
-		if (fcntl(fileno(this->pipe), F_SETFL, FNONBLOCK) == -1) {
-			pclose(this->pipe);
+
+		// Set the write pipe to non-blocking
+		if (fcntl(fileno(this->write), F_SETFL, FNONBLOCK) == -1) {
+			fclose(this->read);
+			fclose(this->write);
+			kill(this->pid, SIGTERM);
 			throw io_error("Unable to set pipe to non-blocking!");
 		}
 
+		// Read in the first print-out of all our keys
 		this->update_data(count);
 	}
 
 	~gnome_config_module() {
-		if (this->pipe)
-			pclose(this->pipe);
+		if (this->read)
+			fclose(this->read);
+		if (this->write)
+			fclose(this->write);
+		kill(this->pid, SIGTERM);
 	}
 
 	url get_config(url dest) throw (runtime_error) {
 		// Check for changes in the config
-		if (this->pipe) this->update_data();
+		this->update_data();
 
 		// Mode is wpad:// or pac+http://...
 		if (this->data["/system/proxy/mode"] == "auto") {
@@ -177,7 +203,9 @@ public:
 	}
 
 private:
-	FILE               *pipe;
+	FILE* read;
+	FILE* write;
+	pid_t pid;
 	map<string, string> data;
 
 	string readline(string buffer="") {
@@ -185,7 +213,7 @@ private:
 
 		// If the fread() call would block, an error occurred or
 		// we are at the end of the line, we're done
-		if (fread(&c, sizeof(char), 1, this->pipe) != 1 || c == '\n')
+		if (fread(&c, sizeof(char), 1, this->read) != 1 || c == '\n')
 			return buffer;
 
 		// Process the next character
@@ -205,13 +233,13 @@ private:
 			return true;
 
 		// We need the pipe to be open
-		if (!this->pipe) return false;
+		if (!this->read) return false;
 
 		fd_set rfds;
-		struct timeval timeout = { 0, 1000 };
+		struct timeval timeout = { 0, 1000 }; // select() for 1/1000th of a second
 		FD_ZERO(&rfds);
-		FD_SET(fileno(this->pipe), &rfds);
-		if (select(fileno(this->pipe)+1, &rfds, NULL, NULL, &timeout) < 1)
+		FD_SET(fileno(this->read), &rfds);
+		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) < 1)
 			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
 			                                                        // our req quota, try again
 
