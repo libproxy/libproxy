@@ -8,10 +8,7 @@ project(libproxy)
 set(CMAKE_PROJECT_VERSION 0.4.0)
 
 # Setup our relative paths
-set(rlibdir lib/)
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES 64)
-  set(rlibdir lib64/)
-endif()
+set(rlibdir lib${LIB_SUFFIX}/)
 set(rmoduledir  ${rlibdir}/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_VERSION}/modules/)
 set(rlibexecdir libexec/)
 set(rbindir     bin/)
@@ -27,7 +24,7 @@ set(includedir ${prefix}/${rincludedir})
 
 # Add a global compilation stuff
 add_definitions(-D_POSIX_C_SOURCE=1)
-
+set(CMAKE_CXX_FLAGS "-g -Wall -Werror ${CMAKE_CXX_FLAGS}")
 
 ### Subdirectories
 add_subdirectory(libproxy)
