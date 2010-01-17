@@ -60,4 +60,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(config_module, envvar, true);
+PX_MODULE_LOAD(config, envvar, true);

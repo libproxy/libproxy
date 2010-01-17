@@ -108,7 +108,7 @@ private:
 			return new name ## _pacrunner(pac); \
 		} \
 	}; \
-	PX_MODULE_LOAD(pacrunner_module, name, cond)
+	PX_MODULE_LOAD(pacrunner, name, cond)
 
 // WPAD module
 class wpad_module : public module {

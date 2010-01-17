@@ -253,7 +253,7 @@ private:
 };
 
 // If we are running in GNOME, then make sure this plugin is registered.
-extern "C" bool px_module_load(module_manager& mm) {
+extern "C" bool PX_MODULE_LOAD_NAME(config, gnome)(module_manager& mm) {
 	if (xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL)) {
 		try { return mm.register_module<config_module>(new gnome_config_module); }
 		catch (io_error) {}

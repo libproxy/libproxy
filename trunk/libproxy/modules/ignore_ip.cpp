@@ -190,4 +190,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(ignore_module, ip, true);
+PX_MODULE_LOAD(ignore, ip, true);

@@ -28,10 +28,15 @@
 
 #include "dl_module.hpp"
 
+#ifdef BUILTIN
+#define PX_MODULE_LOAD_NAME(type, name) type ## _ ## name ## _module_load
+#else
+#define PX_MODULE_LOAD_NAME(type, name) px_module_load
+#endif
 #define PX_MODULE_ID(name) virtual string get_id() const { return this->_bnne(name ? name : __FILE__); }
-#define PX_MODULE_LOAD(basetype, name, cond) \
-	extern "C" bool px_module_load(module_manager& mm) { \
-		if (cond) return mm.register_module<basetype>(new name ## _ ## basetype); \
+#define PX_MODULE_LOAD(type, name, cond) \
+	extern "C" bool PX_MODULE_LOAD_NAME(type, name)(module_manager& mm) { \
+		if (cond) return mm.register_module<type ## _module>(new name ## _ ## type ## _module); \
 		return false; \
 	}
 
@@ -55,6 +60,7 @@ public:
 	typedef       bool (*INIT_TYPE)(module_manager&);
 	static  const char*  INIT_NAME() { return "px_module_load"; }
 
+	module_manager();
 	~module_manager();
 
 	template <class T> vector<T*> get_modules() const {

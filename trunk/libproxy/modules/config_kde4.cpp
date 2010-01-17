@@ -76,4 +76,4 @@ private:
 	config_file cf;
 };
 
-PX_MODULE_LOAD(config_module, kde, xhasclient("kicker", NULL));
+PX_MODULE_LOAD(config, kde, xhasclient("kicker", NULL));

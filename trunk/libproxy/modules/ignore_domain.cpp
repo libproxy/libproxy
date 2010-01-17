@@ -59,4 +59,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(ignore_module, domain, true);
+PX_MODULE_LOAD(ignore, domain, true);

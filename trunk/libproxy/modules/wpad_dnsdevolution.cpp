@@ -101,4 +101,4 @@ private:
 	pac*   lpac;
 };
 
-PX_MODULE_LOAD(wpad_module, dnsdevolution, true);
+PX_MODULE_LOAD(wpad, dnsdevolution, true);

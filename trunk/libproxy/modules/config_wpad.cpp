@@ -30,4 +30,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(config_module, wpad, true);
+PX_MODULE_LOAD(config, wpad, true);

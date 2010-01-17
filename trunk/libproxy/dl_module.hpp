@@ -37,7 +37,7 @@ public:
 class dl_module {
 	public:
 		~dl_module();
-		dl_module(const string filename) throw (dl_error);
+		dl_module(const string filename="") throw (dl_error);
 		bool operator==(const dl_module& module) const;
 		template <class T> T get_symbol(const string symbolname) const throw (dl_error) {
 			return (T) this->getsym(symbolname);

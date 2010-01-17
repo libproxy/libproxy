@@ -90,4 +90,4 @@ private:
 	DBusConnection *conn;
 };
 
-PX_MODULE_LOAD(network_module, networkmanager, true);
+PX_MODULE_LOAD(network, networkmanager, true);
