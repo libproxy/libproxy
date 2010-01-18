@@ -96,11 +96,7 @@ print_proxies(char **proxies)
 
 	for (j=0; proxies[j] ; j++)
 	{
-		printf(proxies[j]);
-		if (proxies[j+1])
-			printf(" ");
-		else
-			printf("\n");
+		printf("%s%s", proxies[j], proxies[j+1] ? " " : "\n");
 		free(proxies[j]);
 	}
 	free(proxies);
