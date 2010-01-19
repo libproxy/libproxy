@@ -24,11 +24,37 @@ using namespace com::googlecode::libproxy;
 
 #include <SystemConfiguration/SystemConfiguration.h>
 
-static bool getint(CFDictionaryRef settings, string key, int64_t& answer) {
+class str : public string {
+public:
+	str(CFStringRef s) : string() {
+		if (!s) return;
+		const char* tmp = CFStringGetCStringPtr(s, CFStringGetFastestEncoding(s));
+		*this += tmp ? tmp : "";
+	}
+
+	str(CFArrayRef a) : string() {
+		if (!a) return;
+		for (CFIndex i=0 ; i < CFArrayGetCount(a) ; i++) {
+			CFStringRef s = (CFStringRef) CFArrayGetValueAtIndex(a, i);
+			*this += str(s);
+			if (i+1 < CFArrayGetCount(a))
+				*this += ",";
+		}
+	}
+};
+
+template <class T>
+static T getobj(CFDictionaryRef settings, string key) {
+	if (!settings) return NULL;
 	CFStringRef k = CFStringCreateWithCString(NULL, key.c_str(), kCFStringEncodingMacRoman);
-	if (!k) return false;
-	CFNumberRef n = (CFNumberRef) CFDictionaryGetValue(settings, k);
+	if (!k) return NULL;
+	T retval = (T) CFDictionaryGetValue(settings, k);
 	CFRelease(k);
+	return retval;
+}
+
+static bool getint(CFDictionaryRef settings, string key, int64_t& answer) {
+	CFNumberRef n = getobj<CFNumberRef>(settings, key);
 	if (!n) return false;
 	if (!CFNumberGetValue(n, kCFNumberSInt64Type, &answer))
 		return false;
@@ -39,19 +65,6 @@ static bool getbool(CFDictionaryRef settings, string key, bool dflt=false) {
 	int64_t i;
 	if (!getint(settings, key, i)) return dflt;
 	return i != 0;
-}
-
-static bool getstr(CFDictionaryRef settings, string key, string& str) {
-	CFStringRef k = CFStringCreateWithCString(NULL, key.c_str(), kCFStringEncodingMacRoman);
-	if (!k) return false;
-	CFStringRef s = (CFStringRef) CFDictionaryGetValue(settings, k);
-	CFRelease(k);
-	if (!s) return false;
-	const char* tmp = CFStringGetCStringPtr(s, kCFStringEncodingMacRoman);
-	if (!tmp) return false;
-
-	str = string(tmp);
-	return true;
 }
 
 static bool protocol_url(CFDictionaryRef settings, string protocol, string& config) {
@@ -67,7 +80,7 @@ static bool protocol_url(CFDictionaryRef settings, string protocol, string& conf
 		return false;
 
 	// Get ProtocolProxy
-	if (!getstr(settings, protocol + "Proxy", host))
+	if ((host = str(getobj<CFStringRef>(settings, protocol + "Proxy"))) == "")
 		return false;
 
 	stringstream ss;
@@ -98,9 +111,7 @@ public:
 
 	url get_config(url url) throw (runtime_error) {
 		string tmp;
-		CFDictionaryRef proxies;
-
-		proxies = SCDynamicStoreCopyProxies(NULL);
+		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
 		if (!proxies) throw runtime_error("Unable to fetch proxy configuration");
 
 		// wpad://
@@ -109,7 +120,7 @@ public:
 
 		// pac+http://...
 		if (getbool(proxies, "ProxyAutoConfigEnable") &&
-	            getstr(proxies, "ProxyAutoConfigURLString", tmp) &&
+		    (tmp = str(getobj<CFStringRef>(proxies, "ProxyAutoConfigURLString"))) != "" &&
         	    url::is_valid(tmp))
 			return com::googlecode::libproxy::url(string("pac+") + tmp);
 
@@ -122,11 +133,9 @@ public:
 		return com::googlecode::libproxy::url(string("direct://"));
 	}
 
-/*	string get_ignore(url) {
-		char *ignore = getenv("no_proxy");
-		      ignore = ignore ? ignore : getenv("NO_PROXY");
-		return string(ignore ? ignore : "");
-	}*/
+	string get_ignore(url) {
+		return str(getobj<CFArrayRef>(SCDynamicStoreCopyProxies(NULL), "ExceptionsList"));
+	}
 };
 
 PX_MODULE_LOAD(config, macosx, true);
