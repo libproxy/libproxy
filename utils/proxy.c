@@ -21,7 +21,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <string.h>
 
 /* Import libproxy API */
