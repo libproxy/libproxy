@@ -21,6 +21,7 @@
 #define CONFIG_FILE_HPP_
 
 #include <stdexcept>
+#include <string>
 #include <map>
 using namespace std;
 

@@ -18,7 +18,9 @@
  ******************************************************************************/
 
 #include <sys/stat.h> // For stat()
+#ifndef WIN32
 #include <dirent.h>   // For opendir(), readdir(), closedir()
+#endif
 
 #include "module_manager.hpp"
 #include "builtin_modules.hpp"
@@ -158,6 +160,7 @@ bool module_manager::load_file(const string filename) {
 }
 
 bool module_manager::load_dir(const string dirname) {
+#ifndef WIN32
 	/* Open the module dir */
 	DIR *moduledir = opendir(dirname.c_str());
 	if (!moduledir) return false;
@@ -174,6 +177,9 @@ bool module_manager::load_dir(const string dirname) {
 	}
 	closedir(moduledir);
 	return loaded;
+#else
+	return false;
+#endif
 }
 
 }

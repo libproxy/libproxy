@@ -34,7 +34,7 @@ static std::string pdlerror() {
 			NULL,
 			GetLastError(),
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			&msg,
+			(LPTSTR) &msg,
 			0,
 			NULL);
 	e = std::string(msg);

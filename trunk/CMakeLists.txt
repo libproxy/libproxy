@@ -23,8 +23,10 @@ set(bindir     ${prefix}/${rbindir})
 set(includedir ${prefix}/${rincludedir})
 
 # Add a global compilation stuff
-add_definitions(-D_POSIX_C_SOURCE=1)
-set(CMAKE_CXX_FLAGS "-g -Wall -Werror ${CMAKE_CXX_FLAGS}")
+if (UNIX)
+  add_definitions(-D_POSIX_C_SOURCE=1)
+  set(CMAKE_CXX_FLAGS "-g -Wall -Werror ${CMAKE_CXX_FLAGS}")
+endif()
 
 ### Subdirectories
 add_subdirectory(libproxy)
