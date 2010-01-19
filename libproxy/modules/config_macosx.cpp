@@ -87,9 +87,9 @@ static bool protocol_url(CFDictionaryRef settings, string protocol, string& conf
 	if (protocol == "HTTP" || protocol == "HTTPS" || protocol == "FTP")
 		ss << "http://";
 	else if (protocol == "Gopher")
-		ss << "gopher://"; // Is this correct?
+		return false; //ss << "gopher://"; // Is this correct?
 	else if (protocol == "RTSP")
-		ss << "rtsp://";   // Is this correct?
+		return false; //ss << "rtsp://";   // Is this correct?
 	else if (protocol == "SOCKS")
 		ss << "socks://";
 	else
@@ -125,29 +125,45 @@ public:
 		if (!proxies) throw runtime_error("Unable to fetch proxy configuration");
 
 		// wpad://
-		if (getbool(proxies, "ProxyAutoDiscoveryEnable"))
+		if (getbool(proxies, "ProxyAutoDiscoveryEnable")) {
+			CFRelease(proxies);
 			return com::googlecode::libproxy::url(string("wpad://"));
+		}
 
 		// pac+http://...
 		if (getbool(proxies, "ProxyAutoConfigEnable") &&
 		    (tmp = str(getobj<CFStringRef>(proxies, "ProxyAutoConfigURLString"))) != "" &&
-        	    url::is_valid(tmp))
+        	    url::is_valid(tmp)) {
+			CFRelease(proxies);
 			return com::googlecode::libproxy::url(string("pac+") + tmp);
+		}
 
 		// http:// or socks:// (TODO: gopher:// and rtsp:// ???)
 		if ((protocol_url(proxies, toupper(url.get_scheme()), tmp)    && url::is_valid(tmp)) ||
 		    (protocol_url(proxies, capitalize(url.get_scheme()), tmp) && url::is_valid(tmp)) ||
 		    (protocol_url(proxies, toupper("http"), tmp)              && url::is_valid(tmp)) ||
-	            (protocol_url(proxies, toupper("socks"), tmp)             && url::is_valid(tmp)))
+	            (protocol_url(proxies, toupper("socks"), tmp)             && url::is_valid(tmp))) {
+			CFRelease(proxies);
 			return com::googlecode::libproxy::url(tmp);
+		}
 
 		// direct://
+		CFRelease(proxies);
 		return com::googlecode::libproxy::url(string("direct://"));
 	}
 
 	string get_ignore(url) {
-		// TODO: "Exclude simple hostnames"
-		return str(getobj<CFArrayRef>(SCDynamicStoreCopyProxies(NULL), "ExceptionsList"));
+		// Get config dict
+		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
+		if (!proxies) return "";
+
+		// Get ignores
+		string tmp = str(getobj<CFArrayRef>(proxies, "ExceptionsList"));
+		if (getbool(proxies, "ExcludeSimpleHostnames"))
+			tmp += (tmp == "" ? string("") : string(",")) + "__simple_hostnames__";
+
+		CFRelease(proxies);
+		return tmp;
 	}
 };
 
