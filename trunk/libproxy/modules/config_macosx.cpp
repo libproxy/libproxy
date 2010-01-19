@@ -102,7 +102,17 @@ static bool protocol_url(CFDictionaryRef settings, string protocol, string& conf
 	return true;
 }
 
-static string toupper(string str) { return str; }
+static string toupper(string str) {
+	string tmp;
+	for (unsigned int i=0 ; str.c_str()[i] ; i++)
+		tmp += toupper(str.c_str()[i]);
+	return tmp;
+}
+
+static string capitalize(string str) {
+	char c = toupper(str.c_str()[0]);
+	return string(&c, 1) + str.substr(1);
+}
 
 class macosx_config_module : public config_module {
 public:
@@ -124,9 +134,11 @@ public:
         	    url::is_valid(tmp))
 			return com::googlecode::libproxy::url(string("pac+") + tmp);
 
-		// http:// or socks://
-		if (protocol_url(proxies, toupper(url.get_scheme()), tmp) ||
-	            protocol_url(proxies, toupper("socks"), tmp))
+		// http:// or socks:// (TODO: gopher:// and rtsp:// ???)
+		if ((protocol_url(proxies, toupper(url.get_scheme()), tmp)    && url::is_valid(tmp)) ||
+		    (protocol_url(proxies, capitalize(url.get_scheme()), tmp) && url::is_valid(tmp)) ||
+		    (protocol_url(proxies, toupper("http"), tmp)              && url::is_valid(tmp)) ||
+	            (protocol_url(proxies, toupper("socks"), tmp)             && url::is_valid(tmp)))
 			return com::googlecode::libproxy::url(tmp);
 
 		// direct://
@@ -134,6 +146,7 @@ public:
 	}
 
 	string get_ignore(url) {
+		// TODO: "Exclude simple hostnames"
 		return str(getobj<CFArrayRef>(SCDynamicStoreCopyProxies(NULL), "ExceptionsList"));
 	}
 };
