@@ -20,11 +20,11 @@
 #include <iostream>
 #include <cstring>
 
-#include <pthread.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
+#else
+#include <pthread.h>
 #endif
 
 #include "config_file.hpp"
@@ -42,7 +42,9 @@ public:
 	vector<string> get_proxies(string url);
 
 private:
+#ifndef WIN32
 	pthread_mutex_t mutex;
+#endif
 	module_manager  mm;
 	libproxy::pac*  pac;
 	bool            wpad;
@@ -95,8 +97,10 @@ _format_pac_response(string response)
 }
 
 proxy_factory::proxy_factory() {
+#ifndef WIN32
 	pthread_mutex_init(&this->mutex, NULL);
 	pthread_mutex_lock(&this->mutex);
+#endif
 	this->pac = NULL;
 
 	// Register our singletons
@@ -116,14 +120,20 @@ proxy_factory::proxy_factory() {
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
 
+#ifndef WIN32
 	pthread_mutex_unlock(&this->mutex);
+#endif
 }
 
 proxy_factory::~proxy_factory() {
+#ifndef WIN32
 	pthread_mutex_lock(&this->mutex);
+#endif
 	if (this->pac) delete this->pac;
+#ifndef WIN32
 	pthread_mutex_unlock(&this->mutex);
 	pthread_mutex_destroy(&this->mutex);
+#endif
 }
 
 
@@ -142,8 +152,10 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		goto do_return;
 	realurl = new url(__url);
 
+#ifndef WIN32
 	// Lock the mutex
 	pthread_mutex_lock(&this->mutex);
+#endif
 
 	// Check to see if our network topology has changed...
 	networks = this->mm.get_modules<network_module>();
@@ -275,7 +287,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Actually return, freeing misc stuff */
 	do_return:
+#ifndef WIN32
 		pthread_mutex_unlock(&this->mutex);
+#endif
 		if (realurl)
 			delete realurl;
 		if (response.size() == 0)

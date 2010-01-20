@@ -23,6 +23,9 @@
 #include <assert.h>
 #ifndef WIN32
 #include <unistd.h>
+#else
+#define STDIN_FILENO 0
+#define read _read
 #endif
 #include <string.h>
 

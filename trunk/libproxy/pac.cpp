@@ -22,17 +22,11 @@
 #include <cstdio>     // For sscanf(...)
 
 #ifdef _WIN32
-#include <winsock2.h>
 #include <io.h>
 #define pfsize(st) (st.st_size)
-#ifndef close
 #define close _close
-#endif
-#ifndef read
 #define read _read
-#endif
 #else
-#include <sys/socket.h>
 #define pfsize(st) (st.st_blksize * st.st_blocks)
 #endif
 
