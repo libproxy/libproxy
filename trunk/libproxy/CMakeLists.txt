@@ -112,10 +112,10 @@ px_module(wpad_dnsdevolution       1)
 message("")
 
 ### Main library
-configure_file(builtin_modules.hpp.in builtin_modules.hpp @ONLY)
 add_library(libproxy SHARED ${lpSOURCES})
 target_link_libraries(libproxy ${lpLIBRARIES})
 set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS SYSCONFDIR="/etc/";MODULEDIR="${moduledir}")
+set_property(SOURCE module_manager.cpp PROPERTY COMPILE_DEFINITIONS BUILTIN_MODULES=${BUILTIN_MODULES})
 set_target_properties(libproxy PROPERTIES PREFIX "" COMPILE_FLAGS -g VERSION 0 SOVERSION 0.0.0)
 install(TARGETS libproxy DESTINATION ${rlibdir})
 install(FILES   proxy.h  DESTINATION ${rincludedir})
