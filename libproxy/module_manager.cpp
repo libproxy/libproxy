@@ -124,7 +124,7 @@ bool module_manager::load_file(const string filename) {
 	// Stat the file to make sure it is a file
 	struct stat st;
 	if (stat(filename.c_str(), &st) != 0) return false;
-	if (!S_ISREG(st.st_mode)) return false;
+	if (st.st_mode & S_IFMT != S_IFREG) return false;
 
 	// Prepare for blacklist check
 	vector<string> blacklist = strsplit(getenv("PX_MODULE_BLACKLIST"), ",");
