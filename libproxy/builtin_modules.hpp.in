@@ -1,9 +1,0 @@
-#ifndef BUILTINMODULES_HPP_
-#define BUILTINMODULES_HPP_
-
-const char* _builtins[] = {
-		@BUILTIN_MODULES@
-		NULL
-};
-
-#endif /* BUILTINMODULES_HPP_ */

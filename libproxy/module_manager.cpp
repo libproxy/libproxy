@@ -23,12 +23,16 @@
 #endif
 
 #include "module_manager.hpp"
-#include "builtin_modules.hpp"
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
 using namespace std;
+
+static const char* _builtins[] = {
+                BUILTIN_MODULES
+                NULL
+};
 
 static vector<string> strsplit(const char* cstr, string delimiter) {
 	vector<string> v;
