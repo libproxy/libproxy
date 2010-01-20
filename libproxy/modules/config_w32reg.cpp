@@ -16,21 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <windows.h>
-
 #include "../module_types.hpp"
+#include <windows.h>
 using namespace com::googlecode::libproxy;
 
 #define W32REG_OFFSET_PAC  (1 << 2)
 #define W32REG_OFFSET_WPAD (1 << 3)
 #define W32REG_BASEKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
+#define W32REG_BUFFLEN 1024
 
-static bool _get_registry(const char *key, const char *name, uchar **sval, uint32_t *slen, uint32_t *ival) {
+static bool _get_registry(const char *key, const char *name, char **sval, uint32_t *slen, uint32_t *ival) {
 	HKEY  hkey;
 	LONG  result;
 	DWORD type;
-	DWORD buflen = 1024;
-	BYTE  buffer[buflen];
+	DWORD buflen = W32REG_BUFFLEN;
+	BYTE  buffer[W32REG_BUFFLEN];
 
 	// Don't allow the caller to specify both sval and ival
 	if (sval && ival)
@@ -65,9 +65,9 @@ static bool _get_registry(const char *key, const char *name, uchar **sval, uint3
 }
 
 static bool _is_enabled(uint8_t type) {
-	uchar    *data   = NULL;
-	uint32_t  dlen   = 0;
-	bool      result = false;
+	char    *data = NULL;
+	uint32_t dlen = 0;
+	bool   result = false;
 
 	// Get the binary value DefaultConnectionSettings
 	if (!_get_registry(W32REG_BASEKEY "\\Connections", "DefaultConnectionSettings", &data, &dlen, NULL))
@@ -84,7 +84,7 @@ static bool _is_enabled(uint8_t type) {
 static map<string, string> _parse_manual(string data) {
 	// ProxyServer comes in two formats:
 	//   1.2.3.4:8080 or ftp=1.2.3.4:8080;https=1.2.3.4:8080...
-	map<string, url> rval;
+	map<string, string> rval;
 
 	// If we have the second format, do recursive parsing,
 	// then handle just the first entry
@@ -101,7 +101,7 @@ static map<string, string> _parse_manual(string data) {
 
 	// Otherwise set the value for this single entry and return
 	string protocol = data.substr(0, data.find("="));
-	try { rval[protocol] = url(protocol + "://" + data.substr(data.find("=")+1)); }
+	try { rval[protocol] = url(protocol + "://" + data.substr(data.find("=")+1)).to_string(); }
 	catch (parse_error&) {}
 
 	return rval;
@@ -137,15 +137,15 @@ public:
 			delete tmp;
 
 			// First we look for an exact match
-			if (manual.find(dst.get_scheme()) != map<string, url>::end)
+			if (manual.find(dst.get_scheme()) != manual.end())
 				return manual[dst.get_scheme()];
 
 			// Next we look for http
-			else if (manual.find("http") != map<string, url>::end)
+			else if (manual.find("http") != manual.end())
 				return manual["http"];
 
 			// Last we look for socks
-			else if (manual.find("socks") != map<string, url>::end)
+			else if (manual.find("socks") != manual.end())
 				return manual["socks"];
 		}
 

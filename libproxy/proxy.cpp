@@ -20,15 +20,15 @@
 #include <iostream>
 #include <cstring>
 
+#include "config_file.hpp"
+#include "module_types.hpp"
+
 #ifdef _WIN32
 #include <windows.h>
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
 #else
 #include <pthread.h>
 #endif
-
-#include "config_file.hpp"
-#include "module_types.hpp"
 
 namespace com {
 namespace googlecode {

@@ -1,5 +1,9 @@
 set(lpSOURCES   config_file.cpp dl_module.cpp module_manager.cpp module_types.cpp pac.cpp proxy.cpp url.cpp)
-set(lpLIBRARIES m pthread dl)
+if (UNIX OR APPLE)
+  set(lpLIBRARIES m pthread dl)
+else()
+  set(lpLIBRARIES "")
+endif()
 set(BUILTIN_MODULES "")
 
 ### Misc files
