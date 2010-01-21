@@ -23,7 +23,7 @@
 #include <stdexcept>
 
 #include "module_manager.hpp"
-#include "pac.hpp"
+#include "url.hpp"
 
 namespace com {
 namespace googlecode {
@@ -80,20 +80,20 @@ public:
 class pacrunner {
 public:
 	virtual ~pacrunner() {};
-	virtual string run(const url url) throw (bad_alloc)=0;
+	virtual string run(const url& dst) throw (bad_alloc)=0;
 };
 
 class pacrunner_module : public module {
 public:
 	// Abstract methods
-	virtual pacrunner* get_pacrunner(const pac pac) throw (bad_alloc)=0;
+	virtual pacrunner* get_pacrunner(const string& pac) throw (bad_alloc)=0;
 
 	// Virtual methods
 	virtual ~pacrunner_module();
 
 	// Final methods
 	pacrunner_module();
-	string run(const pac pac, const url dst) throw (bad_alloc);
+	string run(const char* pac, const url& dst) throw (bad_alloc);
 
 private:
 	pacrunner* pr;
@@ -115,7 +115,7 @@ class wpad_module : public module {
 public:
 	// Abstract methods
 	virtual bool found()=0;
-	virtual pac* next()=0;
+	virtual bool next(url& _url, char** pac)=0;
 	virtual void rewind()=0;
 
 	// Virtual methods

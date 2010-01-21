@@ -46,8 +46,9 @@ private:
 	pthread_mutex_t mutex;
 #endif
 	module_manager  mm;
-	libproxy::pac*  pac;
-	bool            wpad;
+	char*  pac;
+	url    pacurl;
+	bool   wpad;
 };
 
 bool istringcmp(string a, string b) {
@@ -218,7 +219,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		if (!this->pac) {
 			vector<wpad_module*> wpads = this->mm.get_modules<wpad_module>();
 			for (vector<wpad_module*>::iterator i=wpads.begin() ; i != wpads.end() ; i++)
-				if ((this->pac = (*i)->next()))
+				if ((*i)->next(this->pacurl, &this->pac))
 					break;
 
 			/* If getting the PAC fails, but the WPAD cycle worked, restart the cycle */
@@ -235,7 +236,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 						// Attempt to find a PAC
 						for (i=wpads.begin() ; i != wpads.end() ; i++)
-							if ((this->pac = (*i)->next()))
+							if ((*i)->next(this->pacurl, &this->pac))
 								break;
 						break;
 					}
@@ -252,16 +253,19 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 		/* If a PAC already exists, but came from a different URL than the one specified, remove it */
 		if (this->pac) {
-			if (this->pac->get_url() == confurl)
-			{
+			if (this->pacurl == confurl) {
 				delete this->pac;
 				this->pac = NULL;
 			}
 		}
 
 		/* Try to load the PAC if it is not already loaded */
-		if (!this->pac && !(this->pac = new libproxy::pac(confurl)))
-			goto do_return;
+		if (!this->pac) {
+			this->pacurl = confurl;
+			this->pac    = confurl.get_pac();
+			if (!this->pac)
+				goto do_return;
+		}
 	}
 
 	/* In case of either PAC or WPAD, we'll run the PAC */
@@ -273,7 +277,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			goto do_return;
 
 		/* Run the PAC, but only try one PACRunner */
-		response = _format_pac_response(pacrunners[0]->run(*this->pac, *realurl));
+		response = _format_pac_response(pacrunners[0]->run(this->pac, *realurl));
 	}
 
 	/* If we have a manual config (http://..., socks://...) */

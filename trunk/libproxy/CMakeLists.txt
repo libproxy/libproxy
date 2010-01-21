@@ -1,8 +1,8 @@
-set(lpSOURCES   config_file.cpp dl_module.cpp module_manager.cpp module_types.cpp pac.cpp proxy.cpp url.cpp)
-if (UNIX OR APPLE)
-  set(lpLIBRARIES m pthread dl)
+set(lpSOURCES   config_file.cpp dl_module.cpp module_manager.cpp module_types.cpp proxy.cpp url.cpp)
+if (WIN32)
+  set(lpLIBRARIES ws2_32)
 else()
-  set(lpLIBRARIES "")
+  set(lpLIBRARIES m pthread dl)
 endif()
 set(BUILTIN_MODULES "")
 

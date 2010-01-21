@@ -55,14 +55,12 @@ public:
 	static bool is_valid(const string url);
 
 	~url();
+	url();
 	url(const url& url);
 	url(string url) throw (parse_error, logic_error);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
 	url& operator=(string url) throw (parse_error);
-
-	int open();
-	int open(map<string, string> headers);
 
 	string   get_host()     const;
 	const vector<const sockaddr*>* get_ips(bool usedns);
@@ -72,6 +70,7 @@ public:
 	string   get_scheme()   const;
 	string   get_username() const;
 	string   to_string()    const;
+	char*    get_pac(); // Allocated, must free.  NULL on error.
 
 private:
 	string                   host;
