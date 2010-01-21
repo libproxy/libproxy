@@ -97,14 +97,14 @@ pacrunner_module::~pacrunner_module() {
 	if (this->pr) delete this->pr;
 }
 
-string pacrunner_module::run(const pac pac, const url url) throw (bad_alloc) {
-	if (!this->pr || this->last != pac.to_string()) {
+string pacrunner_module::run(const char* pac, const url& dst) throw (bad_alloc) {
+	if (!this->pr || this->last != pac) {
 		if (this->pr) delete this->pr;
-		this->pr   = this->get_pacrunner(pac);
-		this->last = pac.to_string();
+		this->last = pac;
+		this->pr   = this->get_pacrunner(this->last);
 	}
 
-	return this->pr->run(url);
+	return this->pr->run(dst);
 }
 
 bool wpad_module::operator<(const wpad_module& module) const {

@@ -25,29 +25,21 @@ class dns_wpad_module : public wpad_module {
 public:
 	PX_MODULE_ID(NULL);
 
-	dns_wpad_module() {
-		this->last = NULL;
-	}
+	dns_wpad_module() { rewind(); }
+	bool found()      { return last != NULL; }
+	void rewind()     { last = NULL; }
 
-	bool found() {
-		return this->last != NULL;
-	}
+	bool next(url& _url, char** pac) {
+		if (last) return false;
 
-	pac* next() {
-		if (this->last) return NULL;
+		_url = url("http://wpad/wpad.dat");
+		last = *pac = _url.get_pac();
 
-		try { this->last = new pac(url("http://wpad/wpad.dat")); }
-		catch (io_error& e) { }
-
-		return this->last;
-	}
-
-	void rewind() {
-		this->last = NULL;
+		return found();
 	}
 
 private:
-	pac* last;
+	char* last;
 };
 
 PX_MODULE_LOAD(wpad, dns, true);

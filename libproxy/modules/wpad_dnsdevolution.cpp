@@ -32,9 +32,7 @@ static const char *blacklist[] = {
 	NULL
 };
 
-static string
-_get_fqdn()
-{
+static string _get_fqdn() {
 #define BUFLEN 512
 	char hostname[BUFLEN];
 
@@ -58,47 +56,37 @@ class dnsdevolution_wpad_module : public wpad_module {
 public:
 	PX_MODULE_ID(NULL);
 
-	dnsdevolution_wpad_module() {
-		this->rewind();
-	}
+	dnsdevolution_wpad_module() { rewind(); }
+	bool found()                { return lpac != NULL; }
+	void rewind()               { last = ""; }
 
-	bool found() {
-		return this->lpac != NULL;
-	}
-
-	pac* next() {
+	bool next(url& _url, char** pac) {
 		// If we have rewound start the new count
-		if (this->last == "")
-			this->last = _get_fqdn();
+		if (last == "")
+			last = _get_fqdn();
 
 		// Get the 'next' segment
-		if (this->last.find(".") == string::npos) return NULL;
-		this->last = this->last.substr(this->last.find(".")+1);
+		if (last.find(".") == string::npos) return false;
+		last = last.substr(last.find(".") + 1);
 
 		// Don't do TLD's
-		if (this->last.find(".") == string::npos) return NULL;
+		if (this->last.find(".") == string::npos) return false;
 
 		// Process blacklist
 		for (int i=0 ; blacklist[i] ; i++)
-			if (this->last == blacklist[i])
-				return NULL;
+			if (last == blacklist[i])
+				return false;
 
 		// Try to load
-		try { this->lpac = new pac(url(string("http://wpad.") + this->last + "/wpad.dat")); }
-		catch (parse_error& e) { }
-		catch (io_error& e) { }
-
-		return this->lpac;
+		try { _url = url("http://wpad." + last + "/wpad.dat"); }
+		catch (parse_error& e) { return false; }
+		lpac = *pac = _url.get_pac();
+		return found();
 	}
-
-	void rewind() {
-		this->last = "";
-	}
-
 
 private:
 	string last;
-	pac*   lpac;
+	const char* lpac;
 };
 
 PX_MODULE_LOAD(wpad, dnsdevolution, true);

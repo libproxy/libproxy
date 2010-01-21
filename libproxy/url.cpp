@@ -26,8 +26,27 @@
 #include <cstring> // For memcpy()
 #include <sstream> // For int/string conversion (using stringstream)
 #include <cstdio>  // For sscanf()
+#include <cstdlib>    // For atoi()
+#include <sys/stat.h> // For stat()
 
 #include "url.hpp"
+
+#ifdef _WIN32
+#include <io.h>
+#define pfsize(st) (st.st_size)
+#define close _close
+#define read _read
+#else
+#define pfsize(st) (st.st_blksize * st.st_blocks)
+#endif
+
+// This mime type should be reported by the web server
+#define PAC_MIME_TYPE "application/x-ns-proxy-autoconfig"
+// Fall back to checking for this mime type, which servers often report wrong
+#define PAC_MIME_TYPE_FB "text/plain"
+
+// This is the maximum pac size (to avoid memory attacks)
+#define PAC_MAX_SIZE 102400
 
 namespace com {
 namespace googlecode {
@@ -66,6 +85,8 @@ bool url::is_valid(const string __url) {
     delete tmp;
     return true;
 }
+
+url::url() { }
 
 url::url(const string url) throw(parse_error, logic_error) {
 	char *schm = new char[url.size()];
@@ -192,59 +213,6 @@ url& url::operator=(string strurl) throw (parse_error) {
 	return *this;
 }
 
-int url::open() {
-	map<string, string> headers;
-	return this->open(headers);
-}
-
-int url::open(map<string, string> headers) {
-	string request;
-	int sock = -1;
-
-	// In case of a file:// url we open the file and return a handle to it
-	if (this->scheme == "file")
-		return ::open(this->path.c_str(), O_RDONLY);
-
-	// DNS lookup of host
-	if (!this->get_ips(true)) goto error;
-
-	// Iterate through each IP trying to make a connection
-	for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++) {
-		sock = socket((*i)->sa_family, SOCK_STREAM, 0);
-		if (sock < 0) continue;
-
-		if ((*i)->sa_family == AF_INET &&
-			!connect(sock, *i, sizeof(struct sockaddr_in)))
-			break;
-		else if ((*i)->sa_family == AF_INET6 &&
-			!connect(sock, *i, sizeof(struct sockaddr_in6)))
-			break;
-
-		close(sock);
-		sock = -1;
-	}
-	if (sock < 0) goto error;
-
-	// Set any required headers
-	headers["Host"] = this->host;
-
-	// Build the request string
-	request = "GET " + this->path + " HTTP/1.1\r\n";
-	for (map<string, string>::iterator it = headers.begin() ; it != headers.end() ; it++)
-		request += it->first + ": " + it->second + "\r\n";
-	request += "\r\n";
-
-	// Send HTTP request
-	if ((size_t) send(sock, request.c_str(), request.size(), 0) != request.size()) goto error;
-
-	// Return the socket, which is ready for reading the response
-	return sock;
-
-	error:
-		if (sock >= 0) close(sock);
-		return -1;
-}
-
 string url::get_host() const {
 	return this->host;
 }
@@ -307,6 +275,103 @@ string url::get_username() const {
 
 string url::to_string() const {
 	return this->orig;
+}
+
+static inline string _readline(int fd) {
+	// Read a character.
+	// If we don't get a character, return empty string.
+	// If we are at the end of the line, return empty string.
+	char c = '\0';
+	if (read(fd, &c, 1) != 1 || c == '\n') return "";
+	return string(1, c) + _readline(fd);
+}
+
+char* url::get_pac() {
+	int sock = -1;
+	bool correct_mime_type;
+	unsigned long int content_length = 0, status = 0;
+	char* buffer = NULL;
+	string request;
+
+	// In case of a file:// url we open the file and read it
+	if (this->scheme == "file") {
+		struct stat st;
+		if ((sock = ::open(this->path.c_str(), O_RDONLY)) < 0)
+			return NULL;
+		if (!fstat(sock, &st) && pfsize(st) < PAC_MAX_SIZE) {
+			buffer = new char[pfsize(st)+1];
+			if (read(sock, buffer, pfsize(st)) == 0) {
+				delete buffer;
+				buffer = NULL;
+			}
+		}
+		return buffer;
+	}
+
+	// DNS lookup of host
+	if (!this->get_ips(true))
+		return NULL;
+
+	// Iterate through each IP trying to make a connection
+	// Stop at the first one
+	for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++) {
+		sock = socket((*i)->sa_family, SOCK_STREAM, 0);
+		if (sock < 0) continue;
+
+		if ((*i)->sa_family == AF_INET &&
+			!connect(sock, *i, sizeof(struct sockaddr_in)))
+			break;
+		else if ((*i)->sa_family == AF_INET6 &&
+			!connect(sock, *i, sizeof(struct sockaddr_in6)))
+			break;
+
+		close(sock);
+		sock = -1;
+	}
+
+	// Test our socket
+	if (sock < 0) return NULL;
+
+	// Build the request string
+	request  = "GET " + this->path + " HTTP/1.1\r\n";
+	request += "Host: " + this->host + "\r\n";
+	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
+	request += "Connection: close\r\n";
+	request += "\r\n";
+
+	// Send HTTP request
+	if ((size_t) send(sock, request.c_str(), request.size(), 0) != request.size()) {
+		close(sock);
+		return NULL;
+	}
+
+	/* Verify status line */
+	string line = _readline(sock);
+	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
+		/* Check for correct mime type and content length */
+		for (line = _readline(sock) ; line != "\r" && line != "" ; line = _readline(sock)) {
+			// Check for content type
+			if (line.find("Content-Type: ") == 0 &&
+				(line.find(PAC_MIME_TYPE) != string::npos ||
+				 line.find(PAC_MIME_TYPE_FB) != string::npos))
+				correct_mime_type = true;
+
+			// Check for content length
+			else if (content_length == 0)
+				sscanf(line.c_str(), "Content-Length: %lu", &content_length);
+		}
+
+		// Get content
+		if (content_length > 0 && content_length < PAC_MAX_SIZE && correct_mime_type) {
+			buffer = new char[content_length];
+			for (size_t recvd=0 ; recvd < content_length ; )
+				recvd += recv(sock, buffer + recvd, content_length - recvd, 0);
+		}
+	}
+
+	// Clean up
+	close(sock);
+	return buffer;
 }
 
 }

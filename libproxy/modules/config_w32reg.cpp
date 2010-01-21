@@ -75,7 +75,7 @@ static bool _is_enabled(uint8_t type) {
 
 	// WPAD and PAC are contained in the 9th value
 	if (dlen >= 9)
-		result = data[8] & type == type; // Check to see if the bit is set
+		result = (data[8] & type) == type; // Check to see if the bit is set
 
 	delete data;
 	return result;
@@ -152,6 +152,6 @@ public:
 		// Direct
 		return url("direct://");
 	}
-}
+};
 
 PX_MODULE_LOAD(config, w32reg, true);
