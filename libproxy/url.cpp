@@ -86,8 +86,6 @@ bool url::is_valid(const string __url) {
     return true;
 }
 
-url::url() { }
-
 url::url(const string url) throw(parse_error, logic_error) {
 	char *schm = new char[url.size()];
 	char *auth = new char[url.size()];
