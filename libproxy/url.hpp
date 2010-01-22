@@ -76,7 +76,7 @@ private:
 	vector<const sockaddr*>* ips;
 	string                   pass;
 	string                   path;
-	int                      port;
+	uint16_t                 port;
 	string                   scheme;
 	string                   orig;
 	string                   user;
