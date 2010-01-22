@@ -286,7 +286,7 @@ static inline string _readline(int fd) {
 
 char* url::get_pac() {
 	int sock = -1;
-	bool correct_mime_type;
+	bool correct_mime_type, chunked;
 	unsigned long int content_length = 0, status = 0;
 	char* buffer = NULL;
 	string request;
@@ -354,16 +354,46 @@ char* url::get_pac() {
 				 line.find(PAC_MIME_TYPE_FB) != string::npos))
 				correct_mime_type = true;
 
+			// Check for chunked encoding
+			else if (line.find("Content-Transfer-Encoding: chunked") == 0)
+				chunked = true;
+
 			// Check for content length
 			else if (content_length == 0)
 				sscanf(line.c_str(), "Content-Length: %lu", &content_length);
 		}
 
 		// Get content
-		if (content_length > 0 && content_length < PAC_MAX_SIZE && correct_mime_type) {
-			buffer = new char[content_length];
-			for (size_t recvd=0 ; recvd < content_length ; )
-				recvd += recv(sock, buffer + recvd, content_length - recvd, 0);
+		unsigned int recvd = 0;
+		buffer = new char[PAC_MAX_SIZE];
+		*buffer = '\0';
+		do {
+			unsigned int chunk_length;
+
+			if (chunked) {
+				// Discard the empty line if we received a previous chunk
+				if (recvd > 0) _readline(sock);
+
+				// Get the chunk-length line as an integer
+				if (sscanf(_readline(sock).c_str(), "%x", &chunk_length) != 1 || chunk_length == 0) break;
+
+				// Add this chunk to our content length,
+				// ensuring that we aren't over our max size
+				content_length += chunk_length;
+				if (content_length >= PAC_MAX_SIZE) break;
+			}
+
+			while (recvd != content_length) {
+				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
+				if (r < 0) break;
+				recvd += r;
+			}
+			buffer[content_length] = '\0';
+		} while (chunked);
+
+		if (string(buffer).size() != content_length) {
+			delete buffer;
+			buffer = NULL;
 		}
 	}
 
