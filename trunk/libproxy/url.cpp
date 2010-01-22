@@ -129,12 +129,19 @@ url::url(const string url) throw(parse_error, logic_error) {
 
 	// Parse host further. Basically, we're looking for a port.
 	if (*host) {
+		this->port = _get_default_port(this->scheme);
+
+		int hostlen = strlen(host);
+		for (int i=hostlen-1 ; i >= 0 ; i--) {
+			if (host[i] >= '0' && host[i] <= '9') continue;  // Still might be a port
+			if (host[i] != ':' || hostlen - 1 == i) break;   // Definitely not a port
+			if (sscanf(host + i + 1, "%hu", &this->port) != 1) break; // Parse fail, should never happen
+			port_specified = true;
+			host[i] = '\0'; // Terminate at the port ':'
+			break;
+		}	
+
 		this->host = host;
-		port_specified = sscanf(host, "%*[^:]:%d", &this->port) == 1;
-		if (port_specified)
-			this->host = this->host.substr(0, this->host.rfind(':'));
-		else
-			this->port = _get_default_port(this->scheme);
 		*host = NULL;
 	}
 
