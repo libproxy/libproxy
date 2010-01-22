@@ -26,20 +26,25 @@ public:
 	PX_MODULE_ID(NULL);
 
 	dns_wpad_module() { rewind(); }
-	bool found()      { return last != NULL; }
-	void rewind()     { last = NULL; }
+	bool found()      { return lastpac != NULL; }
+	void rewind()     { lasturl = NULL; lastpac = NULL; }
 
-	bool next(url& _url, char** pac) {
-		if (last) return false;
+	url* next(char** pac) {
+		if (lasturl) return false;
 
-		_url = url("http://wpad/wpad.dat");
-		last = *pac = _url.get_pac();
+		lasturl = new url("http://wpad/wpad.dat");
+		lastpac = *pac = lasturl->get_pac();
+		if (!lastpac) {
+			delete lasturl;
+			return NULL;
+		}
 
-		return found();
+		return lasturl;
 	}
 
 private:
-	char* last;
+	url*  lasturl;
+	char* lastpac;
 };
 
 PX_MODULE_LOAD(wpad, dns, true);

@@ -57,36 +57,43 @@ public:
 	PX_MODULE_ID(NULL);
 
 	dnsdevolution_wpad_module() { rewind(); }
-	bool found()                { return lpac != NULL; }
-	void rewind()               { last = ""; }
+	bool found()                { return _found; }
+	void rewind()               { _found = false; last = "";}
 
-	bool next(url& _url, char** pac) {
+	url* next(char** pac) {
 		// If we have rewound start the new count
 		if (last == "")
 			last = _get_fqdn();
 
 		// Get the 'next' segment
-		if (last.find(".") == string::npos) return false;
+		if (last.find(".") == string::npos) return NULL;
 		last = last.substr(last.find(".") + 1);
 
 		// Don't do TLD's
-		if (this->last.find(".") == string::npos) return false;
+		if (last.find(".") == string::npos) return NULL;
 
 		// Process blacklist
 		for (int i=0 ; blacklist[i] ; i++)
 			if (last == blacklist[i])
-				return false;
+				return NULL;
 
 		// Try to load
-		try { _url = url("http://wpad." + last + "/wpad.dat"); }
-		catch (parse_error& e) { return false; }
-		lpac = *pac = _url.get_pac();
-		return found();
+		url* _url = NULL;
+		try { _url = new url("http://wpad." + last + "/wpad.dat"); }
+		catch (parse_error& e) { return NULL; }
+		char *tmppac = *pac = _url->get_pac();
+		if (!tmppac) {
+			delete _url;
+			return NULL;
+		}
+
+		_found = true;
+		return _url;
 	}
 
 private:
 	string last;
-	const char* lpac;
+	bool   _found;
 };
 
 PX_MODULE_LOAD(wpad, dnsdevolution, true);

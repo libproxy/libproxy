@@ -89,6 +89,8 @@ void config_module::set_valid(bool valid) {
 	this->valid = valid;
 }
 
+pacrunner::pacrunner(string, string) {}
+
 pacrunner_module::pacrunner_module() {
 	this->pr = NULL;
 }
@@ -97,14 +99,14 @@ pacrunner_module::~pacrunner_module() {
 	if (this->pr) delete this->pr;
 }
 
-string pacrunner_module::run(const char* pac, const url& dst) throw (bad_alloc) {
-	if (!this->pr || this->last != pac) {
-		if (this->pr) delete this->pr;
-		this->last = pac;
-		this->pr   = this->get_pacrunner(this->last);
+pacrunner* pacrunner_module::get(string pac, string pacurl) throw (bad_alloc) {
+	if (this->pr) {
+		if (this->last == pac)
+			return this->pr;
+		delete this->pr;
 	}
 
-	return this->pr->run(dst);
+	return this->pr = this->create(pac, pacurl);
 }
 
 bool wpad_module::operator<(const wpad_module& module) const {

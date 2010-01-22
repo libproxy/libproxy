@@ -55,7 +55,6 @@ public:
 	static bool is_valid(const string url);
 
 	~url();
-	url();
 	url(const url& url);
 	url(string url) throw (parse_error, logic_error);
 	bool operator==(const url& url) const;

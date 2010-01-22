@@ -748,27 +748,6 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[obj] pac.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>pac.cpp.o</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[pre] pac.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>pac.cpp.i</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[to asm] pac.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>pac.cpp.s</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
 <target name="[obj] proxy.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>

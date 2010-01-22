@@ -47,7 +47,7 @@ private:
 #endif
 	module_manager  mm;
 	char*  pac;
-	url    pacurl;
+	url*   pacurl;
 	bool   wpad;
 };
 
@@ -102,7 +102,8 @@ proxy_factory::proxy_factory() {
 	pthread_mutex_init(&this->mutex, NULL);
 	pthread_mutex_lock(&this->mutex);
 #endif
-	this->pac = NULL;
+	this->pac    = NULL;
+	this->pacurl = NULL;
 
 	// Register our singletons
 	this->mm.set_singleton<pacrunner_module>(true);
@@ -131,6 +132,7 @@ proxy_factory::~proxy_factory() {
 	pthread_mutex_lock(&this->mutex);
 #endif
 	if (this->pac) delete this->pac;
+	if (this->pacurl) delete this->pacurl;
 #ifndef WIN32
 	pthread_mutex_unlock(&this->mutex);
 	pthread_mutex_destroy(&this->mutex);
@@ -210,8 +212,10 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	if (confurl.get_scheme() == "wpad") {
 		/* If the config has just changed from PAC to WPAD, clear the PAC */
 		if (!this->wpad) {
-			if (this->pac) delete this->pac;
-			this->pac  = NULL;
+			if (this->pac)    delete this->pac;
+			if (this->pacurl) delete this->pacurl;
+			this->pac    = NULL;
+			this->pacurl = NULL;
 			this->wpad = true;
 		}
 
@@ -219,7 +223,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		if (!this->pac) {
 			vector<wpad_module*> wpads = this->mm.get_modules<wpad_module>();
 			for (vector<wpad_module*>::iterator i=wpads.begin() ; i != wpads.end() ; i++)
-				if ((*i)->next(this->pacurl, &this->pac))
+				if ((this->pacurl = (*i)->next(&this->pac)))
 					break;
 
 			/* If getting the PAC fails, but the WPAD cycle worked, restart the cycle */
@@ -236,7 +240,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 						// Attempt to find a PAC
 						for (i=wpads.begin() ; i != wpads.end() ; i++)
-							if ((*i)->next(this->pacurl, &this->pac))
+							if ((this->pacurl = (*i)->next(&this->pac)))
 								break;
 						break;
 					}
@@ -253,15 +257,17 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 		/* If a PAC already exists, but came from a different URL than the one specified, remove it */
 		if (this->pac) {
-			if (this->pacurl == confurl) {
+			if (this->pacurl->to_string() != confurl.to_string()) {
+				delete this->pacurl;
 				delete this->pac;
-				this->pac = NULL;
+				this->pacurl = NULL;
+				this->pac    = NULL;
 			}
 		}
 
 		/* Try to load the PAC if it is not already loaded */
 		if (!this->pac) {
-			this->pacurl = confurl;
+			this->pacurl = new url(confurl);
 			this->pac    = confurl.get_pac();
 			if (!this->pac)
 				goto do_return;
@@ -269,7 +275,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	}
 
 	/* In case of either PAC or WPAD, we'll run the PAC */
-	if ((this->pac && confurl.get_scheme() == "wpad") || (confurl.get_scheme().substr(0, 4) == "pac+") ) {
+	if (this->pac && (confurl.get_scheme() == "wpad" || confurl.get_scheme().substr(0, 4) == "pac+") ) {
 		vector<pacrunner_module*> pacrunners = this->mm.get_modules<pacrunner_module>();
 
 		/* No PAC runner found, fall back to direct */
@@ -277,14 +283,15 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			goto do_return;
 
 		/* Run the PAC, but only try one PACRunner */
-		response = _format_pac_response(pacrunners[0]->run(this->pac, *realurl));
+		response = _format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(realurl->to_string(), realurl->get_host()));
 	}
 
 	/* If we have a manual config (http://..., socks://...) */
 	else if (confurl.get_scheme() == "http" || confurl.get_scheme() == "socks")
 	{
 		this->wpad = false;
-		if (this->pac)  { delete this->pac; this->pac = NULL; }
+		if (this->pac)    { delete this->pac;    this->pac = NULL; }
+		if (this->pacurl) { delete this->pacurl; this->pacurl = NULL; }
 		response.clear();
 		response.push_back(confurl.to_string());
 	}

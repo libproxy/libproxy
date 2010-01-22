@@ -107,14 +107,14 @@ public:
 
 		// Get our pipes
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
-			throw io_error("Unable to open gconf helper!");
+			throw runtime_error("Unable to open gconf helper!");
 
 		// Set the read pipe to non-blocking
 		if (fcntl(this->read, F_SETFL, FNONBLOCK) == -1) {
 			close(this->read);
 			close(this->write);
 			kill(this->pid, SIGTERM);
-			throw io_error("Unable to set pipe to non-blocking!");
+			throw runtime_error("Unable to set pipe to non-blocking!");
 		}
 
 		// Read in the first print-out of all our keys
@@ -256,7 +256,7 @@ private:
 extern "C" bool PX_MODULE_LOAD_NAME(config, gnome)(module_manager& mm) {
 	if (xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL)) {
 		try { return mm.register_module<config_module>(new gnome_config_module); }
-		catch (io_error) {}
+		catch (runtime_error) {}
 	}
 	return false;
 }

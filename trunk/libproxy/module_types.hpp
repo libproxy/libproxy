@@ -79,21 +79,23 @@ public:
 // PACRunner module
 class pacrunner {
 public:
+	pacrunner(string pac, string pacurl);
 	virtual ~pacrunner() {};
-	virtual string run(const url& dst) throw (bad_alloc)=0;
+	virtual string run(string url, string host) throw (bad_alloc)=0;
 };
 
 class pacrunner_module : public module {
 public:
-	// Abstract methods
-	virtual pacrunner* get_pacrunner(const string& pac) throw (bad_alloc)=0;
-
 	// Virtual methods
+	virtual pacrunner* get(string pac, string pacurl) throw (bad_alloc);
 	virtual ~pacrunner_module();
 
 	// Final methods
 	pacrunner_module();
-	string run(const char* pac, const url& dst) throw (bad_alloc);
+
+protected:
+	// Abstract methods
+	virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc)=0;
 
 private:
 	pacrunner* pr;
@@ -104,8 +106,9 @@ private:
 	class name ## _pacrunner_module : public pacrunner_module { \
 	public: \
 		PX_MODULE_ID(NULL); \
-		pacrunner* get_pacrunner(const pac pac) throw (bad_alloc) { \
-			return new name ## _pacrunner(pac); \
+	protected: \
+		virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc) { \
+			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
 	PX_MODULE_LOAD(pacrunner, name, cond)
@@ -115,7 +118,7 @@ class wpad_module : public module {
 public:
 	// Abstract methods
 	virtual bool found()=0;
-	virtual bool next(url& _url, char** pac)=0;
+	virtual url* next(char** pac)=0;
 	virtual void rewind()=0;
 
 	// Virtual methods
