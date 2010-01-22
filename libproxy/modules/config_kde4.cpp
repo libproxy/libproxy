@@ -29,7 +29,7 @@ public:
 	PX_MODULE_ID(NULL);
 	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
-	url get_config(url) throw (runtime_error) {
+	url get_config(url dst) throw (runtime_error) {
 		// Open the config file
 		if (this->cf.is_stale())
 		{
@@ -44,8 +44,15 @@ public:
 			string ptype = this->cf.get_value("Proxy Settings", "ProxyType");
 
 			// Use a manual proxy
-			if (ptype == "1")
-				return com::googlecode::libproxy::url(this->cf.get_value("Proxy Settings", "httpProxy"));
+			if (ptype == "1") {
+				try { return com::googlecode::libproxy::url(this->cf.get_value("Proxy Settings", dst.get_scheme() + "Proxy")); }
+				catch (key_error) {
+					try { return com::googlecode::libproxy::url(this->cf.get_value("Proxy Settings", "httpProxy")); }
+					catch (key_error) {
+						return com::googlecode::libproxy::url(this->cf.get_value("Proxy Settings", "socksProxy"));
+					}
+				}
+			}
 
 			// Use a manual PAC
 			else if (ptype == "2")
@@ -70,6 +77,23 @@ public:
 
 		// Don't use any proxy
 		return com::googlecode::libproxy::url("direct://");
+	}
+
+	string get_ignore(url /*dst*/) {
+		// TODO: support ReversedException
+
+		// Open the config file
+		if (this->cf.is_stale())
+		{
+			QString localdir = KStandardDirs().localkdedir();
+			QByteArray ba = localdir.toLatin1();
+			if (!cf.load(string(ba.data()) + "/share/config/kioslaverc"))
+				return "";
+		}
+
+		try { return this->cf.get_value("Proxy Settings", "NoProxyFor"); }
+		catch (key_error&) { }
+		return "";
 	}
 
 private:
