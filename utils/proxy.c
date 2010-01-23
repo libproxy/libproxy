@@ -21,11 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#ifndef WIN32
-#include <unistd.h>
-#else
+#ifdef WIN32
 #define STDIN_FILENO 0
+#include <io.h>
 #define read _read
+#else
+#include <unistd.h>
 #endif
 #include <string.h>
 

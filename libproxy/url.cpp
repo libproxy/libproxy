@@ -80,8 +80,8 @@ static inline sockaddr* _copyaddr(const struct sockaddr& addr) {
 
 bool url::is_valid(const string __url) {
 	url* tmp;
-	try                     { tmp = new url(__url); }
-	catch (parse_error& pe) { return false; }
+	try                  { tmp = new url(__url); }
+	catch (parse_error&) { return false; }
     delete tmp;
     return true;
 }

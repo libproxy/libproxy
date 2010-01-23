@@ -21,6 +21,9 @@
 #define CONFIG_HPP_
 
 #ifdef _WIN32
+#pragma warning(disable: 4251)
+#pragma warning(disable: 4290)
+#pragma warning(disable: 4275)
 #define DLL_PUBLIC __declspec(dllexport)
 #define PATHSEP '\\'
 #ifndef _WIN32_WINNT
@@ -30,6 +33,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <stdint.h>
+typedef unsigned short int sa_family_t;
 #else
 #define DLL_PUBLIC __attribute__ ((visibility("default")))
 #define PATHSEP '/'

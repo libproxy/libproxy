@@ -23,7 +23,9 @@ set(bindir     ${prefix}/${rbindir})
 set(includedir ${prefix}/${rincludedir})
 
 # Add a global compilation stuff
-if (UNIX)
+if (WIN32)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
+else()
   add_definitions(-D_POSIX_C_SOURCE=1)
   set(CMAKE_CXX_FLAGS "-g -Wall -Werror -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
 endif()
