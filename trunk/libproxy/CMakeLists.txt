@@ -110,8 +110,7 @@ elseif(WIN32)
 endif()
 px_module(ignore_domain            2)
 px_module(ignore_ip                2)
-px_module(wpad_dns                 2)
-px_module(wpad_dnsdevolution       1)
+px_module(wpad_dns_alias           2)
 message("")
 
 ### Main library
