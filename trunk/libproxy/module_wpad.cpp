@@ -4,8 +4,9 @@ using namespace com::googlecode::libproxy;
 static const char *DEFAULT_WPAD_ORDER[] = {
 	"wpad_dhcp",
 	"wpad_slp",
-	"wpad_dns",
-	"wpad_dnsdevolution",
+	"wpad_dns_srv",
+	"wpad_dns_txt",
+	"wpad_dns_alias",
 	NULL
 };
 
