@@ -37,16 +37,17 @@ static string trim(string str, const char *set) {
 	return str;
 }
 
-string config_file::get_value(const string key) throw (key_error) {
-	return this->get_value(PX_CONFIG_FILE_DEFAULT_SECTION, key);
+bool config_file::get_value(string key, string& value) {
+	return this->get_value(PX_CONFIG_FILE_DEFAULT_SECTION, key, value);
 }
 
-string config_file::get_value(const string section, const string key) throw (key_error) {
+bool config_file::get_value(string section, string key, string& value) {
 	if (this->sections.find(section) == this->sections.end())
-		throw key_error(string("Section not found: ") + section);
+		return false;
 	if (this->sections[section].find(key) == this->sections[section].end())
-		throw key_error(string("Key not found in section: ") + section);
-	return this->sections[section][key];
+		return false;
+	value = this->sections[section][key];
+	return true;
 }
 
 bool config_file::is_stale() {

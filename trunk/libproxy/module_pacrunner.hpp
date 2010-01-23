@@ -17,36 +17,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef DLOBJECT_HPP_
-#define DLOBJECT_HPP_
+#ifndef MODULE_PACRUNNER_HPP_
+#define MODULE_PACRUNNER_HPP_
 
-#include <string>
-#include <stdexcept>
+#include "module_manager.hpp"
+
+#define PX_DEFINE_PACRUNNER_MODULE(name, cond) \
+	class name ## _pacrunner_module : public pacrunner_module { \
+	public: \
+		PX_MODULE_ID(NULL); \
+	protected: \
+		virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc) { \
+			return new name ## _pacrunner(pac, pacurl); \
+		} \
+	}; \
+	PX_MODULE_LOAD(pacrunner, name, cond)
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
 
-using namespace std;
-
-class dl_error : public runtime_error {
+// PACRunner module
+class DLL_PUBLIC pacrunner {
 public:
-	dl_error(const string& __arg): runtime_error(__arg) {}
+	pacrunner(string pac, string pacurl);
+	virtual ~pacrunner() {};
+	virtual string run(string url, string host) throw (bad_alloc)=0;
 };
 
-class dl_module {
-	public:
-		     ~dl_module();
-		      dl_module(string filename="")             throw (dl_error);
-		void* get_symbol(string symbolname)       const throw (dl_error);
-		bool  operator==(const dl_module& module) const;
+class DLL_PUBLIC pacrunner_module : public module {
+public:
+	// Virtual methods
+	virtual pacrunner* get(string pac, string pacurl) throw (bad_alloc);
+	virtual ~pacrunner_module();
 
-	private:
-		void* dlobject;
+	// Final methods
+	pacrunner_module();
+
+protected:
+	// Abstract methods
+	virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc)=0;
+
+private:
+	pacrunner* pr;
+	string     last;
 };
 
 }
 }
 }
 
-#endif /* DLOBJECT_HPP_ */
+
+#endif /* MODULE_PACRUNNER_HPP_ */

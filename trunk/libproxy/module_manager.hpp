@@ -27,13 +27,13 @@
 #include <algorithm>
 
 #include "dl_module.hpp"
+#include "module.hpp"
 
 #ifdef BUILTIN
 #define PX_MODULE_LOAD_NAME(type, name) type ## _ ## name ## _module_load
 #else
 #define PX_MODULE_LOAD_NAME(type, name) px_module_load
 #endif
-#define PX_MODULE_ID(name) virtual string get_id() const { return this->_bnne(name ? name : __FILE__); }
 #define PX_MODULE_LOAD(type, name, cond) \
 	extern "C" bool PX_MODULE_LOAD_NAME(type, name)(module_manager& mm) { \
 		if (cond) return mm.register_module<type ## _module>(new name ## _ ## type ## _module); \
@@ -45,17 +45,7 @@ namespace googlecode {
 namespace libproxy {
 using namespace std;
 
-class module {
-public:
-	virtual ~module() {}
-	virtual bool operator<(const module&) const { return false; }
-	virtual string get_id() const=0;
-
-protected:
-	string _bnne(const string fn) const;
-};
-
-class module_manager {
+class DLL_PUBLIC module_manager {
 public:
 	typedef       bool (*INIT_TYPE)(module_manager&);
 	static  const char*  INIT_NAME() { return "px_module_load"; }
@@ -74,9 +64,9 @@ public:
 	}
 
 	template <class T> bool register_module(T* module)  {
-		  struct pcmp {
-		    static bool cmp(T* x, T* y) { return *x < *y; }
-		  };
+		struct pcmp {
+			static bool cmp(T* x, T* y) { return *x < *y; }
+		};
 
 		// If the class for this module is a singleton...
 		if (this->singletons.find(&typeid(T)) != this->singletons.end()) {
@@ -99,7 +89,6 @@ public:
 			this->modules[&typeid(T)].push_back(modlist[i]);
 
 		return true;
-
 	}
 
 	template <class T> bool set_singleton(bool singleton) 	{

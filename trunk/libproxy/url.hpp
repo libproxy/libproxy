@@ -20,24 +20,12 @@
 #ifndef URL_HPP_
 #define URL_HPP_
 
-#ifdef _WIN32
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdint.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#endif
-
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "config.hpp"
 
 namespace com {
 namespace googlecode {
@@ -45,12 +33,12 @@ namespace libproxy {
 
 using namespace std;
 
-class parse_error : public runtime_error {
+class DLL_PUBLIC parse_error : public runtime_error {
 public:
 	parse_error(const string& __arg): runtime_error(__arg) {}
 };
 
-class url {
+class DLL_PUBLIC url {
 public:
 	static bool is_valid(const string url);
 
@@ -62,7 +50,7 @@ public:
 	url& operator=(string url) throw (parse_error);
 
 	string   get_host()     const;
-	const vector<const sockaddr*>* get_ips(bool usedns);
+	sockaddr const* const* get_ips(bool usedns);
 	string   get_password() const;
 	string   get_path()     const;
 	uint16_t get_port()     const;
@@ -72,14 +60,14 @@ public:
 	char*    get_pac(); // Allocated, must free.  NULL on error.
 
 private:
-	string                   host;
-	vector<const sockaddr*>* ips;
-	string                   pass;
-	string                   path;
-	uint16_t                 port;
-	string                   scheme;
-	string                   orig;
-	string                   user;
+	string     host;
+	sockaddr** ips;
+	string     pass;
+	string     path;
+	uint16_t   port;
+	string     scheme;
+	string     orig;
+	string     user;
 };
 
 }

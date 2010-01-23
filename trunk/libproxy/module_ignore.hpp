@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_config.hpp"
-using namespace com::googlecode::libproxy;
+#ifndef MODULE_IGNORE_HPP_
+#define MODULE_IGNORE_HPP_
 
-class wpad_config_module : public config_module {
+#include "module_manager.hpp"
+#include "url.hpp"
+
+namespace com {
+namespace googlecode {
+namespace libproxy {
+using namespace std;
+
+// Ignore module
+class DLL_PUBLIC ignore_module : public module {
 public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
-
-	url get_config(url) throw (runtime_error) {
-		return url("wpad://");
-	}
+	virtual bool ignore(url& dst, string ignorestr)=0;
 };
 
-PX_MODULE_LOAD(config, wpad, true);
+}
+}
+}
+
+#endif /* MODULE_IGNORE_HPP_ */

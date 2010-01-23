@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_types.hpp"
+#include "../module_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
 #include <JavaScriptCore/JavaScript.h>

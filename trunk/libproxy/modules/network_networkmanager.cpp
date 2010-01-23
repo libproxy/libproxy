@@ -17,12 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_types.hpp"
+#include <stdint.h> // For uint32_t
+
+#include "../module_network.hpp"
+using namespace com::googlecode::libproxy;
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>
 
-using namespace com::googlecode::libproxy;
 
 class networkmanager_network_module : public network_module {
 public:

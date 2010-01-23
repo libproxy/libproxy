@@ -48,17 +48,6 @@ static vector<string> strsplit(const char* cstr, string delimiter) {
 	return v;
 }
 
-static string basename_noext(string filename) {
-	// Basename
-	if (filename.find_last_of("/\\") != string::npos)
-		filename = filename.substr(filename.find_last_of("/\\")+1);
-
-	// Noext
-	if (filename.rfind(".") != string::npos)
-		return filename.substr(0, filename.rfind("."));
-	return filename;
-}
-
 static bool globmatch(string glob, string str)
 {
 	vector<string> segments = strsplit(glob.c_str(), "*");
@@ -87,16 +76,12 @@ static bool globmatch(string glob, string str)
 	return true;
 }
 
-string module::_bnne(const string fn) const {
-	return basename_noext(fn);
-}
-
 module_manager::module_manager() {
 	dl_module* thisprog = new dl_module();
 	this->dl_modules.insert(thisprog);
 
 	for (unsigned int i=0 ; _builtins[i] ; i++) {
-		module_manager::INIT_TYPE load = thisprog->get_symbol<module_manager::INIT_TYPE>(string(_builtins[i]) + "_module_load");
+		module_manager::INIT_TYPE load = (module_manager::INIT_TYPE) thisprog->get_symbol(string(_builtins[i]) + "_module_load");
 		if (load)
 			load(*this);
 	}
@@ -129,7 +114,7 @@ bool module_manager::load_file(const string filename) {
 	// Prepare for blacklist check
 	vector<string> blacklist = strsplit(getenv("PX_MODULE_BLACKLIST"), ",");
 	vector<string> whitelist = strsplit(getenv("PX_MODULE_WHITELIST"), ",");
-	string         modname   = basename_noext(filename);
+	string         modname   = module::make_name(filename);
 	bool           doload    = true;
 
 	// Check our whitelist/blacklist to see if we should load this module
@@ -153,7 +138,7 @@ bool module_manager::load_file(const string filename) {
 	}
 
 	// Call the INIT function
-	load = dlobj->get_symbol<module_manager::INIT_TYPE>(module_manager::INIT_NAME());
+	load = (module_manager::INIT_TYPE) dlobj->get_symbol(module_manager::INIT_NAME());
 	if (!load || !load(*this)) {
 		this->dl_modules.erase(dlobj);
 		delete dlobj;

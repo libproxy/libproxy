@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_types.hpp"
-#include <windows.h>
+#include "../module_config.hpp"
 using namespace com::googlecode::libproxy;
 
 #define W32REG_OFFSET_PAC  (1 << 2)

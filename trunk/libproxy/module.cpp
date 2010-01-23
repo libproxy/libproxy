@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_config.hpp"
+#include "module.hpp"
 using namespace com::googlecode::libproxy;
 
-class wpad_config_module : public config_module {
-public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
+string module::make_name(string filename) {
+	// Basename
+	if (filename.find_last_of(PATHSEP) != string::npos)
+		filename = filename.substr(filename.find_last_of(PATHSEP)+1);
 
-	url get_config(url) throw (runtime_error) {
-		return url("wpad://");
-	}
-};
+	// Noext
+	if (filename.rfind('.') != string::npos)
+		return filename.substr(0, filename.rfind('.'));
+	return filename;
+}
 
-PX_MODULE_LOAD(config, wpad, true);
+module::~module() {}
+
+bool module::operator<(const module&) const { return false; }

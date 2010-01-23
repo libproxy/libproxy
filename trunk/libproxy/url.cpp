@@ -139,7 +139,7 @@ url::url(const string url) throw(parse_error, logic_error) {
 			port_specified = true;
 			host[i] = '\0'; // Terminate at the port ':'
 			break;
-		}	
+		}
 
 		this->host = host;
 		*host = NULL;
@@ -171,8 +171,8 @@ url::url(const url &url) {
 
 url::~url() {
 	if (this->ips) {
-		for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++)
-			delete *i;
+		for (int i=0 ; this->ips[i] ; i++)
+			delete this->ips[i];
 		delete this->ips;
 	}
 }
@@ -182,6 +182,8 @@ bool url::operator==(const url& url) const {
 }
 
 url& url::operator=(const url& url) {
+	int i=0;
+
 	// Ensure these aren't the same objects
 	if (&url == this)
 		return *this;
@@ -196,17 +198,18 @@ url& url::operator=(const url& url) {
 
 	if (this->ips) {
 		// Free any existing ip cache
-		for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++)
-			delete *i;
+		for (i=0 ; this->ips[i] ; i++)
+			delete this->ips[i];
 		delete this->ips;
 		this->ips = NULL;
 	}
 
 	if (url.ips) {
 		// Copy the new ip cache
-		this->ips = new vector<const sockaddr*>();
-		for (vector<const sockaddr*>::iterator i = url.ips->begin() ; i != url.ips->end() ; i++)
-			this->ips->push_back(_copyaddr(**i));
+		for (i=0 ; url.ips[i] ; i++);
+		this->ips = new sockaddr*[i];
+		for (i=0 ; url.ips[i] ; i++)
+			this->ips[i] = _copyaddr(*url.ips[i]);
 	}
 	return *this;
 }
@@ -222,12 +225,12 @@ string url::get_host() const {
 	return this->host;
 }
 
-const vector<const sockaddr*>* url::get_ips(bool usedns) {
+sockaddr const* const* url::get_ips(bool usedns) {
 	// Check the cache
-	if (this->ips) return (const vector<const sockaddr*>*) this->ips;
+	if (this->ips) return this->ips;
 
 	// Check without DNS first
-	if (usedns && this->get_ips(false)) return (const vector<const sockaddr*>*) this->ips;
+	if (usedns && this->get_ips(false)) return this->ips;
 
 	// Check DNS for IPs
 	struct addrinfo* info;
@@ -238,20 +241,25 @@ const vector<const sockaddr*>* url::get_ips(bool usedns) {
 	flags.ai_flags    = AI_NUMERICHOST;
 	if (!getaddrinfo(this->host.c_str(), NULL, usedns ? NULL : &flags, &info)) {
 		struct addrinfo* first = info;
+		unsigned int i = 0;
 
-		// Create our vector since we actually have a result
-		this->ips = new vector<const sockaddr*>();
+		// Get the size of our array
+		for (info = first ; info ; info = info->ai_next)
+			i++;
+
+		// Create our array since we actually have a result
+		this->ips = new sockaddr*[i];
 
 		// Copy the sockaddr's into this->ips
-		for ( ; info ; info = info->ai_next) {
+		for (i = 0, info = first ; info ; info = info->ai_next) {
 			if (info->ai_addr->sa_family == AF_INET || info->ai_addr->sa_family == AF_INET6) {
-				this->ips->push_back(_copyaddr(*(info->ai_addr)));
-				((sockaddr_in*)(*(this->ips))[this->ips->size()-1])->sin_port = htons(this->port);
+				this->ips[i] = _copyaddr(*(info->ai_addr));
+				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
 			}
 		}
 
 		freeaddrinfo(first);
-		return (const vector<const sockaddr*>*) this->ips;
+		return this->ips;
 	}
 
 	// No addresses found
@@ -319,15 +327,15 @@ char* url::get_pac() {
 
 	// Iterate through each IP trying to make a connection
 	// Stop at the first one
-	for (vector<const sockaddr*>::iterator i = this->ips->begin() ; i != this->ips->end() ; i++) {
-		sock = socket((*i)->sa_family, SOCK_STREAM, 0);
+	for (int i=0 ; this->ips[i] ; i++) {
+		sock = socket(this->ips[i]->sa_family, SOCK_STREAM, 0);
 		if (sock < 0) continue;
 
-		if ((*i)->sa_family == AF_INET &&
-			!connect(sock, *i, sizeof(struct sockaddr_in)))
+		if (this->ips[i]->sa_family == AF_INET &&
+			!connect(sock, this->ips[i], sizeof(struct sockaddr_in)))
 			break;
-		else if ((*i)->sa_family == AF_INET6 &&
-			!connect(sock, *i, sizeof(struct sockaddr_in6)))
+		else if (this->ips[i]->sa_family == AF_INET6 &&
+			!connect(sock, this->ips[i], sizeof(struct sockaddr_in6)))
 			break;
 
 		close(sock);
