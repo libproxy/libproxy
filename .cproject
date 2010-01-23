@@ -363,20 +363,6 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[lib] wpad_dnsdevolution" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>wpad_dnsdevolution</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] wpad_dnsdevolution/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>wpad_dnsdevolution/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
 <target name=": all" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
@@ -769,45 +755,24 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[obj] modules/wpad_dns.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[obj] modules/wpad_dns_alias.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>modules/wpad_dns.cpp.o</buildTarget>
+<buildTarget>modules/wpad_dns_alias.cpp.o</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[pre] modules/wpad_dns.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[pre] modules/wpad_dns_alias.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>modules/wpad_dns.cpp.i</buildTarget>
+<buildTarget>modules/wpad_dns_alias.cpp.i</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[to asm] modules/wpad_dns.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[to asm] modules/wpad_dns_alias.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>modules/wpad_dns.cpp.s</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[obj] modules/wpad_dnsdevolution.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/wpad_dnsdevolution.cpp.o</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[pre] modules/wpad_dnsdevolution.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/wpad_dnsdevolution.cpp.i</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[to asm] modules/wpad_dnsdevolution.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/wpad_dnsdevolution.cpp.s</buildTarget>
+<buildTarget>modules/wpad_dns_alias.cpp.s</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
