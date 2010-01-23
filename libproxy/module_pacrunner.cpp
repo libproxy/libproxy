@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_config.hpp"
+#include "module_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
-class wpad_config_module : public config_module {
-public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
+pacrunner::pacrunner(string, string) {}
 
-	url get_config(url) throw (runtime_error) {
-		return url("wpad://");
+pacrunner_module::pacrunner_module() {
+	this->pr = NULL;
+}
+
+pacrunner_module::~pacrunner_module() {
+	if (this->pr) delete this->pr;
+}
+
+pacrunner* pacrunner_module::get(string pac, string pacurl) throw (bad_alloc) {
+	if (this->pr) {
+		if (this->last == pac)
+			return this->pr;
+		delete this->pr;
 	}
-};
 
-PX_MODULE_LOAD(config, wpad, true);
+	return this->pr = this->create(pac, pacurl);
+}

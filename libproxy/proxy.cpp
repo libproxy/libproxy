@@ -21,13 +21,14 @@
 #include <cstring>
 
 #include "config_file.hpp"
-#include "module_types.hpp"
+#include "module_config.hpp"
+#include "module_ignore.hpp"
+#include "module_network.hpp"
+#include "module_pacrunner.hpp"
+#include "module_wpad.hpp"
 
 #ifdef _WIN32
-#include <windows.h>
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
-#else
-#include <pthread.h>
 #endif
 
 namespace com {
@@ -112,11 +113,9 @@ proxy_factory::proxy_factory() {
 	setenv("_PX_CONFIG_ORDER", "", 1);
    	config_file cf;
 	if (cf.load(SYSCONFDIR "proxy.conf")) {
-    		try {
-    			string tmp = cf.get_value("config_order");
+		string tmp;
+		if (cf.get_value("config_order", tmp))
 			setenv("_PX_CONFIG_ORDER", tmp.c_str(), 1);
-		}
-		catch (key_error e) { }
 	}
 
 	// Load all modules
@@ -316,11 +315,11 @@ struct _pxProxyFactory {
 	com::googlecode::libproxy::proxy_factory pf;
 };
 
-extern "C" struct _pxProxyFactory *px_proxy_factory_new(void) {
+extern "C" DLL_PUBLIC struct _pxProxyFactory *px_proxy_factory_new(void) {
 	return new struct _pxProxyFactory;
 }
 
-extern "C" char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, const char *url) {
+extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, const char *url) {
 	vector<string> proxies;
 	char** retval;
 
@@ -348,6 +347,6 @@ extern "C" char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, con
 	return retval;
 }
 
-extern "C" void px_proxy_factory_free(struct _pxProxyFactory *self) {
+extern "C" DLL_PUBLIC void px_proxy_factory_free(struct _pxProxyFactory *self) {
 	delete self;
 }

@@ -17,13 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_TYPES_HPP_
-#define MODULE_TYPES_HPP_
-
-#include <stdexcept>
+#ifndef MODULE_CONFIG_HPP_
+#define MODULE_CONFIG_HPP_
 
 #include "module_manager.hpp"
 #include "url.hpp"
+
+#define PX_MODULE_CONFIG_CATEGORY(cat) virtual category get_category() const { return cat; }
 
 namespace com {
 namespace googlecode {
@@ -31,7 +31,7 @@ namespace libproxy {
 using namespace std;
 
 // Config module
-class config_module : public module {
+class DLL_PUBLIC config_module : public module {
 public:
 	typedef enum {
 		CATEGORY_AUTO    = 0,
@@ -60,74 +60,8 @@ private:
 	bool valid;
 };
 
-#define PX_MODULE_CONFIG_CATEGORY(cat) virtual category get_category() const { return cat; }
-
-// Ignore module
-class ignore_module : public module {
-public:
-	// Abstract methods
-	virtual bool ignore(url& dst, string ignorestr)=0;
-};
-
-// Network module
-class network_module : public module {
-public:
-	// Abstract methods
-	virtual bool changed()=0;
-};
-
-// PACRunner module
-class pacrunner {
-public:
-	pacrunner(string pac, string pacurl);
-	virtual ~pacrunner() {};
-	virtual string run(string url, string host) throw (bad_alloc)=0;
-};
-
-class pacrunner_module : public module {
-public:
-	// Virtual methods
-	virtual pacrunner* get(string pac, string pacurl) throw (bad_alloc);
-	virtual ~pacrunner_module();
-
-	// Final methods
-	pacrunner_module();
-
-protected:
-	// Abstract methods
-	virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc)=0;
-
-private:
-	pacrunner* pr;
-	string     last;
-};
-
-#define PX_DEFINE_PACRUNNER_MODULE(name, cond) \
-	class name ## _pacrunner_module : public pacrunner_module { \
-	public: \
-		PX_MODULE_ID(NULL); \
-	protected: \
-		virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc) { \
-			return new name ## _pacrunner(pac, pacurl); \
-		} \
-	}; \
-	PX_MODULE_LOAD(pacrunner, name, cond)
-
-// WPAD module
-class wpad_module : public module {
-public:
-	// Abstract methods
-	virtual bool found()=0;
-	virtual url* next(char** pac)=0;
-	virtual void rewind()=0;
-
-	// Virtual methods
-	virtual bool operator<(const wpad_module& module) const;
-	using module::operator<;
-};
-
 }
 }
 }
 
-#endif /* MODULE_TYPES_HPP_ */
+#endif /* MODULE_CONFIG_HPP_ */

@@ -19,7 +19,7 @@
 
 #include <cstdio>
 
-#include "../module_types.hpp"
+#include "../module_ignore.hpp"
 using namespace com::googlecode::libproxy;
 
 class hostname_ignore_module : public ignore_module {

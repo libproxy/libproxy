@@ -19,7 +19,7 @@
 
 #include <cstring>
 
-#include "../module_types.hpp"
+#include "../module_wpad.hpp"
 using namespace com::googlecode::libproxy;
 
 /* The domain blacklist */

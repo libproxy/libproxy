@@ -19,7 +19,7 @@
 
 #include <cstring> // ?
 
-#include "../module_types.hpp"
+#include "../module_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
 // Work around a mozjs include bug

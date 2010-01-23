@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "../config_file.hpp"
-#include "../module_types.hpp"
+#include "../module_config.hpp"
 using namespace com::googlecode::libproxy;
 
 class system_file_config_module : public config_module {
@@ -33,13 +33,17 @@ public:
 	url get_config(url) throw (runtime_error) {
 		if (this->cf.is_stale())
 			this->cf.load(this->get_filename());
-		return this->cf.get_value("proxy");
+		string tmp = "";
+		this->cf.get_value("proxy", tmp);
+		return tmp;
 	}
 
 	string get_ignore(url) {
 		if (this->cf.is_stale())
 			this->cf.load(this->get_filename());
-		return this->cf.get_value("ignore");
+		string tmp = "";
+		this->cf.get_value("ignore", tmp);
+		return tmp;
 	}
 
 protected:

@@ -60,7 +60,7 @@ dl_module::~dl_module() {
 	pdlclose((pdlmtype) this->dlobject);
 }
 
-dl_module::dl_module(const string filename) throw (dl_error) {
+dl_module::dl_module(string filename) throw (dl_error) {
 	if (filename == "")
 		this->dlobject = pdlopen(NULL);
 	else
@@ -73,7 +73,7 @@ bool dl_module::operator==(const dl_module& module) const {
 	return (this->dlobject == module.dlobject);
 }
 
-void* dl_module::getsym(const string symbolname) const throw (dl_error) {
+void* dl_module::get_symbol(string symbolname) const throw (dl_error) {
 	void*sym = pdlsym((pdlmtype) this->dlobject, symbolname.c_str());
 	if (!sym)
 		throw dl_error("Symbol not found: " + symbolname);

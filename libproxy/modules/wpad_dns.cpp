@@ -17,8 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_types.hpp"
-
+#include "../module_wpad.hpp"
 using namespace com::googlecode::libproxy;
 
 class dns_wpad_module : public wpad_module {

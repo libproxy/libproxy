@@ -19,7 +19,7 @@
 
 #include <cstdlib>
 
-#include "../module_types.hpp"
+#include "../module_config.hpp"
 using namespace com::googlecode::libproxy;
 
 class envvar_config_module : public config_module {

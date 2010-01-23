@@ -17,12 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "module_types.hpp"
+#include <cstdlib> // For getenv()
 
-namespace com {
-namespace googlecode {
-namespace libproxy {
-using namespace std;
+#include "module_config.hpp"
+using namespace com::googlecode::libproxy;
 
 static const char *DEFAULT_CONFIG_ORDER[] = {
 	"USER",
@@ -30,14 +28,6 @@ static const char *DEFAULT_CONFIG_ORDER[] = {
 	"SYSTEM",
 	"config_envvar",
 	"config_wpad",
-	NULL
-};
-
-static const char *DEFAULT_WPAD_ORDER[] = {
-	"wpad_dhcp",
-	"wpad_slp",
-	"wpad_dns",
-	"wpad_dnsdevolution",
 	NULL
 };
 
@@ -87,39 +77,4 @@ bool config_module::get_valid() {
 
 void config_module::set_valid(bool valid) {
 	this->valid = valid;
-}
-
-pacrunner::pacrunner(string, string) {}
-
-pacrunner_module::pacrunner_module() {
-	this->pr = NULL;
-}
-
-pacrunner_module::~pacrunner_module() {
-	if (this->pr) delete this->pr;
-}
-
-pacrunner* pacrunner_module::get(string pac, string pacurl) throw (bad_alloc) {
-	if (this->pr) {
-		if (this->last == pac)
-			return this->pr;
-		delete this->pr;
-	}
-
-	return this->pr = this->create(pac, pacurl);
-}
-
-bool wpad_module::operator<(const wpad_module& module) const {
-	for (int i=0 ; DEFAULT_WPAD_ORDER[i] ; i++) {
-		if (module.get_id() == DEFAULT_WPAD_ORDER[i])
-			break;
-		if (this->get_id() == DEFAULT_WPAD_ORDER[i])
-			return true;
-	}
-	return false;
-}
-
-
-}
-}
 }

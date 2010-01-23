@@ -25,7 +25,7 @@
 #include <signal.h>       // For kill()
 #include "xhasclient.cpp" // For xhasclient()
 
-#include "../module_types.hpp"
+#include "../module_config.hpp"
 using namespace com::googlecode::libproxy;
 
 static const char *_all_keys[] = {

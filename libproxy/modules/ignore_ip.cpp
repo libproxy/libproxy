@@ -20,21 +20,7 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0501
-#include <winsock2.h>
-#include <ws2tcpip.h>
-typedef unsigned short int sa_family_t;
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#endif
-
-#include "../module_types.hpp"
-
+#include "../module_ignore.hpp"
 using namespace com::googlecode::libproxy;
 
 static inline bool
@@ -127,7 +113,7 @@ public:
 	virtual bool ignore(url& url, string ignore) {
 		bool result   = false;
 		uint16_t port = 0;
-		const struct sockaddr *dst_ip = url.get_ips(false)->size() > 0 ? (*url.get_ips(false))[0] : NULL;
+		const struct sockaddr *dst_ip = url.get_ips(false) ? url.get_ips(false)[0] : NULL;
 		struct sockaddr *ign_ip   = NULL, *net_ip = NULL;
 
 		/*

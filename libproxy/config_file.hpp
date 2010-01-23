@@ -20,26 +20,22 @@
 #ifndef CONFIG_FILE_HPP_
 #define CONFIG_FILE_HPP_
 
-#include <stdexcept>
 #include <string>
 #include <map>
 using namespace std;
+
+#include "config.hpp"
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
 
-class key_error : public runtime_error {
+class DLL_PUBLIC config_file {
 public:
-	key_error(const string& __arg): runtime_error(__arg) {}
-};
-
-class config_file {
-public:
-	string get_value(const string key) throw (key_error);
-	string get_value(const string section, const string key) throw (key_error);
-	bool   is_stale();
-	bool   load(string filename);
+	bool get_value(string key, string& value);
+	bool get_value(string section, string key, string& value);
+	bool is_stale();
+	bool load(string filename);
 
 private:
 	string                            filename;

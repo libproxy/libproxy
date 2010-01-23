@@ -19,7 +19,7 @@
 
 #include <sstream>
 
-#include "../module_types.hpp"
+#include "../module_config.hpp"
 using namespace com::googlecode::libproxy;
 
 #include <SystemConfiguration/SystemConfiguration.h>

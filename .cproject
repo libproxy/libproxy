@@ -433,6 +433,48 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
+<target name="[obj] module.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module.cpp.o</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[pre] module.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module.cpp.i</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[to asm] module.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module.cpp.s</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[obj] module_config.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_config.cpp.o</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[pre] module_config.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_config.cpp.i</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[to asm] module_config.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_config.cpp.s</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
 <target name="[obj] module_manager.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
@@ -454,24 +496,45 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[obj] module_types.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[obj] module_pacrunner.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>module_types.cpp.o</buildTarget>
+<buildTarget>module_pacrunner.cpp.o</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[pre] module_types.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[pre] module_pacrunner.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>module_types.cpp.i</buildTarget>
+<buildTarget>module_pacrunner.cpp.i</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[to asm] module_types.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<target name="[to asm] module_pacrunner.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
-<buildTarget>module_types.cpp.s</buildTarget>
+<buildTarget>module_pacrunner.cpp.s</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[obj] module_wpad.cpp.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_wpad.cpp.o</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[pre] module_wpad.cpp.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_wpad.cpp.i</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name="[to asm] module_wpad.cpp.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/gmake</buildCommand>
+<buildArguments/>
+<buildTarget>module_wpad.cpp.s</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
