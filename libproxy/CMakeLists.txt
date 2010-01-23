@@ -115,7 +115,7 @@ px_module(wpad_dnsdevolution       1)
 message("")
 
 ### Main library
-add_library(libproxy ${lpSOURCES})
+add_library(libproxy SHARED ${lpSOURCES})
 target_link_libraries(libproxy ${lpLIBRARIES})
 set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS SYSCONFDIR="/etc/";MODULEDIR="${moduledir}")
 set_property(SOURCE module_manager.cpp PROPERTY COMPILE_DEFINITIONS BUILTIN_MODULES=${BUILTIN_MODULES})
