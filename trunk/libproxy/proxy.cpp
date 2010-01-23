@@ -27,8 +27,9 @@
 #include "module_pacrunner.hpp"
 #include "module_wpad.hpp"
 
-#ifdef _WIN32
+#ifdef WIN32
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
+#define strdup _strdup
 #endif
 
 namespace com {

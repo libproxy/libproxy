@@ -23,6 +23,8 @@
 #include <string>
 #include <stdexcept>
 
+#include "config.hpp"
+
 namespace com {
 namespace googlecode {
 namespace libproxy {
