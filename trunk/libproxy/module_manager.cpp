@@ -29,11 +29,6 @@ namespace googlecode {
 namespace libproxy {
 using namespace std;
 
-static const char* _builtins[] = {
-                BUILTIN_MODULES
-                NULL
-};
-
 static vector<string> strsplit(const char* cstr, string delimiter) {
 	vector<string> v;
 	string str = cstr ? cstr : "";
@@ -76,17 +71,6 @@ static bool globmatch(string glob, string str)
 	return true;
 }
 
-module_manager::module_manager() {
-	dl_module* thisprog = new dl_module();
-	this->dl_modules.insert(thisprog);
-
-	for (unsigned int i=0 ; _builtins[i] ; i++) {
-		module_manager::INIT_TYPE load = (module_manager::INIT_TYPE) thisprog->get_symbol(string(_builtins[i]) + "_module_load");
-		if (load)
-			load(*this);
-	}
-}
-
 module_manager::~module_manager() {
 	// Free all modules
 	for (map<const type_info*, vector<module*> >::iterator i=this->modules.begin() ; i != this->modules.end() ; i++) {
@@ -102,9 +86,18 @@ module_manager::~module_manager() {
 	this->dl_modules.clear();
 }
 
+bool module_manager::load_builtin(const string modname) {
+	dl_module dlobj;
+	module_manager::LOAD_TYPE load = (module_manager::LOAD_TYPE)
+					dlobj.get_symbol(modname + __str(PX_MODULE_LOAD_SUFFIX));
+	if (!load || !load(*this))
+		return false;
+	return true;
+}
+
 bool module_manager::load_file(const string filename, const string condsym) {
 	dl_module* dlobj = NULL;
-	module_manager::INIT_TYPE load;
+	string modname   = module::make_name(filename);
 
 	// If the conditional symbol was specified
 	// ensure that the symbol exists within our
@@ -126,7 +119,6 @@ bool module_manager::load_file(const string filename, const string condsym) {
 	// Prepare for blacklist check
 	vector<string> blacklist = strsplit(getenv("PX_MODULE_BLACKLIST"), ",");
 	vector<string> whitelist = strsplit(getenv("PX_MODULE_WHITELIST"), ",");
-	string         modname   = module::make_name(filename);
 	bool           doload    = true;
 
 	// Check our whitelist/blacklist to see if we should load this module
@@ -150,7 +142,8 @@ bool module_manager::load_file(const string filename, const string condsym) {
 	}
 
 	// Call the INIT function
-	load = (module_manager::INIT_TYPE) dlobj->get_symbol(module_manager::INIT_NAME());
+	module_manager::LOAD_TYPE load = (module_manager::LOAD_TYPE)
+					dlobj->get_symbol(modname + __str(PX_MODULE_LOAD_SUFFIX));
 	if (!load || !load(*this)) {
 		this->dl_modules.erase(dlobj);
 		delete dlobj;
