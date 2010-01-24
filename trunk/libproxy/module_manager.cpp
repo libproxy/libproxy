@@ -23,11 +23,8 @@
 #endif
 
 #include "module_manager.hpp"
-
-namespace com {
-namespace googlecode {
-namespace libproxy {
 using namespace std;
+using namespace com::googlecode::libproxy;
 
 static vector<string> strsplit(const char* cstr, string delimiter) {
 	vector<string> v;
@@ -174,8 +171,4 @@ bool module_manager::load_dir(const string dirname) {
 #else
 	return false;
 #endif
-}
-
-}
-}
 }

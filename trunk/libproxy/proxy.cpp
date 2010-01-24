@@ -42,6 +42,14 @@ static const char* _builtin_modules[] = {
                 NULL
 };
 
+static struct {
+	const char* condition;
+	const char* modname;
+} _conditional_modules[] = {
+        CONDITIONAL_MODULES
+        {NULL, NULL}
+};
+
 class proxy_factory {
 public:
 	proxy_factory();
@@ -127,6 +135,11 @@ proxy_factory::proxy_factory() {
 	// Load all builtin modules
 	for (int i=0 ; _builtin_modules[i] ; i++)
 		this->mm.load_builtin(_builtin_modules[i]);
+
+	// Load conditional modules
+	for (int i=0 ; _conditional_modules[i].modname ; i++)
+		this->mm.load_file(string(MODULEDIR) + _conditional_modules[i].modname + "." + MODULEEXT,
+							_conditional_modules[i].condition);
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
