@@ -26,6 +26,7 @@
 #pragma warning(disable: 4275)
 #define DLL_PUBLIC __declspec(dllexport)
 #define PATHSEP '\\'
+#define MODULEEXT "dll"
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
 #endif
@@ -37,6 +38,7 @@ typedef unsigned short int sa_family_t;
 #else
 #define DLL_PUBLIC __attribute__ ((visibility("default")))
 #define PATHSEP '/'
+#define MODULEEXT "so"
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
