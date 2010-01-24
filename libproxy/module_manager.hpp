@@ -29,11 +29,11 @@
 #include "dl_module.hpp"
 #include "module.hpp"
 
-#ifdef BUILTIN
-#define PX_MODULE_LOAD_NAME(type, name) type ## _ ## name ## _module_load
-#else
-#define PX_MODULE_LOAD_NAME(type, name) px_module_load
-#endif
+#define PX_MODULE_LOAD_SUFFIX _module_load
+#define PX_MODULE_LOAD_NAME_MODNAME(modname) modname ## _MODULE_LOAD_SUFFIX
+#define PX_MODULE_LOAD_NAME(type, name) PX_MODULE_LOAD_NAME_MODNAME(type ## _ ## name)
+#define __str(s) #s
+
 #define PX_MODULE_LOAD(type, name, cond) \
 	extern "C" bool PX_MODULE_LOAD_NAME(type, name)(module_manager& mm) { \
 		if (cond) return mm.register_module<type ## _module>(new name ## _ ## type ## _module); \
@@ -47,10 +47,8 @@ using namespace std;
 
 class DLL_PUBLIC module_manager {
 public:
-	typedef       bool (*INIT_TYPE)(module_manager&);
-	static  const char*  INIT_NAME() { return "px_module_load"; }
+	typedef bool (*LOAD_TYPE)(module_manager&);
 
-	module_manager();
 	~module_manager();
 
 	template <class T> vector<T*> get_modules() const {
@@ -98,6 +96,7 @@ public:
 		return true;
 	}
 
+	bool load_builtin(const string modname);
 	bool load_file(const string filename, const string condsym="");
 	bool load_dir(const string dirname);
 
@@ -105,6 +104,8 @@ private:
 	set<dl_module*>                         dl_modules;
 	map<const type_info*, vector<module*> > modules;
 	set<const type_info*>                   singletons;
+
+	bool _load(const string filename, const string initsym);
 };
 
 }
