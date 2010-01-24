@@ -20,7 +20,7 @@
 #include "module_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
-pacrunner::pacrunner(string, string) {}
+pacrunner::pacrunner(string, const url&) {}
 
 pacrunner_module::pacrunner_module() {
 	this->pr = NULL;
@@ -30,7 +30,7 @@ pacrunner_module::~pacrunner_module() {
 	if (this->pr) delete this->pr;
 }
 
-pacrunner* pacrunner_module::get(string pac, string pacurl) throw (bad_alloc) {
+pacrunner* pacrunner_module::get(string pac, const url& pacurl) throw (bad_alloc) {
 	if (this->pr) {
 		if (this->last == pac)
 			return this->pr;

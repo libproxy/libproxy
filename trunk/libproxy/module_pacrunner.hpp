@@ -21,13 +21,14 @@
 #define MODULE_PACRUNNER_HPP_
 
 #include "module_manager.hpp"
+#include "url.hpp"
 
 #define PX_DEFINE_PACRUNNER_MODULE(name, cond) \
 	class name ## _pacrunner_module : public pacrunner_module { \
 	public: \
 		PX_MODULE_ID(NULL); \
 	protected: \
-		virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc) { \
+		virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc) { \
 			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
@@ -40,15 +41,15 @@ namespace libproxy {
 // PACRunner module
 class DLL_PUBLIC pacrunner {
 public:
-	pacrunner(string pac, string pacurl);
+	pacrunner(string pac, const url& pacurl);
 	virtual ~pacrunner() {};
-	virtual string run(string url, string host) throw (bad_alloc)=0;
+	virtual string run(const url& url) throw (bad_alloc)=0;
 };
 
 class DLL_PUBLIC pacrunner_module : public module {
 public:
 	// Virtual methods
-	virtual pacrunner* get(string pac, string pacurl) throw (bad_alloc);
+	virtual pacrunner* get(string pac, const url& pacurl) throw (bad_alloc);
 	virtual ~pacrunner_module();
 
 	// Final methods
@@ -56,7 +57,7 @@ public:
 
 protected:
 	// Abstract methods
-	virtual pacrunner* create(string pac, string pacurl) throw (bad_alloc)=0;
+	virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc)=0;
 
 private:
 	pacrunner* pr;
