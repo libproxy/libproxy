@@ -98,7 +98,7 @@ public:
 		JSGlobalContextRelease(this->jsctx);
 	}
 
-	webkit_pacrunner(string pac, string pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	webkit_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
 		JSStringRef str  = NULL;
 		JSObjectRef func = NULL;
 
@@ -139,13 +139,13 @@ public:
 		throw bad_alloc();
 	}
 
-	string run(string url, string host) throw (bad_alloc) {
+	string run(const url& _url) throw (bad_alloc) {
 		JSStringRef str = NULL;
 		JSValueRef  val = NULL;
 		string      tmp;
 
 		// Run the PAC
-		tmp = string("FindProxyForURL(\"") + url + string("\", \"") + host + "\");";
+		tmp = string("FindProxyForURL(\"") + _url.to_string() + string("\", \"") + _url.get_host() + "\");";
 		str = JSStringCreateWithUTF8CString(tmp.c_str());
 		if (!JSCheckScriptSyntax(this->jsctx, str, NULL, 0, NULL))            goto error;
 		if (!(val = JSEvaluateScript(this->jsctx, str, NULL, NULL, 1, NULL))) goto error;
