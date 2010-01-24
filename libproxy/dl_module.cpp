@@ -22,7 +22,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #define pdlmtype HMODULE
-#define pdlopen(filename) LoadLibrary(filename)
+#define pdlopen(filename) (filename ? LoadLibrary(filename) : GetModuleHandle(filename))
 #define pdlsym GetProcAddress
 #define pdlclose FreeLibrary
 static std::string pdlerror() {
