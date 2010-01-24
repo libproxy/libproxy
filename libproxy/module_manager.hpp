@@ -98,7 +98,7 @@ public:
 		return true;
 	}
 
-	bool load_file(const string filename);
+	bool load_file(const string filename, const string condsym="");
 	bool load_dir(const string dirname);
 
 private:
