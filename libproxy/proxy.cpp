@@ -283,7 +283,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			goto do_return;
 
 		/* Run the PAC, but only try one PACRunner */
-		response = _format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(realurl->to_string(), realurl->get_host()));
+		response = _format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl));
 	}
 
 	/* If we have a manual config (http://..., socks://...) */

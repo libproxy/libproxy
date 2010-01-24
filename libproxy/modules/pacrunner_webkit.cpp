@@ -55,14 +55,10 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 
 	// Try for IPv4
 	tmp = new char[INET6_ADDRSTRLEN+1];
-	if (!inet_ntop(info->ai_family,
-					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
-					tmp, INET_ADDRSTRLEN+1) > 0)
-		// Try for IPv6
-		if (!inet_ntop(info->ai_family,
-						&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
-						tmp, INET6_ADDRSTRLEN+1) > 0)
-		{
+	if (getnameinfo(info->ai_addr, info->ai_addrlen,
+					tmp, INET6_ADDRSTRLEN+1,
+					NULL, 0,
+					NI_NUMERICHOST)) {
 			freeaddrinfo(info);
 			delete tmp;
 			return NULL;

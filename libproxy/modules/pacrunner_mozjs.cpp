@@ -55,13 +55,10 @@ static JSBool dnsResolve(JSContext *cx, JSObject */*obj*/, uintN /*argc*/, jsval
 	memset(tmp, 0, INET6_ADDRSTRLEN+1);
 
 	// Try for IPv4 and IPv6
-	if (!inet_ntop(info->ai_family,
-					&((struct sockaddr_in *) info->ai_addr)->sin_addr,
-					tmp, INET_ADDRSTRLEN+1) > 0)
-		if (!inet_ntop(info->ai_family,
-						&((struct sockaddr_in6 *) info->ai_addr)->sin6_addr,
-						tmp, INET6_ADDRSTRLEN+1) > 0)
-			goto out;
+	if (getnameinfo(info->ai_addr, info->ai_addrlen,
+					tmp, INET6_ADDRSTRLEN+1,
+					NULL, 0,
+					NI_NUMERICHOST)) goto out;
 
 	// We succeeded
 	*rval = STRING_TO_JSVAL(JS_NewString(cx, tmp, strlen(tmp)));
