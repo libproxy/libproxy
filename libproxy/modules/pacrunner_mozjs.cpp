@@ -87,7 +87,7 @@ static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval */
 
 class mozjs_pacrunner : public pacrunner {
 public:
-	mozjs_pacrunner(string pac, string pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	mozjs_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
 		jsval     rval;
 
 		// Set defaults
@@ -119,7 +119,7 @@ public:
 
 		// Add PAC to the environment
 		JS_EvaluateScript(this->jsctx, this->jsglb, pac.c_str(),
-							strlen(pac.c_str()), pacurl.c_str(), 0, &rval);
+							strlen(pac.c_str()), pacurl.to_string().c_str(), 0, &rval);
 		return;
 
 		error:
@@ -134,10 +134,10 @@ public:
 		// JS_ShutDown()?
 	}
 
-	string run(string url, string host) throw (bad_alloc) {
+	string run(const url& _url) throw (bad_alloc) {
 		// Build arguments to the FindProxyForURL() function
-		char *tmpurl  = JS_strdup(this->jsctx, url.c_str());
-		char *tmphost = JS_strdup(this->jsctx, host.c_str());
+		char *tmpurl  = JS_strdup(this->jsctx, _url.to_string().c_str());
+		char *tmphost = JS_strdup(this->jsctx, _url.get_host().c_str());
 		if (!tmpurl || !tmphost) {
 			if (tmpurl) JS_free(this->jsctx, tmpurl);
 			if (tmphost) JS_free(this->jsctx, tmphost);
