@@ -102,9 +102,21 @@ module_manager::~module_manager() {
 	this->dl_modules.clear();
 }
 
-bool module_manager::load_file(const string filename) {
+bool module_manager::load_file(const string filename, const string condsym) {
 	dl_module* dlobj = NULL;
 	module_manager::INIT_TYPE load;
+
+	// If the conditional symbol was specified
+	// ensure that the symbol exists within our
+	// current process before loading.
+	if (condsym != "") {
+		dlobj = new dl_module();
+		if (!dlobj->get_symbol(condsym)) {
+			delete dlobj;
+			return false;
+		}
+		delete dlobj;
+	}
 
 	// Stat the file to make sure it is a file
 	struct stat st;
@@ -129,7 +141,7 @@ bool module_manager::load_file(const string filename) {
 		return false;
 
 	// Load the module
-	dlobj = new dl_module (filename);
+	dlobj = new dl_module(filename);
 
 	// Insert the module
 	if (this->dl_modules.insert(dlobj).second == false) {
