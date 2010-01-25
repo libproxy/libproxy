@@ -73,11 +73,8 @@ bool dl_module::operator==(const dl_module& module) const {
 	return (this->dlobject == module.dlobject);
 }
 
-void* dl_module::get_symbol(string symbolname) const throw (dl_error) {
-	void*sym = pdlsym((pdlmtype) this->dlobject, symbolname.c_str());
-	if (!sym)
-		throw dl_error("Symbol not found: " + symbolname);
-	return sym;
+void* dl_module::get_symbol(string symbolname) const {
+	return pdlsym((pdlmtype) this->dlobject, symbolname.c_str());
 }
 
 }
