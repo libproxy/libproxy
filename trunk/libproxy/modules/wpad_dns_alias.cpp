@@ -20,13 +20,13 @@
 #include "../module_wpad.hpp"
 using namespace com::googlecode::libproxy;
 
-class dns_wpad_module : public wpad_module {
+class dns_alias_wpad_module : public wpad_module {
 public:
 	PX_MODULE_ID(NULL);
 
-	dns_wpad_module() { rewind(); }
-	bool found()      { return lastpac != NULL; }
-	void rewind()     { lasturl = NULL; lastpac = NULL; }
+	dns_alias_wpad_module() { rewind(); }
+	bool found()            { return lastpac != NULL; }
+	void rewind()           { lasturl = NULL; lastpac = NULL; }
 
 	url* next(char** pac) {
 		if (lasturl) return false;
@@ -46,4 +46,4 @@ private:
 	char* lastpac;
 };
 
-PX_MODULE_LOAD(wpad, dns, true);
+PX_MODULE_LOAD(wpad, dns_alias, true);
