@@ -40,7 +40,7 @@ class dl_module {
 	public:
 		     ~dl_module();
 		      dl_module(string filename="")             throw (dl_error);
-		void* get_symbol(string symbolname)       const throw (dl_error);
+		void* get_symbol(string symbolname)       const;
 		bool  operator==(const dl_module& module) const;
 
 	private:
