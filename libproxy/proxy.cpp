@@ -37,19 +37,6 @@ namespace googlecode {
 namespace libproxy {
 using namespace std;
 
-static const char* _builtin_modules[] = {
-                BUILTIN_MODULES
-                NULL
-};
-
-static struct {
-	const char* condition;
-	const char* modname;
-} _conditional_modules[] = {
-        CONDITIONAL_MODULES
-        {NULL, NULL}
-};
-
 class proxy_factory {
 public:
 	proxy_factory();
@@ -131,15 +118,6 @@ proxy_factory::proxy_factory() {
 		if (cf.get_value("config_order", tmp))
 			setenv("_PX_CONFIG_ORDER", tmp.c_str(), 1);
 	}
-
-	// Load all builtin modules
-	for (int i=0 ; _builtin_modules[i] ; i++)
-		this->mm.load_builtin(_builtin_modules[i]);
-
-	// Load conditional modules
-	for (int i=0 ; _conditional_modules[i].modname ; i++)
-		this->mm.load_file(string(MODULEDIR) + _conditional_modules[i].modname + "." + MODULEEXT,
-							_conditional_modules[i].condition);
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
