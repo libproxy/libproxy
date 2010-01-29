@@ -26,6 +26,9 @@
 using namespace std;
 using namespace com::googlecode::libproxy;
 
+#define _str(s) #s
+#define __str(s) _str(s)
+
 static vector<string> strsplit(const char* cstr, string delimiter) {
 	vector<string> v;
 	string str = cstr ? cstr : "";
@@ -83,15 +86,6 @@ module_manager::~module_manager() {
 	this->dl_modules.clear();
 }
 
-bool module_manager::load_builtin(const string modname) {
-	dl_module dlobj;
-	module_manager::LOAD_TYPE load = (module_manager::LOAD_TYPE)
-					dlobj.get_symbol(modname + __str(PX_MODULE_LOAD_SUFFIX));
-	if (!load || !load(*this))
-		return false;
-	return true;
-}
-
 bool module_manager::load_file(const string filename, const string condsym) {
 	dl_module* dlobj = NULL;
 	string modname   = module::make_name(filename);
@@ -140,7 +134,7 @@ bool module_manager::load_file(const string filename, const string condsym) {
 
 	// Call the INIT function
 	module_manager::LOAD_TYPE load = (module_manager::LOAD_TYPE)
-					dlobj->get_symbol(modname + __str(PX_MODULE_LOAD_SUFFIX));
+					dlobj->get_symbol(__str(PX_MODULE_LOAD_NAME));
 	if (!load || !load(*this)) {
 		this->dl_modules.erase(dlobj);
 		delete dlobj;

@@ -62,7 +62,7 @@ protected:
 	virtual string get_filename() { return string(getenv("HOME")) + string("/.proxy.conf"); }
 };
 
-extern "C" DLL_PUBLIC bool PX_MODULE_LOAD_NAME(config, file)(module_manager& mm) {
+extern "C" DLL_PUBLIC bool PX_MODULE_LOAD_NAME(module_manager& mm) {
 	bool success = mm.register_module<config_module>(new user_file_config_module);
 	return mm.register_module<config_module>(new system_file_config_module) || success;
 }

@@ -370,20 +370,6 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[lib] pacrunner_mozjs" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>pacrunner_mozjs</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[lib] pacrunner_mozjs/fast" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>pacrunner_mozjs/fast</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
 <target name="[lib] pacrunner_webkit" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
@@ -759,27 +745,6 @@
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
 <buildTarget>modules/network_networkmanager.s</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[obj] modules/pacrunner_mozjs.o" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/pacrunner_mozjs.o</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[pre] modules/pacrunner_mozjs.i" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/pacrunner_mozjs.i</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[to asm] modules/pacrunner_mozjs.s" path="libproxy" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>modules/pacrunner_mozjs.s</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
