@@ -56,9 +56,9 @@ static bool _get_registry(const char *key, const char *name, char **sval, uint32
 			if (!sval) return false;
 			if (slen) *slen = buflen;
 			*sval = new char[buflen];
-			return !memcpy_s(*sval, buflen, buffer, buflen);
+			return !memcpy(*sval, buffer, buflen);
 		case REG_DWORD:
-			if (ival) return !memcpy_s(ival, sizeof(uint32_t), buffer, buflen);
+			if (ival) return !memcpy(ival, buffer, buflen < sizeof(uint32_t) ? buflen : sizeof(uint32_t));
 	}
 	return false;
 }

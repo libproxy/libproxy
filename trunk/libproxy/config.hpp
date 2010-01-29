@@ -20,7 +20,7 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
-#ifdef _WIN32
+#ifdef WIN32
 #pragma warning(disable: 4251)
 #pragma warning(disable: 4290)
 #pragma warning(disable: 4275)
