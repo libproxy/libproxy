@@ -29,13 +29,9 @@
 #include "dl_module.hpp"
 #include "module.hpp"
 
-#define PX_MODULE_LOAD_SUFFIX _module_load
-#define PX_MODULE_LOAD_NAME_MODNAME(modname) modname ## _MODULE_LOAD_SUFFIX
-#define PX_MODULE_LOAD_NAME(type, name) PX_MODULE_LOAD_NAME_MODNAME(type ## _ ## name)
-#define __str(s) #s
-
+#define PX_MODULE_LOAD_NAME px_module_load
 #define PX_MODULE_LOAD(type, name, cond) \
-	extern "C" bool PX_MODULE_LOAD_NAME(type, name)(module_manager& mm) { \
+	extern "C" DLL_PUBLIC bool PX_MODULE_LOAD_NAME(module_manager& mm) { \
 		if (cond) return mm.register_module<type ## _module>(new name ## _ ## type ## _module); \
 		return false; \
 	}
@@ -96,7 +92,6 @@ public:
 		return true;
 	}
 
-	bool load_builtin(const string modname);
 	bool load_file(const string filename, const string condsym="");
 	bool load_dir(const string dirname);
 
