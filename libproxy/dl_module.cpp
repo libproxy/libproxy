@@ -74,7 +74,7 @@ bool dl_module::operator==(const dl_module& module) const {
 }
 
 void* dl_module::get_symbol(string symbolname) const {
-	return pdlsym((pdlmtype) this->dlobject, symbolname.c_str());
+	return (void*) pdlsym((pdlmtype) this->dlobject, symbolname.c_str());
 }
 
 }
