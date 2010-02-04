@@ -191,6 +191,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			goto invalid_config;
 
 		config->set_valid(true);
+		confign = config->get_ignore(*realurl);
 		break;
 
 		invalid_config:
@@ -202,10 +203,15 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_modules<ignore_module>();
-	for (size_t i=-1 ; i < confign.size() ; i=confign.find(',')) {
-		for (vector<ignore_module*>::iterator it=ignores.begin() ; it != ignores.end() ; it++)
+	for (int i=-1 ; i < (int) confign.size() ; ) {
+		for (vector<ignore_module*>::iterator it=ignores.begin() ; it != ignores.end() ; it++) {
 			if ((*it)->ignore(*realurl, confign.substr(i+1, confign.find(','))))
 				goto do_return;
+		}
+
+		i = confign.find(',');
+		if (i < 0)
+			break;
 	}
 
 	/* If we have a wpad config */

@@ -160,7 +160,7 @@ public:
 		// Get ignores
 		string tmp = str(getobj<CFArrayRef>(proxies, "ExceptionsList"));
 		if (getbool(proxies, "ExcludeSimpleHostnames"))
-			tmp += (tmp == "" ? string("") : string(",")) + "__simple_hostnames__";
+			tmp += (tmp == "" ? string("") : string(",")) + "<local>";
 
 		CFRelease(proxies);
 		return tmp;

@@ -33,7 +33,10 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
-#include <stdint.h>
+typedef unsigned __int64 uint64_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int8  uint8_t;
 typedef unsigned short int sa_family_t;
 #else
 #define DLL_PUBLIC __attribute__ ((visibility("default")))

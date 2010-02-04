@@ -73,7 +73,7 @@ static bool globmatch(string glob, string str)
 
 module_manager::~module_manager() {
 	// Free all modules
-	for (map<const type_info*, vector<module*> >::iterator i=this->modules.begin() ; i != this->modules.end() ; i++) {
+	for (map<string, vector<module*> >::iterator i=this->modules.begin() ; i != this->modules.end() ; i++) {
 		for (vector<module*>::iterator j=i->second.begin() ; j != i->second.end() ; j++)
 			delete *j;
 		i->second.clear();
@@ -145,24 +145,38 @@ bool module_manager::load_file(const string filename, const string condsym) {
 }
 
 bool module_manager::load_dir(const string dirname) {
-#ifndef WIN32
-	/* Open the module dir */
-	DIR *moduledir = opendir(dirname.c_str());
-	if (!moduledir) return false;
+	bool loaded = false;
+#ifdef WIN32
+	WIN32_FIND_DATA fd;
+	HANDLE search;
 
-	/* For each module... */
-	struct dirent *ent;
-	bool           loaded = false;
-	for (int i=0 ; (ent = readdir(moduledir)) ; i++)
-	{
-		/* Load the module */
-		string tmp = dirname + "/" + ent->d_name;
-		loaded = this->load_file(tmp) || loaded;
+	// Create the file search string and do the search
+	string srch = dirname + PATHSEP + "*";
+	search = FindFirstFile(srch.c_str(), &fd);
 
+	// If we got results, try to load each file
+	if (search != INVALID_HANDLE_VALUE) {
+		do {
+			string tmp = dirname + PATHSEP + fd.cFileName;
+			loaded = this->load_file(tmp) || loaded;
+		} while (FindNextFile(search, &fd));
+		FindClose(search);
 	}
-	closedir(moduledir);
-	return loaded;
 #else
-	return false;
+	struct dirent *ent;
+
+	// Open the module dir
+	DIR *moduledir = opendir(dirname.c_str());
+	if (moduledir) {
+		// For each module...
+		while((ent = readdir(moduledir))) {
+			// Load the module
+			string tmp = dirname + PATHSEP + ent->d_name;
+			loaded = this->load_file(tmp) || loaded;
+		}
+		closedir(moduledir);
+	}
 #endif
+
+	return loaded;
 }
