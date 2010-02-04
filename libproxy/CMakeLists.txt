@@ -5,6 +5,11 @@ if(WIN32)
 else()
   target_link_libraries(libproxy m pthread dl)
 endif()
+file(TO_NATIVE_PATH ${moduledir} moduledir)
+if(WIN32)
+  string(REGEX REPLACE "\\\\" "\\\\\\\\" moduledir ${moduledir})
+endif()
+
 set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS SYSCONFDIR="/etc/";MODULEDIR="${moduledir}")
 set_target_properties(libproxy PROPERTIES PREFIX "" VERSION 0 SOVERSION 0.0.0)
 install(TARGETS libproxy DESTINATION ${rlibdir})
@@ -99,7 +104,7 @@ px_module(config_macosx            "${SC_FOUND}"     ${SC_LIBRARIES} ${CF_LIBRAR
 px_module(config_w32reg            "${WIN32}")
 px_module(config_wpad              1)
 px_module(ignore_domain            1)
-px_module(ignore_hostname          "${APPLE}")
+px_module(ignore_hostname          1)
 px_module(ignore_ip                1)
 px_module(network_networkmanager   "${NM_FOUND}"     ${NM_LIBRARIES})
 px_module(pacrunner_mozjs          "${MOZJS_FOUND}"  ${MOZJS_LIBRARIES})
@@ -109,8 +114,10 @@ message("")
 
 ### Misc files
 # PkgConfig file
-configure_file(libproxy-1.0.pc.in libproxy-1.0.pc @ONLY)
-install(FILES libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
+if(NOT ${WIN32})
+  configure_file(libproxy-1.0.pc.in libproxy-1.0.pc @ONLY)
+  install(FILES libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
+endif()
 
 # GNOME (gconf) helper
 if(${GNOME_FOUND})

@@ -48,11 +48,15 @@ public:
 	~module_manager();
 
 	template <class T> vector<T*> get_modules() const {
-		vector<module*> modlist = this->modules.find(&typeid(T))->second;
+		map<string, vector<module*> >::const_iterator it = this->modules.find(typeid(T).name());
 		vector<T*>      retlist;
 
-		for (size_t i=0 ; i < modlist.size() ; i++)
-			retlist.push_back(dynamic_cast<T*>(modlist[i]));
+		if (it != this->modules.end()) {
+			vector<module*> modlist = it->second;
+
+			for (size_t i=0 ; i < modlist.size() ; i++)
+				retlist.push_back(dynamic_cast<T*>(modlist[i]));
+		}
 
 		return retlist;
 	}
@@ -63,9 +67,9 @@ public:
 		};
 
 		// If the class for this module is a singleton...
-		if (this->singletons.find(&typeid(T)) != this->singletons.end()) {
+		if (this->singletons.find(typeid(T).name()) != this->singletons.end()) {
 			// ... and we already have an instance of this class ...
-			if (this->modules[&typeid(T)].size() > 0) {
+			if (this->modules[typeid(T).name()].size() > 0) {
 				// ... free the module and return
 				delete module;
 				return false;
@@ -78,17 +82,17 @@ public:
 		sort(modlist.begin(), modlist.end(), &pcmp::cmp);
 
 		// Insert to our store
-		this->modules[&typeid(T)].clear();
+		this->modules[typeid(T).name()].clear();
 		for (size_t i=0 ; i < modlist.size() ; i++)
-			this->modules[&typeid(T)].push_back(modlist[i]);
+			this->modules[typeid(T).name()].push_back(modlist[i]);
 
 		return true;
 	}
 
-	template <class T> bool set_singleton(bool singleton) 	{
+	template <class T> bool set_singleton(bool singleton) {
 		if (singleton)
-			return this->singletons.insert(&typeid(T)).second;
-		this->singletons.erase(&typeid(T));
+			return this->singletons.insert(typeid(T).name()).second;
+		this->singletons.erase(typeid(T).name());
 		return true;
 	}
 
@@ -96,9 +100,9 @@ public:
 	bool load_dir(const string dirname);
 
 private:
-	set<dl_module*>                         dl_modules;
-	map<const type_info*, vector<module*> > modules;
-	set<const type_info*>                   singletons;
+	set<dl_module*>               dl_modules;
+	map<string, vector<module*> > modules;
+	set<string>                   singletons;
 
 	bool _load(const string filename, const string initsym);
 };

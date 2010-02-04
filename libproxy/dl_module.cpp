@@ -37,7 +37,9 @@ static std::string pdlerror() {
 			(LPTSTR) &msg,
 			0,
 			NULL);
-	e = std::string(msg);
+
+	for (int i=0 ; msg[i] ; i++)
+		e += std::string(1, (char) msg[i]);
     LocalFree(msg);
     return e;
 }

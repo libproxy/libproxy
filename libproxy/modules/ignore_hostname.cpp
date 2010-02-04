@@ -27,7 +27,9 @@ public:
 	PX_MODULE_ID(NULL);
 
 	virtual bool ignore(url& url, string ignorestr) {
-		if (ignorestr == "__simple_hostnames__" && url.get_host().find('.') == string::npos)
+		if (ignorestr == "<local>" && 
+			url.get_host().find(':') == string::npos && // Make sure it's not IPv6
+			url.get_host().find('.') == string::npos)
 			return true;
 		return false;
 	}

@@ -56,9 +56,9 @@ static bool _get_registry(const char *key, const char *name, char **sval, uint32
 			if (!sval) return false;
 			if (slen) *slen = buflen;
 			*sval = new char[buflen];
-			return !memcpy(*sval, buffer, buflen);
+			return memcpy(*sval, buffer, buflen) != NULL;
 		case REG_DWORD:
-			if (ival) return !memcpy(ival, buffer, buflen < sizeof(uint32_t) ? buflen : sizeof(uint32_t));
+			if (ival) return memcpy(ival, buffer, buflen < sizeof(uint32_t) ? buflen : sizeof(uint32_t)) != NULL;
 	}
 	return false;
 }
@@ -94,7 +94,7 @@ static map<string, string> _parse_manual(string data) {
 
 	// If we have the first format, just assign HTTP and we're done
 	if (data.find("=") == string::npos) {
-		rval["http"] = data;
+		rval["http"] = string("http://") + data;
 		return rval;
 	}
 
@@ -109,15 +109,16 @@ static map<string, string> _parse_manual(string data) {
 class w32reg_config_module : public config_module {
 public:
 	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SYSTEM);
+	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
 
 	url get_config(url dst) throw (runtime_error) {
 		char        *tmp = NULL;
 		uint32_t enabled = 0;
 
 		// WPAD
-		if (_is_enabled(W32REG_OFFSET_WPAD))
+		if (_is_enabled(W32REG_OFFSET_WPAD)) {
 			return url("wpad://");
+		}
 
 		// PAC
 		if (_is_enabled(W32REG_OFFSET_PAC) &&
@@ -134,15 +135,15 @@ public:
 			_get_registry(W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
 			map<string, string> manual = _parse_manual(tmp);
 			delete tmp;
-
+			
 			// First we look for an exact match
 			if (manual.find(dst.get_scheme()) != manual.end())
 				return manual[dst.get_scheme()];
-
+			
 			// Next we look for http
 			else if (manual.find("http") != manual.end())
 				return manual["http"];
-
+			
 			// Last we look for socks
 			else if (manual.find("socks") != manual.end())
 				return manual["socks"];
@@ -150,6 +151,17 @@ public:
 
 		// Direct
 		return url("direct://");
+	}
+
+	string get_ignore(url dst) {
+		char *tmp;
+		if (_get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
+			string po = tmp;
+			delete tmp;
+			if (po == "<local>")
+				return po;
+		}
+		return "";
 	}
 };
 
