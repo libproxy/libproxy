@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_WPAD_HPP_
-#define MODULE_WPAD_HPP_
+#ifndef EXTENSION_WPAD_HPP_
+#define EXTENSION_WPAD_HPP_
 
 #include <libmodman/module.hpp>
 #include "url.hpp"
@@ -46,4 +46,4 @@ public:
 }
 }
 
-#endif /* MODULE_WPAD_HPP_ */
+#endif /* EXTENSION_WPAD_HPP_ */
