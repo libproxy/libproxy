@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_PACRUNNER_HPP_
-#define MODULE_PACRUNNER_HPP_
+#ifndef EXTENSION_PACRUNNER_HPP_
+#define EXTENSION_PACRUNNER_HPP_
 
 #include <libmodman/module.hpp>
 #include "url.hpp"
@@ -71,4 +71,4 @@ private:
 }
 
 
-#endif /* MODULE_PACRUNNER_HPP_ */
+#endif /* EXTENSION_PACRUNNER_HPP_ */

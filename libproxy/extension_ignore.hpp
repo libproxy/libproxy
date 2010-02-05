@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_IGNORE_HPP_
-#define MODULE_IGNORE_HPP_
+#ifndef EXTENSION_IGNORE_HPP_
+#define EXTENSION_IGNORE_HPP_
 
 #include <libmodman/module.hpp>
 
@@ -39,4 +39,4 @@ public:
 }
 }
 
-#endif /* MODULE_IGNORE_HPP_ */
+#endif /* EXTENSION_IGNORE_HPP_ */
