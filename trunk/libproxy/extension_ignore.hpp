@@ -17,36 +17,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_HPP_
-#define MODULE_HPP_
+#ifndef MODULE_IGNORE_HPP_
+#define MODULE_IGNORE_HPP_
 
-#include <string>
-#include <set>
-#include <map>
-#include <vector>
-#include <typeinfo>
-#include <algorithm>
+#include <libmodman/module.hpp>
 
-#include "config.hpp"
-
-#define PX_MODULE_ID(name) virtual string get_id() const { return module::make_name(name ? name : __FILE__); }
+#include "url.hpp"
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
 using namespace std;
+using namespace com::googlecode::libmodman;
 
-class DLL_PUBLIC module {
+class DLL_PUBLIC ignore_extension : public extension<ignore_extension> {
 public:
-	static string make_name(string filename);
-
-	virtual ~module();
-	virtual bool operator<(const module&) const;
-	virtual string get_id() const=0;
+	virtual bool ignore(url& dst, string ignorestr)=0;
 };
 
 }
 }
 }
 
-#endif /* MODULE_HPP_ */
+#endif /* MODULE_IGNORE_HPP_ */

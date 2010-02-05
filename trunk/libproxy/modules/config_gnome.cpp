@@ -25,7 +25,7 @@
 #include <signal.h>       // For kill()
 #include "xhasclient.cpp" // For xhasclient()
 
-#include "../module_config.hpp"
+#include "../extension_config.hpp"
 using namespace com::googlecode::libproxy;
 
 static const char *_all_keys[] = {
@@ -93,12 +93,9 @@ static int popen2(const char *program, int* read, int* write, pid_t* pid) {
 	}
 }
 
-class gnome_config_module : public config_module {
+class gnome_config_extension : public config_extension {
 public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
-
-	gnome_config_module() {
+	gnome_config_extension() {
 		// Build the command
 		int count;
 		string cmd = LIBEXECDIR "pxgconf";
@@ -121,7 +118,7 @@ public:
 		this->update_data(count);
 	}
 
-	~gnome_config_module() {
+	~gnome_config_extension() {
 		close(this->read);
 		close(this->write);
 		kill(this->pid, SIGTERM);
@@ -252,11 +249,25 @@ private:
 	}
 };
 
-// If we are running in GNOME, then make sure this plugin is registered.
-extern "C" DLL_PUBLIC bool PX_MODULE_LOAD_NAME(module_manager& mm) {
-	if (xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL)) {
-		try { return mm.register_module<config_module>(new gnome_config_module); }
-		catch (runtime_error) {}
-	}
-	return false;
+// Only attempt to load this module if we are in a gnome session
+static bool gnome_config_extension_test() {
+	return xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL);
 }
+
+static base_extension** gnome_config_extension_init() {
+	base_extension** retval = new base_extension*[2];
+	retval[1] = NULL;
+	try {
+		retval[0] = new gnome_config_extension();
+		return retval;
+	}
+	catch (runtime_error) {
+		delete retval;
+		return NULL;
+	}
+}
+
+MM_MODULE_DEFINE = {
+		MM_MODULE_RECORD(gnome_config_extension, gnome_config_extension_init, gnome_config_extension_test, NULL),
+		MM_MODULE_LAST,
+};

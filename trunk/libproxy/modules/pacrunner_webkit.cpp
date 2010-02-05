@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_pacrunner.hpp"
+#include "../extension_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
 #include <JavaScriptCore/JavaScript.h>
@@ -160,4 +160,4 @@ private:
 	JSGlobalContextRef jsctx;
 };
 
-PX_DEFINE_PACRUNNER_MODULE(webkit, true);
+PX_PACRUNNER_MODULE_EZ(webkit, true, "JSObjectMakeFunctionWithCallback");

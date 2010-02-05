@@ -17,32 +17,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_WPAD_HPP_
-#define MODULE_WPAD_HPP_
+#include "extension_config.hpp"
+using namespace com::googlecode::libproxy;
 
-#include "module_manager.hpp"
-#include "url.hpp"
-
-namespace com {
-namespace googlecode {
-namespace libproxy {
-using namespace std;
-
-// WPAD module
-class DLL_PUBLIC wpad_module : public module {
-public:
-	// Abstract methods
-	virtual bool found()=0;
-	virtual url* next(char** pac)=0;
-	virtual void rewind()=0;
-
-	// Virtual methods
-	virtual bool operator<(const wpad_module& module) const;
-	using module::operator<;
-};
-
-}
-}
+string config_extension::get_ignore(url) {
+	return "";
 }
 
-#endif /* MODULE_WPAD_HPP_ */
+bool config_extension::set_creds(url, string, string) {
+	return false;
+}
+
+bool config_extension::operator<(const base_extension&) const {
+	return true;
+}
+
+bool config_extension::get_valid() {
+	return this->valid;
+}
+
+void config_extension::set_valid(bool valid) {
+	this->valid = valid;
+}

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,34 +17,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef CONFIG_FILE_HPP_
-#define CONFIG_FILE_HPP_
+#ifndef MODULE_CONFIG_HPP_
+#define MODULE_CONFIG_HPP_
 
-#include <string>
-#include <map>
-using namespace std;
-
-#include "config.hpp"
+#include <libmodman/module.hpp>
+#include "url.hpp"
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
+using namespace std;
+using namespace com::googlecode::libmodman;
 
-class DLL_PUBLIC config_file {
+// Config module
+class DLL_PUBLIC config_extension : public extension<config_extension> {
 public:
-	bool get_value(string key, string& value);
-	bool get_value(string section, string key, string& value);
-	bool is_stale();
-	bool load(string filename);
+	// Abstract methods
+	virtual url      get_config(url dst) throw (runtime_error)=0;
+
+	// Virtual methods
+	virtual string   get_ignore(url dst);
+	virtual bool     set_creds(url proxy, string username, string password);
+
+	// Final methods
+	        bool     get_valid();
+	        void     set_valid(bool valid);
+	virtual bool     operator<(const base_extension&) const;
 
 private:
-	string                            filename;
-	time_t                            mtime;
-	map<string, map<string, string> > sections;
+	bool valid;
 };
 
 }
 }
 }
 
-#endif /*CONFIG_FILE_HPP_*/
+#endif /* MODULE_CONFIG_HPP_ */

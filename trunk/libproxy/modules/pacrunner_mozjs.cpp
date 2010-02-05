@@ -160,4 +160,4 @@ private:
 	JSObject  *jsglb;
 };
 
-PX_DEFINE_PACRUNNER_MODULE(mozjs, true);
+PX_PACRUNNER_MODULE_EZ(mozjs, true, "JS_DefineFunction");

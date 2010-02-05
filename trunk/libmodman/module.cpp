@@ -1,5 +1,5 @@
 /*******************************************************************************
- * libproxy - A library for proxy configuration
+ * libmodman - A library for extending applications
  * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -17,23 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_NETWORK_HPP_
-#define MODULE_NETWORK_HPP_
+#include "module.hpp"
+using namespace com::googlecode::libmodman;
 
-#include "module_manager.hpp"
+bool base_extension::singleton() { return false; }
 
-namespace com {
-namespace googlecode {
-namespace libproxy {
-
-// Network module
-class DLL_PUBLIC network_module : public module {
-public:
-	virtual bool changed()=0;
-};
-
-}
-}
-}
-
-#endif /* MODULE_NETWORK_HPP_ */
+base_extension::~base_extension() {}
+bool base_extension::operator<(const base_extension&) const { return false; }

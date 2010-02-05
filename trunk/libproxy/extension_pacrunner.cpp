@@ -17,20 +17,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "module.hpp"
+#include "extension_pacrunner.hpp"
 using namespace com::googlecode::libproxy;
 
-string module::make_name(string filename) {
-	// Basename
-	if (filename.find_last_of(PATHSEP) != string::npos)
-		filename = filename.substr(filename.find_last_of(PATHSEP)+1);
+pacrunner::pacrunner(string, const url&) {}
 
-	// Noext
-	if (filename.rfind('.') != string::npos)
-		return filename.substr(0, filename.rfind('.'));
-	return filename;
+
+bool pacrunner_extension::singleton() {
+	return true;
 }
 
-module::~module() {}
+pacrunner_extension::pacrunner_extension() {
+	this->pr = NULL;
+}
 
-bool module::operator<(const module&) const { return false; }
+pacrunner_extension::~pacrunner_extension() {
+	if (this->pr) delete this->pr;
+}
+
+pacrunner* pacrunner_extension::get(string pac, const url& pacurl) throw (bad_alloc) {
+	if (this->pr) {
+		if (this->last == pac)
+			return this->pr;
+		delete this->pr;
+	}
+
+	return this->pr = this->create(pac, pacurl);
+}

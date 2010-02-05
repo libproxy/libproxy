@@ -1,5 +1,5 @@
 /*******************************************************************************
- * libproxy - A library for proxy configuration
+ * libmodman - A library for extending applications
  * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -17,25 +17,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "module_pacrunner.hpp"
-using namespace com::googlecode::libproxy;
+#ifndef MAIN_HPP_
+#define MAIN_HPP_
 
-pacrunner::pacrunner(string, const url&) {}
+#include "../module_manager.hpp"
 
-pacrunner_module::pacrunner_module() {
-	this->pr = NULL;
-}
+using namespace std;
+using namespace com::googlecode::libmodman;
 
-pacrunner_module::~pacrunner_module() {
-	if (this->pr) delete this->pr;
-}
+class singleton_extension : public extension<singleton_extension> {
+public:
+	static bool              singleton() { return true; }
+};
 
-pacrunner* pacrunner_module::get(string pac, const url& pacurl) throw (bad_alloc) {
-	if (this->pr) {
-		if (this->last == pac)
-			return this->pr;
-		delete this->pr;
+class sorted_extension    : public extension<sorted_extension> {
+public:
+	virtual bool operator<(const base_extension& other) const {
+		return string(typeid(*this).name()) > string(typeid(other).name());
 	}
+};
 
-	return this->pr = this->create(pac, pacurl);
-}
+class symbol_extension    : public extension<symbol_extension> {};
+class condition_extension : public extension<condition_extension> {};
+
+#endif /* MAIN_HPP_ */

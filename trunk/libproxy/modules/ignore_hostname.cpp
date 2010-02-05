@@ -19,15 +19,13 @@
 
 #include <cstdio>
 
-#include "../module_ignore.hpp"
+#include "../extension_ignore.hpp"
 using namespace com::googlecode::libproxy;
 
-class hostname_ignore_module : public ignore_module {
+class hostname_ignore_extension : public ignore_extension {
 public:
-	PX_MODULE_ID(NULL);
-
 	virtual bool ignore(url& url, string ignorestr) {
-		if (ignorestr == "<local>" && 
+		if (ignorestr == "<local>" &&
 			url.get_host().find(':') == string::npos && // Make sure it's not IPv6
 			url.get_host().find('.') == string::npos)
 			return true;
@@ -35,4 +33,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(ignore, hostname, true);
+MM_MODULE_EZ(hostname_ignore_extension, true, NULL);

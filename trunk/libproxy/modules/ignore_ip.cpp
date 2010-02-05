@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "../module_ignore.hpp"
+#include "../extension_ignore.hpp"
 using namespace com::googlecode::libproxy;
 
 static inline bool
@@ -106,10 +106,8 @@ _sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
 	return NULL;
 }
 
-class ip_ignore_module : public ignore_module {
+class ip_ignore_extension : public ignore_extension {
 public:
-	PX_MODULE_ID(NULL);
-
 	virtual bool ignore(url& url, string ignore) {
 		bool result   = false;
 		uint16_t port = 0;
@@ -176,4 +174,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(ignore, ip, true);
+MM_MODULE_EZ(ip_ignore_extension, true, NULL);

@@ -7,6 +7,9 @@ project(libproxy)
 # Set the version
 set(CMAKE_PROJECT_VERSION 0.4.0)
 
+# Enable testing
+enable_testing()
+
 # Setup our relative paths
 if(${WIN32})
   set(rlibdir .)
@@ -39,6 +42,7 @@ else()
 endif()
 
 ### Subdirectories
+add_subdirectory(libmodman)
 add_subdirectory(libproxy)
 add_subdirectory(bindings)
 add_subdirectory(utils)

@@ -19,14 +19,11 @@
 
 #include <cstdlib>
 
-#include "../module_config.hpp"
+#include "../extension_config.hpp"
 using namespace com::googlecode::libproxy;
 
-class envvar_config_module : public config_module {
+class envvar_config_extension : public config_extension {
 public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
-
 	url get_config(url url) throw (runtime_error) {
 		char *proxy = NULL;
 
@@ -58,6 +55,11 @@ public:
 		      ignore = ignore ? ignore : getenv("NO_PROXY");
 		return string(ignore ? ignore : "");
 	}
+
+	// Make sure that envvar is pushed to the back behind all other config extensions
+	virtual bool operator<(const base_extension&) const {
+		return false;
+	}
 };
 
-PX_MODULE_LOAD(config, envvar, true);
+MM_MODULE_EZ(envvar_config_extension, true, NULL);
