@@ -32,11 +32,9 @@
 	}; \
 	MM_MODULE_EZ(name ## _pacrunner_extension, cond, symb)
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 using namespace std;
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 // PACRunner module
 class DLL_PUBLIC pacrunner {
@@ -67,8 +65,5 @@ private:
 };
 
 }
-}
-}
-
 
 #endif /* EXTENSION_PACRUNNER_HPP_ */

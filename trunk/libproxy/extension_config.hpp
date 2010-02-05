@@ -23,11 +23,9 @@
 #include <libmodman/module.hpp>
 #include "url.hpp"
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 using namespace std;
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 // Config module
 class DLL_PUBLIC config_extension : public extension<config_extension> {
@@ -48,8 +46,6 @@ private:
 	bool valid;
 };
 
-}
-}
 }
 
 #endif /* EXTENSION_CONFIG_HPP_ */

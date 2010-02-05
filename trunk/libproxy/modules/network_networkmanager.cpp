@@ -20,7 +20,7 @@
 #include <stdint.h> // For uint32_t
 
 #include "../extension_network.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>

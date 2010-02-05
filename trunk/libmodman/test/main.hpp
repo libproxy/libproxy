@@ -23,7 +23,7 @@
 #include "../module_manager.hpp"
 
 using namespace std;
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 class singleton_extension : public extension<singleton_extension> {
 public:

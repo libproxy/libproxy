@@ -33,7 +33,7 @@
 
 #define MM_MODULE_VERSION 1
 #define MM_MODULE_NAME __module
-#define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct com::googlecode::libmodman::module DLL_PUBLIC MM_MODULE_NAME[]
+#define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct libmodman::module DLL_PUBLIC MM_MODULE_NAME[]
 
 #define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL }
 #define MM_MODULE_RECORD(type, init, test, symb) \
@@ -43,8 +43,8 @@
 	static bool clsname ## _test() { \
 		return (cond); \
 	} \
-	static com::googlecode::libmodman::base_extension** clsname ## _init() { \
-		com::googlecode::libmodman::base_extension** retval = new com::googlecode::libmodman::base_extension*[2]; \
+	static libmodman::base_extension** clsname ## _init() { \
+		libmodman::base_extension** retval = new libmodman::base_extension*[2]; \
 		retval[0] = new clsname(); \
 		retval[1] = NULL; \
 		return retval; \
@@ -54,8 +54,6 @@
 		MM_MODULE_LAST, \
 	};
 
-namespace com {
-namespace googlecode {
 namespace libmodman {
 
 class DLL_PUBLIC base_extension {
@@ -81,8 +79,6 @@ struct module {
 	const char* const   symb;
 };
 
-}
-}
 }
 
 #endif /* MODULE_HPP_ */

@@ -33,8 +33,6 @@
 #define strdup _strdup
 #endif
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 using namespace std;
 
@@ -311,11 +309,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 }
 
 }
-}
-}
 
 struct _pxProxyFactory {
-	com::googlecode::libproxy::proxy_factory pf;
+	libproxy::proxy_factory pf;
 };
 
 extern "C" DLL_PUBLIC struct _pxProxyFactory *px_proxy_factory_new(void) {

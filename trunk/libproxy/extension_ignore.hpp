@@ -24,19 +24,15 @@
 
 #include "url.hpp"
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 using namespace std;
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 class DLL_PUBLIC ignore_extension : public extension<ignore_extension> {
 public:
 	virtual bool ignore(url& dst, string ignorestr)=0;
 };
 
-}
-}
 }
 
 #endif /* EXTENSION_IGNORE_HPP_ */

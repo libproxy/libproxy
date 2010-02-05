@@ -20,7 +20,7 @@
 #include <cstdlib>
 
 #include "../extension_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 class envvar_config_extension : public config_extension {
 public:
@@ -47,7 +47,7 @@ public:
 
 		if (!proxy)
 			throw runtime_error("Unable to read configuration");
-		return com::googlecode::libproxy::url(proxy);
+		return libproxy::url(proxy);
 	}
 
 	string get_ignore(url) {

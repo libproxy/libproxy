@@ -1,5 +1,5 @@
 #include "extension_wpad.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 #include <cstring>
 

@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "../extension_pacrunner.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 #include <JavaScriptCore/JavaScript.h>
 #include "pacutils.h"

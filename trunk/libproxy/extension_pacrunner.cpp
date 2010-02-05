@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "extension_pacrunner.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 pacrunner::pacrunner(string, const url&) {}
 

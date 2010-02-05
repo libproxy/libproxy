@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "module.hpp"
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 bool base_extension::singleton() { return false; }
 

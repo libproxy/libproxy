@@ -28,8 +28,6 @@
 
 #include "module.hpp"
 
-namespace com {
-namespace googlecode {
 namespace libmodman {
 using namespace std;
 
@@ -76,8 +74,6 @@ private:
 	map<string, vector<base_extension*> > extensions;
 };
 
-}
-}
 }
 
 #endif /* MODULE_MANAGER_HPP_ */
