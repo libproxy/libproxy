@@ -20,23 +20,23 @@
 #ifndef MODULE_PACRUNNER_HPP_
 #define MODULE_PACRUNNER_HPP_
 
-#include "module_manager.hpp"
+#include <libmodman/module.hpp>
 #include "url.hpp"
 
-#define PX_DEFINE_PACRUNNER_MODULE(name, cond) \
-	class name ## _pacrunner_module : public pacrunner_module { \
-	public: \
-		PX_MODULE_ID(NULL); \
+#define PX_PACRUNNER_MODULE_EZ(name, cond, symb) \
+	class name ## _pacrunner_extension : public pacrunner_extension { \
 	protected: \
 		virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc) { \
 			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
-	PX_MODULE_LOAD(pacrunner, name, cond)
+	MM_MODULE_EZ(name ## _pacrunner_extension, cond, symb)
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
+using namespace std;
+using namespace com::googlecode::libmodman;
 
 // PACRunner module
 class DLL_PUBLIC pacrunner {
@@ -46,14 +46,16 @@ public:
 	virtual string run(const url& url) throw (bad_alloc)=0;
 };
 
-class DLL_PUBLIC pacrunner_module : public module {
+class DLL_PUBLIC pacrunner_extension : public extension<pacrunner_extension> {
 public:
+	static bool singleton();
+
 	// Virtual methods
 	virtual pacrunner* get(string pac, const url& pacurl) throw (bad_alloc);
-	virtual ~pacrunner_module();
+	virtual ~pacrunner_extension();
 
 	// Final methods
-	pacrunner_module();
+	pacrunner_extension();
 
 protected:
 	// Abstract methods

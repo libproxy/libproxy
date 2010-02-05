@@ -68,7 +68,7 @@ static bool getbool(CFDictionaryRef settings, string key, bool dflt=false) {
 }
 
 static bool protocol_url(CFDictionaryRef settings, string protocol, string& config) {
-        int64_t port;
+	int64_t port;
 	string  host;
 
 	// Check ProtocolEnabled
@@ -167,5 +167,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(config, macosx, true);
-
+PX_MODULE_INFO_EZ(config_module, config_macosx, NULL, macosx_config_module, true);

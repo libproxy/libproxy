@@ -17,51 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MODULE_CONFIG_HPP_
-#define MODULE_CONFIG_HPP_
+#ifndef MODULE_NETWORK_HPP_
+#define MODULE_NETWORK_HPP_
 
-#include "module_manager.hpp"
-#include "url.hpp"
-
-#define PX_MODULE_CONFIG_CATEGORY(cat) virtual category get_category() const { return cat; }
+#include <libmodman/module.hpp>
 
 namespace com {
 namespace googlecode {
 namespace libproxy {
-using namespace std;
+using namespace com::googlecode::libmodman;
 
-// Config module
-class DLL_PUBLIC config_module : public module {
+// Network module
+class DLL_PUBLIC network_extension : public extension<network_extension> {
 public:
-	typedef enum {
-		CATEGORY_AUTO    = 0,
-		CATEGORY_NONE    = 0,
-		CATEGORY_SYSTEM  = 1,
-		CATEGORY_SESSION = 2,
-		CATEGORY_USER    = 3,
-		CATEGORY__LAST   = CATEGORY_USER
-	} category;
-
-	// Abstract methods
-	virtual category get_category() const=0;
-	virtual url      get_config(url dst) throw (runtime_error)=0;
-
-	// Virtual methods
-	virtual string   get_ignore(url dst);
-	virtual bool     set_creds(url proxy, string username, string password);
-
-	// Final methods
-	        bool     get_valid();
-	        void     set_valid(bool valid);
-	virtual bool     operator<(const config_module& module) const;
-	using module::operator<;
-
-private:
-	bool valid;
+	virtual bool changed()=0;
 };
 
 }
 }
 }
 
-#endif /* MODULE_CONFIG_HPP_ */
+#endif /* MODULE_NETWORK_HPP_ */

@@ -19,22 +19,19 @@
 
 #include <stdint.h> // For uint32_t
 
-#include "../module_network.hpp"
+#include "../extension_network.hpp"
 using namespace com::googlecode::libproxy;
 
 #include <dbus/dbus.h>
 #include <NetworkManager/NetworkManager.h>
 
-
-class networkmanager_network_module : public network_module {
+class networkmanager_network_extension : public network_extension {
 public:
-	PX_MODULE_ID(NULL);
-
-	networkmanager_network_module() {
+	networkmanager_network_extension() {
 		this->conn = NULL;
 	}
 
-	~networkmanager_network_module() {
+	~networkmanager_network_extension() {
 		if (this->conn) dbus_connection_close(this->conn);
 	}
 
@@ -92,4 +89,4 @@ private:
 	DBusConnection *conn;
 };
 
-PX_MODULE_LOAD(network, networkmanager, true);
+MM_MODULE_EZ(networkmanager_network_extension, true, NULL);

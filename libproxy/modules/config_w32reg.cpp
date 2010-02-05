@@ -165,4 +165,4 @@ public:
 	}
 };
 
-PX_MODULE_LOAD(config, w32reg, true);
+PX_MODULE_INFO_EZ(config_module, config_w32reg, NULL, w32reg_config_module, true);

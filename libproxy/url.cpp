@@ -254,6 +254,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 		for (i = 0, info = first ; info ; info = info->ai_next) {
 			if (info->ai_addr->sa_family == AF_INET || info->ai_addr->sa_family == AF_INET6) {
 				this->ips[i] = _copyaddr(*(info->ai_addr));
+				if (!this->ips[i]) break;
 				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
 			}
 		}

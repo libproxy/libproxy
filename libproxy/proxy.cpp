@@ -16,16 +16,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
-#include <algorithm>
-#include <iostream>
-#include <cstring>
 
-#include "config_file.hpp"
-#include "module_config.hpp"
-#include "module_ignore.hpp"
-#include "module_network.hpp"
-#include "module_pacrunner.hpp"
-#include "module_wpad.hpp"
+#include <vector>
+#include <cstring> // For strdup()
+
+#include <libmodman/module_manager.hpp>
+
+#include "extension_config.hpp"
+#include "extension_ignore.hpp"
+#include "extension_network.hpp"
+#include "extension_pacrunner.hpp"
+#include "extension_wpad.hpp"
 
 #ifdef WIN32
 #define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
@@ -107,17 +108,12 @@ proxy_factory::proxy_factory() {
 	this->pac    = NULL;
 	this->pacurl = NULL;
 
-	// Register our singletons
-	this->mm.set_singleton<pacrunner_module>(true);
-
-	// If we have a config file, load the config order from it
-	setenv("_PX_CONFIG_ORDER", "", 1);
-   	config_file cf;
-	if (cf.load(SYSCONFDIR "proxy.conf")) {
-		string tmp;
-		if (cf.get_value("config_order", tmp))
-			setenv("_PX_CONFIG_ORDER", tmp.c_str(), 1);
-	}
+	// Register our types
+	this->mm.register_type<config_extension>();
+	this->mm.register_type<ignore_extension>();
+	this->mm.register_type<network_extension>();
+	this->mm.register_type<pacrunner_extension>();
+	this->mm.register_type<wpad_extension>();
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
@@ -141,14 +137,14 @@ proxy_factory::~proxy_factory() {
 
 
 vector<string> proxy_factory::get_proxies(string __url) {
-	url*                    realurl = NULL;
-	url                     confurl("direct://");
-	string                  confign;
-	config_module*          config;
-	vector<network_module*> networks;
-	vector<config_module*>  configs;
-	vector<ignore_module*>  ignores;
-	vector<string>          response;
+	url*                       realurl = NULL;
+	url                        confurl("direct://");
+	string                     confign;
+	config_extension*          config;
+	vector<network_extension*> networks;
+	vector<config_extension*>  configs;
+	vector<ignore_extension*>  ignores;
+	vector<string>             response;
 
 	// Check to make sure our url is valid
 	if (!url::is_valid(__url))
@@ -161,12 +157,12 @@ vector<string> proxy_factory::get_proxies(string __url) {
 #endif
 
 	// Check to see if our network topology has changed...
-	networks = this->mm.get_modules<network_module>();
-	for (vector<network_module*>::iterator i=networks.begin() ; i != networks.end() ; i++) {
+	networks = this->mm.get_extensions<network_extension>();
+	for (vector<network_extension*>::iterator i=networks.begin() ; i != networks.end() ; i++) {
 		// If it has, reset our wpad/pac setup and we'll retry our config
 		if ((*i)->changed()) {
-			vector<wpad_module*> wpads = this->mm.get_modules<wpad_module>();
-			for (vector<wpad_module*>::iterator j=wpads.begin() ; j != wpads.end() ; j++)
+			vector<wpad_extension*> wpads = this->mm.get_extensions<wpad_extension>();
+			for (vector<wpad_extension*>::iterator j=wpads.begin() ; j != wpads.end() ; j++)
 				(*j)->rewind();
 			if (this->pac) delete this->pac;
 			this->pac = NULL;
@@ -174,8 +170,8 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		}
 	}
 
-	configs = this->mm.get_modules<config_module>();
-	for (vector<config_module*>::iterator i=configs.begin() ; i != configs.end() ; i++) {
+	configs = this->mm.get_extensions<config_extension>();
+	for (vector<config_extension*>::iterator i=configs.begin() ; i != configs.end() ; i++) {
 		config = *i;
 
 		// Try to get the confurl
@@ -202,9 +198,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	}
 
 	/* Check our ignore patterns */
-	ignores = this->mm.get_modules<ignore_module>();
+	ignores = this->mm.get_extensions<ignore_extension>();
 	for (int i=-1 ; i < (int) confign.size() ; ) {
-		for (vector<ignore_module*>::iterator it=ignores.begin() ; it != ignores.end() ; it++) {
+		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() ; it++) {
 			if ((*it)->ignore(*realurl, confign.substr(i+1, confign.find(','))))
 				goto do_return;
 		}
@@ -227,14 +223,14 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 		/* If we have no PAC, get one */
 		if (!this->pac) {
-			vector<wpad_module*> wpads = this->mm.get_modules<wpad_module>();
-			for (vector<wpad_module*>::iterator i=wpads.begin() ; i != wpads.end() ; i++)
+			vector<wpad_extension*> wpads = this->mm.get_extensions<wpad_extension>();
+			for (vector<wpad_extension*>::iterator i=wpads.begin() ; i != wpads.end() ; i++)
 				if ((this->pacurl = (*i)->next(&this->pac)))
 					break;
 
 			/* If getting the PAC fails, but the WPAD cycle worked, restart the cycle */
 			if (!this->pac) {
-				for (vector<wpad_module*>::iterator i=wpads.begin() ; i != wpads.end() ; i++) {
+				for (vector<wpad_extension*>::iterator i=wpads.begin() ; i != wpads.end() ; i++) {
 					if ((*i)->found()) {
 						/* Since a PAC was found at some point,
 						 * rewind all the WPADS to start from the beginning */
@@ -282,7 +278,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* In case of either PAC or WPAD, we'll run the PAC */
 	if (this->pac && (confurl.get_scheme() == "wpad" || confurl.get_scheme().substr(0, 4) == "pac+") ) {
-		vector<pacrunner_module*> pacrunners = this->mm.get_modules<pacrunner_module>();
+		vector<pacrunner_extension*> pacrunners = this->mm.get_extensions<pacrunner_extension>();
 
 		/* No PAC runner found, fall back to direct */
 		if (pacrunners.size() == 0)
@@ -327,7 +323,7 @@ extern "C" DLL_PUBLIC struct _pxProxyFactory *px_proxy_factory_new(void) {
 }
 
 extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, const char *url) {
-	vector<string> proxies;
+	std::vector<std::string> proxies;
 	char** retval;
 
 	// Call the main method
