@@ -36,7 +36,7 @@
 #define pdlopen(filename) LoadLibrary(filename)
 #define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define pdlsym GetProcAddress
-#define pdlclose FreeLibrary
+#define pdlclose(module) FreeLibrary((pdlmtype) module)
 /*static std::string pdlerror() {
 	std::string e;
 	LPTSTR msg;
@@ -52,20 +52,20 @@
 	e = std::string(msg);
     LocalFree(msg);
     return e;
-}
+}*/
 static pdlmtype pdlreopen(pdlmtype module) {
 	char tmp[4096];
 	if (!module) return NULL;
 	DWORD i = GetModuleFileName(module, tmp, 4096);
 	pdlclose(module);
 	return (i == 0 || i == 4096) ? NULL : pdlopen(tmp);
-}*/
+}
 #else
 #define pdlmtype void*
 #define pdlopen(filename) dlopen(filename, RTLD_NOW | RTLD_LOCAL)
 #define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
 #define pdlsym dlsym
-#define pdlclose dlclose
+#define pdlclose(module) dlclose((pdlmtype) module)
 //static std::string pdlerror() { return dlerror(); }
 static pdlmtype pdlreopen(pdlmtype module) { return module; }
 #endif
@@ -191,11 +191,11 @@ bool module_manager::load_dir(string dirname, bool symbreq) {
 	WIN32_FIND_DATA fd;
 	HANDLE search;
 
-	string srch = dirname + PATHSEP + "*";
+	string srch = dirname + "\\" + "*";
 	search = FindFirstFile(srch.c_str(), &fd);
 	if (search != INVALID_HANDLE_VALUE) {
 		do {
-			files.push_back(dirname + "\\" + fd.cFileName)
+			files.push_back(dirname + "\\" + fd.cFileName);
 		} while (FindNextFile(search, &fd));
 		FindClose(search);
 	}
