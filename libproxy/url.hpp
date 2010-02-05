@@ -27,8 +27,6 @@
 
 #include "config.hpp"
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 
 using namespace std;
@@ -70,8 +68,6 @@ private:
 	string     user;
 };
 
-}
-}
 }
 
 #endif /*URL_HPP_*/

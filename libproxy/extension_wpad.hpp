@@ -23,11 +23,9 @@
 #include <libmodman/module.hpp>
 #include "url.hpp"
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
 using namespace std;
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 // WPAD module
 class DLL_PUBLIC wpad_extension : public extension<wpad_extension> {
@@ -42,8 +40,6 @@ public:
 	using extension<wpad_extension>::operator<;
 };
 
-}
-}
 }
 
 #endif /* EXTENSION_WPAD_HPP_ */

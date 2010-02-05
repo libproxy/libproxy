@@ -20,7 +20,7 @@
 #include <cstring> // ?
 
 #include "../module_pacrunner.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 // Work around a mozjs include bug
 #ifndef JS_HAS_FILE_OBJECT

@@ -22,10 +22,8 @@
 
 #include <libmodman/module.hpp>
 
-namespace com {
-namespace googlecode {
 namespace libproxy {
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 // Network module
 class DLL_PUBLIC network_extension : public extension<network_extension> {
@@ -33,8 +31,6 @@ public:
 	virtual bool changed()=0;
 };
 
-}
-}
 }
 
 #endif /* EXTENSION_NETWORK_HPP_ */

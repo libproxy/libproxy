@@ -29,9 +29,7 @@
 #include <cstdlib>    // For atoi()
 #include <sys/stat.h> // For stat()
 
-#include "url.hpp"
-
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #define pfsize(st) (st.st_size)
 #define close _close
@@ -40,6 +38,10 @@
 #define pfsize(st) (st.st_blksize * st.st_blocks)
 #endif
 
+#include "url.hpp"
+using namespace libproxy;
+using namespace std;
+
 // This mime type should be reported by the web server
 #define PAC_MIME_TYPE "application/x-ns-proxy-autoconfig"
 // Fall back to checking for this mime type, which servers often report wrong
@@ -47,11 +49,6 @@
 
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
-
-namespace com {
-namespace googlecode {
-namespace libproxy {
-using namespace std;
 
 static inline int _get_default_port(string scheme) {
         struct servent *serv;
@@ -416,8 +413,4 @@ char* url::get_pac() {
 	// Clean up
 	close(sock);
 	return buffer;
-}
-
-}
-}
 }

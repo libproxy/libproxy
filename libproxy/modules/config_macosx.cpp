@@ -20,7 +20,7 @@
 #include <sstream>
 
 #include "../module_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 #include <SystemConfiguration/SystemConfiguration.h>
 
@@ -127,7 +127,7 @@ public:
 		// wpad://
 		if (getbool(proxies, "ProxyAutoDiscoveryEnable")) {
 			CFRelease(proxies);
-			return com::googlecode::libproxy::url(string("wpad://"));
+			return libproxy::url(string("wpad://"));
 		}
 
 		// pac+http://...
@@ -135,7 +135,7 @@ public:
 		    (tmp = str(getobj<CFStringRef>(proxies, "ProxyAutoConfigURLString"))) != "" &&
         	    url::is_valid(tmp)) {
 			CFRelease(proxies);
-			return com::googlecode::libproxy::url(string("pac+") + tmp);
+			return libproxy::url(string("pac+") + tmp);
 		}
 
 		// http:// or socks:// (TODO: gopher:// and rtsp:// ???)
@@ -144,12 +144,12 @@ public:
 		    (protocol_url(proxies, toupper("http"), tmp)              && url::is_valid(tmp)) ||
 	            (protocol_url(proxies, toupper("socks"), tmp)             && url::is_valid(tmp))) {
 			CFRelease(proxies);
-			return com::googlecode::libproxy::url(tmp);
+			return libproxy::url(tmp);
 		}
 
 		// direct://
 		CFRelease(proxies);
-		return com::googlecode::libproxy::url(string("direct://"));
+		return libproxy::url(string("direct://"));
 	}
 
 	string get_ignore(url) {

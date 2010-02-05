@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "../extension_wpad.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 class dns_alias_wpad_extension : public wpad_extension {
 public:

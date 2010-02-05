@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #include "../extension_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 #define W32REG_OFFSET_PAC  (1 << 2)
 #define W32REG_OFFSET_WPAD (1 << 3)

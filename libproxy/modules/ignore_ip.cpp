@@ -21,7 +21,7 @@
 #include <cstring>
 
 #include "../extension_ignore.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 static inline bool
 _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)

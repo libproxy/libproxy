@@ -26,7 +26,7 @@
 #include "xhasclient.cpp" // For xhasclient()
 
 #include "../extension_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 static const char *_all_keys[] = {
 	"/system/proxy/mode",        "/system/proxy/autoconfig_url",

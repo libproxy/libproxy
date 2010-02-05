@@ -20,7 +20,7 @@
 #include <cstdio>
 
 #include "../extension_ignore.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 class domain_ignore_extension : public ignore_extension {
 public:

@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "extension_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 string config_extension::get_ignore(url) {
 	return "";

@@ -28,7 +28,7 @@
 #endif
 
 #include "module_manager.hpp"
-using namespace com::googlecode::libmodman;
+using namespace libmodman;
 
 #ifdef WIN32
 #define pdlmtype HMODULE

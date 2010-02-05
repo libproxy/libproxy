@@ -22,7 +22,7 @@
 #include "xhasclient.cpp" // For xhasclient(...)
 
 #include "../extension_config.hpp"
-using namespace com::googlecode::libproxy;
+using namespace libproxy;
 
 class kde_config_extension : public config_extension {
 public:
@@ -84,7 +84,7 @@ public:
 		};
 
 		// qInstallMsgHandler(oldHandler);  // restore old behaviour
-		return com::googlecode::libproxy::url(cfg);
+		return libproxy::url(cfg);
 	}
 
 	string get_ignore(url /*dst*/) {
