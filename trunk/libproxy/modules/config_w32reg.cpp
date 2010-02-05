@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "../module_config.hpp"
+#include "../extension_config.hpp"
 using namespace com::googlecode::libproxy;
 
 #define W32REG_OFFSET_PAC  (1 << 2)
@@ -106,11 +106,8 @@ static map<string, string> _parse_manual(string data) {
 	return rval;
 }
 
-class w32reg_config_module : public config_module {
+class w32reg_config_extension : public config_extension {
 public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_SESSION);
-
 	url get_config(url dst) throw (runtime_error) {
 		char        *tmp = NULL;
 		uint32_t enabled = 0;
@@ -165,4 +162,4 @@ public:
 	}
 };
 
-PX_MODULE_INFO_EZ(config_module, config_w32reg, NULL, w32reg_config_module, true);
+MM_MODULE_EZ(w32reg_config_extension, true, NULL);
