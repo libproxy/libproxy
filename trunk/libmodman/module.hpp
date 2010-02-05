@@ -32,7 +32,7 @@
 #define MM_MODULE_VERSION 1
 #define MM_MODULE_NAME __module
 
-#define MM_MODULE_DEFINE DLL_PUBLIC struct com::googlecode::libmodman::module MM_MODULE_NAME[]
+#define MM_MODULE_DEFINE extern "C" struct com::googlecode::libmodman::module DLL_PUBLIC MM_MODULE_NAME[]
 #define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL }
 #define MM_MODULE_RECORD(type, init, test, symb) \
 	{ MM_MODULE_VERSION, type::base_type(), init, test, symb }

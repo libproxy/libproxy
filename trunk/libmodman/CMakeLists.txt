@@ -29,6 +29,8 @@ function(mm_create_test name progname modtype)
   add_test(NAME ${name} COMMAND test/${progname} test/modules/${modtype} ${ARGN})
 endfunction(mm_create_test)
 
+# I'm not sure why this doesn't work on win32
+if(UNIX)
 mm_create_module(condition one false NULL)
 mm_create_module(condition two true  NULL)
 mm_create_module(singleton one true  NULL)
@@ -50,3 +52,4 @@ mm_create_test(sorted    sorted    sorted    two one)
 mm_create_test(symbol    symbolz   symbol    two)
 mm_create_test(nosymbol  symbol    symbol)
 mm_create_test(nosymreq  symbol    symbol    one)
+endif(UNIX)

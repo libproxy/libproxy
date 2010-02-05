@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <algorithm>
-
+#include <algorithm>  // For sort()
 #include <sys/stat.h> // For stat()
+
 #ifdef WIN32
 #include <windows.h>
 #else
@@ -28,13 +28,11 @@
 #endif
 
 #include "module_manager.hpp"
-
-#include <cstdio>
+using namespace com::googlecode::libmodman;
 
 #ifdef WIN32
 #define pdlmtype HMODULE
 #define pdlopen(filename) LoadLibrary(filename)
-#define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define pdlsym GetProcAddress
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
 /*static std::string pdlerror() {
@@ -49,31 +47,20 @@
 			(LPTSTR) &msg,
 			0,
 			NULL);
-	e = std::string(msg);
+	e = std::string((const char*) msg);
     LocalFree(msg);
     return e;
 }*/
-static pdlmtype pdlreopen(pdlmtype module) {
-	char tmp[4096];
-	if (!module) return NULL;
-	DWORD i = GetModuleFileName(module, tmp, 4096);
-	pdlclose(module);
-	return (i == 0 || i == 4096) ? NULL : pdlopen(tmp);
-}
 #else
 #define pdlmtype void*
-#define pdlopen(filename) dlopen(filename, RTLD_NOW | RTLD_LOCAL)
-#define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
+#define pdlopen(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
 #define pdlsym dlsym
 #define pdlclose(module) dlclose((pdlmtype) module)
 //static std::string pdlerror() { return dlerror(); }
-static pdlmtype pdlreopen(pdlmtype module) { return module; }
 #endif
 
 #define _str(s) #s
 #define __str(s) _str(s)
-
-using namespace com::googlecode::libmodman;
 
 module_manager::~module_manager() {
 	// Free all extensions
@@ -96,10 +83,9 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	if (stat(filename.c_str(), &st) != 0) return false;
 	if ((st.st_mode & S_IFMT) != S_IFREG) return false;
 
-	// Open the module without doing any symbol resolution
-	pdlmtype dlobj = pdlopenl(filename.c_str());
+	// Open the module
+	pdlmtype dlobj = pdlopen(filename.c_str());
 	if (!dlobj) return false;
-	bool lazyload = true;
 
 	// If we have already loaded this module, return true
 	if (this->modules.find((void*) dlobj) != this->modules.end()) {
@@ -107,7 +93,6 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		return true;
 	}
 
-on_reload:
 	// Get the module_info struct
 	module* mi = (module*) pdlsym(dlobj, __str(MM_MODULE_NAME));
 	if (!mi) {
@@ -149,14 +134,6 @@ on_reload:
 			pdlclose(thisproc);
 		}
 #endif
-
-		if (lazyload) {
-			// Reload the module (not in lazy mode)
-			dlobj = pdlreopen(dlobj);
-			if (!dlobj) return false;
-			lazyload = false;
-			goto on_reload;
-		}
 
 		// If our execution test succeeds, call init()
 		if (mi[i].test()) {
