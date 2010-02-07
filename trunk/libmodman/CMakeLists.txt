@@ -1,10 +1,10 @@
 ### Main library
-add_library(modman SHARED module.cpp module_manager.cpp)
+add_library(libmodman SHARED module.cpp module_manager.cpp)
 if(NOT WIN32)
-  target_link_libraries(modman dl)
+  target_link_libraries(libmodman dl)
 endif()
-set_target_properties(modman PROPERTIES VERSION 0 SOVERSION 0.0.0)
-install(TARGETS modman DESTINATION ${rlibdir})
+set_target_properties(libmodman PROPERTIES PREFIX "" VERSION 0 SOVERSION 0.0.0)
+install(TARGETS libmodman DESTINATION ${rlibdir})
 
 ### Tests
 function(mm_create_module MODTYPE MODNAME MODCOND MODSYMB)
@@ -19,9 +19,9 @@ endfunction(mm_create_module)
 function(mm_create_program name EXTTYPE)
   add_executable(test/${name} test/main.cpp)
   set_property(TARGET test/${name} PROPERTY COMPILE_DEFINITIONS "EXTTYPE=${EXTTYPE}_extension")
-  target_link_libraries(test/${name} modman)
+  target_link_libraries(test/${name} libmodman)
   if(${ARGC} GREATER 2)
-    target_link_libraries(test/${name} ${ARGN};modman)
+    target_link_libraries(test/${name} ${ARGN};libmodman)
   endif()
 endfunction(mm_create_program)
 
