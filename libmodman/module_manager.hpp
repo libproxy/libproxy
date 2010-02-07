@@ -31,7 +31,7 @@
 namespace libmodman {
 using namespace std;
 
-class DLL_PUBLIC module_manager {
+class __MM_DLL_EXPORT module_manager {
 public:
 	~module_manager();
 	bool load_file(string filename, bool symbreq=true);

@@ -27,6 +27,7 @@
 #include <dirent.h> // For opendir(), readdir(), closedir()
 #endif
 
+#define __MM_INTERNAL
 #include "module_manager.hpp"
 using namespace libmodman;
 

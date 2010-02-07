@@ -23,17 +23,26 @@
 #include <typeinfo>
 #include <cstdlib>
 
+
 #ifdef WIN32
-#define DLL_PUBLIC __declspec(dllexport)
 #define __MOD_DEF_PREFIX extern "C"
+#ifdef __MM_INTERNAL
+#define __MM_DLL_EXPORT __declspec(dllexport)
 #else
-#define DLL_PUBLIC __attribute__ ((visibility("default")))
+#define __MM_DLL_EXPORT __declspec(dllimport)
+#endif
+#else
 #define __MOD_DEF_PREFIX
+#ifdef __MM_INTERNAL
+#define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
+#else
+#define __MM_DLL_EXPORT
+#endif
 #endif
 
 #define MM_MODULE_VERSION 1
 #define MM_MODULE_NAME __module
-#define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct libmodman::module DLL_PUBLIC MM_MODULE_NAME[]
+#define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct libmodman::module __MM_DLL_EXPORT MM_MODULE_NAME[]
 
 #define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL }
 #define MM_MODULE_RECORD(type, init, test, symb) \
@@ -56,7 +65,7 @@
 
 namespace libmodman {
 
-class DLL_PUBLIC base_extension {
+class __MM_DLL_EXPORT base_extension {
 public:
 	static const char* base_type() { return typeid(base_extension).name(); }
 	static bool        singleton();
@@ -66,7 +75,7 @@ public:
 };
 
 template <class T>
-class DLL_PUBLIC extension : public base_extension {
+class __MM_DLL_EXPORT extension : public base_extension {
 public:
 	static const char* base_type() { return typeid(T).name(); }
 };

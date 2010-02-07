@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
+#define __MM_INTERNAL
 #include "module.hpp"
 using namespace libmodman;
 
