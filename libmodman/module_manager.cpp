@@ -86,12 +86,14 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	if (stat(filename.c_str(), &st) != 0) return false;
 	if ((st.st_mode & S_IFMT) != S_IFREG) return false;
 
+	if (debug)
+		cerr << "loading : " << filename << "\r";
+
 	// Open the module
 	pdlmtype dlobj = pdlopen(filename.c_str());
 	if (!dlobj) {
 		if (debug) {
-			cerr << "Failed loading module: " << filename << endl;
-			cerr << pdlerror() << endl;
+			cerr << "failed!" << endl << "\t" << pdlerror() << endl;
 		}
 		return false;
 	}
@@ -105,7 +107,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	// Get the module_info struct
 	module* mi = (module*) pdlsym(dlobj, __str(MM_MODULE_NAME));
 	if (!mi) {
-		if (debug) cerr << "Unable to find struct " __str(MM_MODULE_NAME) " in module: " << filename << endl;
+		if (debug)
+			cerr << "failed!" << endl << "\tUnable to find struct '" __str(MM_MODULE_NAME) "'!" << endl;
 		pdlclose(dlobj);
 		return false;
 	}
@@ -151,13 +154,12 @@ bool module_manager::load_file(string filename, bool symbreq) {
 			if (extensions) {
 				// init() returned extensions we need to register
 				loaded = true;
+				cerr << "success" << endl;
 				for (unsigned int j=0 ; extensions[j] ; j++) {
 					if (debug)
-						cerr << "Found extension '"
-						     << typeid(*extensions[j]).name()
-						     << "' with base type '"
-						     << mi[i].type
-						     << "'" << endl;
+						cerr << "\tRegistering "
+						     << typeid(*extensions[j]).name() << "("
+						     << mi[i].type << ")" << endl;
 					this->extensions[mi[i].type].push_back(extensions[j]);
 				}
 				delete extensions;
@@ -167,7 +169,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 
 	// We didn't load this module, so exit
 	if (!loaded) {
-		if (debug) cerr << "Unable to find any suitable extension factories in module: " << filename << endl;
+		if (debug)
+			cerr << "failed!" << endl << "\tNo suitable extension factories!" << endl;
 		pdlclose(dlobj);
 		return false;
 	}
@@ -176,7 +179,6 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	this->modules.insert((void*) dlobj);
 
 	// Yay, we did it!
-	if (debug) cerr << "Successfully loaded module: " << filename << endl;
 	return true;
 }
 
