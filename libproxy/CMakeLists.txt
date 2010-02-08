@@ -77,6 +77,10 @@ if("${PKG_CONFIG_FOUND}")
   endif()
 endif()
 
+if(UNIX AND NOT APPLE)
+  set(ENVVAR_FOUND 1)
+endif()
+
 if(APPLE)
   find_library(WEBKIT_LIBRARIES JavaScriptCore)
   find_library(SC_LIBRARIES SystemConfiguration)
@@ -97,7 +101,7 @@ endif()
 ## Module definition
 #
 message("MODULES TO BUILD:")
-px_module(config_envvar            "${UNIX} AND NOT ${APPLE}")
+px_module(config_envvar            "${ENVVAR_FOUND}")
 px_module(config_gnome             "${GNOME_FOUND}"  ${X11_LIBRARIES})
 px_module(config_kde4              "${KDE4_FOUND}"   ${KDE4_LIBRARIES} ${X11_LIBRARIES})
 px_module(config_macosx            "${SC_FOUND}"     ${SC_LIBRARIES} ${CF_LIBRARIES})
