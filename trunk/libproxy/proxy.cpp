@@ -115,6 +115,7 @@ proxy_factory::proxy_factory() {
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
+	this->mm.load_dir(MODULEDIR, false);
 
 #ifndef WIN32
 	pthread_mutex_unlock(&this->mutex);
