@@ -100,6 +100,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 
 	// If we have already loaded this module, return true
 	if (this->modules.find((void*) dlobj) != this->modules.end()) {
+		if (debug)
+			cerr << "preload" << endl;
 		pdlclose(dlobj);
 		return true;
 	}
