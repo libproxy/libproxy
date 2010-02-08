@@ -156,7 +156,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 			if (extensions) {
 				// init() returned extensions we need to register
 				loaded = true;
-				cerr << "success" << endl;
+				if (debug) cerr << "success" << endl;
 				for (unsigned int j=0 ; extensions[j] ; j++) {
 					if (debug)
 						cerr << "\tRegistering "
