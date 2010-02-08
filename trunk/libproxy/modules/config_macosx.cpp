@@ -19,7 +19,7 @@
 
 #include <sstream>
 
-#include "../module_config.hpp"
+#include "../extension_config.hpp"
 using namespace libproxy;
 
 #include <SystemConfiguration/SystemConfiguration.h>
@@ -114,11 +114,8 @@ static string capitalize(string str) {
 	return string(&c, 1) + str.substr(1);
 }
 
-class macosx_config_module : public config_module {
+class macosx_config_extension : public config_extension {
 public:
-	PX_MODULE_ID(NULL);
-	PX_MODULE_CONFIG_CATEGORY(config_module::CATEGORY_NONE);
-
 	url get_config(url url) throw (runtime_error) {
 		string tmp;
 		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
@@ -167,4 +164,5 @@ public:
 	}
 };
 
-PX_MODULE_INFO_EZ(config_module, config_macosx, NULL, macosx_config_module, true);
+MM_MODULE_EZ(macosx_config_extension, true, NULL);
+
