@@ -25,19 +25,19 @@
 using namespace std;
 using namespace libmodman;
 
-class singleton_extension : public extension<singleton_extension> {
+class __MM_DLL_EXPORT singleton_extension : public extension<singleton_extension> {
 public:
 	static bool              singleton() { return true; }
 };
 
-class sorted_extension    : public extension<sorted_extension> {
+class __MM_DLL_EXPORT sorted_extension    : public extension<sorted_extension> {
 public:
 	virtual bool operator<(const base_extension& other) const {
 		return string(typeid(*this).name()) > string(typeid(other).name());
 	}
 };
 
-class symbol_extension    : public extension<symbol_extension> {};
-class condition_extension : public extension<condition_extension> {};
+class __MM_DLL_EXPORT symbol_extension    : public extension<symbol_extension> {};
+class __MM_DLL_EXPORT condition_extension : public extension<condition_extension> {};
 
 #endif /* MAIN_HPP_ */
