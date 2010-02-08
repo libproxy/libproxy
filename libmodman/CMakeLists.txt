@@ -14,6 +14,7 @@ function(mm_create_module MODTYPE MODNAME MODCOND MODSYMB)
   endif()
   add_library(test/modules/${MODTYPE}/${MODNAME} MODULE test/${MODTYPE}_${MODNAME}.cpp)
   set_target_properties(test/modules/${MODTYPE}/${MODNAME} PROPERTIES PREFIX "")
+  target_link_libraries(test/modules/${MODTYPE}/${MODNAME} libmodman)
 endfunction(mm_create_module)
 
 function(mm_create_program name EXTTYPE)
