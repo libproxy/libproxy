@@ -198,15 +198,12 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
-	for (int i=-1 ; i < (int) confign.size() ; ) {
-		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() ; it++) {
-			if ((*it)->ignore(*realurl, confign.substr(i+1, confign.find(','))))
-				goto do_return;
-		}
+	for (size_t i=0 ; i < confign.size() && i != string::npos ; i=confign.substr(i).find(',')) {
+		while (i < confign.size() && confign[i] == ',') i++;
 
-		i = confign.find(',');
-		if (i < 0)
-			break;
+		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() ; it++)
+			if ((*it)->ignore(*realurl, confign.substr(i, confign.find(','))))
+				goto do_return;
 	}
 
 	/* If we have a wpad config */
