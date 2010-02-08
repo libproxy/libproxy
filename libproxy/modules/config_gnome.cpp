@@ -215,10 +215,10 @@ private:
 	}
 
 	// This method attempts to update data
-	// If called with no arguments, it will check for new data (sleeping for <=1000
+	// If called with no arguments, it will check for new data (sleeping for <=10
 	// useconds) and returning true or false depending on if at least one line of
 	// data was found.
-	// However, if req > 0, we will keep checking for new lines (at 1000 usec ivals)
+	// However, if req > 0, we will keep checking for new lines (at 10 usec ivals)
 	// until enough lines are found.  This allows us to wait for *all* the initial
 	// values to be read in before we start processing gconf requests.
 	bool update_data(int req=0, int found=0) {
@@ -230,7 +230,7 @@ private:
 		if (!this->read) return false;
 
 		fd_set rfds;
-		struct timeval timeout = { 0, 1000 }; // select() for 1/1000th of a second
+		struct timeval timeout = { 0, 10 }; // select() for 1/1000th of a second
 		FD_ZERO(&rfds);
 		FD_SET(this->read, &rfds);
 		if (select(this->read+1, &rfds, NULL, NULL, &timeout) < 1)
