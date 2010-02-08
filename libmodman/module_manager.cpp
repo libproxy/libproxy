@@ -19,6 +19,7 @@
 
 #include <algorithm>  // For sort()
 #include <sys/stat.h> // For stat()
+#include <iostream>
 
 #ifdef WIN32
 #include <windows.h>
@@ -27,7 +28,6 @@
 #include <dirent.h> // For opendir(), readdir(), closedir()
 #endif
 
-#define __MM_INTERNAL
 #include "module_manager.hpp"
 using namespace libmodman;
 
@@ -36,7 +36,7 @@ using namespace libmodman;
 #define pdlopen(filename) LoadLibrary(filename)
 #define pdlsym GetProcAddress
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
-/*static std::string pdlerror() {
+static std::string pdlerror() {
 	std::string e;
 	LPTSTR msg;
 
@@ -51,13 +51,13 @@ using namespace libmodman;
 	e = std::string((const char*) msg);
     LocalFree(msg);
     return e;
-}*/
+}
 #else
 #define pdlmtype void*
 #define pdlopen(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
 #define pdlsym dlsym
 #define pdlclose(module) dlclose((pdlmtype) module)
-//static std::string pdlerror() { return dlerror(); }
+static std::string pdlerror() { return dlerror(); }
 #endif
 
 #define _str(s) #s
@@ -79,6 +79,8 @@ module_manager::~module_manager() {
 }
 
 bool module_manager::load_file(string filename, bool symbreq) {
+	const char* debug = getenv("_MM_DEBUG");
+
 	// Stat the file to make sure it is a file
 	struct stat st;
 	if (stat(filename.c_str(), &st) != 0) return false;
@@ -86,7 +88,13 @@ bool module_manager::load_file(string filename, bool symbreq) {
 
 	// Open the module
 	pdlmtype dlobj = pdlopen(filename.c_str());
-	if (!dlobj) return false;
+	if (!dlobj) {
+		if (debug) {
+			cerr << "Failed loading module: " << filename << endl;
+			cerr << pdlerror() << endl;
+		}
+		return false;
+	}
 
 	// If we have already loaded this module, return true
 	if (this->modules.find((void*) dlobj) != this->modules.end()) {
@@ -97,6 +105,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	// Get the module_info struct
 	module* mi = (module*) pdlsym(dlobj, __str(MM_MODULE_NAME));
 	if (!mi) {
+		if (debug) cerr << "Unable to find struct " __str(MM_MODULE_NAME) " in module: " << filename << endl;
 		pdlclose(dlobj);
 		return false;
 	}
@@ -142,8 +151,15 @@ bool module_manager::load_file(string filename, bool symbreq) {
 			if (extensions) {
 				// init() returned extensions we need to register
 				loaded = true;
-				for (unsigned int j=0 ; extensions[j] ; j++)
+				for (unsigned int j=0 ; extensions[j] ; j++) {
+					if (debug)
+						cerr << "Found extension '"
+						     << typeid(*extensions[j]).name()
+						     << "' with base type '"
+						     << mi[i].type
+						     << "'" << endl;
 					this->extensions[mi[i].type].push_back(extensions[j]);
+				}
 				delete extensions;
 			}
 		}
@@ -151,6 +167,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 
 	// We didn't load this module, so exit
 	if (!loaded) {
+		if (debug) cerr << "Unable to find any suitable extension factories in module: " << filename << endl;
 		pdlclose(dlobj);
 		return false;
 	}
@@ -159,6 +176,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	this->modules.insert((void*) dlobj);
 
 	// Yay, we did it!
+	if (debug) cerr << "Successfully loaded module: " << filename << endl;
 	return true;
 }
 
