@@ -23,21 +23,12 @@
 #include <typeinfo>
 #include <cstdlib>
 
-
 #ifdef WIN32
 #define __MOD_DEF_PREFIX extern "C"
-#ifdef __MM_INTERNAL
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #else
-#define __MM_DLL_EXPORT __declspec(dllimport)
-#endif
-#else
 #define __MOD_DEF_PREFIX
-#ifdef __MM_INTERNAL
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
-#else
-#define __MM_DLL_EXPORT
-#endif
 #endif
 
 #define MM_MODULE_VERSION 1
