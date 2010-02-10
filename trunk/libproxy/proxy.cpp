@@ -43,7 +43,9 @@ public:
 	vector<string> get_proxies(string url);
 
 private:
-#ifndef WIN32
+#ifdef WIN32
+	HANDLE mutex;
+#else
 	pthread_mutex_t mutex;
 #endif
 	module_manager  mm;
@@ -99,7 +101,10 @@ _format_pac_response(string response)
 }
 
 proxy_factory::proxy_factory() {
-#ifndef WIN32
+#ifdef WIN32
+	this->mutex = CreateMutex(NULL, false, NULL);
+	WaitForSingleObject(this->mutex, INFINITE);
+#else
 	pthread_mutex_init(&this->mutex, NULL);
 	pthread_mutex_lock(&this->mutex);
 #endif
@@ -117,18 +122,24 @@ proxy_factory::proxy_factory() {
 	this->mm.load_dir(MODULEDIR);
 	this->mm.load_dir(MODULEDIR, false);
 
-#ifndef WIN32
+#ifdef WIN32
+	ReleaseMutex(this->mutex);
+#else
 	pthread_mutex_unlock(&this->mutex);
 #endif
 }
 
 proxy_factory::~proxy_factory() {
-#ifndef WIN32
+#ifdef WIN32
+	WaitForSingleObject(this->mutex, INFINITE);
+#else
 	pthread_mutex_lock(&this->mutex);
 #endif
 	if (this->pac) delete this->pac;
 	if (this->pacurl) delete this->pacurl;
-#ifndef WIN32
+#ifdef WIN32
+	ReleaseMutex(this->mutex);
+#else
 	pthread_mutex_unlock(&this->mutex);
 	pthread_mutex_destroy(&this->mutex);
 #endif
@@ -150,8 +161,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		goto do_return;
 	realurl = new url(__url);
 
-#ifndef WIN32
-	// Lock the mutex
+#ifdef WIN32
+	WaitForSingleObject(this->mutex, INFINITE);
+#else
 	pthread_mutex_lock(&this->mutex);
 #endif
 
@@ -296,7 +308,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Actually return, freeing misc stuff */
 	do_return:
-#ifndef WIN32
+#ifdef WIN32
+		ReleaseMutex(this->mutex);
+#else
 		pthread_mutex_unlock(&this->mutex);
 #endif
 		if (realurl)
