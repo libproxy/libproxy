@@ -28,6 +28,14 @@
 
 #include "module.hpp"
 
+#ifndef _MOD_SUFFIX
+#ifdef WIN32
+#define _MOD_SUFFIX "dll"
+#else
+#define _MOD_SUFFIX "so"
+#endif
+#endif
+
 namespace libmodman {
 using namespace std;
 
@@ -35,7 +43,7 @@ class __MM_DLL_EXPORT module_manager {
 public:
 	~module_manager();
 	bool load_file(string filename, bool symbreq=true);
-	bool load_dir(string dirname, bool symbreq=true);
+	bool load_dir(string dirname, bool symbreq=true, string suffix=_MOD_SUFFIX);
 
 	template <class T> vector<T*> get_extensions() const {
 		struct pcmp {

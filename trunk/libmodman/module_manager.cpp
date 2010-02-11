@@ -184,14 +184,14 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	return true;
 }
 
-bool module_manager::load_dir(string dirname, bool symbreq) {
+bool module_manager::load_dir(string dirname, bool symbreq, string suffix) {
 	vector<string> files;
 
 #ifdef WIN32
 	WIN32_FIND_DATA fd;
 	HANDLE search;
 
-	string srch = dirname + "\\" + "*";
+	string srch = dirname + "\\*." + suffix;
 	search = FindFirstFile(srch.c_str(), &fd);
 	if (search != INVALID_HANDLE_VALUE) {
 		do {
@@ -204,8 +204,11 @@ bool module_manager::load_dir(string dirname, bool symbreq) {
 
 	DIR *moduledir = opendir(dirname.c_str());
 	if (moduledir) {
-		while((ent = readdir(moduledir)))
-			files.push_back(dirname + "/" + ent->d_name);
+		while((ent = readdir(moduledir))) {
+			string tmp = ent->d_name;
+			if (tmp.find(suffix, tmp.size() - suffix.size()) != tmp.npos)
+				files.push_back(dirname + "/" + tmp);
+		}
 		closedir(moduledir);
 	}
 #endif
