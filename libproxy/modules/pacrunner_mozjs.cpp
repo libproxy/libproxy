@@ -26,6 +26,11 @@ using namespace libproxy;
 #ifndef JS_HAS_FILE_OBJECT
 #define JS_HAS_FILE_OBJECT 0
 #endif
+#ifdef WIN32
+#ifndef XP_WIN
+#define XP_WIN
+#endif
+#endif
 #include <jsapi.h>
 #include "pacutils.h"
 
@@ -37,7 +42,7 @@ using namespace libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static JSBool dnsResolve(JSContext *cx, JSObject */*obj*/, uintN /*argc*/, jsval *argv, jsval *rval) {
+static JSBool dnsResolve(JSContext *cx, JSObject * /*obj*/, uintN /*argc*/, jsval *argv, jsval *rval) {
 	// Get hostname argument
 	char *tmp = JS_strdup(cx, JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
 
@@ -70,7 +75,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject */*obj*/, uintN /*argc*/, jsval
 		return true;
 }
 
-static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval */*argv*/, jsval *rval) {
+static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval * /*argv*/, jsval *rval) {
 	char *hostname = (char *) JS_malloc(cx, 1024);
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewString(cx, hostname, strlen(hostname));
