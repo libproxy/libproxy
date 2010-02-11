@@ -27,33 +27,33 @@ int main(int argc, const char** argv) {
 	module_manager mm;
 
 	if (argc < 2) {
-		cerr << "Usage: " << argv[0] << " MODULEDIR MODNAME ..." << endl;
+		cout << "Usage: " << argv[0] << " MODULEDIR MODNAME ..." << endl;
 		return 1;
 	}
 
 	if (!mm.register_type<EXTTYPE>()) {
-		cerr << "Unable to register type!" << endl;
+		cout << "Unable to register type!" << endl;
 		return 2;
 	}
 
 	if (!mm.load_dir(argv[1]) && argc > 2) {
 		if (!mm.load_dir(argv[1], false)) {
-			cerr << "Unable to load modules!" << endl;
+			cout << "Unable to load modules!" << endl;
 			return 3;
 		}
 	}
 
 	vector<EXTTYPE*> exts = mm.get_extensions<EXTTYPE>();
 	if (exts.size() != (unsigned int) argc - 2) {
-		cerr << "Wrong number of extensions found!" << endl;
+		cout << "Wrong number of extensions found!" << endl;
 		return 4;
 	}
 
 	for (unsigned int i=0 ; i < exts.size() ; i++) {
 		if (!strstr(typeid(*(exts[i])).name(), argv[i+2])) {
-			cerr << "Unable to find extension! Here's the list:" << endl;
+			cout << "Unable to find extension! Here's the list:" << endl;
 			for (unsigned int j=0 ; j < exts.size() ; j++)
-				cerr << "\t" << typeid(*(exts[j])).name() << endl;
+				cout << "\t" << typeid(*(exts[j])).name() << endl;
 			return 5;
 		}
 	}
