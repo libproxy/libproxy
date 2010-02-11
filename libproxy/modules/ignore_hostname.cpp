@@ -33,4 +33,4 @@ public:
 	}
 };
 
-MM_MODULE_EZ(hostname_ignore_extension, true, NULL);
+MM_MODULE_EZ(hostname_ignore_extension, true, NULL, NULL);
