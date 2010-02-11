@@ -35,9 +35,9 @@
 #define MM_MODULE_NAME __module
 #define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct libmodman::module __MM_DLL_EXPORT MM_MODULE_NAME[]
 
-#define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL }
+#define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL, NULL }
 #define MM_MODULE_RECORD(type, init, test, symb) \
-	{ MM_MODULE_VERSION, type::base_type(), init, test, symb }
+	{ MM_MODULE_VERSION, type::base_type(), init, test, symb, NULL }
 
 #define MM_MODULE_EZ(clsname, cond, symb) \
 	static bool clsname ## _test() { \
@@ -77,6 +77,7 @@ struct module {
 	base_extension**  (*init)();
 	bool              (*test)();
 	const char* const   symb;
+	const char* const   smod;
 };
 
 }
