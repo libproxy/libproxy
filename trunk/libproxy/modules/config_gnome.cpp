@@ -268,6 +268,6 @@ static base_extension** gnome_config_extension_init() {
 }
 
 MM_MODULE_DEFINE = {
-		MM_MODULE_RECORD(gnome_config_extension, gnome_config_extension_init, gnome_config_extension_test, NULL),
+		MM_MODULE_RECORD(gnome_config_extension, gnome_config_extension_init, gnome_config_extension_test, NULL, NULL),
 		MM_MODULE_LAST,
 };

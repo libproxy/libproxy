@@ -160,4 +160,4 @@ private:
 	JSGlobalContextRef jsctx;
 };
 
-PX_PACRUNNER_MODULE_EZ(webkit, true, "JSObjectMakeFunctionWithCallback");
+PX_PACRUNNER_MODULE_EZ(webkit, true, "JSObjectMakeFunctionWithCallback", "webkit");

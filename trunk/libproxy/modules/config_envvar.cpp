@@ -62,4 +62,4 @@ public:
 	}
 };
 
-MM_MODULE_EZ(envvar_config_extension, true, NULL);
+MM_MODULE_EZ(envvar_config_extension, true, NULL, NULL);

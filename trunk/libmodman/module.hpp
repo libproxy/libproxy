@@ -36,10 +36,10 @@
 #define MM_MODULE_DEFINE __MOD_DEF_PREFIX struct libmodman::module __MM_DLL_EXPORT MM_MODULE_NAME[]
 
 #define MM_MODULE_LAST { MM_MODULE_VERSION, NULL, NULL, NULL, NULL, NULL }
-#define MM_MODULE_RECORD(type, init, test, symb) \
-	{ MM_MODULE_VERSION, type::base_type(), init, test, symb, NULL }
+#define MM_MODULE_RECORD(type, init, test, symb, smod) \
+	{ MM_MODULE_VERSION, type::base_type(), init, test, symb, smod }
 
-#define MM_MODULE_EZ(clsname, cond, symb) \
+#define MM_MODULE_EZ(clsname, cond, symb, smod) \
 	static bool clsname ## _test() { \
 		return (cond); \
 	} \
@@ -50,7 +50,7 @@
 		return retval; \
 	} \
 	MM_MODULE_DEFINE = { \
-		MM_MODULE_RECORD(clsname, clsname ## _init, clsname ## _test, symb), \
+		MM_MODULE_RECORD(clsname, clsname ## _init, clsname ## _test, symb, smod), \
 		MM_MODULE_LAST, \
 	};
 
