@@ -1,0 +1,45 @@
+### Functions
+function(mm_create_module MODTYPE MODNAME MODCOND MODSYMB)
+  configure_file(modules/module.cpp.in libmodman/test/${MODTYPE}_${MODNAME}.cpp @ONLY)
+  if(NOT IS_DIRECTORY modules/${MODTYPE})
+    file(MAKE_DIRECTORY modules/${MODTYPE})
+  endif()
+  include_directories(../../)
+  add_library(${MODTYPE}_${MODNAME} MODULE ${MODTYPE}_${MODNAME}.cpp)
+  set_target_properties(${MODTYPE}_${MODNAME} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY modules/${MODTYPE})
+  target_link_libraries(${MODTYPE}_${MODNAME} libmodman)
+endfunction(mm_create_module)
+
+function(mm_create_program name EXTTYPE)
+  add_executable(${name} main.cpp)
+  set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS "EXTTYPE=${EXTTYPE}_extension")
+  target_link_libraries(${name} libmodman)
+  if(${ARGC} GREATER 2)
+    target_link_libraries(${name} ${ARGN};libmodman)
+  endif()
+endfunction(mm_create_program)
+
+### Modules
+mm_create_module(condition one false NULL)
+mm_create_module(condition two true  NULL)
+mm_create_module(singleton one true  NULL)
+mm_create_module(singleton two true  NULL)
+mm_create_module(sorted    one true  NULL)
+mm_create_module(sorted    two true  NULL)
+mm_create_module(symbol    one true  \"asdfoia\")
+mm_create_module(symbol    two true  \"deflate\")
+
+### Programs
+mm_create_program(condition condition)
+mm_create_program(singleton singleton)
+mm_create_program(sorted    sorted)
+mm_create_program(symbol    symbol)
+mm_create_program(symbolz   symbol z)
+
+### Tests
+add_test(condition condition modules/condition two)
+add_test(singleton singleton modules/singleton one)
+add_test(sorted    sorted    modules/sorted    two one)
+add_test(symbol    symbolz   modules/symbol    two)
+add_test(nosymbol  symbol    modules/symbol)
+add_test(nosymreq  symbol    modules/symbol    one)
