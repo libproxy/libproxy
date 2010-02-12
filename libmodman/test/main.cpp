@@ -20,11 +20,19 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#ifdef WIN32
+#ifdef SYMB
+#include <winsock2.h>
+#endif
+#endif
 
 #include "main.hpp"
 
 int main(int argc, const char** argv) {
 	module_manager mm;
+#ifdef SYMB
+	void* symb = recv;
+#endif
 
 	if (argc < 2) {
 		cout << "Usage: " << argv[0] << " MODULEDIR MODNAME ..." << endl;

@@ -12,10 +12,12 @@ endfunction(mm_create_module)
 
 function(mm_create_program name EXTTYPE)
   add_executable(${name} main.cpp)
-  set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS "EXTTYPE=${EXTTYPE}_extension")
   target_link_libraries(${name} libmodman)
   if(${ARGC} GREATER 2)
     target_link_libraries(${name} ${ARGN};libmodman)
+    set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS "EXTTYPE=${EXTTYPE}_extension";"SYMB=1")
+  else()
+    set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS "EXTTYPE=${EXTTYPE}_extension")
   endif()
 endfunction(mm_create_program)
 
