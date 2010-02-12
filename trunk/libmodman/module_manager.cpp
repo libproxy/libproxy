@@ -55,7 +55,7 @@ static string pdlerror() {
 
 static bool pdlsymlinked(const char* modn, const char* symb) {
 	return (GetProcAddress(GetModuleHandle(modn), symb) != NULL || \
-		    GetProcAddress(GetModuleHandle(NULL), symb) != NULL)
+		    GetProcAddress(GetModuleHandle(NULL), symb) != NULL);
 }
 #else
 #define pdlmtype void*
@@ -180,7 +180,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		// If a symbol is defined, we'll search for it in the main process
 		if (mi[i].symb) {
 			// Try to find the symbol in the main process
-			if (!pdlsymlinked(NULL, mi[i].symb)) {
+			if (!pdlsymlinked(mi[i].smod, mi[i].symb)) {
 				// If the symbol is not found and the symbol is required, continue
 				// If the symbol is not found and not required, we'll load only
 				// if there are no other modules of this type

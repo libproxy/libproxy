@@ -162,4 +162,4 @@ public:
 	}
 };
 
-MM_MODULE_EZ(w32reg_config_extension, true, NULL);
+MM_MODULE_EZ(w32reg_config_extension, true, NULL, NULL);
