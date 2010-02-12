@@ -30,8 +30,10 @@
 
 int main(int argc, const char** argv) {
 	module_manager mm;
+#ifdef WIN32
 #ifdef SYMB
 	void* symb = recv;
+#endif
 #endif
 
 	if (argc < 2) {
