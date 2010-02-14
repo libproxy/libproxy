@@ -35,9 +35,14 @@ using namespace libmodman;
 
 #ifdef WIN32
 #define pdlmtype HMODULE
-#define pdlopen(filename) LoadLibrary(filename)
+#define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define pdlsym GetProcAddress
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
+static pdlmtype pdlreopen(const char* filename, pdlmtype module) {
+	pdlclose(module);
+	return LoadLibrary(filename);
+}
+
 static string pdlerror() {
 	std::string e;
 	LPTSTR msg;
@@ -61,9 +66,10 @@ static bool pdlsymlinked(const char* modn, const char* symb) {
 }
 #else
 #define pdlmtype void*
-#define pdlopen(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
+#define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
 #define pdlsym dlsym
 #define pdlclose(module) dlclose((pdlmtype) module)
+#define pdlreopen(filename, module) module
 
 static string pdlerror() {
 	return dlerror();
@@ -97,15 +103,6 @@ module_manager::~module_manager() {
 		pdlclose(*i);
 	this->modules.clear();
 }
-/*
-bool module_manager::load_module(module* mi) {
-	const char* debug = getenv("_MM_DEBUG");
-	bool loaded = false;
-	for (unsigned int i=0 ; mi[i].vers == MM_MODULE_VERSION && mi[i].type && mi[i].init ; i++) {
-
-	}
-	return loaded;
-}*/
 
 bool module_manager::load_file(string filename, bool symbreq) {
 	const char* debug = getenv("_MM_DEBUG");
@@ -119,7 +116,9 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		cerr << "loading : " << filename << "\r";
 
 	// Open the module
-	pdlmtype dlobj = pdlopen(filename.c_str());
+	bool lazy = true;
+	pdlmtype dlobj = pdlopenl(filename.c_str());
+loadfull:
 	if (!dlobj) {
 		if (debug)
 			cerr << "failed!" << endl
@@ -136,12 +135,12 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	}
 
 	// Get the module info
-	const unsigned int* vers    =           (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
+	const unsigned int* vers    =             (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
 	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(type)));
 	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(init)));
 	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(test)));
-	const char** const   symb   =      (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
-	const char** const   smod   =      (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
+	const char** const   symb   =        (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
+	const char** const   smod   =        (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
 	if (!vers || !type || !init || !*type || !*init || *vers != MM_MODULE_VERSION) {
 		if (debug)
 			cerr << "failed!" << endl
@@ -191,6 +190,12 @@ bool module_manager::load_file(string filename, bool symbreq) {
 			pdlclose(dlobj);
 			return false;
 		}
+	}
+
+	if (lazy) {
+		dlobj = pdlreopen(filename.c_str(), dlobj);
+		lazy  = false;
+		goto loadfull;
 	}
 
 	// If our execution test succeeds, call init()
