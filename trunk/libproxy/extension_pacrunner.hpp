@@ -23,14 +23,15 @@
 #include <libmodman/module.hpp>
 #include "url.hpp"
 
-#define PX_PACRUNNER_MODULE_EZ(name, cond, symb, smod) \
+#define PX_PACRUNNER_MODULE_EZ(name, symb, smod) \
 	class name ## _pacrunner_extension : public pacrunner_extension { \
 	protected: \
 		virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc) { \
 			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
-	MM_MODULE_EZ(name ## _pacrunner_extension, cond, symb, smod)
+	MM_MODULE_INIT_EZ(name ## _pacrunner_extension); \
+	MM_MODULE_SYMB(symb, smod)
 
 namespace libproxy {
 using namespace std;

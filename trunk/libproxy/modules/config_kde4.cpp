@@ -121,4 +121,5 @@ private:
 */
 };
 
-MM_MODULE_EZ(kde_config_extension, xhasclient("kicker", NULL), NULL, NULL);
+MM_MODULE_INIT_EZ(kde_config_extension);
+MM_MODULE_TEST_EZ(kde_config_extension, xhasclient("kicker", NULL));

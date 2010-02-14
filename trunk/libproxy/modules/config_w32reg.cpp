@@ -132,15 +132,15 @@ public:
 			_get_registry(W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
 			map<string, string> manual = _parse_manual(tmp);
 			delete tmp;
-			
+
 			// First we look for an exact match
 			if (manual.find(dst.get_scheme()) != manual.end())
 				return manual[dst.get_scheme()];
-			
+
 			// Next we look for http
 			else if (manual.find("http") != manual.end())
 				return manual["http"];
-			
+
 			// Last we look for socks
 			else if (manual.find("socks") != manual.end())
 				return manual["socks"];
@@ -162,4 +162,4 @@ public:
 	}
 };
 
-MM_MODULE_EZ(w32reg_config_extension, true, NULL, NULL);
+MM_MODULE_INIT_EZ(w32reg_config_extension);
