@@ -116,8 +116,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		cerr << "loading : " << filename << "\r";
 
 	// Open the module
-	bool lazy = true;
-	pdlmtype dlobj = pdlopenl(filename.c_str());
+	bool lazy = false;
+	pdlmtype dlobj = pdlreopen(filename.c_str(), pdlopenl(filename.c_str()));
 loadfull:
 	if (!dlobj) {
 		if (debug)
