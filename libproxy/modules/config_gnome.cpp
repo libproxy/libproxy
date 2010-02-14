@@ -249,11 +249,6 @@ private:
 	}
 };
 
-// Only attempt to load this module if we are in a gnome session
-static bool gnome_config_extension_test() {
-	return xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL);
-}
-
 static base_extension** gnome_config_extension_init() {
 	base_extension** retval = new base_extension*[2];
 	retval[1] = NULL;
@@ -267,7 +262,5 @@ static base_extension** gnome_config_extension_init() {
 	}
 }
 
-MM_MODULE_DEFINE = {
-		MM_MODULE_RECORD(gnome_config_extension, gnome_config_extension_init, gnome_config_extension_test, NULL, NULL),
-		MM_MODULE_LAST,
-};
+MM_MODULE_INIT(gnome_config_extension, gnome_config_extension_init);
+MM_MODULE_TEST_EZ(gnome_config_extension, xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL));

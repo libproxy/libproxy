@@ -31,6 +31,8 @@
 #include "module_manager.hpp"
 using namespace libmodman;
 
+#include <cstdio>
+
 #ifdef WIN32
 #define pdlmtype HMODULE
 #define pdlopen(filename) LoadLibrary(filename)
@@ -67,7 +69,7 @@ static string pdlerror() {
 	return dlerror();
 }
 
-static bool pdlsymlinked(const char* modn, const char* symb) {
+bool pdlsymlinked(const char* modn, const char* symb) {
 	void* mod = dlopen(NULL, RTLD_LAZY | RTLD_LOCAL);
 	if (mod) {
 		void* sym = dlsym(mod, symb);
@@ -95,30 +97,15 @@ module_manager::~module_manager() {
 		pdlclose(*i);
 	this->modules.clear();
 }
-
+/*
 bool module_manager::load_module(module* mi) {
 	const char* debug = getenv("_MM_DEBUG");
 	bool loaded = false;
 	for (unsigned int i=0 ; mi[i].vers == MM_MODULE_VERSION && mi[i].type && mi[i].init ; i++) {
-		// If our execution test succeeds, call init()
-		if (mi[i].test()) {
-			base_extension** extensions = mi[i].init();
-			if (extensions) {
-				// init() returned extensions we need to register
-				loaded = true;
-				for (unsigned int j=0 ; extensions[j] ; j++) {
-					if (debug)
-						cerr << "\tRegistering "
-						     << typeid(*extensions[j]).name() << "("
-						     << mi[i].type << ")" << endl;
-					this->extensions[mi[i].type].push_back(extensions[j]);
-				}
-				delete extensions;
-			}
-		}
+
 	}
 	return loaded;
-}
+}*/
 
 bool module_manager::load_file(string filename, bool symbreq) {
 	const char* debug = getenv("_MM_DEBUG");
@@ -148,68 +135,90 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		return true;
 	}
 
-	// Get the module_info struct
-	module* mi = (module*) pdlsym(dlobj, __str(MM_MODULE_NAME));
-	if (!mi) {
+	// Get the module info
+	const unsigned int* vers    =           (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
+	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(type)));
+	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(init)));
+	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(test)));
+	const char** const   symb   =      (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
+	const char** const   smod   =      (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
+	if (!vers || !type || !init || !*type || !*init || *vers != MM_MODULE_VERSION) {
 		if (debug)
 			cerr << "failed!" << endl
-			     << "\tUnable to find struct: " __str(MM_MODULE_NAME) << endl;
+			     << "\tUnable to find basic module info!" << endl;
 		pdlclose(dlobj);
 		return false;
 	}
 
-	bool tryload = false;
-	for (unsigned int i=0 ; mi[i].vers == MM_MODULE_VERSION && mi[i].type && mi[i].init ; i++) {
-		// Make sure the type is registered
-		if (this->extensions.find(mi[i].type) == this->extensions.end()) {
-			if (debug)
-				cerr << "failed!" << endl
-				     << "\tUnknown extension type: " << mi[i].type << endl;
-			continue;
-		}
-
-		// If this is a singleton and we already have an instance, don't instantiate
-		if (this->singletons.find(mi[i].type) != this->singletons.end() &&
-			this->extensions[mi[i].type].size() > 0) {
-			if (debug)
-				cerr << "failed!" << endl
-				     << "\tNot loading subsequent singleton for: " << mi[i].type << endl;
-			continue;
-		}
-
-		// If a symbol is defined, we'll search for it in the main process
-		if (mi[i].symb) {
-			// Try to find the symbol in the main process
-			if (!pdlsymlinked(mi[i].smod, mi[i].symb)) {
-				// If the symbol is not found and the symbol is required, continue
-				// If the symbol is not found and not required, we'll load only
-				// if there are no other modules of this type
-				if (symbreq || this->extensions[mi[i].type].size() > 0) {
-					if (debug)
-						cerr << "failed!" << endl
-						     << "\tUnable to find required symbol: "
-						     << mi[i].symb << endl;
-					continue;
-				}
-			}
-		}
-
-		tryload = true;
-	}
-
-	// Our tests failed
-	if (debug) cerr << endl;
-	if (!tryload) {
+	// Make sure the type is registered
+	if (this->extensions.find((*type)()) == this->extensions.end()) {
 		if (debug)
-			cerr << "\tNo suitable extension factories to try!" << endl;
+			cerr << "failed!" << endl
+				 << "\tUnknown extension type: " << (*type)() << endl;
 		pdlclose(dlobj);
 		return false;
 	}
 
-	// We didn't load this module, so exit
-	if (!this->load_module(mi)) {
+	// If this is a singleton and we already have an instance, don't instantiate
+	if (this->singletons.find((*type)()) != this->singletons.end() &&
+		this->extensions[(*type)()].size() > 0) {
 		if (debug)
-			cerr << "\tAll extension factories failed!" << endl;
+			cerr << "failed!" << endl
+			     << "\tNot loading subsequent singleton for: " << (*type)() << endl;
+		pdlclose(dlobj);
+		return false;
+	}
+
+	// If a symbol is defined, we'll search for it in the main process
+	if (symb && *symb && smod && *smod && !pdlsymlinked(*smod, *symb)) {
+		// If the symbol is not found and the symbol is required, error
+		if (symbreq) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tUnable to find required symbol: "
+					 << symb << endl;
+			pdlclose(dlobj);
+			return false;
+		}
+
+		// If the symbol is not found and not required, we'll load only
+		// if there are no other modules of this type
+		else if (this->extensions[(*type)()].size() > 0) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tUnable to find required symbol: "
+					 << symb << endl;
+			pdlclose(dlobj);
+			return false;
+		}
+	}
+
+	// If our execution test succeeds, call init()
+	if ((test && *test && (*test)()) || !test || !*test) {
+		base_extension** extensions = (*init)();
+		if (!extensions) {
+			pdlclose(dlobj);
+			return false;
+		}
+
+		if (debug)
+			cerr << "success" << endl;
+
+		// init() returned extensions we need to register
+		for (unsigned int i=0 ; extensions[i] ; i++) {
+			if (debug)
+				cerr << "\tRegistering "
+					 << typeid(*extensions[i]).name() << "("
+					 << (*type)() << ")" << endl;
+			this->extensions[(*type)()].push_back(extensions[i]);
+		}
+		delete extensions;
+	}
+	else {
+		if (debug)
+			cerr << "failed!" << endl
+				 << "\tTest execution failed: "
+				 << symb << endl;
 		pdlclose(dlobj);
 		return false;
 	}

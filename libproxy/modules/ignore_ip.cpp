@@ -174,4 +174,4 @@ public:
 	}
 };
 
-MM_MODULE_EZ(ip_ignore_extension, true, NULL, NULL);
+MM_MODULE_INIT_EZ(ip_ignore_extension);
