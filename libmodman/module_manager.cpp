@@ -64,6 +64,16 @@ static bool pdlsymlinked(const char* modn, const char* symb) {
 	return (GetProcAddress(GetModuleHandle(modn), symb) != NULL || \
 		    GetProcAddress(GetModuleHandle(NULL), symb) != NULL);
 }
+
+static string prep_type_name(string name) {
+	string prefix = "get_type_name<";
+	string suffix = ">(";
+	if (name.find(prefix) != name.npos)
+		name = name.substr(name.find(prefix) + prefix.size());
+	if (name.find(suffix) != name.npos)
+		name = name.substr(0, name.find(suffix));
+	return name;
+}
 #else
 #define pdlmtype void*
 #define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
@@ -84,6 +94,8 @@ bool pdlsymlinked(const char* modn, const char* symb) {
 	}
 	return false;
 }
+
+#define prep_type_name(string name) name
 #endif
 
 #define _str(s) #s
@@ -116,8 +128,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		cerr << "loading : " << filename << "\r";
 
 	// Open the module
-	bool lazy = false;
-	pdlmtype dlobj = pdlreopen(filename.c_str(), pdlopenl(filename.c_str()));
+	bool lazy = true;
+	pdlmtype dlobj = pdlopenl(filename.c_str());
 loadfull:
 	if (!dlobj) {
 		if (debug)
@@ -135,12 +147,12 @@ loadfull:
 	}
 
 	// Get the module info
-	const unsigned int* vers    =             (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
+	const unsigned int* vers     =            (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
 	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(type)));
 	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(init)));
 	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(test)));
-	const char** const   symb   =        (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
-	const char** const   smod   =        (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
+	const char** const   symb    =       (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
+	const char** const   smod    =       (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
 	if (!vers || !type || !init || !*type || !*init || *vers != MM_MODULE_VERSION) {
 		if (debug)
 			cerr << "failed!" << endl
@@ -149,21 +161,24 @@ loadfull:
 		return false;
 	}
 
+	// Get the module type
+	string types = (*type)();
+
 	// Make sure the type is registered
-	if (this->extensions.find((*type)()) == this->extensions.end()) {
+	if (this->extensions.find(types) == this->extensions.end()) {
 		if (debug)
 			cerr << "failed!" << endl
-				 << "\tUnknown extension type: " << (*type)() << endl;
+				 << "\tUnknown extension type: " << prep_type_name(types) << endl;
 		pdlclose(dlobj);
 		return false;
 	}
 
 	// If this is a singleton and we already have an instance, don't instantiate
-	if (this->singletons.find((*type)()) != this->singletons.end() &&
-		this->extensions[(*type)()].size() > 0) {
+	if (this->singletons.find(types) != this->singletons.end() &&
+		this->extensions[types].size() > 0) {
 		if (debug)
 			cerr << "failed!" << endl
-			     << "\tNot loading subsequent singleton for: " << (*type)() << endl;
+			     << "\tNot loading subsequent singleton for: " << prep_type_name(types) << endl;
 		pdlclose(dlobj);
 		return false;
 	}
@@ -182,7 +197,7 @@ loadfull:
 
 		// If the symbol is not found and not required, we'll load only
 		// if there are no other modules of this type
-		else if (this->extensions[(*type)()].size() > 0) {
+		else if (this->extensions[types].size() > 0) {
 			if (debug)
 				cerr << "failed!" << endl
 					 << "\tUnable to find required symbol: "
@@ -214,8 +229,8 @@ loadfull:
 			if (debug)
 				cerr << "\tRegistering "
 					 << typeid(*extensions[i]).name() << "("
-					 << (*type)() << ")" << endl;
-			this->extensions[(*type)()].push_back(extensions[i]);
+					 << prep_type_name(types) << ")" << endl;
+			this->extensions[types].push_back(extensions[i]);
 		}
 		delete extensions;
 	}
