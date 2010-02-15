@@ -95,7 +95,7 @@ bool pdlsymlinked(const char* modn, const char* symb) {
 	return false;
 }
 
-#define prep_type_name(string name) name
+#define prep_type_name(name) name
 #endif
 
 #define _str(s) #s
