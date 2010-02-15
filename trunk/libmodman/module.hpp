@@ -27,6 +27,7 @@
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #define __MM_FUNC_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
+template <class T> static const char* __mm_get_type_name() { return __FUNCSIG__; }
 #else
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
 #define __MM_FUNC_DEF_PREFIX            __MM_DLL_EXPORT
@@ -34,12 +35,10 @@
 #endif
 
 #define MM_MODULE_VERSION 1
-
 #define MM_MODULE_VARNAME(name) __mm_ ## name
 #define MM_MODULE_INIT(mtype, minit) \
-	template <class T> static const char* mtype ## _type() { return T::base_type(); } \
 	__MM_SCLR_DEF_PREFIX const unsigned int  MM_MODULE_VARNAME(vers)    = MM_MODULE_VERSION; \
-	__MM_FUNC_DEF_PREFIX const char*       (*MM_MODULE_VARNAME(type))() = mtype ## _type<mtype>; \
+	__MM_FUNC_DEF_PREFIX const char*       (*MM_MODULE_VARNAME(type))() = mtype::base_type; \
 	__MM_FUNC_DEF_PREFIX base_extension**  (*MM_MODULE_VARNAME(init))() = minit;
 #define MM_MODULE_TEST(mtest) \
 	__MM_FUNC_DEF_PREFIX bool              (*MM_MODULE_VARNAME(test))() = mtest;
@@ -63,7 +62,13 @@ namespace libmodman {
 
 class __MM_DLL_EXPORT base_extension {
 public:
-	static const char* base_type() { return typeid(base_extension).name(); }
+	static const char* base_type() {
+#ifdef WIN32
+		return __mm_get_type_name<base_extension>();
+#else
+		return typeid(base_extension).name();
+#endif
+	}
 	static bool        singleton();
 
 	virtual ~base_extension();
@@ -73,7 +78,14 @@ public:
 template <class T>
 class __MM_DLL_EXPORT extension : public base_extension {
 public:
-	static const char* base_type() { return typeid(T).name(); }
+	static const char* base_type() {
+#ifdef WIN32
+		return __mm_get_type_name<T>();
+#else
+		return typeid(T).name();
+#endif
+		
+	}
 };
 
 }
