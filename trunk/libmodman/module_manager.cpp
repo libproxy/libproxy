@@ -66,8 +66,8 @@ static bool pdlsymlinked(const char* modn, const char* symb) {
 }
 
 static string prep_type_name(string name) {
-	string prefix = "get_type_name<";
-	string suffix = ">(";
+	string prefix = "<class ";
+	string suffix = ">::";
 	if (name.find(prefix) != name.npos)
 		name = name.substr(name.find(prefix) + prefix.size());
 	if (name.find(suffix) != name.npos)
