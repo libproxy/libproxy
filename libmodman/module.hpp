@@ -27,7 +27,6 @@
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #define __MM_FUNC_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
-template <class T> static const char* __mm_get_type_name() { return __FUNCSIG__; }
 #else
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
 #define __MM_FUNC_DEF_PREFIX            __MM_DLL_EXPORT
@@ -64,7 +63,7 @@ class __MM_DLL_EXPORT base_extension {
 public:
 	static const char* base_type() {
 #ifdef WIN32
-		return __mm_get_type_name<base_extension>();
+		return __FUNCSIG__;
 #else
 		return typeid(base_extension).name();
 #endif
@@ -80,7 +79,7 @@ class __MM_DLL_EXPORT extension : public base_extension {
 public:
 	static const char* base_type() {
 #ifdef WIN32
-		return __mm_get_type_name<T>();
+		return __FUNCSIG__;
 #else
 		return typeid(T).name();
 #endif
