@@ -1,5 +1,5 @@
 ### Main library
-add_library(libmodman SHARED module.cpp module_manager.cpp)
+add_library(libmodman SHARED module.hpp module_manager.hpp module_manager.cpp)
 if(NOT WIN32)
   target_link_libraries(libmodman dl)
 endif()

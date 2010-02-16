@@ -20,30 +20,30 @@
 #ifndef MODULE_HPP_
 #define MODULE_HPP_
 
-#include <typeinfo>
-#include <cstdlib>
+#include <cstdlib> // For NULL
 
 #ifdef WIN32
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #define __MM_FUNC_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #else
+#include <typeinfo>
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
 #define __MM_FUNC_DEF_PREFIX            __MM_DLL_EXPORT
 #define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #endif
 
-#define MM_MODULE_VERSION 1
-#define MM_MODULE_VARNAME(name) __mm_ ## name
+#define __MM_MODULE_VERSION 1
+#define __MM_MODULE_VARNAME(name) __mm_ ## name
 #define MM_MODULE_INIT(mtype, minit) \
-	__MM_SCLR_DEF_PREFIX const unsigned int  MM_MODULE_VARNAME(vers)    = MM_MODULE_VERSION; \
-	__MM_FUNC_DEF_PREFIX const char*       (*MM_MODULE_VARNAME(type))() = mtype::base_type; \
-	__MM_FUNC_DEF_PREFIX base_extension**  (*MM_MODULE_VARNAME(init))() = minit;
+	__MM_SCLR_DEF_PREFIX const unsigned int  __MM_MODULE_VARNAME(vers)    = __MM_MODULE_VERSION; \
+	__MM_FUNC_DEF_PREFIX const char*       (*__MM_MODULE_VARNAME(type))() = mtype::base_type; \
+	__MM_FUNC_DEF_PREFIX base_extension**  (*__MM_MODULE_VARNAME(init))() = minit;
 #define MM_MODULE_TEST(mtest) \
-	__MM_FUNC_DEF_PREFIX bool              (*MM_MODULE_VARNAME(test))() = mtest;
+	__MM_FUNC_DEF_PREFIX bool              (*__MM_MODULE_VARNAME(test))() = mtest;
 #define MM_MODULE_SYMB(msymb, msmod) \
-	__MM_SCLR_DEF_PREFIX const char* const   MM_MODULE_VARNAME(symb)    = msymb; \
-	__MM_SCLR_DEF_PREFIX const char* const   MM_MODULE_VARNAME(smod)    = msmod;
+	__MM_SCLR_DEF_PREFIX const char* const   __MM_MODULE_VARNAME(symb)    = msymb; \
+	__MM_SCLR_DEF_PREFIX const char* const   __MM_MODULE_VARNAME(smod)    = msmod;
 
 #define MM_MODULE_INIT_EZ(clsname) \
 	static libmodman::base_extension** clsname ## _init() { \
@@ -61,30 +61,26 @@ namespace libmodman {
 
 class __MM_DLL_EXPORT base_extension {
 public:
-	static const char* base_type() {
-#ifdef WIN32
-		return __FUNCSIG__;
-#else
-		return typeid(base_extension).name();
-#endif
-	}
-	static bool        singleton();
-
-	virtual ~base_extension();
-	virtual bool operator<(const base_extension&) const;
+	static const char* base_type() { return NULL;  }
+	static bool        singleton() { return false; }
+	virtual      ~base_extension() {}
+	virtual bool operator<(const base_extension&) const =0;
 };
 
-template <class T>
+template <class basetype, bool snglton=false>
 class __MM_DLL_EXPORT extension : public base_extension {
 public:
 	static const char* base_type() {
 #ifdef WIN32
 		return __FUNCSIG__;
 #else
-		return typeid(T).name();
+		return typeid(basetype).name();
 #endif
-		
+
 	}
+
+	static bool singleton() { return snglton; }
+	virtual bool operator<(const base_extension&) const { return false; };
 };
 
 }

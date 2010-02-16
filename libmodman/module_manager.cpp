@@ -147,13 +147,13 @@ loadfull:
 	}
 
 	// Get the module info
-	const unsigned int* vers     =            (unsigned int*) pdlsym(dlobj, __str(MM_MODULE_VARNAME(vers)));
-	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(type)));
-	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(init)));
-	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(MM_MODULE_VARNAME(test)));
-	const char** const   symb    =       (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(symb)));
-	const char** const   smod    =       (const char** const) pdlsym(dlobj, __str(MM_MODULE_VARNAME(smod)));
-	if (!vers || !type || !init || !*type || !*init || *vers != MM_MODULE_VERSION) {
+	const unsigned int* vers     =            (unsigned int*) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(vers)));
+	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(type)));
+	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(init)));
+	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(test)));
+	const char** const   symb    =       (const char** const) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(symb)));
+	const char** const   smod    =       (const char** const) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(smod)));
+	if (!vers || !type || !init || !*type || !*init || *vers != __MM_MODULE_VERSION) {
 		if (debug)
 			cerr << "failed!" << endl
 			     << "\tUnable to find basic module info!" << endl;
