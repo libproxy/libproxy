@@ -280,27 +280,6 @@
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>
-<target name="[obj] module.cpp.o" path="libmodman" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>module.cpp.o</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[pre] module.cpp.i" path="libmodman" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>module.cpp.i</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
-<target name="[to asm] module.cpp.s" path="libmodman" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
-<buildCommand>/usr/bin/gmake</buildCommand>
-<buildArguments/>
-<buildTarget>module.cpp.s</buildTarget>
-<stopOnError>true</stopOnError>
-<useDefaultCommand>false</useDefaultCommand>
-</target>
 <target name="[obj] module_manager.cpp.o" path="libmodman" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
 <buildCommand>/usr/bin/gmake</buildCommand>
 <buildArguments/>
