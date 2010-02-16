@@ -45,10 +45,8 @@ public:
 	virtual string run(const url& url) throw (bad_alloc)=0;
 };
 
-class DLL_PUBLIC pacrunner_extension : public extension<pacrunner_extension> {
+class DLL_PUBLIC pacrunner_extension : public extension<pacrunner_extension, true> {
 public:
-	static bool singleton();
-
 	// Virtual methods
 	virtual pacrunner* get(string pac, const url& pacurl) throw (bad_alloc);
 	virtual ~pacrunner_extension();

@@ -22,11 +22,6 @@ using namespace libproxy;
 
 pacrunner::pacrunner(string, const url&) {}
 
-
-bool pacrunner_extension::singleton() {
-	return true;
-}
-
 pacrunner_extension::pacrunner_extension() {
 	this->pr = NULL;
 }
