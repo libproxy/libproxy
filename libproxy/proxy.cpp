@@ -149,6 +149,7 @@ proxy_factory::~proxy_factory() {
 vector<string> proxy_factory::get_proxies(string __url) {
 	url*                       realurl = NULL;
 	url                        confurl("direct://");
+	bool                       ignored = false, invign = false;
 	string                     confign;
 	config_extension*          config;
 	vector<network_extension*> networks;
@@ -210,13 +211,17 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
-	for (size_t i=0 ; i < confign.size() && i != string::npos ; i=confign.substr(i).find(',')) {
+	invign  = confign[0] == '-';
+	if (invign) confign = confign.substr(1);
+	for (size_t i=0 ; i < confign.size() && i != string::npos && !ignored; i=confign.substr(i).find(',')) {
 		while (i < confign.size() && confign[i] == ',') i++;
 
-		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() ; it++)
+		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
 			if ((*it)->ignore(*realurl, confign.substr(i, confign.find(','))))
-				goto do_return;
+				ignored = true;
 	}
+	if (!ignored && invign) goto do_return;
+	if (ignored && !invign) goto do_return;
 
 	/* If we have a wpad config */
 	if (confurl.get_scheme() == "wpad") {
