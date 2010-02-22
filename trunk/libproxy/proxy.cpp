@@ -105,6 +105,9 @@ proxy_factory::proxy_factory() {
 #ifdef WIN32
 	this->mutex = CreateMutex(NULL, false, NULL);
 	WaitForSingleObject(this->mutex, INFINITE);
+	WSADATA wsadata;
+	WORD vers = MAKEWORD(2, 2);
+	WSAStartup(vers, &wsadata);
 #else
 	pthread_mutex_init(&this->mutex, NULL);
 	pthread_mutex_lock(&this->mutex);
@@ -140,6 +143,7 @@ proxy_factory::~proxy_factory() {
 	if (this->pac) delete this->pac;
 	if (this->pacurl) delete this->pacurl;
 #ifdef WIN32
+	WSACleanup();
 	ReleaseMutex(this->mutex);
 #else
 	pthread_mutex_unlock(&this->mutex);
@@ -313,8 +317,10 @@ vector<string> proxy_factory::get_proxies(string __url) {
 		vector<pacrunner_extension*> pacrunners = this->mm.get_extensions<pacrunner_extension>();
 
 		/* No PAC runner found, fall back to direct */
-		if (pacrunners.size() == 0)
+		if (pacrunners.size() == 0) {
+			if (debug) cerr << "Unable to find a required pacrunner!" << endl;
 			goto do_return;
+		}
 
 		/* Run the PAC, but only try one PACRunner */
 		if (debug) cerr << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;

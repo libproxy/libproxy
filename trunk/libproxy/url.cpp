@@ -34,6 +34,7 @@
 #define pfsize(st) (st.st_size)
 #define close _close
 #define read _read
+#define SHUT_RDWR SD_BOTH
 #else
 #define pfsize(st) (st.st_blksize * st.st_blocks)
 #endif
@@ -234,6 +235,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 	// Check DNS for IPs
 	struct addrinfo* info;
 	struct addrinfo flags;
+	memset(&flags, NULL, sizeof(addrinfo));
 	flags.ai_family   = AF_UNSPEC;
 	flags.ai_socktype = 0;
 	flags.ai_protocol = 0;
@@ -300,7 +302,7 @@ static inline string _readline(int fd) {
 	// If we don't get a character, return empty string.
 	// If we are at the end of the line, return empty string.
 	char c = '\0';
-	if (read(fd, &c, 1) != 1 || c == '\n') return "";
+	if (recv(fd, &c, 1, 0) != 1 || c == '\n') return "";
 	return string(1, c) + _readline(fd);
 }
 
@@ -418,6 +420,6 @@ char* url::get_pac() {
 	}
 
 	// Clean up
-	close(sock);
+	shutdown(sock, SHUT_RDWR);
 	return buffer;
 }
