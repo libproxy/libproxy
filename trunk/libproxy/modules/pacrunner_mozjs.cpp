@@ -87,6 +87,15 @@ static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval * 
 	return true;
 }
 
+// Setup Javascript global class
+// This MUST be a static global
+static JSClass cls = {
+		"global", JSCLASS_GLOBAL_FLAGS,
+		JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+		JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
 class mozjs_pacrunner : public pacrunner {
 public:
 	mozjs_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
@@ -95,14 +104,6 @@ public:
 		// Set defaults
 		this->jsrun = NULL;
 		this->jsctx = NULL;
-
-		// Setup Javascript global class
-		JSClass cls = {
-				"global", JSCLASS_GLOBAL_FLAGS,
-				JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-				JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-		};
 
 		// Initialize Javascript runtime environment
 		if (!(this->jsrun = JS_NewRuntime(1024 * 1024)))                  goto error;
