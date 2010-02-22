@@ -127,6 +127,8 @@ url::url(const string url) throw(parse_error, logic_error) {
 	// Parse host further. Basically, we're looking for a port.
 	if (*host) {
 		this->port = _get_default_port(this->scheme);
+		if (this->scheme.find('+') != this->scheme.npos)
+			this->port = _get_default_port(this->scheme.substr(this->scheme.find('+')+1));
 
 		int hostlen = strlen(host);
 		for (int i=hostlen-1 ; i >= 0 ; i--) {
@@ -245,13 +247,12 @@ sockaddr const* const* url::get_ips(bool usedns) {
 			i++;
 
 		// Return NULL if no IPs found
-		if (i == 0) {
-			this->ips = NULL;
-			return NULL;
-		}
+		if (i == 0)
+			return this->ips = NULL;
 
 		// Create our array since we actually have a result
-		this->ips = new sockaddr*[i];
+		this->ips = new sockaddr*[++i];
+		memset(this->ips, NULL, sizeof(sockaddr*)*i);
 
 		// Copy the sockaddr's into this->ips
 		for (i = 0, info = first ; info ; info = info->ai_next) {
@@ -260,7 +261,6 @@ sockaddr const* const* url::get_ips(bool usedns) {
 				if (!this->ips[i]) break;
 				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
 			}
-			this->ips[i] = NULL;
 		}
 
 		freeaddrinfo(first);
@@ -306,7 +306,7 @@ static inline string _readline(int fd) {
 
 char* url::get_pac() {
 	int sock = -1;
-	bool correct_mime_type, chunked;
+	bool correct_mime_type = false, chunked = false;
 	unsigned long int content_length = 0, status = 0;
 	char* buffer = NULL;
 	string request;
