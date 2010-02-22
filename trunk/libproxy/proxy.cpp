@@ -111,6 +111,7 @@ proxy_factory::proxy_factory() {
 #endif
 	this->pac    = NULL;
 	this->pacurl = NULL;
+	this->wpad   = false;
 
 	// Register our types
 	this->mm.register_type<config_extension>();
