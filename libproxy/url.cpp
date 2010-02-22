@@ -244,6 +244,12 @@ sockaddr const* const* url::get_ips(bool usedns) {
 		for (info = first ; info ; info = info->ai_next)
 			i++;
 
+		// Return NULL if no IPs found
+		if (i == 0) {
+			this->ips = NULL;
+			return NULL;
+		}
+
 		// Create our array since we actually have a result
 		this->ips = new sockaddr*[i];
 
@@ -254,6 +260,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 				if (!this->ips[i]) break;
 				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
 			}
+			this->ips[i] = NULL;
 		}
 
 		freeaddrinfo(first);
