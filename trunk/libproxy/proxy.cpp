@@ -18,7 +18,8 @@
  ******************************************************************************/
 
 #include <vector>
-#include <cstring> // For strdup()
+#include <cstring>  // For strdup()
+#include <iostream> // For cout
 
 #include <libmodman/module_manager.hpp>
 
@@ -156,6 +157,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	vector<config_extension*>  configs;
 	vector<ignore_extension*>  ignores;
 	vector<string>             response;
+	const char*                debug = getenv("_PX_DEBUG");
 
 	// Check to make sure our url is valid
 	if (!url::is_valid(__url))
@@ -173,6 +175,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	for (vector<network_extension*>::iterator i=networks.begin() ; i != networks.end() ; i++) {
 		// If it has, reset our wpad/pac setup and we'll retry our config
 		if ((*i)->changed()) {
+			if (debug) cout << "Network changed" << endl;
 			vector<wpad_extension*> wpads = this->mm.get_extensions<wpad_extension>();
 			for (vector<wpad_extension*>::iterator j=wpads.begin() ; j != wpads.end() ; j++)
 				(*j)->rewind();
@@ -208,6 +211,8 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			(config)->set_valid(false);
 			config = NULL;
 	}
+	if (debug) cout << "Using config: " << typeid(*config).name() << endl;
+	if (debug) cout << "Using ignore: " << confign << endl;
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
@@ -224,6 +229,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	if (ignored && !invign) goto do_return;
 
 	/* If we have a wpad config */
+	if (debug) cout << "Config is: " << confurl.to_string() << endl;
 	if (confurl.get_scheme() == "wpad") {
 		/* If the config has just changed from PAC to WPAD, clear the PAC */
 		if (!this->wpad) {
@@ -236,15 +242,23 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 		/* If we have no PAC, get one */
 		if (!this->pac) {
+			if (debug) cout << "Trying to find the PAC using WPAD..." << endl;
 			vector<wpad_extension*> wpads = this->mm.get_extensions<wpad_extension>();
-			for (vector<wpad_extension*>::iterator i=wpads.begin() ; i != wpads.end() ; i++)
-				if ((this->pacurl = (*i)->next(&this->pac)))
+			for (vector<wpad_extension*>::iterator i=wpads.begin() ; i != wpads.end() ; i++) {
+				if (debug) cout << "WPAD search via: " << typeid(**i).name() << endl;
+				if ((this->pacurl = (*i)->next(&this->pac))) {
+					if (debug) cout << "PAC found!" << endl;
 					break;
+				}
+			}
 
 			/* If getting the PAC fails, but the WPAD cycle worked, restart the cycle */
 			if (!this->pac) {
+				if (debug) cout << "No PAC found..." << endl;
 				for (vector<wpad_extension*>::iterator i=wpads.begin() ; i != wpads.end() ; i++) {
 					if ((*i)->found()) {
+						if (debug) cout << "Resetting WPAD search..." << endl;
+
 						/* Since a PAC was found at some point,
 						 * rewind all the WPADS to start from the beginning */
 						/* Yes, the reuse of 'i' here is intentional...
@@ -254,18 +268,22 @@ vector<string> proxy_factory::get_proxies(string __url) {
 							(*i)->rewind();
 
 						// Attempt to find a PAC
-						for (i=wpads.begin() ; i != wpads.end() ; i++)
-							if ((this->pacurl = (*i)->next(&this->pac)))
+						for (i=wpads.begin() ; i != wpads.end() ; i++) {
+							if (debug) cout << "WPAD search via: " << typeid(**i).name() << endl;
+							if ((this->pacurl = (*i)->next(&this->pac))) {
+								if (debug) cout << "PAC found!" << endl;
 								break;
+							}
+						}
 						break;
 					}
 				}
 			}
 		}
 	}
+
 	// If we have a PAC config
-	else if (confurl.get_scheme().substr(0, 4) == "pac+")
-	{
+	else if (confurl.get_scheme().substr(0, 4) == "pac+") {
 		/* Save the PAC config */
 		if (this->wpad)
 			this->wpad = false;
@@ -298,6 +316,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			goto do_return;
 
 		/* Run the PAC, but only try one PACRunner */
+		if (debug) cout << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;
 		response = _format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl));
 	}
 
