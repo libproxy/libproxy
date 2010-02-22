@@ -74,8 +74,13 @@ _sockaddr_from_string(string ip)
 	if (getaddrinfo(ip.c_str(), NULL, &flags, &info) != 0 || !info) return result;
 
 	/* Copy the results into our buffer */
-	if (!(result = (sockaddr *) new char[info->ai_addrlen])) return result;
+	result = (sockaddr *) new char[info->ai_addrlen];
+	if (!result) {
+		freeaddrinfo(info);
+		return result;
+	}
 	memcpy(result, info->ai_addr, info->ai_addrlen);
+	freeaddrinfo(info);
 	return result;
 }
 
