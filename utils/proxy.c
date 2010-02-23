@@ -21,13 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#ifdef WIN32
-#define STDIN_FILENO 0
-#include <io.h>
-#define read _read
-#else
-#include <unistd.h>
-#endif
 #include <string.h>
 
 /* Import libproxy API */
@@ -40,50 +33,6 @@ malloc0(size_t s)
 	if (!tmp) return NULL;
 	memset(tmp, '\0', s);
 	return tmp;
-}
-
-/**
- * Reads a single line of text from the specified file descriptor
- * @fd File descriptor to read from
- * @buffer The buffer to write to (usually NULL)
- * @bufsize The size of the buffer (usually 0)
- * @return Newly allocated string containing one line only
- */
-static char *
-readline(int fd, char *buffer, size_t bufsize)
-{
-	char c = '\0';
-
-	/* Verify we have an open socket */
-	if (fd < 0) return NULL;
-
-	/* Read a character.  If we don't get a character, return the buffer. */
-	if (read(fd, &c, 1) != 1) return buffer;
-
-	/* If we are at the end of the line, return. */
-	if (c == '\n') return buffer ? buffer : (char *) malloc0(1);
-
-	/* We have a character, make sure we have a buffer. */
-	if (!buffer)
-	{
-		assert((buffer = (char *) malloc0(1)));
-		bufsize = 0;
-	}
-
-	/* If our buffer is full, add more to the buffer. */
-	if (bufsize <= strlen(buffer))
-	{
-		char *tmp = NULL;
-		assert((tmp = (char *) malloc(1024 + strlen(buffer) + 1)));
-		memset(tmp, 0, 1024 + strlen(buffer) + 1);
-		strcpy(tmp, buffer);
-		free(buffer);
-		buffer = tmp;
-		bufsize = strlen(buffer) + 1024;
-	}
-
-	strncat(buffer, &c, 1);
-	return readline(fd, buffer, bufsize);
 }
 
 /**
@@ -112,7 +61,7 @@ int
 main(int argc, char **argv)
 {
 	int i;
-	char *url;
+	char url[102400]; // Should be plently long for most URLs
 
 	/* Create the proxy factory object */
 	pxProxyFactory *pf = px_proxy_factory_new();
@@ -138,8 +87,10 @@ main(int argc, char **argv)
 	else
 	{
 		/* For each URL we read on STDIN, get the proxies to use */
-		for (url = NULL ; (url = readline(STDIN_FILENO, NULL, 0)) ; free(url))
+		for (url[0] = '\0' ; fgets(url, 102400, stdin) != NULL ; )
 		{
+			if (url[strlen(url)-1] == '\n') url[strlen(url)-1] = '\0';
+
 			/*
 			 * Get an array of proxies to use. These should be used
 			 * in the order returned. Only move on to the next proxy
