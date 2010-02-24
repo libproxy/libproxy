@@ -18,8 +18,9 @@
  ******************************************************************************/
 
 #include <vector>
-#include <cstring>  // For strdup()
-#include <iostream> // For cerr
+#include <cstring>   // For strdup()
+#include <iostream>  // For cerr
+#include <stdexcept> // For exception
 
 #include <libmodman/module_manager.hpp>
 
@@ -380,13 +381,13 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct _pxProxyFactory
 	char** retval;
 
 	// Call the main method
-	//try {
+	try {
 		proxies = self->pf.get_proxies(url);
 		retval  = new char*[proxies.size()+1];
-	//} catch (exception&) {
+	} catch (std::exception&) {
 		// Return NULL on any exception
-	//	return NULL;
-	//}
+		return NULL;
+	}
 
 	// Copy the results into an array
 	// Return NULL on memory allocation failure
