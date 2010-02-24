@@ -28,6 +28,8 @@
 #include "../extension_config.hpp"
 using namespace libproxy;
 
+#define BUFFERSIZE 10240
+
 static const char *_all_keys[] = {
 	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
 	"/system/http_proxy/host",   "/system/http_proxy/port",
@@ -41,7 +43,7 @@ static const char *_all_keys[] = {
 	NULL
 };
 
-static int popen2(const char *program, int* read, int* write, pid_t* pid) {
+static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 	if (!read || !write || !pid || !program || !*program)
 		return EINVAL;
 	*read  = NULL;
@@ -87,8 +89,13 @@ static int popen2(const char *program, int* read, int* write, pid_t* pid) {
 	default: // Parent
 		close(rpipe[1]);
 		close(wpipe[0]);
-		*read  = rpipe[0];
-		*write = wpipe[1];
+		*read  = fdopen(rpipe[0], "r");
+		*write = fdopen(wpipe[1], "w");
+		if (*read == NULL || *write == NULL) {
+			if (*read  != NULL) fclose(*read);
+			if (*write != NULL) fclose(*write);
+			return errno;
+		}
 		return 0;
 	}
 }
@@ -107,9 +114,9 @@ public:
 			throw runtime_error("Unable to open gconf helper!");
 
 		// Set the read pipe to non-blocking
-		if (fcntl(this->read, F_SETFL, FNONBLOCK) == -1) {
-			close(this->read);
-			close(this->write);
+		if (fcntl(fileno(this->read), F_SETFL, FNONBLOCK) == -1) {
+			fclose(this->read);
+			fclose(this->write);
 			kill(this->pid, SIGTERM);
 			throw runtime_error("Unable to set pipe to non-blocking!");
 		}
@@ -119,8 +126,8 @@ public:
 	}
 
 	~gnome_config_extension() {
-		close(this->read);
-		close(this->write);
+		fclose(this->read);
+		fclose(this->write);
 		kill(this->pid, SIGTERM);
 	}
 
@@ -191,28 +198,16 @@ public:
 		string user = string("/system/http_proxy/authentication_user\t") + username + "\n";
 		string pass = string("/system/http_proxy/authentication_password\t") + password + "\n";
 
-		return (::write(this->write, auth.c_str(), auth.size()) == (ssize_t) auth.size() &&
-				::write(this->write, user.c_str(), user.size()) == (ssize_t) user.size() &&
-				::write(this->write, pass.c_str(), pass.size()) == (ssize_t) pass.size());
+		return (fwrite(auth.c_str(), 1, auth.size(), this->write) == auth.size() &&
+			fwrite(user.c_str(), 1, user.size(), this->write) == user.size() &&
+			fwrite(pass.c_str(), 1, pass.size(), this->write) == pass.size());
 	}
 
 private:
-	int   read;
-	int   write;
+	FILE* read;
+	FILE* write;
 	pid_t pid;
 	map<string, string> data;
-
-	string readline(string buffer="") {
-		char c;
-
-		// If the read() call would block, an error occurred or
-		// we are at the end of the line, we're done
-		if (::read(this->read, &c, 1) != 1 || c == '\n')
-			return buffer;
-
-		// Process the next character
-		return this->readline(buffer + string(&c, 1));
-	}
 
 	// This method attempts to update data
 	// If called with no arguments, it will check for new data (sleeping for <=10
@@ -232,15 +227,17 @@ private:
 		fd_set rfds;
 		struct timeval timeout = { 0, 10 }; // select() for 1/1000th of a second
 		FD_ZERO(&rfds);
-		FD_SET(this->read, &rfds);
-		if (select(this->read+1, &rfds, NULL, NULL, &timeout) < 1)
+		FD_SET(fileno(this->read), &rfds);
+		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) < 1)
 			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
 			                                                        // our req quota, try again
 
 		bool retval = false;
-		for (string line = this->readline() ; line != "" ; line = this->readline()) {
-			string key = line.substr(0, line.find("\t"));
-			string val = line.substr(line.find("\t")+1);
+		for (char l[BUFFERSIZE] ; fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
+			string line = l;
+			line        = line.substr(0, line.rfind('\n'));
+			string key  = line.substr(0, line.find("\t"));
+			string val  = line.substr(line.find("\t")+1);
 			this->data[key] = val;
 			retval = ++found >= req;
 		}
