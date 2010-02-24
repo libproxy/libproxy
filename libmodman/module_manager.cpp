@@ -110,6 +110,14 @@ bool pdlsymlinked(const char* modn, const char* symb) {
 #define _str(s) #s
 #define __str(s) _str(s)
 
+#ifndef _MOD_SUFFIX
+#ifdef WIN32
+#define _MOD_SUFFIX "dll"
+#else
+#define _MOD_SUFFIX "so"
+#endif
+#endif
+
 module_manager::~module_manager() {
 	// Free all extensions
 	for (map<string, vector<base_extension*> >::iterator i=this->extensions.begin() ; i != this->extensions.end() ; i++) {
@@ -290,14 +298,14 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	return true;
 }
 
-bool module_manager::load_dir(string dirname, bool symbreq, string suffix) {
+bool module_manager::load_dir(string dirname, bool symbreq) {
 	vector<string> files;
 
 #ifdef WIN32
 	WIN32_FIND_DATA fd;
 	HANDLE search;
 
-	string srch = dirname + "\\*." + suffix;
+	string srch = dirname + "\\*." + _MOD_SUFFIX;
 	search = FindFirstFile(srch.c_str(), &fd);
 	if (search != INVALID_HANDLE_VALUE) {
 		do {
@@ -312,7 +320,7 @@ bool module_manager::load_dir(string dirname, bool symbreq, string suffix) {
 	if (moduledir) {
 		while((ent = readdir(moduledir))) {
 			string tmp = ent->d_name;
-			if (tmp.find(suffix, tmp.size() - suffix.size()) != tmp.npos)
+			if (tmp.find(_MOD_SUFFIX, tmp.size() - suffix.size()) != tmp.npos)
 				files.push_back(dirname + "/" + tmp);
 		}
 		closedir(moduledir);
