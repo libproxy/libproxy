@@ -25,10 +25,7 @@
 using namespace std;
 using namespace libmodman;
 
-class __MM_DLL_EXPORT singleton_extension : public extension<singleton_extension> {
-public:
-	static bool              singleton() { return true; }
-};
+class __MM_DLL_EXPORT singleton_extension : public extension<singleton_extension, true> {};
 
 class __MM_DLL_EXPORT sorted_extension    : public extension<sorted_extension> {
 public:
