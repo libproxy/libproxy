@@ -33,11 +33,18 @@ using namespace libmodman;
 
 #include <cstdio>
 
+#define _LOAD_FAIL -1
+#define _LOAD_LAZY  0
+#define _LOAD_SUCC  1
+
 #ifdef WIN32
 #define pdlmtype HMODULE
 #define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
-#define pdlsym GetProcAddress
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
+static void* pdlsym(pdlmtype mod, string sym) {
+	return GetProcAddress(mod, sym.c_str());
+}
+
 static pdlmtype pdlreopen(const char* filename, pdlmtype module) {
 	pdlclose(module);
 	return LoadLibrary(filename);
@@ -77,9 +84,11 @@ static string prep_type_name(string name) {
 #else
 #define pdlmtype void*
 #define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
-#define pdlsym dlsym
 #define pdlclose(module) dlclose((pdlmtype) module)
 #define pdlreopen(filename, module) module
+static void* pdlsym(pdlmtype mod, string sym) {
+	return dlsym(mod, sym.c_str());
+}
 
 static string pdlerror() {
 	return dlerror();
@@ -116,6 +125,119 @@ module_manager::~module_manager() {
 	this->modules.clear();
 }
 
+static int load(map<string, vector<base_extension*> >& extensions,
+                             set<string>&              singletons,
+                             pdlmtype                  mod,
+                             bool                      lazy,
+                             bool                      symbreq,
+                             string                    prefix="") {
+	const char* debug = getenv("_MM_DEBUG");
+
+	// Get the module info
+	const unsigned int*  vers    =            (unsigned int*) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(vers)));
+	const char* const (**type)() = (const char* const (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(type)));
+	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(init)));
+	bool              (**test)() =              (bool (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(test)));
+	const char** const   symb    =       (const char** const) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(symb)));
+	const char** const   smod    =       (const char** const) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(smod)));
+	if (!vers || !type || !init || !*type || !*init || *vers != __MM_MODULE_VERSION) {
+		if (debug)
+			cerr << "failed!" << endl
+			     << "\tUnable to find basic module info!" << endl;
+		return _LOAD_FAIL;
+	}
+
+	// Get the module type
+	string types = (*type)();
+
+	// Make sure the type is registered
+	if (extensions.find(types) == extensions.end()) {
+		if (debug)
+			cerr << "failed!" << endl
+				 << "\tUnknown extension type: " << prep_type_name(types) << endl;
+		return _LOAD_FAIL;
+	}
+
+	// If this is a singleton and we already have an instance, don't instantiate
+	if (singletons.find(types) != singletons.end() &&
+		extensions[types].size() > 0) {
+		if (debug)
+			cerr << "failed!" << endl
+			     << "\tNot loading subsequent singleton for: " << prep_type_name(types) << endl;
+		return _LOAD_FAIL;
+	}
+
+	// If a symbol is defined, we'll search for it in the main process
+	if (symb && *symb && smod && *smod && !pdlsymlinked(*smod, *symb)) {
+		// If the symbol is not found and the symbol is required, error
+		if (symbreq) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tUnable to find required symbol: "
+					 << symb << endl;
+			return _LOAD_FAIL;
+		}
+
+		// If the symbol is not found and not required, we'll load only
+		// if there are no other modules of this type
+		else if (extensions[types].size() > 0) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tUnable to find required symbol: "
+					 << symb << endl;
+			return _LOAD_FAIL;
+		}
+	}
+
+	// We've passed all the tests this far, do it again in non-lazy mode
+	if (lazy) return _LOAD_LAZY;
+
+	// If our execution test succeeds, call init()
+	if ((test && *test && (*test)()) || !test || !*test) {
+		base_extension** exts = (*init)();
+		if (!exts) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tinit() returned no extensions!" << endl;
+			return _LOAD_FAIL;
+		}
+
+		if (debug)
+			cerr << "success" << endl;
+
+		// init() returned extensions we need to register
+		for (unsigned int i=0 ; exts[i] ; i++) {
+			if (debug)
+				cerr << "\tRegistering "
+					 << typeid(*exts[i]).name() << "("
+					 << prep_type_name(exts[i]->get_base_type()) << ")" << endl;
+			extensions[exts[i]->get_base_type()].push_back(exts[i]);
+		}
+		delete exts;
+		return _LOAD_SUCC;
+	}
+
+	if (debug)
+		cerr << "failed!" << endl
+			 << "\tTest execution failed: " << symb << endl;
+	return _LOAD_FAIL;
+}
+
+bool module_manager::load_builtin(string prefix) {
+	const char* debug = getenv("_MM_DEBUG");
+	if (debug)
+			cerr << "loading : builtin module " << prefix << "\r";
+
+	// Open a handle to the main process
+	pdlmtype dlobj = pdlopenl(NULL);
+	if (dlobj == NULL) return false;
+
+	// Do the load with the specified prefix
+	int status = load(this->extensions, this->singletons, dlobj, false, false, prefix);
+	pdlclose(dlobj);
+	return status == _LOAD_SUCC;
+}
+
 bool module_manager::load_file(string filename, bool symbreq) {
 	const char* debug = getenv("_MM_DEBUG");
 
@@ -128,9 +250,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 		cerr << "loading : " << filename << "\r";
 
 	// Open the module
-	bool lazy = true;
 	pdlmtype dlobj = pdlopenl(filename.c_str());
-loadfull:
 	if (!dlobj) {
 		if (debug)
 			cerr << "failed!" << endl
@@ -146,99 +266,19 @@ loadfull:
 		return true;
 	}
 
-	// Get the module info
-	const unsigned int* vers     =            (unsigned int*) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(vers)));
-	const char* const (**type)() = (const char* const (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(type)));
-	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(init)));
-	bool              (**test)() =              (bool (**)()) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(test)));
-	const char** const   symb    =       (const char** const) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(symb)));
-	const char** const   smod    =       (const char** const) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(smod)));
-	if (!vers || !type || !init || !*type || !*init || *vers != __MM_MODULE_VERSION) {
-		if (debug)
-			cerr << "failed!" << endl
-			     << "\tUnable to find basic module info!" << endl;
-		pdlclose(dlobj);
-		return false;
-	}
-
-	// Get the module type
-	string types = (*type)();
-
-	// Make sure the type is registered
-	if (this->extensions.find(types) == this->extensions.end()) {
-		if (debug)
-			cerr << "failed!" << endl
-				 << "\tUnknown extension type: " << prep_type_name(types) << endl;
-		pdlclose(dlobj);
-		return false;
-	}
-
-	// If this is a singleton and we already have an instance, don't instantiate
-	if (this->singletons.find(types) != this->singletons.end() &&
-		this->extensions[types].size() > 0) {
-		if (debug)
-			cerr << "failed!" << endl
-			     << "\tNot loading subsequent singleton for: " << prep_type_name(types) << endl;
-		pdlclose(dlobj);
-		return false;
-	}
-
-	// If a symbol is defined, we'll search for it in the main process
-	if (symb && *symb && smod && *smod && !pdlsymlinked(*smod, *symb)) {
-		// If the symbol is not found and the symbol is required, error
-		if (symbreq) {
-			if (debug)
-				cerr << "failed!" << endl
-					 << "\tUnable to find required symbol: "
-					 << symb << endl;
-			pdlclose(dlobj);
-			return false;
-		}
-
-		// If the symbol is not found and not required, we'll load only
-		// if there are no other modules of this type
-		else if (this->extensions[types].size() > 0) {
-			if (debug)
-				cerr << "failed!" << endl
-					 << "\tUnable to find required symbol: "
-					 << symb << endl;
-			pdlclose(dlobj);
-			return false;
-		}
-	}
-
-	if (lazy) {
+	// Try and finish the load
+	int status = load(this->extensions, this->singletons, dlobj, true, symbreq);
+	if (status == _LOAD_LAZY) { // Reload the module in non-lazy mode
 		dlobj = pdlreopen(filename.c_str(), dlobj);
-		lazy  = false;
-		goto loadfull;
-	}
-
-	// If our execution test succeeds, call init()
-	if ((test && *test && (*test)()) || !test || !*test) {
-		base_extension** extensions = (*init)();
-		if (!extensions) {
-			pdlclose(dlobj);
+		if (!dlobj) {
+			if (debug)
+				cerr << "failed!" << endl
+					 << "\tUnable to reload module: " << pdlerror() << endl;
 			return false;
 		}
-
-		if (debug)
-			cerr << "success" << endl;
-
-		// init() returned extensions we need to register
-		for (unsigned int i=0 ; extensions[i] ; i++) {
-			if (debug)
-				cerr << "\tRegistering "
-					 << typeid(*extensions[i]).name() << "("
-					 << prep_type_name(types) << ")" << endl;
-			this->extensions[types].push_back(extensions[i]);
-		}
-		delete extensions;
+		status = load(this->extensions, this->singletons, dlobj, false, symbreq);
 	}
-	else {
-		if (debug)
-			cerr << "failed!" << endl
-				 << "\tTest execution failed: "
-				 << symb << endl;
+	if (status == _LOAD_FAIL) {
 		pdlclose(dlobj);
 		return false;
 	}
