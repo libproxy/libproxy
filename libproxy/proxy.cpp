@@ -130,7 +130,7 @@ proxy_factory::proxy_factory() {
 
 	// Load builtin modules
 	for (int i=0 ; _builtin_modules[i] ; i++)
-		this->mm.load_builtin(_builtin_modules[i]);
+		this->mm.load_builtin(_builtin_modules[i], "libproxy");
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
@@ -166,7 +166,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	url                        confurl("direct://");
 	bool                       ignored = false, invign = false;
 	string                     confign;
-	config_extension*          config;
+	config_extension*          config = NULL;
 	vector<network_extension*> networks;
 	vector<config_extension*>  configs;
 	vector<ignore_extension*>  ignores;
@@ -225,8 +225,13 @@ vector<string> proxy_factory::get_proxies(string __url) {
 			(config)->set_valid(false);
 			config = NULL;
 	}
-	if (debug) cerr << "Using config: " << typeid(*config).name() << endl;
-	if (debug) cerr << "Using ignore: " << confign << endl;
+	if (debug) {
+		if (config)
+			cerr << "Using config: " << typeid(*config).name() << endl;
+		else
+			cerr << "Using config: NULL" << endl;
+		cerr << "Using ignore: " << confign << endl;
+	}
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
