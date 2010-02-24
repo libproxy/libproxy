@@ -24,7 +24,7 @@ using namespace libproxy;
 #define W32REG_BASEKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
 #define W32REG_BUFFLEN 1024
 
-static bool _get_registry(const char *key, const char *name, char **sval, uint32_t *slen, uint32_t *ival) {
+static bool get_registry(const char *key, const char *name, char **sval, uint32_t *slen, uint32_t *ival) {
 	HKEY  hkey;
 	LONG  result;
 	DWORD type;
@@ -63,13 +63,13 @@ static bool _get_registry(const char *key, const char *name, char **sval, uint32
 	return false;
 }
 
-static bool _is_enabled(uint8_t type) {
+static bool is_enabled(uint8_t type) {
 	char    *data = NULL;
 	uint32_t dlen = 0;
 	bool   result = false;
 
 	// Get the binary value DefaultConnectionSettings
-	if (!_get_registry(W32REG_BASEKEY "\\Connections", "DefaultConnectionSettings", &data, &dlen, NULL))
+	if (!get_registry(W32REG_BASEKEY "\\Connections", "DefaultConnectionSettings", &data, &dlen, NULL))
 		return false;
 
 	// WPAD and PAC are contained in the 9th value
@@ -80,7 +80,7 @@ static bool _is_enabled(uint8_t type) {
 	return result;
 }
 
-static map<string, string> _parse_manual(string data) {
+static map<string, string> parse_manual(string data) {
 	// ProxyServer comes in two formats:
 	//   1.2.3.4:8080 or ftp=1.2.3.4:8080;https=1.2.3.4:8080...
 	map<string, string> rval;
@@ -88,7 +88,7 @@ static map<string, string> _parse_manual(string data) {
 	// If we have the second format, do recursive parsing,
 	// then handle just the first entry
 	if (data.find(";") != string::npos) {
-		rval = _parse_manual(data.substr(data.find(";")+1));
+		rval = parse_manual(data.substr(data.find(";")+1));
 		data = data.substr(0, data.find(";"));
 	}
 
@@ -113,13 +113,13 @@ public:
 		uint32_t enabled = 0;
 
 		// WPAD
-		if (_is_enabled(W32REG_OFFSET_WPAD)) {
+		if (is_enabled(W32REG_OFFSET_WPAD)) {
 			return url("wpad://");
 		}
 
 		// PAC
-		if (_is_enabled(W32REG_OFFSET_PAC) &&
-			_get_registry(W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL) &&
+		if (is_enabled(W32REG_OFFSET_PAC) &&
+			get_registry(W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL) &&
 			url::is_valid(string("pac+") + tmp)) {
 			url cfg(string("pac+") + tmp);
 			delete tmp;
@@ -128,9 +128,9 @@ public:
 
 		// Manual proxy
 		// Check to see if we are enabled and get the value of ProxyServer
-		if (_get_registry(W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled &&
-			_get_registry(W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
-			map<string, string> manual = _parse_manual(tmp);
+		if (get_registry(W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled &&
+			get_registry(W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
+			map<string, string> manual = parse_manual(tmp);
 			delete tmp;
 
 			// First we look for an exact match
@@ -152,7 +152,7 @@ public:
 
 	string get_ignore(url dst) {
 		char *tmp;
-		if (_get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
+		if (get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
 			string po = tmp;
 			delete tmp;
 			if (po == "<local>")

@@ -11,7 +11,7 @@ using namespace std;
 
 static GMainLoop* loop = NULL;
 
-static int _print_value(const GConfValue *value, const char *suffix) {
+static int print_value(const GConfValue *value, const char *suffix) {
 	int count = 0;
 	GSList* cursor = NULL;
 
@@ -31,11 +31,11 @@ static int _print_value(const GConfValue *value, const char *suffix) {
 	case GCONF_VALUE_LIST:
 		cursor = gconf_value_get_list(value);
 		for ( ; cursor ; cursor = g_slist_next(cursor))
-			count += _print_value((const GConfValue *) cursor->data, cursor->next ? "," : suffix);
+			count += print_value((const GConfValue *) cursor->data, cursor->next ? "," : suffix);
 		return count;
 	case GCONF_VALUE_PAIR:
-		return  _print_value(gconf_value_get_car(value), ",") +
-			_print_value(gconf_value_get_cdr(value), suffix);
+		return  print_value(gconf_value_get_car(value), ",") +
+			print_value(gconf_value_get_cdr(value), suffix);
 	default:
 		throw exception();
 	}
@@ -44,21 +44,21 @@ static int _print_value(const GConfValue *value, const char *suffix) {
 	return 0;
 }
 
-static void _on_value_change(GConfClient* /*client*/, guint /*cnxn_id*/, GConfEntry* entry, void* /*user_data*/) {
+static void on_value_change(GConfClient* /*client*/, guint /*cnxn_id*/, GConfEntry* entry, void* /*user_data*/) {
 	printf("%s\t", gconf_entry_get_key(entry));
-	_print_value(gconf_entry_get_value(entry), "\n");
+	print_value(gconf_entry_get_value(entry), "\n");
 }
 
-static void _on_sig(int /*signal*/) {
+static void on_sig(int /*signal*/) {
 	g_main_loop_quit(loop);
 }
 
-static gboolean _error(GIOChannel* /*source*/, GIOCondition /*condition*/, gpointer /*data*/) {
+static gboolean err(GIOChannel* /*source*/, GIOCondition /*condition*/, gpointer /*data*/) {
 	g_main_loop_quit(loop);
 	return false;
 }
 
-static gboolean _set_key(const char *key, const char *val) {
+static gboolean set_key(const char *key, const char *val) {
 	gboolean error = false;
 	GConfClient *client = gconf_client_get_default();
 	GConfValue  *value  = gconf_client_get(client, key, NULL);
@@ -93,7 +93,7 @@ static gboolean _set_key(const char *key, const char *val) {
 	return !error;
 }
 
-static gboolean _stdin(GIOChannel *source, GIOCondition condition, gpointer data) {
+static gboolean in(GIOChannel *source, GIOCondition condition, gpointer data) {
 	gchar *key, *val;
 	GIOStatus st = g_io_channel_read_line(source, &key, NULL, NULL, NULL);
 
@@ -110,7 +110,7 @@ static gboolean _stdin(GIOChannel *source, GIOCondition condition, gpointer data
 		val = g_strrstr(key, "\t") + 1;
 		*(val-1) = NULL;
 
-		if (!_set_key(key, val))
+		if (!set_key(key, val))
 			goto exit;
 
 		g_free(key);
@@ -118,19 +118,19 @@ static gboolean _stdin(GIOChannel *source, GIOCondition condition, gpointer data
 	}
 	else if (key && st == G_IO_STATUS_AGAIN) {
 		g_free(key);
-		return _stdin(source, condition, data);
+		return in(source, condition, data);
 	}
 
 exit:
 	g_free(key);
-	return _error(source, condition, data);
+	return err(source, condition, data);
 }
 
 int main(int argc, char **argv) {
 	if (argc < 2) return 1;
 
 	// Register sighup handler
-	if (signal(SIGHUP, _on_sig) == SIG_ERR || signal(SIGPIPE, _on_sig) == SIG_ERR) {
+	if (signal(SIGHUP, on_sig) == SIG_ERR || signal(SIGPIPE, on_sig) == SIG_ERR) {
 		fprintf(stderr, "Unable to trap signals!");
 		return 2;
 	}
@@ -156,12 +156,12 @@ int main(int argc, char **argv) {
 	// Setup our GIO Channels
 	GIOChannel* inchan  = g_io_channel_unix_new(fileno(stdin));
 	GIOChannel* outchan = g_io_channel_unix_new(fileno(stdout));
-	g_io_add_watch(inchan,  G_IO_IN,  _stdin, NULL);
-	g_io_add_watch(inchan,  G_IO_PRI, _stdin, NULL);
-	g_io_add_watch(inchan,  G_IO_ERR, _error, NULL);
-	g_io_add_watch(inchan,  G_IO_HUP, _error, NULL);
-	g_io_add_watch(outchan, G_IO_ERR, _error, NULL);
-	g_io_add_watch(outchan, G_IO_HUP, _error, NULL);
+	g_io_add_watch(inchan,  G_IO_IN,  in, NULL);
+	g_io_add_watch(inchan,  G_IO_PRI, in, NULL);
+	g_io_add_watch(inchan,  G_IO_ERR, err, NULL);
+	g_io_add_watch(inchan,  G_IO_HUP, err, NULL);
+	g_io_add_watch(outchan, G_IO_ERR, err, NULL);
+	g_io_add_watch(outchan, G_IO_HUP, err, NULL);
 
 	// Get GConf client
 	GConfClient* client = gconf_client_get_default();
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 	// Add server notifications for all keys
 	for (int i=1 ; i < argc ; i++) {
 		gconf_client_add_dir(client, argv[i], GCONF_CLIENT_PRELOAD_NONE, NULL);
-		gconf_client_notify_add(client, argv[i], _on_value_change, NULL, NULL, NULL);
+		gconf_client_notify_add(client, argv[i], on_value_change, NULL, NULL, NULL);
 		gconf_client_notify(client, argv[i]);
 	}
 

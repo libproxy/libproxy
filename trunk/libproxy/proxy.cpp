@@ -35,7 +35,7 @@
 #define strdup _strdup
 #endif
 
-static const char* _builtin_modules[] = {
+static const char* builtin_modules[] = {
 	BUILTIN_MODULES
 	NULL
 };
@@ -61,7 +61,7 @@ private:
 	bool   wpad;
 };
 
-bool istringcmp(string a, string b) {
+static bool istringcmp(string a, string b) {
     transform( a.begin(), a.end(), a.begin(), ::tolower );
     transform( b.begin(), b.end(), b.begin(), ::tolower );
     return ( a == b );
@@ -69,17 +69,17 @@ bool istringcmp(string a, string b) {
 
 // Convert the PAC formatted response into our proxy URL array response
 static vector<string>
-_format_pac_response(string response)
+format_pac_response(string response)
 {
 	vector<string> retval;
 
 	// Skip ahead one character if we start with ';'
 	if (response[0] == ';')
-		return _format_pac_response(response.substr(1));
+		return format_pac_response(response.substr(1));
 
 	// If the string contains a delimiter (';')
 	if (response.find(';') != string::npos) {
-		retval   = _format_pac_response(response.substr(response.find(';')+1));
+		retval   = format_pac_response(response.substr(response.find(';')+1));
 		response = response.substr(0, response.find(';'));
 	}
 
@@ -130,8 +130,8 @@ proxy_factory::proxy_factory() {
 	this->mm.register_type<wpad_extension>();
 
 	// Load builtin modules
-	for (int i=0 ; _builtin_modules[i] ; i++)
-		this->mm.load_builtin(_builtin_modules[i], "libproxy");
+	for (int i=0 ; builtin_modules[i] ; i++)
+		this->mm.load_builtin(builtin_modules[i], "libproxy");
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);
@@ -162,7 +162,7 @@ proxy_factory::~proxy_factory() {
 }
 
 
-vector<string> proxy_factory::get_proxies(string __url) {
+vector<string> proxy_factory::get_proxies(string url_) {
 	url*                       realurl = NULL;
 	url                        confurl("direct://");
 	bool                       ignored = false, invign = false;
@@ -175,9 +175,9 @@ vector<string> proxy_factory::get_proxies(string __url) {
 	const char*                debug = getenv("_PX_DEBUG");
 
 	// Check to make sure our url is valid
-	if (!url::is_valid(__url))
+	if (!url::is_valid(url_))
 		goto do_return;
-	realurl = new url(__url);
+	realurl = new url(url_);
 
 #ifdef WIN32
 	WaitForSingleObject(this->mutex, INFINITE);
@@ -339,7 +339,7 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 		/* Run the PAC, but only try one PACRunner */
 		if (debug) cerr << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;
-		response = _format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl));
+		response = format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl));
 	}
 
 	/* If we have a manual config (http://..., socks://...) */
@@ -368,15 +368,15 @@ vector<string> proxy_factory::get_proxies(string __url) {
 
 }
 
-struct _pxProxyFactory {
+struct pxProxyFactory_ {
 	libproxy::proxy_factory pf;
 };
 
-extern "C" DLL_PUBLIC struct _pxProxyFactory *px_proxy_factory_new(void) {
-	return new struct _pxProxyFactory;
+extern "C" DLL_PUBLIC struct pxProxyFactory_ *px_proxy_factory_new(void) {
+	return new struct pxProxyFactory_;
 }
 
-extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct _pxProxyFactory *self, const char *url) {
+extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_ *self, const char *url) {
 	std::vector<std::string> proxies;
 	char** retval;
 
@@ -404,6 +404,6 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct _pxProxyFactory
 	return retval;
 }
 
-extern "C" DLL_PUBLIC void px_proxy_factory_free(struct _pxProxyFactory *self) {
+extern "C" DLL_PUBLIC void px_proxy_factory_free(struct pxProxyFactory_ *self) {
 	delete self;
 }

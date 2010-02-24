@@ -135,13 +135,13 @@ public:
 		throw bad_alloc();
 	}
 
-	string run(const url& _url) throw (bad_alloc) {
+	string run(const url& url_) throw (bad_alloc) {
 		JSStringRef str = NULL;
 		JSValueRef  val = NULL;
 		string      tmp;
 
 		// Run the PAC
-		tmp = string("FindProxyForURL(\"") + _url.to_string() + string("\", \"") + _url.get_host() + "\");";
+		tmp = string("FindProxyForURL(\"") + url_.to_string() + string("\", \"") + url_.get_host() + "\");";
 		str = JSStringCreateWithUTF8CString(tmp.c_str());
 		if (!JSCheckScriptSyntax(this->jsctx, str, NULL, 0, NULL))            goto error;
 		if (!(val = JSEvaluateScript(this->jsctx, str, NULL, NULL, 1, NULL))) goto error;

@@ -33,7 +33,7 @@ using namespace std;
 
 class DLL_PUBLIC parse_error : public runtime_error {
 public:
-	parse_error(const string& __arg): runtime_error(__arg) {}
+	parse_error(const string& arg): runtime_error(arg) {}
 };
 
 class DLL_PUBLIC url {

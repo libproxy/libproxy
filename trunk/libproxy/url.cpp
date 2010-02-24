@@ -51,21 +51,21 @@ using namespace std;
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
 
-static inline int _get_default_port(string scheme) {
+static inline int get_default_port(string scheme) {
         struct servent *serv;
         if ((serv = getservbyname(scheme.c_str(), NULL))) return ntohs(serv->s_port);
         return 0;
 }
 
 template <class T>
-static inline string _to_string (const T& t) {
+static inline string to_string_ (const T& t) {
 	stringstream ss;
 	ss << t;
 	return ss.str();
 }
 
 #define _copyaddr_t(type, addr) (sockaddr*) memcpy(new type, &(addr), sizeof(type))
-static inline sockaddr* _copyaddr(const struct sockaddr& addr) {
+static inline sockaddr* copyaddr(const struct sockaddr& addr) {
 	switch (addr.sa_family) {
 	case (AF_INET):
 		return _copyaddr_t(sockaddr_in, addr);
@@ -76,9 +76,9 @@ static inline sockaddr* _copyaddr(const struct sockaddr& addr) {
 	}
 }
 
-bool url::is_valid(const string __url) {
+bool url::is_valid(const string url_) {
 	url* tmp;
-	try                  { tmp = new url(__url); }
+	try                  { tmp = new url(url_); }
 	catch (parse_error&) { return false; }
     delete tmp;
     return true;
@@ -127,9 +127,9 @@ url::url(const string url) throw(parse_error, logic_error) {
 
 	// Parse host further. Basically, we're looking for a port.
 	if (*host) {
-		this->port = _get_default_port(this->scheme);
+		this->port = get_default_port(this->scheme);
 		if (this->scheme.find('+') != this->scheme.npos)
-			this->port = _get_default_port(this->scheme.substr(this->scheme.find('+')+1));
+			this->port = get_default_port(this->scheme.substr(this->scheme.find('+')+1));
 
 		int hostlen = strlen(host);
 		for (int i=hostlen-1 ; i >= 0 ; i--) {
@@ -157,7 +157,7 @@ url::url(const string url) throw(parse_error, logic_error) {
 	else
 		this->orig = this->scheme + "://" + this->host;
 	if (port_specified)
-		this->orig = this->orig + ":" + _to_string<int>(this->port) + this->path;
+		this->orig = this->orig + ":" + to_string_<int>(this->port) + this->path;
 	else
 		this->orig = this->orig + this->path;
 	if (this->orig != url)
@@ -209,7 +209,7 @@ url& url::operator=(const url& url) {
 		for (i=0 ; url.ips[i] ; i++);
 		this->ips = new sockaddr*[i];
 		for (i=0 ; url.ips[i] ; i++)
-			this->ips[i] = _copyaddr(*url.ips[i]);
+			this->ips[i] = copyaddr(*url.ips[i]);
 	}
 	return *this;
 }
@@ -259,7 +259,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 		// Copy the sockaddr's into this->ips
 		for (i = 0, info = first ; info ; info = info->ai_next) {
 			if (info->ai_addr->sa_family == AF_INET || info->ai_addr->sa_family == AF_INET6) {
-				this->ips[i] = _copyaddr(*(info->ai_addr));
+				this->ips[i] = copyaddr(*(info->ai_addr));
 				if (!this->ips[i]) break;
 				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
 			}
@@ -297,13 +297,13 @@ string url::to_string() const {
 	return this->orig;
 }
 
-static inline string _readline(int fd) {
+static inline string recvline(int fd) {
 	// Read a character.
 	// If we don't get a character, return empty string.
 	// If we are at the end of the line, return empty string.
 	char c = '\0';
 	if (recv(fd, &c, 1, 0) != 1 || c == '\n') return "";
-	return string(1, c) + _readline(fd);
+	return string(1, c) + recvline(fd);
 }
 
 char* url::get_pac() {
@@ -366,10 +366,10 @@ char* url::get_pac() {
 	}
 
 	/* Verify status line */
-	string line = _readline(sock);
+	string line = recvline(sock);
 	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
 		/* Check for correct mime type and content length */
-		for (line = _readline(sock) ; line != "\r" && line != "" ; line = _readline(sock)) {
+		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
 			// Check for content type
 			if (line.find("Content-Type: ") == 0 &&
 				(line.find(PAC_MIME_TYPE) != string::npos ||
@@ -394,10 +394,10 @@ char* url::get_pac() {
 
 			if (chunked) {
 				// Discard the empty line if we received a previous chunk
-				if (recvd > 0) _readline(sock);
+				if (recvd > 0) recvline(sock);
 
 				// Get the chunk-length line as an integer
-				if (sscanf(_readline(sock).c_str(), "%x", &chunk_length) != 1 || chunk_length == 0) break;
+				if (sscanf(recvline(sock).c_str(), "%x", &chunk_length) != 1 || chunk_length == 0) break;
 
 				// Add this chunk to our content length,
 				// ensuring that we aren't over our max size

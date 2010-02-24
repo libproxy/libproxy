@@ -140,16 +140,16 @@ static int load(map<string, vector<base_extension*> >& extensions,
                              pdlmtype                  mod,
                              bool                      lazy,
                              bool                      symbreq,
-                             string                    prefix="") {
+                             string                    modname="") {
 	const char* debug = getenv("_MM_DEBUG");
 
 	// Get the module info
-	const unsigned int*  vers    =            (unsigned int*) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(vers)));
-	const char* const (**type)() = (const char* const (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(type)));
-	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(init)));
-	bool              (**test)() =              (bool (**)()) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(test)));
-	const char** const   symb    =       (const char** const) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(symb)));
-	const char** const   smod    =       (const char** const) pdlsym(mod, prefix + __str(__MM_MODULE_VARNAME(smod)));
+	const unsigned int*  vers    =            (unsigned int*) pdlsym(mod, __str(__MM_MODULE_VARNAME(vers)) + modname);
+	const char* const (**type)() = (const char* const (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(type)) + modname);
+	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(init)) + modname);
+	bool              (**test)() =              (bool (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(test)) + modname);
+	const char** const   symb    =       (const char** const) pdlsym(mod, __str(__MM_MODULE_VARNAME(symb)) + modname);
+	const char** const   smod    =       (const char** const) pdlsym(mod, __str(__MM_MODULE_VARNAME(smod)) + modname);
 	if (!vers || !type || !init || !*type || !*init || *vers != __MM_MODULE_VERSION) {
 		if (debug)
 			cerr << "failed!" << endl
@@ -233,21 +233,21 @@ static int load(map<string, vector<base_extension*> >& extensions,
 	return _LOAD_FAIL;
 }
 
-bool module_manager::load_builtin(string prefix, const char* modname) {
+bool module_manager::load_builtin(string modname, const char* libname) {
 	const char* debug = getenv("_MM_DEBUG");
 	if (debug)
-			cerr << "loading : builtin module " << prefix << CR;
+			cerr << "loading : builtin module " << modname << CR;
 
 	// Open a handle to the main process
 #ifdef WIN32
-	pdlmtype dlobj = GetModuleHandle(modname);
+	pdlmtype dlobj = GetModuleHandle(libname);
 #else
 	pdlmtype dlobj = pdlopenl(NULL);
 #endif
 	if (dlobj == NULL) return false;
 
 	// Do the load with the specified prefix
-	int status = load(this->extensions, this->singletons, dlobj, false, false, prefix);
+	int status = load(this->extensions, this->singletons, dlobj, false, false, modname);
 	pdlclose(dlobj);
 	return status == _LOAD_SUCC;
 }
