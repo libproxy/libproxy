@@ -43,8 +43,7 @@ pxProxyFactory *px_proxy_factory_new(void);
  * A NULL-terminated array of proxy strings is returned.
  * If the first proxy fails, the second should be tried, etc...
  * Don't forget to free the strings/array when you are done.
- * In all cases, at least one entry in the array will be returned.
- * There are no error conditions.
+ * If an unrecoverable error occurs, this function returns NULL.
  *
  * Regarding performance: this method always blocks and may be called
  * in a separate thread (is thread-safe).  In most cases, the time
