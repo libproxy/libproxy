@@ -22,6 +22,10 @@
 
 #include <cstdlib> // For NULL
 
+#ifndef MM_MODULE_BUILTIN
+#define MM_MODULE_BUILTIN
+#endif
+
 #ifdef WIN32
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #define __MM_FUNC_DEF_PREFIX extern "C" __MM_DLL_EXPORT
@@ -34,7 +38,9 @@
 #endif
 
 #define __MM_MODULE_VERSION 1
-#define __MM_MODULE_VARNAME(name) __mm_ ## name
+#define __MM_MODULE_VARNAME__(prefix, name) prefix ## __mm_ ## name
+#define __MM_MODULE_VARNAME_(prefix, name) __MM_MODULE_VARNAME__(prefix, name)
+#define __MM_MODULE_VARNAME(name) __MM_MODULE_VARNAME_(MM_MODULE_BUILTIN, name)
 #define MM_MODULE_INIT(mtype, minit) \
 	__MM_SCLR_DEF_PREFIX const unsigned int  __MM_MODULE_VARNAME(vers)    = __MM_MODULE_VERSION; \
 	__MM_FUNC_DEF_PREFIX const char*       (*__MM_MODULE_VARNAME(type))() = mtype::base_type; \
@@ -61,26 +67,25 @@ namespace libmodman {
 
 class __MM_DLL_EXPORT base_extension {
 public:
-	static const char* base_type() { return NULL;  }
-	static bool        singleton() { return false; }
-	virtual      ~base_extension() {}
-	virtual bool operator<(const base_extension&) const =0;
+	static  const char*     base_type() { return NULL; }
+	static  bool            singleton() { return false; }
+	virtual           ~base_extension() {}
+	virtual const char* get_base_type() const =0;
+	virtual bool            operator<(const base_extension&) const =0;
 };
 
-template <class basetype, bool snglton=false>
+template <class basetype, bool sngl=false>
 class __MM_DLL_EXPORT extension : public base_extension {
 public:
-	static const char* base_type() {
 #ifdef WIN32
-		return __FUNCSIG__;
+	static  const char*     base_type() { return __FUNCSIG__; }
 #else
-		return typeid(basetype).name();
+	static  const char*     base_type() { return typeid(basetype).name(); }
 #endif
 
-	}
-
-	static bool singleton() { return snglton; }
-	virtual bool operator<(const base_extension&) const { return false; };
+	static  bool            singleton() { return sngl; }
+	virtual const char* get_base_type() const { return basetype::base_type(); }
+	virtual bool            operator<(const base_extension&) const { return false; };
 };
 
 }

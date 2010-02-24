@@ -34,6 +34,11 @@
 #define strdup _strdup
 #endif
 
+static const char* _builtin_modules[] = {
+	BUILTIN_MODULES
+	NULL
+};
+
 namespace libproxy {
 using namespace std;
 
@@ -122,6 +127,10 @@ proxy_factory::proxy_factory() {
 	this->mm.register_type<network_extension>();
 	this->mm.register_type<pacrunner_extension>();
 	this->mm.register_type<wpad_extension>();
+
+	// Load builtin modules
+	for (int i=0 ; _builtin_modules[i] ; i++)
+		this->mm.load_builtin(_builtin_modules[i]);
 
 	// Load all modules
 	this->mm.load_dir(MODULEDIR);

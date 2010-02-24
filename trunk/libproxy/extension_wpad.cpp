@@ -14,9 +14,9 @@ static const char *DEFAULT_WPAD_ORDER[] = {
 
 bool wpad_extension::operator<(const wpad_extension& other) const {
 	for (int i=0 ; DEFAULT_WPAD_ORDER[i] ; i++) {
-		if (strstr(other.base_type(), DEFAULT_WPAD_ORDER[i]))
+		if (strstr(other.get_base_type(), DEFAULT_WPAD_ORDER[i]))
 			break;
-		if (strstr(this->base_type(), DEFAULT_WPAD_ORDER[i]))
+		if (strstr(this->get_base_type(), DEFAULT_WPAD_ORDER[i]))
 			return true;
 	}
 	return false;
