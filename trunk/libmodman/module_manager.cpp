@@ -113,8 +113,10 @@ bool pdlsymlinked(const char* modn, const char* symb) {
 #ifndef _MOD_SUFFIX
 #ifdef WIN32
 #define _MOD_SUFFIX "dll"
+#define CR ""
 #else
 #define _MOD_SUFFIX "so"
+#define CR "\r"
 #endif
 #endif
 
@@ -231,13 +233,17 @@ static int load(map<string, vector<base_extension*> >& extensions,
 	return _LOAD_FAIL;
 }
 
-bool module_manager::load_builtin(string prefix) {
+bool module_manager::load_builtin(string prefix, const char* modname) {
 	const char* debug = getenv("_MM_DEBUG");
 	if (debug)
-			cerr << "loading : builtin module " << prefix << "\r";
+			cerr << "loading : builtin module " << prefix << CR;
 
 	// Open a handle to the main process
+#ifdef WIN32
+	pdlmtype dlobj = GetModuleHandle(modname);
+#else
 	pdlmtype dlobj = pdlopenl(NULL);
+#endif
 	if (dlobj == NULL) return false;
 
 	// Do the load with the specified prefix
@@ -255,7 +261,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	if ((st.st_mode & S_IFMT) != S_IFREG) return false;
 
 	if (debug)
-		cerr << "loading : " << filename << "\r";
+		cerr << "loading : " << filename << CR;
 
 	// Open the module
 	pdlmtype dlobj = pdlopenl(filename.c_str());
