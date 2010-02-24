@@ -137,10 +137,10 @@ public:
 		// JS_ShutDown()?
 	}
 
-	string run(const url& _url) throw (bad_alloc) {
+	string run(const url& url_) throw (bad_alloc) {
 		// Build arguments to the FindProxyForURL() function
-		char *tmpurl  = JS_strdup(this->jsctx, _url.to_string().c_str());
-		char *tmphost = JS_strdup(this->jsctx, _url.get_host().c_str());
+		char *tmpurl  = JS_strdup(this->jsctx, url_.to_string().c_str());
+		char *tmphost = JS_strdup(this->jsctx, url_.get_host().c_str());
 		if (!tmpurl || !tmphost) {
 			if (tmpurl) JS_free(this->jsctx, tmpurl);
 			if (tmphost) JS_free(this->jsctx, tmphost);

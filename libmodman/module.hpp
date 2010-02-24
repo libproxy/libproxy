@@ -38,8 +38,8 @@
 #endif
 
 #define __MM_MODULE_VERSION 1
-#define __MM_MODULE_VARNAME__(prefix, name) prefix ## __mm_ ## name
-#define __MM_MODULE_VARNAME_(prefix, name) __MM_MODULE_VARNAME__(prefix, name)
+#define __MM_MODULE_VARNAME__(suffix, name) mm_ ## name ## _ ## suffix
+#define __MM_MODULE_VARNAME_(suffix, name) __MM_MODULE_VARNAME__(suffix, name)
 #define __MM_MODULE_VARNAME(name) __MM_MODULE_VARNAME_(MM_MODULE_BUILTIN, name)
 #define MM_MODULE_INIT(mtype, minit) \
 	__MM_SCLR_DEF_PREFIX const unsigned int  __MM_MODULE_VARNAME(vers)    = __MM_MODULE_VERSION; \

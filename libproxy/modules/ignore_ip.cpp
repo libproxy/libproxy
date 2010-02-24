@@ -24,7 +24,7 @@
 using namespace libproxy;
 
 static inline bool
-_sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)
+sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const struct sockaddr *nm)
 {
 	if (!ip_a || !ip_b) return false;
 	if (ip_a->sa_family != ip_b->sa_family) return false;
@@ -60,7 +60,7 @@ _sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const
 }
 
 static inline sockaddr *
-_sockaddr_from_string(string ip)
+sockaddr_from_string(string ip)
 {
 	struct sockaddr *result = NULL;
 
@@ -85,7 +85,7 @@ _sockaddr_from_string(string ip)
 }
 
 static inline sockaddr *
-_sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
+sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
 {
 	/* IPv4 */
 	if (af == AF_INET)
@@ -123,7 +123,7 @@ public:
 		 * IPv4
 		 * IPv6
 		 */
-		if ((ign_ip = _sockaddr_from_string(ignore)))
+		if ((ign_ip = sockaddr_from_string(ignore)))
 			goto out;
 
 		/*
@@ -134,15 +134,15 @@ public:
 		 */
 		if (ignore.find('/') != string::npos)
 		{
-			ign_ip = _sockaddr_from_string(ignore.substr(0, ignore.find('/')));
-			net_ip = _sockaddr_from_string(ignore.substr(ignore.find('/') + 1));
+			ign_ip = sockaddr_from_string(ignore.substr(0, ignore.find('/')));
+			net_ip = sockaddr_from_string(ignore.substr(ignore.find('/') + 1));
 
 			/* If CIDR notation was used, get the netmask */
 			if (ign_ip && !net_ip)
 			{
 				uint32_t cidr = 0;
 				if (sscanf(ignore.substr(ignore.find('/') + 1).c_str(), "%d", &cidr) == 1)
-					net_ip = _sockaddr_from_cidr(ign_ip->sa_family, cidr);
+					net_ip = sockaddr_from_cidr(ign_ip->sa_family, cidr);
 			}
 
 			if (ign_ip && net_ip && ign_ip->sa_family == net_ip->sa_family)
@@ -160,7 +160,7 @@ public:
 		 */
 		if (ignore.rfind(':') != string::npos && sscanf(ignore.substr(ignore.rfind(':')).c_str(), ":%hu", &port) == 1 && port > 0)
 		{
-			ign_ip = _sockaddr_from_string(ignore.substr(ignore.rfind(':')).c_str());
+			ign_ip = sockaddr_from_string(ignore.substr(ignore.rfind(':')).c_str());
 
 			/* Make sure this really is just a port and not just an IPv6 address */
 			if (ign_ip && (ign_ip->sa_family != AF_INET6 || ignore[0] == '['))
@@ -172,7 +172,7 @@ public:
 		}
 
 	out:
-		result = _sockaddr_equals(dst_ip, ign_ip, net_ip);
+		result = sockaddr_equals(dst_ip, ign_ip, net_ip);
 		free(ign_ip);
 		free(net_ip);
 		return port != 0 ? (port == url.get_port() && result) : result;

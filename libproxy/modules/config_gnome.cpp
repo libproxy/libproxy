@@ -30,7 +30,7 @@ using namespace libproxy;
 
 #define BUFFERSIZE 10240
 
-static const char *_all_keys[] = {
+static const char *all_keys[] = {
 	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
 	"/system/http_proxy/host",   "/system/http_proxy/port",
 	"/system/proxy/secure_host", "/system/proxy/secure_port",
@@ -106,8 +106,8 @@ public:
 		// Build the command
 		int count;
 		string cmd = LIBEXECDIR "pxgconf";
-		for (count=0 ; _all_keys[count] ; count++)
-			cmd += string(" ", 1) + _all_keys[count];
+		for (count=0 ; all_keys[count] ; count++)
+			cmd += string(" ", 1) + all_keys[count];
 
 		// Get our pipes
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)

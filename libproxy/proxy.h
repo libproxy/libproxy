@@ -25,7 +25,7 @@ extern "C"
 {
 #endif
 
-typedef struct _pxProxyFactory  pxProxyFactory;
+typedef struct pxProxyFactory_  pxProxyFactory;
 
 /**
  * Creates a new pxProxyFactory instance. This instance should be kept
