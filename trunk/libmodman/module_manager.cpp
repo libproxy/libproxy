@@ -320,7 +320,7 @@ bool module_manager::load_dir(string dirname, bool symbreq) {
 	if (moduledir) {
 		while((ent = readdir(moduledir))) {
 			string tmp = ent->d_name;
-			if (tmp.find(_MOD_SUFFIX, tmp.size() - suffix.size()) != tmp.npos)
+			if (tmp.find(_MOD_SUFFIX, tmp.size() - string(_MOD_SUFFIX).size()) != tmp.npos)
 				files.push_back(dirname + "/" + tmp);
 		}
 		closedir(moduledir);
