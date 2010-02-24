@@ -17,25 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#ifndef MAIN_HPP_
-#define MAIN_HPP_
+#include "main.hpp"
 
-#include "../module_manager.hpp"
-
-using namespace std;
-using namespace libmodman;
-
-class __MM_DLL_EXPORT singleton_extension : public extension<singleton_extension, true> {};
-
-class __MM_DLL_EXPORT sorted_extension    : public extension<sorted_extension> {
-public:
-	virtual bool operator<(const base_extension& other) const {
-		return string(typeid(*this).name()) > string(typeid(other).name());
-	}
-};
-
-class __MM_DLL_EXPORT symbol_extension    : public extension<symbol_extension> {};
-class __MM_DLL_EXPORT condition_extension : public extension<condition_extension> {};
-class __MM_DLL_EXPORT builtin_extension   : public extension<builtin_extension> {};
-
-#endif /* MAIN_HPP_ */
+int main() {
+	module_manager mm;
+	mm.register_type<EXTTYPE>();
+	return !mm.load_builtin(BUILTIN_MODULE);
+}
