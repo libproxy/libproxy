@@ -36,6 +36,7 @@ mm_create_module(singleton one true  NULL        NULL)
 mm_create_module(singleton two true  NULL        NULL)
 mm_create_module(sorted    one true  NULL        NULL)
 mm_create_module(sorted    two true  NULL        NULL)
+mm_create_module(builtin   one true  NULL        NULL)
 if (WIN32)
 mm_create_module(symbol    one true  \"asdfoia\" \"ws2_32\")
 mm_create_module(symbol    two true  \"recv\"    \"ws2_32\")
@@ -54,6 +55,9 @@ mm_create_program(symbollnk symbol ws2_32)
 else()
 mm_create_program(symbollnk symbol z)
 endif()
+add_executable(builtin test/builtin.cpp libmodman/test/builtin_one.cpp)
+target_link_libraries(builtin libmodman)
+set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS EXTTYPE=builtin_extension;BUILTIN_MODULE="extension";MM_MODULE_BUILTIN=extension)
 
 # Tests
 add_test(NAME condition COMMAND condition $<TARGET_FILE_DIR:condition_one> two)
@@ -62,4 +66,5 @@ add_test(NAME sorted    COMMAND sorted    $<TARGET_FILE_DIR:sorted_one>    two o
 add_test(NAME symbol    COMMAND symbollnk $<TARGET_FILE_DIR:symbol_one>    two)
 add_test(NAME nosymbol  COMMAND symbol    $<TARGET_FILE_DIR:symbol_one>)
 add_test(NAME nosymreq  COMMAND symbol    $<TARGET_FILE_DIR:symbol_one>    one)
+add_test(NAME builtin   COMMAND builtin)
 
