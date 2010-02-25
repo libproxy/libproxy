@@ -163,6 +163,6 @@ if(WIN32)
 endif()
 
 set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS MODULEDIR="${moduledir}";BUILTIN_MODULES=${BUILTIN_MODULES})
-set_target_properties(libproxy PROPERTIES PREFIX "" VERSION 0 SOVERSION 0.0.0)
+set_target_properties(libproxy PROPERTIES PREFIX "" VERSION 1.0.0 SOVERSION 1)
 install(TARGETS libproxy DESTINATION ${rlibdir})
 install(FILES   proxy.h  DESTINATION ${rincludedir})
