@@ -2,10 +2,27 @@
 cmake_minimum_required(VERSION 2.8)
 project(libproxy)
 
+### Enable packaging
+set(CPACK_PACKAGE_VERSION_MAJOR 0)
+set(CPACK_PACKAGE_VERSION_MINOR 4)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+set(CPACK_IGNORE_FILES "CMakeCache.txt;install_manifest.txt;utils/proxy$;/Testing/;/Makefile$;\\\\.cmake$;\\\\.tar.gz$;\\\\.so[.0-9]*$;/build/;/_CPack_Packages/;/CMakeFiles/;/CVS/;/\\\\.svn/;/\\\\.git/;\\\\.swp$;\\\\.#;/#")
+set(CPACK_SOURCE_IGNORE_FILES ${CPACK_IGNORE_FILES})
+
+SET(CPACK_SOURCE_TBZ2 "OFF")
+SET(CPACK_SOURCE_TGZ "ON")
+SET(CPACK_SOURCE_TZ "OFF")
+
+SET(CPACK_SOURCE_PACKAGE_FILE_NAME "libproxy-${CPACK_PACKAGE_VERSION}")
+SET(CPACK_SOURCE_TOPLEVEL_TAG "")
+
+include(CPack)
 
 ### Globals
 # Set the version
-set(CMAKE_PROJECT_VERSION 0.4.0)
+set(CMAKE_PROJECT_VERSION "${CPACK_PACKAGE_VERSION}")
 
 # Enable testing
 enable_testing()
