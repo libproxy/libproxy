@@ -17,109 +17,87 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include "kconfig.h"
-#include "kconfiggroup.h"
+#include <KDE/KConfig>
+#include <KDE/KConfigGroup>
+#include <KDE/KGlobal>
 #include "xhasclient.cpp" // For xhasclient(...)
 
 #include "../extension_config.hpp"
 using namespace libproxy;
 
+static void dummyMessageHandler(QtMsgType, const char *) {}
+
 class kde_config_extension : public config_extension {
 public:
-	url get_config(url dst) throw (runtime_error) {
+	kde_config_extension() {
 		/* The constructor of KConfig uses qAppName() which asumes a QApplication object to exist.
 		If not, an error message is written. This error message and all others seems to be disabled for
 		libraries, but to be sure, we can reemplace temporaly Qt's internal message handler by a
 		dummy implementation. */
-		// QtMsgHandler oldHandler = qInstallMsgHandler(dummyMessageHandler);  // supress Qt messages
-
-		string cfg;
-		int ptype;
 
 		// Open the config file
-		KConfig kde_cf("kioslaverc", KConfig::NoGlobals);  // like in kprotocolmanager.cpp
-		KConfigGroup kde_settings(&kde_cf, "Proxy Settings");  // accessing respective group
+		QtMsgHandler oldHandler = qInstallMsgHandler(dummyMessageHandler);
+		this->cfg = new KConfig("kioslaverc", KConfig::NoGlobals);
+		this->grp = new KConfigGroup(this->cfg, "Proxy Settings");
+		qInstallMsgHandler(oldHandler);
+	}
 
-		// Read the config file to find out what type of proxy to use
-		ptype = kde_settings.readEntry("ProxyType", 0);
+	~kde_config_extension() {
+		delete this->grp;
+		delete this->cfg;
+	}
 
-		QByteArray ba;
-		QString manual_proxy;
-		switch (ptype) {
+	url get_config(url dst) throw (runtime_error) {
+		string  tmp;
+		QString prxy;
+		switch (this->grp->readEntry("ProxyType", 0)) {
 			case 1: // Use a manual proxy
-				manual_proxy = kde_settings.readEntry(QString(dst.get_scheme().c_str()) + "Proxy", "");
-				if (manual_proxy.isEmpty()) {
-					manual_proxy = kde_settings.readEntry("httpProxy", "");
-					if (manual_proxy.isEmpty()) {
-						manual_proxy = kde_settings.readEntry("socksProxy", "");
-						if (manual_proxy.isEmpty()) {
-							manual_proxy = "direct://";
-						};
+				prxy = this->grp->readEntry(QString(dst.get_scheme().c_str()) + "Proxy", "");
+				if (prxy.isEmpty()) {
+					prxy = this->grp->readEntry("httpProxy", "");
+					if (prxy.isEmpty()) {
+						prxy = this->grp->readEntry("socksProxy", "");
+						if (prxy.isEmpty())
+							prxy = "direct://";
 					};
 				};
 				// The result of toLatin1() is undefined for non-Latin1 strings.
 				// However, KDE saves this entry using IDN and percent-encoding, so no problem...
-				ba = manual_proxy.toLatin1();
-				cfg = string(ba.data());
-				break;
+				return string(prxy.toLatin1().data());
 			case 2: // Use a manual PAC
 				// The result of toLatin1() is undefined for non-Latin1 strings.
 				// However, KDE saves this entry using IDN and percent-encoding, so no problem...
-				ba = kde_settings.readEntry("Proxy Config Script", "").toLatin1();
-				cfg = string(ba.data());
-				if (url::is_valid("pac+" + cfg))
-					cfg = "pac+" + cfg;
-				else
-					cfg = "wpad://";
-				break;
+				tmp = string(this->grp->readEntry("Proxy Config Script", "").toLatin1().data());
+				if (url::is_valid("pac+" + tmp))
+					return url("pac+" + tmp);
+				return url("wpad://");
 			case 3: // Use WPAD
-				cfg = "wpad://";
-				break;
+				return url("wpad://");
 			case 4: // Use envvar
 				throw runtime_error("User config_envvar"); // We'll bypass this config plugin and let the envvar plugin work
-				break;
 			default:
-				cfg = "direct://";
-				break;
+				return url("direct://");
 		};
 
-		// qInstallMsgHandler(oldHandler);  // restore old behaviour
-		return libproxy::url(cfg);
+		// Never get here!
 	}
 
 	string get_ignore(url /*dst*/) {
-		// TODO: support ReversedException
-
-		/* The constructor of KConfig uses qAppName() which asumes a QApplication object to exist.
-		If not, an error message is written. This error message and all others seems to be disabled for
-		libraries, but to be sure, we can reemplace temporaly Qt's internal message handler by a
-		dummy implementation. */
-		// QtMsgHandler oldHandler = qInstallMsgHandler(dummyMessageHandler);  // supress Qt messages
-
-		string returnValue;
-		// Open the config file
-		KConfig kde_cf("kioslaverc", KConfig::NoGlobals);  // like in kprotocolmanager.cpp
-		KConfigGroup kde_settings(&kde_cf, "Proxy Settings");  // accessing respective group
-
-		if (kde_settings.readEntry("ProxyType", 0) == 1)  { // apply ignore list only for manual proxy configuration
-			QStringList list = kde_settings.readEntry("NoProxyFor", QStringList());
-			for (int i = 0; i < list.size(); ++i) {
+		// Apply ignore list only for manual proxy configuration
+		if (this->grp->readEntry("ProxyType", 0) == 1)  { 
+			string prefix = this->grp->readEntry("ReversedException", false) ? "-" : "";
+			QStringList list = this->grp->readEntry("NoProxyFor", QStringList());
+			for (int i = 0; i < list.size(); ++i)
 				list[i] = QUrl(list.at(i)).toEncoded();
-			};
-			returnValue = string(list.join(",").toLatin1().data());
-		} else {
-			returnValue = "";
-		};
+			return prefix + string(list.join(",").toLatin1().data());
+		}
+		return "";
+	}
 
-		// qInstallMsgHandler(oldHandler);  // restore old behaviour
-		return returnValue;
-	}
-/*
 private:
-	void dummyMessageHandler(QtMsgType, const char *) {
-	}
-*/
+	KConfig*      cfg;
+	KConfigGroup* grp;
 };
 
 MM_MODULE_INIT_EZ(kde_config_extension);
-MM_MODULE_TEST_EZ(kde_config_extension, xhasclient("kicker", NULL));
+MM_MODULE_TEST_EZ(kde_config_extension, xhasclient("kicker", "klipper", "kwin", "plasma-desktop", NULL));
