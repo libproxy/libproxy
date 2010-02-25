@@ -322,8 +322,11 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		if (!this->pac) {
 			this->pacurl = new url(confurl);
 			this->pac    = confurl.get_pac();
-			if (!this->pac)
+			if (!this->pac) {
+				if (debug) cerr << "Unable to download PAC!" << endl;
 				goto do_return;
+			}
+			if (debug) cerr << "PAC received!" << endl;
 		}
 	}
 
@@ -339,7 +342,9 @@ vector<string> proxy_factory::get_proxies(string url_) {
 
 		/* Run the PAC, but only try one PACRunner */
 		if (debug) cerr << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;
-		response = format_pac_response(pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl));
+		string pacresp = pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl);
+		if (debug) cerr << "Pacrunner returned: " << pacresp << endl;
+		response = format_pac_response(pacresp);
 	}
 
 	/* If we have a manual config (http://..., socks://...) */
