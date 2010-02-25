@@ -1,4 +1,22 @@
-Thu Oct 8 21:26:00 2009 Dominique Leuenberger <dominique@leuenberger.net>
+Thu Feb 25 20:12:57 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
+	* === Released 0.4.0 ===
+        * C++ rewrite
+        * Small API change (px_proxy_factory_get_proxy() can now return NULL)
+	* SOVERSION bump
+        * libmodman is now a seperate library
+	* Migrate to cmake
+	* Windows support (config_w32reg, ignore_hostname; VC++ support)
+	* MacOSX support (config_macosx, ignore_hostname)
+	* Built-in modules support
+	* Support for chunked encoding
+	* Move to hidden visibility by default
+	* KDE's KConfig symantics are fully supported
+	* Removeal of all PX_* env variables (no longer needed)
+	* Symbol based detection of relevant pacrunner
+	* Reworked config_gnome to not suck (its *much* faster)
+	* Many other things I can't remember
+	
+Thu Oct 08 21:26:00 2009 Dominique Leuenberger <dominique@leuenberger.net>
 	* === Released 0.3.1 ===
 	- Bugfixes
 	  + config file parser reads all sections
