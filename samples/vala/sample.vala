@@ -1,4 +1,4 @@
-using Px;
+using Libproxy;
 
 void main () {
 	var proxy_factory = new ProxyFactory ();
