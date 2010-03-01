@@ -1,0 +1,23 @@
+---
+abstract: 'Perl binding for Libproxy'
+author:
+  - 'Gonéri Le Bouder <goneri@rulezlan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
+distribution_type: module
+generated_by: 'Module::Install version 0.90'
+license: Perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+module_name: Net::Libproxy
+name: Net-Libproxy
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  perl: 5.8.1
+version: 0.03
