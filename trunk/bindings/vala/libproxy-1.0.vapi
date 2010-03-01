@@ -1,5 +1,5 @@
-[CCode (cprefix = "px", cheader_filename = "proxy.h")]
-namespace Px {
+[CCode (cprefix = "px", lower_case_cprefix = "px_", cheader_filename = "proxy.h")]
+namespace Libproxy {
 	[Compact]
 	[CCode (free_function = "px_proxy_factory_free")]
 	public class ProxyFactory {
