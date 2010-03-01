@@ -1,0 +1,15 @@
+Changes
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/MakeMaker.pm
+inc/Module/Install/Metadata.pm
+lib/Net/Libproxy.pm
+Libproxy.xs
+Makefile.PL
+MANIFEST
+MANIFEST.SKIP
+META.yml
+README
+t/Libproxy.t
+typemap
