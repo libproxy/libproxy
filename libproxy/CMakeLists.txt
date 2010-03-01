@@ -79,8 +79,8 @@ endif()
 
 if(WIN32)
   # Make the relevant variables show up in the UI
-  set(MOZJS_INCLUDE_DIR  "MOZJS_INCLUDE_DIR-NOTFOUND"  CACHE FILEPATH "Path to the MOZJS include files")
-  set(WEBKIT_INCLUDE_DIR "WEBKIT_INCLUDE_DIR-NOTFOUND" CACHE FILEPATH "Path to the WEBKIT include files")
+  set(MOZJS_INCLUDE_DIR  "MOZJS_INCLUDE_DIR-NOTFOUND"  CACHE PATH "Path to the MOZJS include directory")
+  set(WEBKIT_INCLUDE_DIR "WEBKIT_INCLUDE_DIR-NOTFOUND" CACHE PATH "Path to the WEBKIT include directory")
   set(MOZJS_LIBRARIES    "MOZJS_LIBRARIES-NOTFOUND"    CACHE FILEPATH "Path to the MOZJS .lib file")
   set(WEBKIT_LIBRARIES   "WEBKIT_LIBRARIES-NOTFOUND"   CACHE FILEPATH "Path to the WEBKIT .lib file")
 
