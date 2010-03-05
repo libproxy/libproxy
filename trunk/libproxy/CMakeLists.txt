@@ -137,7 +137,7 @@ message("")
 
 ### Misc files
 # PkgConfig file
-if(NOT WIN32)
+if(NOT WIN32 AND NOT APPLE)
   configure_file(libproxy-1.0.pc.in libproxy-1.0.pc @ONLY)
   install(FILES libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
 endif()
