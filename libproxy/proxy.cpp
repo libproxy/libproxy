@@ -388,7 +388,8 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 	// Call the main method
 	try {
 		proxies = self->pf.get_proxies(url);
-		retval  = new char*[proxies.size()+1];
+		retval  = (char**) malloc(sizeof(char*) * (proxies.size() + 1));
+		if (!retval) return NULL;
 	} catch (std::exception&) {
 		// Return NULL on any exception
 		return NULL;
@@ -402,7 +403,7 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 		if (retval[i] == NULL) {
 			for (int j=i-1 ; j >= 0 ; j--)
 				free(retval[j]);
-			delete retval;
+			free(retval);
 			return NULL;
 		}
 	}

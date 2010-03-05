@@ -223,7 +223,7 @@ static int load(map<string, vector<base_extension*> >& extensions,
 					 << prep_type_name(exts[i]->get_base_type()) << ")" << endl;
 			extensions[exts[i]->get_base_type()].push_back(exts[i]);
 		}
-		delete exts;
+		delete[] exts;
 		return _LOAD_SUCC;
 	}
 

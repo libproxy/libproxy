@@ -102,10 +102,10 @@ url::url(const string url) throw(parse_error, logic_error) {
 		!(sscanf(url.c_str(), "%[^:]://%s",             schm, path) == 2 && string("file") == schm) && !((*path = NULL)) &&  // URL with path (ex: file:///foo)
 		!(sscanf(url.c_str(), "%[^:]://",               schm) == 1 && (string("direct") == schm || string("wpad") == schm))) // URL with scheme-only (ex: wpad://, direct://)
 	{
-		delete schm;
-		delete auth;
-		delete host;
-		delete path;
+		delete[] schm;
+		delete[] auth;
+		delete[] host;
+		delete[] path;
 		throw parse_error("Invalid URL: " + url);
 	}
 
@@ -146,10 +146,10 @@ url::url(const string url) throw(parse_error, logic_error) {
 	}
 
 	// Cleanup
-	delete schm;
-	delete auth;
-	delete host;
-	delete path;
+	delete[] schm;
+	delete[] auth;
+	delete[] host;
+	delete[] path;
 
 	// Verify by re-assembly
 	if (this->user != "" && this->pass != "")
