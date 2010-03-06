@@ -139,6 +139,12 @@ if(NOT WIN32 AND NOT APPLE)
   install(FILES libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
 endif()
 
+# CMake Find helper
+if (NOT WIN32 AND NOT APPLE)
+  configure_file(Findlibproxy.cmake.in Findlibproxy.cmake @ONLY)
+  install(FILES Findlibproxy.cmake DESTINATION ${datadir}/cmake/Modules)
+endif()
+
 # GNOME (gconf) helper
 if(${GNOME_FOUND})
   add_executable(pxgconf modules/pxgconf.cpp)
