@@ -314,7 +314,7 @@ char* url::get_pac() {
 	string request;
 
 	// In case of a file:// url we open the file and read it
-	if (this->scheme == "file") {
+	if (this->scheme == "file" || this->scheme == "pac+file") {
 		struct stat st;
 		if ((sock = ::open(this->path.c_str(), O_RDONLY)) < 0)
 			return NULL;
