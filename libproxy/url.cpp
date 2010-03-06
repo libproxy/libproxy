@@ -95,11 +95,11 @@ url::url(const string url) throw(parse_error, logic_error) {
 	// Break apart our url into 4 sections: scheme, auth (user/pass), host and path
 	// We'll do further parsing of auth and host a bit later
 	// NOTE: reset the unused variable after each scan or we get bleed-through
-	if (sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]/%s", schm, auth, host, path) != 4                && !((*path = NULL)) &&  // URL with auth, host and path
-		sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]",    schm, auth, host) != 3                      && !((*auth = NULL)) &&  // URL with auth, host
-		sscanf(url.c_str(),   "%[^:]://%[^/]/%s",       schm, host, path) != 3                      && !((*path = NULL)) &&  // URL with host, path
-		sscanf(url.c_str(),   "%[^:]://%[^/]",          schm, host) != 2                            && !((*host = NULL)) &&  // URL with host
-		!(sscanf(url.c_str(), "%[^:]://%s",             schm, path) == 2 && string("file") == schm) && !((*path = NULL)) &&  // URL with path (ex: file:///foo)
+	if (sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]/%s", schm, auth, host, path) != 4                    && !((*path = '\0')) &&  // URL with auth, host and path
+		sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]",    schm, auth, host) != 3                      && !((*auth = '\0')) &&  // URL with auth, host
+		sscanf(url.c_str(),   "%[^:]://%[^/]/%s",       schm, host, path) != 3                      && !((*path = '\0')) &&  // URL with host, path
+		sscanf(url.c_str(),   "%[^:]://%[^/]",          schm, host) != 2                            && !((*host = '\0')) &&  // URL with host
+		!(sscanf(url.c_str(), "%[^:]://%s",             schm, path) == 2 && string("file") == schm) && !((*path = '\0')) &&  // URL with path (ex: file:///foo)
 		!(sscanf(url.c_str(), "%[^:]://",               schm) == 1 && (string("direct") == schm || string("wpad") == schm))) // URL with scheme-only (ex: wpad://, direct://)
 	{
 		delete[] schm;
@@ -112,8 +112,8 @@ url::url(const string url) throw(parse_error, logic_error) {
 	// Set scheme and path
 	this->scheme   = schm;
 	this->path     = *path ? string("/") + path : "";
-	*schm = NULL;
-	*path = NULL;
+	*schm = '\0';
+	*path = '\0';
 
 	// Parse auth further
 	if (*auth) {
@@ -122,7 +122,7 @@ url::url(const string url) throw(parse_error, logic_error) {
 			this->pass = this->user.substr(this->user.find(":")+1);
 			this->user = this->user.substr(0, this->user.find(":"));
 		}
-		*auth = NULL;
+		*auth = '\0';
 	}
 
 	// Parse host further. Basically, we're looking for a port.
@@ -142,7 +142,7 @@ url::url(const string url) throw(parse_error, logic_error) {
 		}
 
 		this->host = host;
-		*host = NULL;
+		*host = '\0';
 	}
 
 	// Cleanup
@@ -235,7 +235,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 	// Check DNS for IPs
 	struct addrinfo* info;
 	struct addrinfo flags;
-	memset(&flags, NULL, sizeof(addrinfo));
+	memset(&flags, '\0', sizeof(addrinfo));
 	flags.ai_family   = AF_UNSPEC;
 	flags.ai_socktype = 0;
 	flags.ai_protocol = 0;
@@ -254,7 +254,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 
 		// Create our array since we actually have a result
 		this->ips = new sockaddr*[++i];
-		memset(this->ips, NULL, sizeof(sockaddr*)*i);
+		memset(this->ips, '\0', sizeof(sockaddr*)*i);
 
 		// Copy the sockaddr's into this->ips
 		for (i = 0, info = first ; info ; info = info->ai_next) {
