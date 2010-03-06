@@ -1,5 +1,5 @@
 ### Required
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 project(libproxy)
 
 ### Enable packaging
@@ -35,12 +35,14 @@ if(${WIN32})
   set(rlibexecdir .)
   set(rbindir     .)
   set(rincludedir include/)
+  set(rdatadir    .)
 else()
   set(rlibdir     lib${LIB_SUFFIX}/)
   set(rmoduledir  ${rlibdir}${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_VERSION}/modules/)
   set(rlibexecdir libexec/)
   set(rbindir     bin/)
   set(rincludedir include/)
+  set(rdatadir    share/)
 endif()
 
 # Setup our full paths
@@ -50,6 +52,7 @@ set(moduledir  ${prefix}/${rmoduledir}  CACHE PATH "moduledir")
 set(libexecdir ${prefix}/${rlibexecdir} CACHE PATH "libexecdir")
 set(bindir     ${prefix}/${rbindir}     CACHE PATH "bindir")
 set(includedir ${prefix}/${rincludedir} CACHE PATH "includedir")
+set(datadir    ${prefix}/${rdatadir}    CACHE PATH "datadir")
 
 # Add a global compilation stuff
 if (WIN32)
