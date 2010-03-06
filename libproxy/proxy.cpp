@@ -84,7 +84,8 @@ format_pac_response(string response)
 	}
 
 	// Strip whitespace
-	response = response.substr(response.find_first_not_of(" \t"), response.find_last_not_of(" \t")+1);
+	if (response.size() > 0)
+		response = response.substr(response.find_first_not_of(" \t\n"), response.find_last_not_of(" \t\n")+1);
 
 	// Get the method and the server
 	string method = "";
