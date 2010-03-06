@@ -33,14 +33,33 @@ Information on libproxy bindings coming soon...
 
 
 = Building the Code =
+Libproxy was changed to the cmake build system to better support various operating systems. You can build libproxy like this:
 {{{
-$ ./autogen.sh
-$ ./configure --with-gnome --with-kde --with-mozjs --with-networkmanager
-$ make
-$ su
-# make install
+cmake \
+[-DCMAKE_INSTALL_PREFIX=/usr] \
+[-Dlibdir=/usr/lib] \
+[-Ddatadir=/usr/share] \
+[-Dmoduledir=/usrlib/libproxy/0.4.0/modules] \
+[-Dbindir=/usr/bin] \
+[-Dlibexecdir=/usr/libexec] \
+[-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js] \
+.
+make
+sudo make install
 }}}
 
+== The cmake parameters explained ==
+[-DCMAKE_INSTALL_PREFIX=/usr/local]: The base directory to be used for the installation
+[-Dlibdir=/usr/local/lib]: Where the libraries are to be installed
+[-Ddatadir=/usr/local/share]: Various data files go here
+[-Dmoduledir=/usr/local/lib/libproxy/0.4.0/modules]: All modules for libproxy go to this folder
+[-Dbindir=/usr/local/bin]: The libproxy utilites will be installed here
+[-Dlibexecdir=/usr/local/libexec]: And library helper goes here
+[-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js]: Specify in which order the different JS libraries shall be probed. The first one found will be used.
+
+All paths defined can of course can changed. The paths The ones noted here are used if the specific parameter is left out and can be considered the defaults.
+
+Note the dot (.) at the end of the cmake call. This is the path to the libproxy source. Dot denotes the current directory and can be used when building directly in the source folder of libproxy (recommended).
 
 = Testing it Out =
 {{{
