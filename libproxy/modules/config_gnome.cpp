@@ -105,7 +105,7 @@ public:
 	gnome_config_extension() {
 		// Build the command
 		int count;
-		string cmd = LIBEXECDIR "pxgconf";
+		string cmd = LIBEXECDIR "/pxgconf";
 		for (count=0 ; all_keys[count] ; count++)
 			cmd += string(" ", 1) + all_keys[count];
 
