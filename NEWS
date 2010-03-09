@@ -1,3 +1,8 @@
+New in version 0.4.1
+===============================
+* Perl bindings
+* Vala bindings
+
 New in version 0.4.0
 ===============================
 * C++ rewrite
