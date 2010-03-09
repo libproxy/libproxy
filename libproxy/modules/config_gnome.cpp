@@ -73,8 +73,8 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 		close(STDIN_FILENO);  // Close stdin
 		close(STDOUT_FILENO); // Close stdout
 
-		dup(wpipe[0]); // Dup the read end of the write pipe to stdin
-		dup(rpipe[1]); // Dup the write end of the read pipe to stdout
+		dup2(wpipe[0], STDIN_FILENO);  // Dup the read end of the write pipe to stdin
+		dup2(rpipe[1], STDOUT_FILENO); // Dup the write end of the read pipe to stdout
 
 		// Close unneeded fds
 		close(rpipe[0]);
