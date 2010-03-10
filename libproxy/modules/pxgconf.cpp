@@ -100,7 +100,7 @@ static gboolean in(GIOChannel *source, GIOCondition condition, gpointer data) {
 	// Remove the trailing '\n'
 	for (int i=0 ; key && key[i] ; i++)
 		if (key[i] == '\n')
-			key[i] = NULL;
+			key[i] = '\0';
 
 	// If we were successful
 	if (key && st == G_IO_STATUS_NORMAL) {
@@ -108,7 +108,7 @@ static gboolean in(GIOChannel *source, GIOCondition condition, gpointer data) {
 			goto exit;
 
 		val = g_strrstr(key, "\t") + 1;
-		*(val-1) = NULL;
+		*(val-1) = '\0';
 
 		if (!set_key(key, val))
 			goto exit;
