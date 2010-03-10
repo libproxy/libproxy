@@ -32,7 +32,7 @@ _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
 
 class ProxyFactory(object):
     """A ProxyFactory object is used to provide potential proxies to use
-    in order to reach a given URL (via 'getProxy(url)').
+    in order to reach a given URL (via 'getProxies(url)').
  
     This instance should be kept around as long as possible as it contains
     cached data to increase performance.  Memory usage should be minimal (cache
@@ -41,7 +41,7 @@ class ProxyFactory(object):
     Usage is pretty simple:
         pf = libproxy.ProxyFactory()
         for url in urls:
-            proxies = pf.getProxy(url)
+            proxies = pf.getProxies(url)
             for proxy in proxies:
                 if proxy == "direct://":
                     # Fetch URL without using a proxy
