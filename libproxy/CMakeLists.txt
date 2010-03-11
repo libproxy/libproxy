@@ -135,14 +135,14 @@ message("")
 ### Misc files
 # PkgConfig file
 if(NOT WIN32 AND NOT APPLE)
-  configure_file(libproxy-1.0.pc.in libproxy-1.0.pc @ONLY)
-  install(FILES libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/libproxy-1.0.pc.in ${CMAKE_BINARY_DIR}/libproxy-1.0.pc @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
 endif()
 
 # CMake Find helper
 if (NOT WIN32 AND NOT APPLE)
-  configure_file(Findlibproxy.cmake.in Findlibproxy.cmake @ONLY)
-  install(FILES Findlibproxy.cmake DESTINATION ${datadir}/cmake/Modules)
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/Findlibproxy.cmake.in ${CMAKE_BINARY_DIR}/Findlibproxy.cmake @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/Findlibproxy.cmake DESTINATION ${datadir}/cmake/Modules)
 endif()
 
 # GNOME (gconf) helper
