@@ -113,6 +113,9 @@ public:
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
 			throw runtime_error("Unable to open gconf helper!");
 
+		// Read in our initial data
+		this->read_data(count);
+
 		// Set the read pipe to non-blocking
 		if (fcntl(fileno(this->read), F_SETFL, FNONBLOCK) == -1) {
 			fclose(this->read);
@@ -120,9 +123,6 @@ public:
 			kill(this->pid, SIGTERM);
 			throw runtime_error("Unable to set pipe to non-blocking!");
 		}
-
-		// Read in the first print-out of all our keys
-		this->update_data(count);
 	}
 
 	~gnome_config_extension() {
@@ -133,7 +133,12 @@ public:
 
 	url get_config(url dest) throw (runtime_error) {
 		// Check for changes in the config
-		this->update_data();
+		fd_set rfds;
+		struct timeval timeout = { 0, 0 };
+		FD_ZERO(&rfds);
+		FD_SET(fileno(this->read), &rfds);
+		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
+			this->read_data();
 
 		// Mode is wpad:// or pac+http://...
 		if (this->data["/system/proxy/mode"] == "auto") {
@@ -209,40 +214,20 @@ private:
 	pid_t pid;
 	map<string, string> data;
 
-	// This method attempts to update data
-	// If called with no arguments, it will check for new data (sleeping for <=10
-	// useconds) and returning true or false depending on if at least one line of
-	// data was found.
-	// However, if req > 0, we will keep checking for new lines (at 10 usec ivals)
-	// until enough lines are found.  This allows us to wait for *all* the initial
-	// values to be read in before we start processing gconf requests.
-	bool update_data(int req=0, int found=0) {
-		// If we have collected the correct number of lines, return true
-		if (req > 0 && found >= req)
-			return true;
+	bool read_data(int num=-1) {
+		if (num == 0)    return true;
+		if (!this->read) return false; // We need the pipe to be open
 
-		// We need the pipe to be open
-		if (!this->read) return false;
-
-		fd_set rfds;
-		struct timeval timeout = { 0, 10 }; // select() for 1/1000th of a second
-		FD_ZERO(&rfds);
-		FD_SET(fileno(this->read), &rfds);
-		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) < 1)
-			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
-			                                                        // our req quota, try again
-
-		bool retval = false;
-		for (char l[BUFFERSIZE] ; fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
+		for (char l[BUFFERSIZE] ; num != 0 && fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
 			string line = l;
 			line        = line.substr(0, line.rfind('\n'));
 			string key  = line.substr(0, line.find("\t"));
 			string val  = line.substr(line.find("\t")+1);
 			this->data[key] = val;
-			retval = ++found >= req;
+			if (num > 0) num--;
 		}
 
-		return (this->update_data(req, found) || retval);
+		return (num <= 0);
 	}
 };
 
