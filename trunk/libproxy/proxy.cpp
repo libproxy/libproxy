@@ -31,7 +31,6 @@
 #include "extension_wpad.hpp"
 
 #ifdef WIN32
-#define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
 #define strdup _strdup
 #endif
 
