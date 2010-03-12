@@ -25,6 +25,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "module.hpp"
 
@@ -49,8 +50,13 @@ public:
 		if (it != this->extensions.end()) {
 			vector<base_extension*> extlist = it->second;
 
-			for (size_t i=0 ; i < extlist.size() ; i++)
-				retlist.push_back(dynamic_cast<T*>(extlist[i]));
+			for (size_t i=0 ; i < extlist.size() ; i++) {
+				T* obj = dynamic_cast<T*>(extlist[i]);
+				if (obj)
+					retlist.push_back(obj);
+				else
+					assert (obj != NULL);
+			}
 
 			sort(retlist.begin(), retlist.end(), &pcmp::cmp);
 		}
