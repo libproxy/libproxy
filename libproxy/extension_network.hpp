@@ -21,7 +21,7 @@
 #define EXTENSION_NETWORK_HPP_
 
 #include <libmodman/module.hpp>
-#include "url.hpp"
+#include "config.hpp"
 
 namespace libproxy {
 using namespace libmodman;
