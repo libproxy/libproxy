@@ -20,7 +20,7 @@
 #include "../extension_pacrunner.hpp"
 using namespace libproxy;
 
-#ifdef APPLE
+#ifdef __APPLE__
 // JavaScriptCore.h requires CoreFoundation
 // This is only found on Mac OS X
 #include <JavaScriptCore/JavaScriptCore.h>
