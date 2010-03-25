@@ -1,3 +1,3 @@
 || || *Endpoint HTTP* || *Endpoint HTTPS* ||
-|| *Proxy HTTP* || ??? || ??? ||
-|| *Proxy HTTPS* || ??? || ??? ||
+|| *Proxy HTTP* || http || http ||
+|| *Proxy HTTPS* || http || http ||
