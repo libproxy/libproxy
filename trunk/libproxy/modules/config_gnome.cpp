@@ -23,7 +23,6 @@
 #include <errno.h>        // For errno stuff
 #include <unistd.h>       // For pipe(), close(), vfork(), dup(), execl(), _exit()
 #include <signal.h>       // For kill()
-#include "xhasclient.cpp" // For xhasclient()
 
 #include "../extension_config.hpp"
 using namespace libproxy;
@@ -247,4 +246,9 @@ static base_extension** gnome_config_extension_init() {
 }
 
 MM_MODULE_INIT(gnome_config_extension, gnome_config_extension_init);
-MM_MODULE_TEST_EZ(gnome_config_extension, xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL));
+MM_MODULE_TEST_EZ(gnome_config_extension,
+                     (
+                         getenv("GNOME_DESKTOP_SESSION_ID") ||
+                         (getenv("DESKTOP_SESSION") && string(getenv("DESKTOP_SESSION")) == "gnome")
+                     )
+                 );
