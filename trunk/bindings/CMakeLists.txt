@@ -11,3 +11,9 @@ endif()
 
 #TODO c-sharp bindings
 
+#TODO perl bindings
+
+# Install Vala bindings / Install only when -DWITH_VALA is passed to cmake.
+if(WITH_VALA)
+  install(FILES vala/libproxy-1.0.vapi DESTINATION ${datadir}/vala/vapi)
+endif()
