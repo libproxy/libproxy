@@ -101,6 +101,10 @@ format_pac_response(string response)
 		retval.insert(retval.begin(), string("http://") + server);
 	else if (istringcmp(method, "socks") && url::is_valid("http://" + server))
 		retval.insert(retval.begin(), string("socks://") + server);
+	else if (istringcmp(method, "socks4") && url::is_valid("http://" + server))
+		retval.insert(retval.begin(), string("socks4://") + server);
+	else if (istringcmp(method, "socks5") && url::is_valid("http://" + server))
+		retval.insert(retval.begin(), string("socks5://") + server);
 	else if (istringcmp(method, "direct"))
 		retval.insert(retval.begin(), string("direct://"));
 
