@@ -73,7 +73,7 @@ pxProxyFactory *px_proxy_factory_new(void);
  * @url The URL we are trying to reach
  * @return A NULL-terminated array of proxy strings to use
  */
-char **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
+char **px_proxy_factory_get_proxies(pxProxyFactory *self, const char *url);
 
 /**
  * Frees the pxProxyFactory instance when no longer used.
