@@ -118,7 +118,7 @@ public:
 		this->read_data(count);
 
 		// Set the read pipe to non-blocking
-		if (fcntl(fileno(this->read), F_SETFL, FNONBLOCK) == -1) {
+		if (fcntl(fileno(this->read), F_SETFL, O_NONBLOCK) == -1) {
 			fclose(this->read);
 			fclose(this->write);
 			kill(this->pid, SIGTERM);
