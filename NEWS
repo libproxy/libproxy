@@ -1,7 +1,7 @@
 New in version 0.4.1
 ===============================
 * Perl bindings
-* Vala bindings
+* Vala bindings are installed if -DWITH_VALA=yes is passed to cmake
 
 New in version 0.4.0
 ===============================
