@@ -43,6 +43,8 @@ cmake \
 [-Dbindir=/usr/bin] \
 [-Dlibexecdir=/usr/libexec] \
 [-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js] \
+[-DWITH_VALA=YES] \
+[-DPERL_VENDORINSTALL] \
 .
 make
 sudo make install
@@ -56,6 +58,8 @@ sudo make install
 [-Dbindir=/usr/local/bin]: The libproxy utilites will be installed here
 [-Dlibexecdir=/usr/local/libexec]: And library helper goes here
 [-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js]: Specify in which order the different JS libraries shall be probed. The first one found will be used.
+[-DWITH_VALA] Install the Vala bindings in the system
+[-DPERL_VENDORINSTALL] Install the perl bindings into vendor_lib instead of site_lib
 
 All paths defined can of course can changed. The paths The ones noted here are used if the specific parameter is left out and can be considered the defaults.
 
