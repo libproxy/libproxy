@@ -20,5 +20,6 @@ add_library(PLlibproxy SHARED ${Libproxy_LIB_SRCS})
 
 target_link_libraries(PLlibproxy)
 set_target_properties(PLlibproxy PROPERTIES OUTPUT_NAME "Libproxy")
+set_target_properties(PLlibproxy PROPERTIES PREFIX "")
 
 install( TARGETS PLlibproxy DESTINATION ${PERL_SITE_ARCH_DIR}/auto/Net/Libproxy )
