@@ -5,10 +5,6 @@
 #include <proxy.h>
 
 
-
-typedef struct _pxProxyFactory ProxyFactory;
-
-
 void XS_pack_charPtrPtr( SV * arg, char ** array, int count) {
   int i;
   AV * avref;
@@ -22,11 +18,12 @@ void XS_pack_charPtrPtr( SV * arg, char ** array, int count) {
 
 MODULE = Net::Libproxy PACKAGE = Net::Libproxy
 
+PROTOTYPES: DISABLE
 
-ProxyFactory *
+pxProxyFactory *
 proxy_factory_new()
   PREINIT:
-    ProxyFactory *pf;
+    pxProxyFactory *pf;
   CODE:
     pf = px_proxy_factory_new();
     RETVAL = pf;
@@ -35,7 +32,7 @@ proxy_factory_new()
 
 char **
 proxy_factory_get_proxies(pf, url)
-    ProxyFactory * pf
+    pxProxyFactory * pf
     char * url
   PREINIT:
     char ** array;
@@ -57,7 +54,7 @@ MODULE = Net::Libproxy PACKAGE = Net::Libproxy::ProxyFactoryPtr
 
 void
 DESTROY(pf)
-    ProxyFactory * pf
+    pxProxyFactory * pf
   CODE:
     printf("Net::Libproxy::DESTROY\n");
     px_proxy_factory_free(pf);

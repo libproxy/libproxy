@@ -1,7 +1,0 @@
-.git
-createChanges.pl
-MANIFEST.bak
-Net-Libproxy.*
-^Makefile$
-Makefile.old
-.*.swp
