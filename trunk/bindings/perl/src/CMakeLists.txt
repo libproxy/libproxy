@@ -22,4 +22,4 @@ target_link_libraries(PLlibproxy ${PERL_LIBRARY} libproxy)
 set_target_properties(PLlibproxy PROPERTIES OUTPUT_NAME "Libproxy")
 set_target_properties(PLlibproxy PROPERTIES PREFIX "")
 
-install( TARGETS PLlibproxy DESTINATION ${PERL_SITE_ARCH_DIR}/auto/Net/Libproxy )
+install( TARGETS PLlibproxy DESTINATION ${PX_PERL_ARCH}/auto/Net/Libproxy )
