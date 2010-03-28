@@ -4,7 +4,7 @@ include_directories( ${PERL_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/libproxy )
 # Run doxsubpp.pl to run xsubpp on Libproxy.xs
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/Libproxy.c
                    COMMAND ${PERL_EXECUTABLE} ARGS ${CMAKE_CURRENT_SOURCE_DIR}/doxsubpp.pl ${PERL_EXECUTABLE} Libproxy.xs Libproxy.c
-                   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Libproxy.xs ${CMAKE_BINARY_DIR}/libproxy/libproxy
+                   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Libproxy.xs libproxy
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
