@@ -1,2 +1,0 @@
-TYPEMAP
-ProxyFactory *   T_PTROBJ

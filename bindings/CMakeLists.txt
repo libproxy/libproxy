@@ -11,7 +11,8 @@ endif()
 
 #TODO c-sharp bindings
 
-#TODO perl bindings
+#perl bindings live in their own subdir.
+add_subdirectory(perl)
 
 # Install Vala bindings / Install only when -DWITH_VALA is passed to cmake.
 if(WITH_VALA)

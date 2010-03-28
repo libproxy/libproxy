@@ -1,6 +1,6 @@
 New in version 0.4.1
 ===============================
-* Perl bindings
+* Perl bindings have been integrated into the CMake Build System
 * Vala bindings are installed if -DWITH_VALA=yes is passed to cmake
 
 New in version 0.4.0
