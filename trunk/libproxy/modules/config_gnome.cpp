@@ -138,18 +138,22 @@ public:
 	gnome_config_extension() {
 		// Build the command
 		int count;
+		struct stat st;
 		string cmd = LIBEXECDIR "/pxgconf";
 		const char *pxgconf = getenv("PX_GCONF");
 
 		if (pxgconf)
 			cmd = string (pxgconf);
 
+		if (stat(cmd.c_str(), &st))
+			throw runtime_error ("Unable to open gconf helper!");
+
 		for (count=0 ; all_keys[count] ; count++)
 			cmd += string(" ", 1) + all_keys[count];
 
 		// Get our pipes
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
-			throw runtime_error("Unable to open gconf helper!");
+			throw runtime_error("Unable to run gconf helper!");
 
 		// Read in our initial data
 		this->read_data(count);
