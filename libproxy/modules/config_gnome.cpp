@@ -139,6 +139,11 @@ public:
 		// Build the command
 		int count;
 		string cmd = LIBEXECDIR "/pxgconf";
+		const char *pxgconf = getenv("PX_GCONF");
+
+		if (pxgconf)
+			cmd = string (pxgconf);
+
 		for (count=0 ; all_keys[count] ; count++)
 			cmd += string(" ", 1) + all_keys[count];
 
