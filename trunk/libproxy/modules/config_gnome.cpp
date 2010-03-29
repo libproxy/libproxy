@@ -251,7 +251,7 @@ public:
 
 	bool set_creds(url /*proxy*/, string username, string password) {
 		string auth = PROXY_USE_AUTHENTICATION "\ttrue\n";
-		string user = string(PROXY_AUTH_USER "t") + username + "\n";
+		string user = string(PROXY_AUTH_USER "\t") + username + "\n";
 		string pass = string(PROXY_AUTH_PASSWORD "\t") + password + "\n";
 
 		return (fwrite(auth.c_str(), 1, auth.size(), this->write) == auth.size() &&
