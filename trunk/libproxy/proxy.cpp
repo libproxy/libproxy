@@ -112,6 +112,8 @@ format_pac_response(string response)
 }
 
 proxy_factory::proxy_factory() {
+	const char *module_dir;
+
 #ifdef WIN32
 	this->mutex = CreateMutex(NULL, false, NULL);
 	WaitForSingleObject(this->mutex, INFINITE);
@@ -138,8 +140,11 @@ proxy_factory::proxy_factory() {
 		this->mm.load_builtin(builtin_modules[i], "libproxy");
 
 	// Load all modules
-	this->mm.load_dir(MODULEDIR);
-	this->mm.load_dir(MODULEDIR, false);
+	module_dir = getenv("PX_MODULE_PATH");
+	if (!module_dir)
+		module_dir = MODULEDIR;
+	this->mm.load_dir(module_dir);
+	this->mm.load_dir(module_dir, false);
 
 #ifdef WIN32
 	ReleaseMutex(this->mutex);
