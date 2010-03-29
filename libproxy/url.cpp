@@ -206,7 +206,7 @@ url& url::operator=(const url& url) {
 
 	if (url.ips) {
 		// Copy the new ip cache
-		for (i=0 ; url.ips[i] ; i++);
+		for (i=0 ; url.ips[i] ; i++) {};
 		this->ips = new sockaddr*[i];
 		for (i=0 ; url.ips[i] ; i++)
 			this->ips[i] = copyaddr(*url.ips[i]);
