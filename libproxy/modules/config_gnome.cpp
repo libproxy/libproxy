@@ -29,16 +29,38 @@ using namespace libproxy;
 
 #define BUFFERSIZE 10240
 
+#define PROXY_MODE					"/system/proxy/mode"
+#define PROXY_USE_AUTHENTICATION	"/system/http_proxy/use_authentication"
+#define PROXY_AUTH_PASSWORD			"/system/http_proxy/authentication_password"
+#define PROXY_AUTH_USER				"/system/http_proxy/authentication_user"
+#define PROXY_AUTOCONFIG_URL		"/system/proxy/autoconfig_url"
+#define PROXY_IGNORE_HOSTS			"/system/http_proxy/ignore_hosts"
+#define PROXY_HTTP_HOST				"/system/http_proxy/host"
+#define PROXY_HTTP_PORT				"/system/http_proxy/port"
+#define PROXY_FTP_HOST				"/system/proxy/ftp_host"
+#define PROXY_FTP_PORT				"/system/proxy/ftp_port"
+#define PROXY_SECURE_HOST			"/system/proxy/secure_host"
+#define PROXY_SECURE_PORT			"/system/proxy/secure_port"
+#define PROXY_SOCKS_HOST			"/system/proxy/socks_host"
+#define PROXY_SOCKS_PORT			"/system/proxy/socks_port"
+#define PROXY_SAME_FOR_ALL          "/system/http_proxy/use_same_proxy"
+
 static const char *all_keys[] = {
-	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
-	"/system/http_proxy/host",   "/system/http_proxy/port",
-	"/system/proxy/secure_host", "/system/proxy/secure_port",
-	"/system/proxy/ftp_host",    "/system/proxy/ftp_port",
-	"/system/proxy/socks_host",  "/system/proxy/socks_port",
-	"/system/http_proxy/ignore_hosts",
-	"/system/http_proxy/use_authentication",
-	"/system/http_proxy/authentication_user",
-	"/system/http_proxy/authentication_password",
+	PROXY_MODE,
+	PROXY_USE_AUTHENTICATION,
+	PROXY_AUTH_PASSWORD,
+	PROXY_AUTH_USER,
+	PROXY_AUTOCONFIG_URL,
+	PROXY_IGNORE_HOSTS,
+	PROXY_HTTP_HOST,
+	PROXY_HTTP_PORT,
+	PROXY_FTP_HOST,
+	PROXY_FTP_PORT,
+	PROXY_SECURE_HOST,
+	PROXY_SECURE_PORT,
+	PROXY_SOCKS_HOST,
+	PROXY_SOCKS_PORT,
+	PROXY_SAME_FOR_ALL,
 	NULL
 };
 
@@ -101,6 +123,16 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 	}
 }
 
+static inline uint16_t get_port(string &port)
+{
+	uint16_t retval;
+
+	if (sscanf(port.c_str(), "%hu", &retval) != 1)
+		retval = 0;
+
+	return retval;	
+}
+
 class gnome_config_extension : public config_extension {
 public:
 	gnome_config_extension() {
@@ -142,47 +174,56 @@ public:
 			this->read_data();
 
 		// Mode is wpad:// or pac+http://...
-		if (this->data["/system/proxy/mode"] == "auto") {
-			string pac = this->data["/system/proxy/autoconfig_url"];
+		if (this->data[PROXY_MODE] == "auto") {
+			string pac = this->data[PROXY_AUTOCONFIG_URL];
 			return url::is_valid(pac) ? url(string("pac+") + pac) : url("wpad://");
 		}
 
 		// Mode is http://... or socks://...
-		else if (this->data["/system/proxy/mode"] == "manual") {
-			string type = "http", host, port;
-			bool   auth     = this->data["/system/http_proxy/use_authentication"] == "true";
-			string username = this->data["/system/http_proxy/authentication_user"];
-			string password = this->data["/system/http_proxy/authentication_password"];
-			uint16_t p = 0;
+		else if (this->data[PROXY_MODE] == "manual") {
+			string type, host, port;
+			bool       auth = this->data[PROXY_USE_AUTHENTICATION] == "true";
+			string username = this->data[PROXY_AUTH_USER];
+			string password = this->data[PROXY_AUTH_PASSWORD];
+			bool same_proxy = this->data[PROXY_SAME_FOR_ALL] == "true"; 
 
-			// Get the per-scheme proxy settings
-			if (dest.get_scheme() == "https") {
-				host = this->data["/system/proxy/secure_host"];
-				port = this->data["/system/proxy/secure_port"];
-				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			// If socks is set use it (except when same_proxy is set)
+			if (!same_proxy) {
+				type = "socks";
+				host = this->data[PROXY_SOCKS_HOST];
+				port = this->data[PROXY_SOCKS_PORT];
 			}
-			else if (dest.get_scheme() == "ftp") {
-				host = this->data["/system/proxy/ftp_host"];
-				port = this->data["/system/proxy/ftp_port"];
-				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
-			}
-			if (host == "" || p == 0)
-			{
-				host = this->data["/system/http_proxy/host"];
-				port = this->data["/system/http_proxy/port"];
-				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			
+			if (host == "" || get_port(port) == 0) {
+				// Get the per-scheme proxy settings
+				if (dest.get_scheme() == "http") {
+						type = "http";
+						host = this->data[PROXY_HTTP_HOST];
+						port = this->data[PROXY_HTTP_PORT];
+				}
+				else if (dest.get_scheme() == "https") {
+						type = "http"; /* We merge HTTP and HTTPS */
+						host = this->data[PROXY_SECURE_HOST];
+						port = this->data[PROXY_SECURE_PORT];
+				}
+				else if (dest.get_scheme() == "ftp") {
+						type = "ftp";
+						host = this->data[PROXY_FTP_HOST];
+						port = this->data[PROXY_FTP_PORT];
+				}
+
+				// If no proxy is set and we have the same_proxy option
+				// enabled try socks at the end only.
+				if (same_proxy && (host == "" || get_port(port) == 0)) {
+					type = "socks";
+					host = this->data[PROXY_SOCKS_HOST];
+					port = this->data[PROXY_SOCKS_PORT];
+				}
 			}
 
-			// If http(s)/ftp proxy is not set, try socks
-			if (host == "" || p == 0)
-			{
-				host = this->data["/system/proxy/socks_host"];
-				port = this->data["/system/proxy/socks_port"];
-				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
-			}
 
 			// If host and port were found, build config url
-			if (host != "" && p != 0) {
+			if (host != "" && get_port(port) != 0) {
 				string tmp = type + "://";
 				if (auth)
 					tmp += username + ":" + password + "@";
@@ -196,13 +237,13 @@ public:
 	}
 
 	string get_ignore(url) {
-		return this->data["/system/http_proxy/ignore_hosts"];
+		return this->data[PROXY_IGNORE_HOSTS];
 	}
 
 	bool set_creds(url /*proxy*/, string username, string password) {
-		string auth = "/system/http_proxy/use_authentication\ttrue\n";
-		string user = string("/system/http_proxy/authentication_user\t") + username + "\n";
-		string pass = string("/system/http_proxy/authentication_password\t") + password + "\n";
+		string auth = PROXY_USE_AUTHENTICATION "\ttrue\n";
+		string user = string(PROXY_AUTH_USER "t") + username + "\n";
+		string pass = string(PROXY_AUTH_PASSWORD "\t") + password + "\n";
 
 		return (fwrite(auth.c_str(), 1, auth.size(), this->write) == auth.size() &&
 			fwrite(user.c_str(), 1, user.size(), this->write) == user.size() &&
