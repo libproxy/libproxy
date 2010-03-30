@@ -1,7 +1,7 @@
 find_package(Perl)
 include (FindPerlLibs)
 
-if(PERL_FOUND)
+if(PERL_FOUND AND PERLLIBS_FOUND)
 
   # Some distributions install perl packages in vendor when shipped with the distro.
   # Let's make their lifes easier by offering an install flag for this usecase.
