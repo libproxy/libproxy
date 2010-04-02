@@ -84,12 +84,10 @@ static bool protocol_url(CFDictionaryRef settings, string protocol, string& conf
 		return false;
 
 	stringstream ss;
-	if (protocol == "HTTP" || protocol == "HTTPS" || protocol == "FTP")
+	if (protocol == "HTTP" || protocol == "HTTPS" || protocol == "FTP" || protocol == "Gopher")
 		ss << "http://";
-	else if (protocol == "Gopher")
-		return false; //ss << "gopher://"; // Is this correct?
 	else if (protocol == "RTSP")
-		return false; //ss << "rtsp://";   // Is this correct?
+		ss << "rtsp://";
 	else if (protocol == "SOCKS")
 		ss << "socks://";
 	else
