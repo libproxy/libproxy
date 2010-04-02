@@ -214,26 +214,18 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		config = *i;
 
 		// Try to get the confurl
-		try { confurl = (config)->get_config(*realurl); }
-		catch (runtime_error e) { goto invalid_config; }
-
-		// Validate the input
-		if (!(confurl.get_scheme() == "http" ||
-			  confurl.get_scheme() == "socks" ||
-			  confurl.get_scheme().substr(0, 4) == "pac+" ||
-			  confurl.get_scheme() == "wpad" ||
-			  confurl.get_scheme() == "direct"))
-			goto invalid_config;
-
-		config->set_valid(true);
-		confign = config->get_ignore(*realurl);
-		break;
-
-		invalid_config:
+		try {
+			confurl = config->get_config(*realurl);
+			confign = config->get_ignore(*realurl);
+			config->set_valid(true);
+			break;
+		}
+		catch (runtime_error e) {
 			confurl = "direct://";
 			confign = "";
-			(config)->set_valid(false);
+			config->set_valid(false);
 			config = NULL;
+		}
 	}
 	if (debug) {
 		if (config)
@@ -356,8 +348,8 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		response = format_pac_response(pacresp);
 	}
 
-	/* If we have a manual config (http://..., socks://...) */
-	else if (confurl.get_scheme() == "http" || confurl.get_scheme() == "socks")
+	/* If we have a manual config (http://..., socks://..., etc.) */
+	else
 	{
 		this->wpad = false;
 		if (this->pac)    { delete this->pac;    this->pac = NULL; }
