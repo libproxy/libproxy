@@ -211,12 +211,17 @@ public:
 						port = this->data[PROXY_HTTP_PORT];
 				}
 				else if (dest.get_scheme() == "https") {
-						type = "http"; /* We merge HTTP and HTTPS */
+						// It is expected that the configured server is an
+						// HTTP server that support CONNECT method.
+						type = "http";
 						host = this->data[PROXY_SECURE_HOST];
 						port = this->data[PROXY_SECURE_PORT];
 				}
 				else if (dest.get_scheme() == "ftp") {
-						type = "ftp";
+						// It is expected that the configured server is an
+						// HTTP server that handles proxying FTP URLs 
+						// (e.g. request with header "Host: ftp://ftp.host.org")
+						type = "http";
 						host = this->data[PROXY_FTP_HOST];
 						port = this->data[PROXY_FTP_PORT];
 				}
