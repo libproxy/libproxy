@@ -1,7 +1,7 @@
 #
-# spec file for package libproxy (Version 0.3.0)
+# spec file for package libproxy (Version 0.4.0)
 #
-# Copyright (c) 2009 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2010 SUSE LINUX Products GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -18,6 +18,9 @@
 # norootforbuild
 
 %define         build_core_not_modules 1
+%if 0%{suse_version} > 1120
+%define xulrunner_ver 192
+%else
 %if 0%{suse_version} > 1110
 %define xulrunner_ver 191
 %else
@@ -27,6 +30,7 @@
 %define xulrunner_ver 181
 %endif
 %endif
+%endif
 Url:            http://code.google.com/p/libproxy/
 %define _name   libproxy
 
@@ -34,23 +38,30 @@ Name:           libproxy
 Group:          System/Libraries
 Summary:        Libproxy provides consistent proxy configuration to applications
 Version:        @VERSION@
-Release:        1
+Release:        4
 Source:         http://libproxy.googlecode.com/files/%{_name}-%{version}.tar.bz2
-License:        LGPL v2.1 or later
+Source99:       baselibs.conf
+License:        LGPLv2.1+
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  cmake
+BuildRequires:  gcc-c++
 BuildRequires:  pkg-config
-BuildRequires:  python-devel
+BuildRequires:  zlib-devel
 %if !%build_core_not_modules
 BuildRequires:  dbus-1-devel
 BuildRequires:  gconf2-devel
 # For directory ownership, but also because we want to rebuild the modules if
 # the library changed
-BuildRequires:  libproxy0
+BuildRequires:  libproxy1
 BuildRequires:  libwebkit-devel
 BuildRequires:  mozilla-xulrunner%{xulrunner_ver}-devel
 BuildRequires:  NetworkManager-devel
-BuildRequires:  xorg-x11-libXmu-devel
+BuildRequires:  libkde4-devel
+BuildRequires:  libqt4-devel
+%else
+BuildRequires:  python-devel
 %endif
+
 %if %suse_version <= 1110
 %define python_sitelib %{py_sitedir}
 %endif
@@ -72,10 +83,10 @@ libproxy offers the following features: * extremely small core
 %if %build_core_not_modules
 
 %package tools
-License:        GPL v2 or later ; LGPL v2.1 or later
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        A simple application using libproxy
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
+Requires:       libproxy1 = %{version}
 
 %description tools
 A simple application that will use libproxy to give the results you can
@@ -83,11 +94,11 @@ expect from other applications. It can be used to debug what would
 happen in various cases.
 
 
-%package devel 
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package devel
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy provides consistent proxy configuration to applications - Development Files
 Group:          Development/Libraries/C and C++
-Requires:       libproxy0 = %{version}
+Requires:       libproxy1 = %{version}
 
 %description devel
 libproxy offers the following features: * extremely small core
@@ -103,12 +114,12 @@ libproxy offers the following features: * extremely small core
 * a standard way of dealing with proxy settings across all scenarios
 
 
-%package -n libproxy0          
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy provides consistent proxy configuration to applications
 Group:          System/Libraries
 
-%description -n libproxy0
+%description -n libproxy1
 libproxy offers the following features: * extremely small core
    footprint (< 35K)
 
@@ -121,12 +132,23 @@ libproxy offers the following features: * extremely small core
 
 * a standard way of dealing with proxy settings across all scenarios
 
+%package -n libmodman0_0_0
+License:        GPLv2+ ; LGPLv2.1+
+Summary:        Libproxy's Module Management Library
+Group:          System/Libraries
+
+%description -n libmodman0_0_0
+A module management library taking care of loading / unload modules
+including heuristics in detecting which bindings might already
+be used by an application and favouring this one.
+
 
 %package -n python-libproxy
-License:        GPL v2 or later ; LGPL v2.1 or later
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Python bindings for libproxy
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
+BuildArch:      noarch
+Requires:       libproxy1 = %{version}
 %py_requires
 
 %description -n python-libproxy
@@ -143,11 +165,32 @@ libproxy offers the following features: * extremely small core
 * a standard way of dealing with proxy settings across all scenarios
 
 
+%package -n perl-Net-Libproxy
+License:        GPLv2+ ; LGPLv2.1+
+Summary:        Perl bindings for libproxy
+Group:          Development/Libraries/Perl
+Requires:       libproxy1 = %{version}
+Requires:       perl = %{perl_version}%py_requires
+
+%description -n perl-Net-Libproxy
+libproxy offers the following features: * extremely small core
+   footprint (< 35K)
+
+* no external dependencies within libproxy core (libproxy modules
+   may have dependencies)
+
+* only 3 functions in the stable external API
+
+* dynamic adjustment to changing network topology
+
+* a standard way of dealing with proxy settings across all scenarios
+
+
 %package -n libproxy-sharp
-License:        GPL v2 or later ; LGPL v2.1 or later
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        .Net bindings for libproxy
 Group:          Development/Languages/Mono
-Requires:       libproxy0 = %{version}
+Requires:       libproxy1 = %{version}
 
 %description -n libproxy-sharp
 libproxy offers the following features: * extremely small core
@@ -165,228 +208,189 @@ libproxy offers the following features: * extremely small core
 
 %else
 
-%package -n libproxy0-config-gnome
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1-config-gnome
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy module for GNOME configuration
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Recommends:     libproxy0-pacrunner = %{version}
-Recommends:     libproxy0-wpad-dns = %{version}
-Supplements:    packageand(libproxy0:gconf2)
+Requires:       libproxy1 = %{version}
+Recommends:     libproxy1-pacrunner = %{version}
+Recommends:     libproxy1-wpad-dns = %{version}
+Supplements:    packageand(libproxy1:gconf2)
 Provides:       libproxy-gnome = %{version}
 Obsoletes:      libproxy-gnome < %{version}
-Provides:       libproxy0-gnome = %{version}
-Obsoletes:      libproxy0-gnome < %{version}
 
-
-%description -n libproxy0-config-gnome
+%description -n libproxy1-config-gnome
 A module to extend libproxy with capabilities to query GNOME about
 proxy settings.
 
 
-%package -n libproxy0-config-kde
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1-config-kde4
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy module for KDE configuration
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Recommends:     libproxy0-pacrunner = %{version}
-Recommends:     libproxy0-wpad-dns = %{version}
-Supplements:    packageand(libproxy0:libkde4)
+Requires:       libproxy1 = %{version}
+Recommends:     libproxy1-pacrunner = %{version}
+Recommends:     libproxy1-wpad-dns = %{version}
+Supplements:    packageand(libproxy1:libkde4)
 Provides:       libproxy-kde = %{version}
 Obsoletes:      libproxy-kde < %{version}
-Provides:       libproxy0-kde = %{version}
-Obsoletes:      libproxy0-kde < %{version}
 
-%description -n libproxy0-config-kde
-A module to extend libproxy with capabilities to query KDE about proxy
+%description -n libproxy1-config-kde4
+A module to extend libproxy with capabilities to query KDE4 about proxy
 settings.
 
 
-%package -n libproxy0-pacrunner-mozjs
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1-pacrunner-mozjs
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy module to support wpad/pac parsing via Mozilla JavaScript Engine
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Supplements:    packageand(libproxy0:mozilla-xulrunner%{xulrunner_ver})
+Requires:       libproxy1 = %{version}
+Supplements:    packageand(libproxy1:mozilla-xulrunner%{xulrunner_ver})
 # A virtual symbol to identify that this is a pacrunner.
-Provides:       libproxy0-pacrunner = %{version}
-Provides:       libproxy-mozjs = %{version}
-Obsoletes:      libproxy-mozjs < %{version}
-Provides:       libproxy0-mozjs = %{version}
-Obsoletes:      libproxy0-mozjs < %{version}
+Provides:       libproxy1-pacrunner = %{version}
 
-%description -n libproxy0-pacrunner-mozjs
+%description -n libproxy1-pacrunner-mozjs
 A module to extend libproxy with capabilities to pass addresses to a
 WPAD/PAC script and have it find the correct proxy.
 
 
-%package -n libproxy0-pacrunner-webkit
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1-pacrunner-webkit
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy module to support WPAD/PAC parsing via WebKit JavaScript Engine
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Supplements:    packageand(libproxy0:libwebkit-1)
-Provides:       libproxy0-pacrunner = %{version}
-Provides:       libproxy-webkit = %{version}
-Obsoletes:      libproxy-webkit < %{version}
-Provides:       libproxy0-webkit = %{version}
-Obsoletes:      libproxy0-webkit < %{version}
+Requires:       libproxy1 = %{version}
+Supplements:    packageand(libproxy1:libwebkit-1)
+# A virtual symbol to identify that this is a pacrunner.
+Provides:       libproxy1-pacrunner = %{version}
 
-%description -n libproxy0-pacrunner-webkit
+%description -n libproxy1-pacrunner-webkit
 A module to extend libproxy with capabilities to pass addresses to a
 WPAD/PAC script and have it find the correct proxy.
 
 
-%package -n libproxy0-networkmanager
-License:        GPL v2 or later ; LGPL v2.1 or later
+%package -n libproxy1-networkmanager
+License:        GPLv2+ ; LGPLv2.1+
 Summary:        Libproxy module for NetworkManager configuration
 Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Supplements:    packageand(libproxy0:NetworkManager)
-Provides:       libproxy-networkmanager = %{version}
-Obsoletes:      libproxy-networkmanager < %{version}
+Requires:       libproxy1 = %{version}
+Supplements:    packageand(libproxy1:NetworkManager)
 
-%description -n libproxy0-networkmanager
+%description -n libproxy1-networkmanager
 A module to extend libproxy with capabilities to query NetworkManager
 about network configuration changes.
-
-
-%package -n libproxy0-config-wpad
-License:        GPL v2 or later ; LGPL v2.1 or later
-Summary:        Libproxy module for WPAD autofallback
-Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Requires:       libproxy0-wpad-dns = %{version}
-
-%description -n libproxy0-config-wpad
-A module to extend libproxy with capabilities to query wpad://
-in case no other module returns valid configuration.
-
-This might not be wanted in tight security environments.
-
-
-%package -n libproxy0-wpad-dns
-License:        GPL v2 or later ; LGPL v2.1 or later
-Summary:        Libproxy module for WPAD Autofallback
-Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Requires:       libproxy0-pacrunner = %{version}
-Recommends:     libproxy-wpad-dns-devolution = %{version}
-
-%description -n libproxy0-wpad-dns
-This modules performs the DNS queries needed to find
-the wpad:// configuration.
-
-The module is needed to exist whenever automatic proxy
-configuration is used.
-
-
-%package -n libproxy0-wpad-dns-devolution
-License:        GPL v2 or later ; LGPL v2.1 or later
-Summary:        Libproxy module for WPAD Autofallback
-Group:          System/Libraries
-Requires:       libproxy0 = %{version}
-Requires:       libproxy0-pacrunner = %{version}
-Requires:       libproxy0-wpad-dns = %{version}
-
-%description -n libproxy0-wpad-dns-devolution
-A module to extend wpad:// capabilities of libproxy with DNS
-devolution. The module is written with care and it will never
-fall back to the .TLD domains.
-
 
 %endif
 
 %prep
 %setup -q -n %{_name}-%{version}
+mkdir build
 
 %build
-%configure \
-%if %build_core_not_modules
-  --without-wpad \
-%endif
-  --with-python \
-  --disable-static
-%{__make} %{?jobs:-j%jobs}
+cd build
+cmake \
+  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+  -Dlibdir=%{_libdir} \
+  -Dlibexecdir=%{_libexecdir}/libproxy \
+  -Ddatadir=%{_datadir} \
+  -Dmoduledir=%{_libdir}/libproxy/%{version}/modules \
+  -DWITH_VALA=yes \
+  -DPERL_VENDORINSTALL=yes \
+..
+%{__make} %{?jobs:-j%jobs} VERBOSE=1
 
 %install
+cd build
+%makeinstall
 %if %build_core_not_modules
-%makeinstall
-rm %{buildroot}%{_libdir}/*.la
+# Build the basic directory structure for the modules so we can
+# own the directories in the main library package
+install -d %{buildroot}%{_libexecdir}/libproxy
+install -d %{buildroot}%{_libdir}/%{name}/%{version}/modules
 %else
-cd src/lib
-%makeinstall
-cd ../modules
-%makeinstall
 # remove files that are part of the core
 rm %{buildroot}%{_includedir}/*.h
-rm %{buildroot}%{_libdir}/libproxy.*
-rm %{buildroot}%{_libdir}/libproxy/%{version}/modules/config_envvar.so
-rm %{buildroot}%{_libdir}/libproxy/%{version}/modules/config_file.so
-rm %{buildroot}%{_libdir}/libproxy/%{version}/modules/config_direct.so
-rm %{buildroot}%{_libdir}/libproxy/%{version}/modules/ignore_*.so
+# Delete all files that exist in the base libproxy package
+rm %{buildroot}%{_bindir}/proxy
+rm %{buildroot}%{_libdir}/libproxy.so*
+rm %{buildroot}%{_libdir}/libmodman.so*
+rm %{buildroot}%{python_sitelib}/*.py
+rm %{buildroot}%{_libdir}/pkgconfig/libproxy-1.0.pc
+rm %{buildroot}%{_datadir}/cmake/Modules/Findlibproxy.cmake
+rm %{buildroot}%{_datadir}/vala/vapi/libproxy-1.0.vapi
+rm %{buildroot}%{perl_vendorarch}/Net/Libproxy.pm
+rm %{buildroot}%{perl_vendorarch}/auto/Net/Libproxy/Libproxy.so
 %endif
 %if %build_core_not_modules
 
-%post -n libproxy0 -p /sbin/ldconfig
+%post -n libproxy1 -p /sbin/ldconfig
 
-%postun -n libproxy0 -p /sbin/ldconfig
+%post -n libmodman0_0_0 -p /sbin/ldconfig
+
+%postun -n libproxy1 -p /sbin/ldconfig
+
+%postun -n libmodman0_0_0 -p /sbin/ldconfig
 
 %files tools
 %defattr(-, root, root)
 %{_bindir}/proxy
 
-%files -n libproxy0
+%files -n libproxy1
 %defattr(-, root, root)
-%{_libdir}/*.so.*
+%{_libdir}/libproxy.so.*
+%dir %{_libexecdir}/libproxy
 %dir %{_libdir}/libproxy
 %dir %{_libdir}/libproxy/%{version}
 %dir %{_libdir}/libproxy/%{version}/modules
-%{_libdir}/libproxy/%{version}/modules/config_envvar.so
-%{_libdir}/libproxy/%{version}/modules/config_file.so
-%{_libdir}/libproxy/%{version}/modules/config_direct.so
-%{_libdir}/libproxy/%{version}/modules/ignore_*.so
+#%{_libdir}/libproxy/%{version}/modules/config_envvar.so
+#%{_libdir}/libproxy/%{version}/modules/config_file.so
+#%{_libdir}/libproxy/%{version}/modules/config_direct.so
+#%{_libdir}/libproxy/%{version}/modules/ignore_*.so
+
+%files -n libmodman0_0_0
+%defattr(-, root, root)
+%{_libdir}/libmodman.so.*
 
 %files devel
 %defattr(-, root, root)
 %{_includedir}/*.h
 %{_libdir}/*.so
-%{_libdir}/pkgconfig/*.pc
+%{_libdir}/pkgconfig/libproxy-1.0.pc
+%{_datadir}/cmake/Modules/Findlibproxy.cmake
+%dir %{_datadir}/vala
+%dir %{_datadir}/vala/vapi
+%{_datadir}/vala/vapi/libproxy-1.0.vapi
 
 %files -n python-libproxy
 %defattr(-, root, root)
 %{python_sitelib}/*.py
+
+%files -n perl-Net-Libproxy
+%defattr(-,root,root)
+%dir %{perl_vendorarch}/Net
+%dir %{perl_vendorarch}/auto/Net
+%dir %{perl_vendorarch}/auto/Net/Libproxy
+%{perl_vendorarch}/Net/Libproxy.pm
+%{perl_vendorarch}/auto/Net/Libproxy/Libproxy.so
 %else
 
-%files -n libproxy0-config-kde
+%files -n libproxy1-config-kde4
 %defattr(-, root, root)
-%{_libdir}/libproxy/%{version}/modules/config_kde.so
+%{_libdir}/libproxy/%{version}/modules/config_kde4.so
 
-%files -n libproxy0-config-gnome
+%files -n libproxy1-config-gnome
 %defattr(-, root, root)
 %{_libdir}/libproxy/%{version}/modules/config_gnome.so
+%{_libexecdir}/libproxy/pxgconf
 
-%files -n libproxy0-config-wpad
-%defattr(-, root, root)
-%{_libdir}/libproxy/%{version}/modules/config_wpad.so
-
-%files -n libproxy0-wpad-dns
-%defattr(-, root, root)
-%{_libdir}/libproxy/%{version}/modules/wpad_dns.so
-
-%files -n libproxy0-wpad-dns-devolution
-%defattr(-, root, root)
-%{_libdir}/libproxy/%{version}/modules/wpad_dnsdevolution.so
-
-%files -n libproxy0-networkmanager
+%files -n libproxy1-networkmanager
 %defattr(-, root, root)
 %{_libdir}/libproxy/%{version}/modules/network_networkmanager.so
 
-%files -n libproxy0-pacrunner-webkit
+%files -n libproxy1-pacrunner-webkit
 %defattr(-, root, root)
 %{_libdir}/libproxy/%{version}/modules/pacrunner_webkit.so
 
-%files -n libproxy0-pacrunner-mozjs
+%files -n libproxy1-pacrunner-mozjs
 %defattr(-, root, root)
 %{_libdir}/libproxy/%{version}/modules/pacrunner_mozjs.so
 %endif
