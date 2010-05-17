@@ -168,9 +168,16 @@ int main(int argc, char **argv) {
 
 	// Add server notifications for all keys
 	for (int i=1 ; i < argc ; i++) {
+		GConfValue *value;
 		gconf_client_add_dir(client, argv[i], GCONF_CLIENT_PRELOAD_NONE, NULL);
 		gconf_client_notify_add(client, argv[i], on_value_change, NULL, NULL, NULL);
-		gconf_client_notify(client, argv[i]);
+		value = gconf_client_get(client, argv[i], NULL);
+		if (value) {
+			gconf_value_free (value);
+			gconf_client_notify(client, argv[i]);
+		} else {
+			printf("%s\n", argv[i]);
+		}
 	}
 
 	g_main_loop_run(loop);
