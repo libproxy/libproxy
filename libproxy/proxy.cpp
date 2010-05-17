@@ -239,12 +239,15 @@ vector<string> proxy_factory::get_proxies(string url_) {
 	ignores = this->mm.get_extensions<ignore_extension>();
 	invign  = confign[0] == '-';
 	if (invign) confign = confign.substr(1);
-	for (size_t i=0 ; i < confign.size() && i != string::npos && !ignored; i=confign.substr(i).find(',')) {
-		while (i < confign.size() && confign[i] == ',') i++;
-
-		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
-			if ((*it)->ignore(*realurl, confign.substr(i, confign.find(','))))
-				ignored = true;
+	for (size_t i=0 ; i < confign.size() && !ignored;) {
+		size_t next = confign.find(',', i);
+		if (next == string::npos) next = confign.length();
+		if (next > (i+1)) {
+			string ignorestr = confign.substr (i, next - i);
+			for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
+				ignored = ((*it)->ignore(*realurl, ignorestr));
+		}
+		i = next+1;
 	}
 	if (!ignored && invign) goto do_return;
 	if (ignored && !invign) goto do_return;
