@@ -90,6 +90,8 @@ url::url(const string url) throw(parse_error, logic_error) {
 	char *host = new char[url.size()];
 	char *path = new char[url.size()];
 	bool port_specified = false;
+	bool auth_specified = false;
+	bool pass_specified = false;
 	this->ips = NULL;
 
 	// Break apart our url into 4 sections: scheme, auth (user/pass), host and path
@@ -117,8 +119,10 @@ url::url(const string url) throw(parse_error, logic_error) {
 
 	// Parse auth further
 	if (*auth) {
+		auth_specified = true;
 		this->user = auth;
 		if (string(auth).find(":") != string:: npos) {
+			pass_specified = true;
 			this->pass = this->user.substr(this->user.find(":")+1);
 			this->user = this->user.substr(0, this->user.find(":"));
 		}
@@ -152,8 +156,11 @@ url::url(const string url) throw(parse_error, logic_error) {
 	delete[] path;
 
 	// Verify by re-assembly
-	if (this->user != "" && this->pass != "")
-		this->orig = this->scheme + "://" + this->user + ":" + this->pass + "@" + this->host;
+	if (auth_specified)
+		if (pass_specified)
+			this->orig = this->scheme + "://" + this->user + ":" + this->pass + "@" + this->host;
+		else
+			this->orig = this->scheme + "://" + this->user + "@" + this->host;
 	else
 		this->orig = this->scheme + "://" + this->host;
 	if (port_specified)
