@@ -2,6 +2,9 @@ New in version 0.4.1
 ===============================
 * Perl bindings have been integrated into the CMake Build System
 * Vala bindings are installed if -DWITH_VALA=yes is passed to cmake
+* All extensions can be disabled using WITH_*=OFF cmake options
+* socks5:// and socks4:// can now be returned
+* Many bugfixes
 
 New in version 0.4.0
 ===============================
