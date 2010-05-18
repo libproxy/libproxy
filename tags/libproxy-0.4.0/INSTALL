@@ -1,0 +1,5 @@
+1. cmake ./
+2. make
+3. make install
+
+Or something like that...

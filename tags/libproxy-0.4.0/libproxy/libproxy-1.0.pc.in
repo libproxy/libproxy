@@ -1,0 +1,9 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libproxy
+Description: Proxy Configuration Library
+Version: @VERSION@
+Libs: -L${libdir} -lproxy
+Cflags: -I${includedir} 
