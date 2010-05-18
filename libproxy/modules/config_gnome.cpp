@@ -23,44 +23,23 @@
 #include <errno.h>        // For errno stuff
 #include <unistd.h>       // For pipe(), close(), vfork(), dup(), execl(), _exit()
 #include <signal.h>       // For kill()
+#include "xhasclient.cpp" // For xhasclient()
 
 #include "../extension_config.hpp"
 using namespace libproxy;
 
 #define BUFFERSIZE 10240
 
-#define PROXY_MODE					"/system/proxy/mode"
-#define PROXY_USE_AUTHENTICATION	"/system/http_proxy/use_authentication"
-#define PROXY_AUTH_PASSWORD			"/system/http_proxy/authentication_password"
-#define PROXY_AUTH_USER				"/system/http_proxy/authentication_user"
-#define PROXY_AUTOCONFIG_URL		"/system/proxy/autoconfig_url"
-#define PROXY_IGNORE_HOSTS			"/system/http_proxy/ignore_hosts"
-#define PROXY_HTTP_HOST				"/system/http_proxy/host"
-#define PROXY_HTTP_PORT				"/system/http_proxy/port"
-#define PROXY_FTP_HOST				"/system/proxy/ftp_host"
-#define PROXY_FTP_PORT				"/system/proxy/ftp_port"
-#define PROXY_SECURE_HOST			"/system/proxy/secure_host"
-#define PROXY_SECURE_PORT			"/system/proxy/secure_port"
-#define PROXY_SOCKS_HOST			"/system/proxy/socks_host"
-#define PROXY_SOCKS_PORT			"/system/proxy/socks_port"
-#define PROXY_SAME_FOR_ALL          "/system/http_proxy/use_same_proxy"
-
 static const char *all_keys[] = {
-	PROXY_MODE,
-	PROXY_USE_AUTHENTICATION,
-	PROXY_AUTH_PASSWORD,
-	PROXY_AUTH_USER,
-	PROXY_AUTOCONFIG_URL,
-	PROXY_IGNORE_HOSTS,
-	PROXY_HTTP_HOST,
-	PROXY_HTTP_PORT,
-	PROXY_FTP_HOST,
-	PROXY_FTP_PORT,
-	PROXY_SECURE_HOST,
-	PROXY_SECURE_PORT,
-	PROXY_SOCKS_HOST,
-	PROXY_SOCKS_PORT,
-	PROXY_SAME_FOR_ALL,
+	"/system/proxy/mode",        "/system/proxy/autoconfig_url",
+	"/system/http_proxy/host",   "/system/http_proxy/port",
+	"/system/proxy/secure_host", "/system/proxy/secure_port",
+	"/system/proxy/ftp_host",    "/system/proxy/ftp_port",
+	"/system/proxy/socks_host",  "/system/proxy/socks_port",
+	"/system/http_proxy/ignore_hosts",
+	"/system/http_proxy/use_authentication",
+	"/system/http_proxy/authentication_user",
+	"/system/http_proxy/authentication_password",
 	NULL
 };
 
@@ -94,10 +73,8 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 		close(STDIN_FILENO);  // Close stdin
 		close(STDOUT_FILENO); // Close stdout
 
-		// Dup the read end of the write pipe to stdin
-		// Dup the write end of the read pipe to stdout
-		if (dup2(wpipe[0], STDIN_FILENO)  != STDIN_FILENO)  _exit(1);
-		if (dup2(rpipe[1], STDOUT_FILENO) != STDOUT_FILENO) _exit(2);
+		dup(wpipe[0]); // Dup the read end of the write pipe to stdin
+		dup(rpipe[1]); // Dup the write end of the read pipe to stdout
 
 		// Close unneeded fds
 		close(rpipe[0]);
@@ -123,48 +100,29 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 	}
 }
 
-static inline uint16_t get_port(string &port)
-{
-	uint16_t retval;
-
-	if (sscanf(port.c_str(), "%hu", &retval) != 1)
-		retval = 0;
-
-	return retval;	
-}
-
 class gnome_config_extension : public config_extension {
 public:
 	gnome_config_extension() {
 		// Build the command
 		int count;
-		struct stat st;
-		string cmd = LIBEXECDIR "/pxgconf";
-		const char *pxgconf = getenv("PX_GCONF");
-
-		if (pxgconf)
-			cmd = string (pxgconf);
-
-		if (stat(cmd.c_str(), &st))
-			throw runtime_error ("Unable to open gconf helper!");
-
+		string cmd = LIBEXECDIR "pxgconf";
 		for (count=0 ; all_keys[count] ; count++)
 			cmd += string(" ", 1) + all_keys[count];
 
 		// Get our pipes
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
-			throw runtime_error("Unable to run gconf helper!");
-
-		// Read in our initial data
-		this->read_data(count);
+			throw runtime_error("Unable to open gconf helper!");
 
 		// Set the read pipe to non-blocking
-		if (fcntl(fileno(this->read), F_SETFL, O_NONBLOCK) == -1) {
+		if (fcntl(fileno(this->read), F_SETFL, FNONBLOCK) == -1) {
 			fclose(this->read);
 			fclose(this->write);
 			kill(this->pid, SIGTERM);
 			throw runtime_error("Unable to set pipe to non-blocking!");
 		}
+
+		// Read in the first print-out of all our keys
+		this->update_data(count);
 	}
 
 	~gnome_config_extension() {
@@ -175,69 +133,50 @@ public:
 
 	url get_config(url dest) throw (runtime_error) {
 		// Check for changes in the config
-		fd_set rfds;
-		struct timeval timeout = { 0, 0 };
-		FD_ZERO(&rfds);
-		FD_SET(fileno(this->read), &rfds);
-		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
-			this->read_data();
+		this->update_data();
 
 		// Mode is wpad:// or pac+http://...
-		if (this->data[PROXY_MODE] == "auto") {
-			string pac = this->data[PROXY_AUTOCONFIG_URL];
+		if (this->data["/system/proxy/mode"] == "auto") {
+			string pac = this->data["/system/proxy/autoconfig_url"];
 			return url::is_valid(pac) ? url(string("pac+") + pac) : url("wpad://");
 		}
 
 		// Mode is http://... or socks://...
-		else if (this->data[PROXY_MODE] == "manual") {
-			string type, host, port;
-			bool       auth = this->data[PROXY_USE_AUTHENTICATION] == "true";
-			string username = this->data[PROXY_AUTH_USER];
-			string password = this->data[PROXY_AUTH_PASSWORD];
-			bool same_proxy = this->data[PROXY_SAME_FOR_ALL] == "true"; 
+		else if (this->data["/system/proxy/mode"] == "manual") {
+			string type = "http", host, port;
+			bool   auth     = this->data["/system/http_proxy/use_authentication"] == "true";
+			string username = this->data["/system/http_proxy/authentication_user"];
+			string password = this->data["/system/http_proxy/authentication_password"];
+			uint16_t p = 0;
 
-			// If socks is set use it (except when same_proxy is set)
-			if (!same_proxy) {
-				type = "socks";
-				host = this->data[PROXY_SOCKS_HOST];
-				port = this->data[PROXY_SOCKS_PORT];
+			// Get the per-scheme proxy settings
+			if (dest.get_scheme() == "https") {
+				host = this->data["/system/proxy/secure_host"];
+				port = this->data["/system/proxy/secure_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
 			}
-			
-			if (host == "" || get_port(port) == 0) {
-				// Get the per-scheme proxy settings
-				if (dest.get_scheme() == "http") {
-						type = "http";
-						host = this->data[PROXY_HTTP_HOST];
-						port = this->data[PROXY_HTTP_PORT];
-				}
-				else if (dest.get_scheme() == "https") {
-						// It is expected that the configured server is an
-						// HTTP server that support CONNECT method.
-						type = "http";
-						host = this->data[PROXY_SECURE_HOST];
-						port = this->data[PROXY_SECURE_PORT];
-				}
-				else if (dest.get_scheme() == "ftp") {
-						// It is expected that the configured server is an
-						// HTTP server that handles proxying FTP URLs 
-						// (e.g. request with header "Host: ftp://ftp.host.org")
-						type = "http";
-						host = this->data[PROXY_FTP_HOST];
-						port = this->data[PROXY_FTP_PORT];
-				}
-
-				// If no proxy is set and we have the same_proxy option
-				// enabled try socks at the end only.
-				if (same_proxy && (host == "" || get_port(port) == 0)) {
-					type = "socks";
-					host = this->data[PROXY_SOCKS_HOST];
-					port = this->data[PROXY_SOCKS_PORT];
-				}
+			else if (dest.get_scheme() == "ftp") {
+				host = this->data["/system/proxy/ftp_host"];
+				port = this->data["/system/proxy/ftp_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			}
+			if (host == "" || p == 0)
+			{
+				host = this->data["/system/http_proxy/host"];
+				port = this->data["/system/http_proxy/port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
 			}
 
+			// If http(s)/ftp proxy is not set, try socks
+			if (host == "" || p == 0)
+			{
+				host = this->data["/system/proxy/socks_host"];
+				port = this->data["/system/proxy/socks_port"];
+				if (sscanf(port.c_str(), "%hu", &p) != 1) p = 0;
+			}
 
 			// If host and port were found, build config url
-			if (host != "" && get_port(port) != 0) {
+			if (host != "" && p != 0) {
 				string tmp = type + "://";
 				if (auth)
 					tmp += username + ":" + password + "@";
@@ -251,13 +190,13 @@ public:
 	}
 
 	string get_ignore(url) {
-		return this->data[PROXY_IGNORE_HOSTS];
+		return this->data["/system/http_proxy/ignore_hosts"];
 	}
 
 	bool set_creds(url /*proxy*/, string username, string password) {
-		string auth = PROXY_USE_AUTHENTICATION "\ttrue\n";
-		string user = string(PROXY_AUTH_USER "\t") + username + "\n";
-		string pass = string(PROXY_AUTH_PASSWORD "\t") + password + "\n";
+		string auth = "/system/http_proxy/use_authentication\ttrue\n";
+		string user = string("/system/http_proxy/authentication_user\t") + username + "\n";
+		string pass = string("/system/http_proxy/authentication_password\t") + password + "\n";
 
 		return (fwrite(auth.c_str(), 1, auth.size(), this->write) == auth.size() &&
 			fwrite(user.c_str(), 1, user.size(), this->write) == user.size() &&
@@ -270,20 +209,40 @@ private:
 	pid_t pid;
 	map<string, string> data;
 
-	bool read_data(int num=-1) {
-		if (num == 0)    return true;
-		if (!this->read) return false; // We need the pipe to be open
+	// This method attempts to update data
+	// If called with no arguments, it will check for new data (sleeping for <=10
+	// useconds) and returning true or false depending on if at least one line of
+	// data was found.
+	// However, if req > 0, we will keep checking for new lines (at 10 usec ivals)
+	// until enough lines are found.  This allows us to wait for *all* the initial
+	// values to be read in before we start processing gconf requests.
+	bool update_data(int req=0, int found=0) {
+		// If we have collected the correct number of lines, return true
+		if (req > 0 && found >= req)
+			return true;
 
-		for (char l[BUFFERSIZE] ; num != 0 && fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
+		// We need the pipe to be open
+		if (!this->read) return false;
+
+		fd_set rfds;
+		struct timeval timeout = { 0, 10 }; // select() for 1/1000th of a second
+		FD_ZERO(&rfds);
+		FD_SET(fileno(this->read), &rfds);
+		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) < 1)
+			return req > 0 ? this->update_data(req, found) : false; // If we still haven't met
+			                                                        // our req quota, try again
+
+		bool retval = false;
+		for (char l[BUFFERSIZE] ; fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
 			string line = l;
 			line        = line.substr(0, line.rfind('\n'));
 			string key  = line.substr(0, line.find("\t"));
 			string val  = line.substr(line.find("\t")+1);
 			this->data[key] = val;
-			if (num > 0) num--;
+			retval = ++found >= req;
 		}
 
-		return (num <= 0);
+		return (this->update_data(req, found) || retval);
 	}
 };
 
@@ -301,9 +260,4 @@ static base_extension** gnome_config_extension_init() {
 }
 
 MM_MODULE_INIT(gnome_config_extension, gnome_config_extension_init);
-MM_MODULE_TEST_EZ(gnome_config_extension,
-                     (
-                         getenv("GNOME_DESKTOP_SESSION_ID") ||
-                         (getenv("DESKTOP_SESSION") && string(getenv("DESKTOP_SESSION")) == "gnome")
-                     )
-                 );
+MM_MODULE_TEST_EZ(gnome_config_extension, xhasclient("gnome-session", "gnome-settings-daemon", "gnome-panel", NULL));

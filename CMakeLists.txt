@@ -1,5 +1,5 @@
 ### Required
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(libproxy)
 
 ### Enable packaging
@@ -30,36 +30,33 @@ enable_testing()
 
 # Setup our relative paths
 if(${WIN32})
-  set(rlibdir     .)
+  set(rlibdir .)
   set(rmoduledir  modules/)
   set(rlibexecdir .)
   set(rbindir     .)
   set(rincludedir include/)
-  set(rdatadir    .)
 else()
-  set(rlibdir     lib${LIB_SUFFIX}/)
-  set(rmoduledir  ${rlibdir}${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_VERSION}/modules/)
+  set(rlibdir lib${LIB_SUFFIX}/)
+  set(rmoduledir  ${rlibdir}/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_VERSION}/modules/)
   set(rlibexecdir libexec/)
   set(rbindir     bin/)
   set(rincludedir include/)
-  set(rdatadir    share/)
 endif()
 
 # Setup our full paths
-set(prefix     ${CMAKE_INSTALL_PREFIX}  CACHE PATH "prefix")
-set(libdir     ${prefix}/${rlibdir}     CACHE PATH "libdir")
-set(moduledir  ${prefix}/${rmoduledir}  CACHE PATH "moduledir")
-set(libexecdir ${prefix}/${rlibexecdir} CACHE PATH "libexecdir")
-set(bindir     ${prefix}/${rbindir}     CACHE PATH "bindir")
-set(includedir ${prefix}/${rincludedir} CACHE PATH "includedir")
-set(datadir    ${prefix}/${rdatadir}    CACHE PATH "datadir")
+set(prefix     ${CMAKE_INSTALL_PREFIX})
+set(libdir     ${prefix}/${rlibdir})
+set(moduledir  ${prefix}/${rmoduledir})
+set(libexecdir ${prefix}/${rlibexecdir})
+set(bindir     ${prefix}/${rbindir})
+set(includedir ${prefix}/${rincludedir})
 
 # Add a global compilation stuff
 if (WIN32)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 else()
   add_definitions(-D_POSIX_C_SOURCE=1)
-  set(CMAKE_CXX_FLAGS "-g -Wall -Werror -fvisibility=hidden -Os ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-g -Wall -Werror -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
 endif()
 
 ### Subdirectories

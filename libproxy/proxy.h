@@ -66,29 +66,14 @@ pxProxyFactory *px_proxy_factory_new(void);
  * The format of the returned proxy strings are as follows:
  *   - http://[username:password@]proxy:port
  *   - socks://[username:password@]proxy:port
- *   - socks5://[username:password@]proxy:port
- *   - socks4://[username:password@]proxy:port
- *   - <procotol>://[username:password@]proxy:port
  *   - direct://
  * Please note that the username and password in the above URLs are optional
  * and should be use to authenticate the connection if present.
  *
- * For SOCKS proxies, when the protocol version is specified (socks4:// or
- * sock5://), it is expected that only this version is used. When only
- * socks:// is set, the client MUST try SOCKS version 5 protocol and, on
- * connection failure, fallback to SOCKS version 4.
- *
- * Other proxying protocols may exist. It is expected that the returned
- * configuration scheme shall match the network service name of the
- * proxy protocol or the service name of the protocol being proxied if the
- * previous does not exist. As an example, on Mac OS X you can configure a
- * RTSP streaming proxy. The expected returned configuration would be:
- *   - rtsp://[username:password@]proxy:port
- * 
  * @url The URL we are trying to reach
  * @return A NULL-terminated array of proxy strings to use
  */
-char **px_proxy_factory_get_proxies(pxProxyFactory *self, const char *url);
+char **px_proxy_factory_get_proxies(pxProxyFactory *self, char *url);
 
 /**
  * Frees the pxProxyFactory instance when no longer used.

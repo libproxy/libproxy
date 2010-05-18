@@ -31,6 +31,7 @@
 #include "extension_wpad.hpp"
 
 #ifdef WIN32
+#define setenv(name, value, overwrite) SetEnvironmentVariable(name, value)
 #define strdup _strdup
 #endif
 
@@ -83,8 +84,7 @@ format_pac_response(string response)
 	}
 
 	// Strip whitespace
-	if (response.size() > 0)
-		response = response.substr(response.find_first_not_of(" \t\n"), response.find_last_not_of(" \t\n")+1);
+	response = response.substr(response.find_first_not_of(" \t"), response.find_last_not_of(" \t")+1);
 
 	// Get the method and the server
 	string method = "";
@@ -101,10 +101,6 @@ format_pac_response(string response)
 		retval.insert(retval.begin(), string("http://") + server);
 	else if (istringcmp(method, "socks") && url::is_valid("http://" + server))
 		retval.insert(retval.begin(), string("socks://") + server);
-	else if (istringcmp(method, "socks4") && url::is_valid("http://" + server))
-		retval.insert(retval.begin(), string("socks4://") + server);
-	else if (istringcmp(method, "socks5") && url::is_valid("http://" + server))
-		retval.insert(retval.begin(), string("socks5://") + server);
 	else if (istringcmp(method, "direct"))
 		retval.insert(retval.begin(), string("direct://"));
 
@@ -112,8 +108,6 @@ format_pac_response(string response)
 }
 
 proxy_factory::proxy_factory() {
-	const char *module_dir;
-
 #ifdef WIN32
 	this->mutex = CreateMutex(NULL, false, NULL);
 	WaitForSingleObject(this->mutex, INFINITE);
@@ -140,11 +134,8 @@ proxy_factory::proxy_factory() {
 		this->mm.load_builtin(builtin_modules[i], "libproxy");
 
 	// Load all modules
-	module_dir = getenv("PX_MODULE_PATH");
-	if (!module_dir)
-		module_dir = MODULEDIR;
-	this->mm.load_dir(module_dir);
-	this->mm.load_dir(module_dir, false);
+	this->mm.load_dir(MODULEDIR);
+	this->mm.load_dir(MODULEDIR, false);
 
 #ifdef WIN32
 	ReleaseMutex(this->mutex);
@@ -214,18 +205,26 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		config = *i;
 
 		// Try to get the confurl
-		try {
-			confurl = config->get_config(*realurl);
-			confign = config->get_ignore(*realurl);
-			config->set_valid(true);
-			break;
-		}
-		catch (runtime_error e) {
+		try { confurl = (config)->get_config(*realurl); }
+		catch (runtime_error e) { goto invalid_config; }
+
+		// Validate the input
+		if (!(confurl.get_scheme() == "http" ||
+			  confurl.get_scheme() == "socks" ||
+			  confurl.get_scheme().substr(0, 4) == "pac+" ||
+			  confurl.get_scheme() == "wpad" ||
+			  confurl.get_scheme() == "direct"))
+			goto invalid_config;
+
+		config->set_valid(true);
+		confign = config->get_ignore(*realurl);
+		break;
+
+		invalid_config:
 			confurl = "direct://";
 			confign = "";
-			config->set_valid(false);
+			(config)->set_valid(false);
 			config = NULL;
-		}
 	}
 	if (debug) {
 		if (config)
@@ -239,15 +238,12 @@ vector<string> proxy_factory::get_proxies(string url_) {
 	ignores = this->mm.get_extensions<ignore_extension>();
 	invign  = confign[0] == '-';
 	if (invign) confign = confign.substr(1);
-	for (size_t i=0 ; i < confign.size() && !ignored;) {
-		size_t next = confign.find(',', i);
-		if (next == string::npos) next = confign.length();
-		if (next > (i+1)) {
-			string ignorestr = confign.substr (i, next - i);
-			for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
-				ignored = ((*it)->ignore(*realurl, ignorestr));
-		}
-		i = next+1;
+	for (size_t i=0 ; i < confign.size() && i != string::npos && !ignored; i=confign.substr(i).find(',')) {
+		while (i < confign.size() && confign[i] == ',') i++;
+
+		for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
+			if ((*it)->ignore(*realurl, confign.substr(i, confign.find(','))))
+				ignored = true;
 	}
 	if (!ignored && invign) goto do_return;
 	if (ignored && !invign) goto do_return;
@@ -351,8 +347,8 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		response = format_pac_response(pacresp);
 	}
 
-	/* If we have a manual config (http://..., socks://..., etc.) */
-	else
+	/* If we have a manual config (http://..., socks://...) */
+	else if (confurl.get_scheme() == "http" || confurl.get_scheme() == "socks")
 	{
 		this->wpad = false;
 		if (this->pac)    { delete this->pac;    this->pac = NULL; }
@@ -392,8 +388,7 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 	// Call the main method
 	try {
 		proxies = self->pf.get_proxies(url);
-		retval  = (char**) malloc(sizeof(char*) * (proxies.size() + 1));
-		if (!retval) return NULL;
+		retval  = new char*[proxies.size()+1];
 	} catch (std::exception&) {
 		// Return NULL on any exception
 		return NULL;
@@ -407,7 +402,7 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 		if (retval[i] == NULL) {
 			for (int j=i-1 ; j >= 0 ; j--)
 				free(retval[j]);
-			free(retval);
+			delete retval;
 			return NULL;
 		}
 	}

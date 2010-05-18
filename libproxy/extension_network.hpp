@@ -21,13 +21,12 @@
 #define EXTENSION_NETWORK_HPP_
 
 #include <libmodman/module.hpp>
-#include "config.hpp"
 
 namespace libproxy {
 using namespace libmodman;
 
 // Network module
-class DLL_PUBLIC network_extension : public extension<network_extension> {
+class network_extension : public extension<network_extension> {
 public:
 	virtual bool changed()=0;
 };

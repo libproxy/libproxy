@@ -20,6 +20,7 @@
 #include <KDE/KConfig>
 #include <KDE/KConfigGroup>
 #include <KDE/KGlobal>
+#include "xhasclient.cpp" // For xhasclient(...)
 
 #include "../extension_config.hpp"
 using namespace libproxy;
@@ -99,4 +100,4 @@ private:
 };
 
 MM_MODULE_INIT_EZ(kde_config_extension);
-MM_MODULE_TEST_EZ(kde_config_extension, getenv("KDE_FULL_SESSION"));
+MM_MODULE_TEST_EZ(kde_config_extension, xhasclient("kicker", "klipper", "kwin", "plasma-desktop", NULL));

@@ -100,7 +100,7 @@ static gboolean in(GIOChannel *source, GIOCondition condition, gpointer data) {
 	// Remove the trailing '\n'
 	for (int i=0 ; key && key[i] ; i++)
 		if (key[i] == '\n')
-			key[i] = '\0';
+			key[i] = NULL;
 
 	// If we were successful
 	if (key && st == G_IO_STATUS_NORMAL) {
@@ -108,7 +108,7 @@ static gboolean in(GIOChannel *source, GIOCondition condition, gpointer data) {
 			goto exit;
 
 		val = g_strrstr(key, "\t") + 1;
-		*(val-1) = '\0';
+		*(val-1) = NULL;
 
 		if (!set_key(key, val))
 			goto exit;
@@ -168,16 +168,9 @@ int main(int argc, char **argv) {
 
 	// Add server notifications for all keys
 	for (int i=1 ; i < argc ; i++) {
-		GConfValue *value;
 		gconf_client_add_dir(client, argv[i], GCONF_CLIENT_PRELOAD_NONE, NULL);
 		gconf_client_notify_add(client, argv[i], on_value_change, NULL, NULL, NULL);
-		value = gconf_client_get(client, argv[i], NULL);
-		if (value) {
-			gconf_value_free (value);
-			gconf_client_notify(client, argv[i]);
-		} else {
-			printf("%s\n", argv[i]);
-		}
+		gconf_client_notify(client, argv[i]);
 	}
 
 	g_main_loop_run(loop);

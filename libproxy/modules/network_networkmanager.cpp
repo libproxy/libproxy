@@ -46,7 +46,7 @@ public:
 			{
 				dbus_connection_close(conn);
 				dbus_connection_read_write(conn, 0);
-				for (DBusMessage *msg=NULL ; (msg = dbus_connection_pop_message(conn)) ; dbus_message_unref(msg)) {};
+				for (DBusMessage *msg=NULL ; (msg = dbus_connection_pop_message(conn)) ; dbus_message_unref(msg));
 			}
 
 			// Create a new connections

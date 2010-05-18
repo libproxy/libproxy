@@ -2,8 +2,8 @@ prefix=@prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libproxy-1.0
+Name: libproxy
 Description: Proxy Configuration Library
-Version: @CMAKE_PROJECT_VERSION@
+Version: @VERSION@
 Libs: -L${libdir} -lproxy
 Cflags: -I${includedir} 
