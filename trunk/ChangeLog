@@ -1,3 +1,24 @@
+Tue May 18 10:30:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+	* === Released 0.4.1 ===
+	* Improved cross-platform build
+	* Added Perl and Vala bindings
+	* Fix multiple infinite loop bugs
+	* Fix random crash with Gnome backend
+	* Standardized Gnome backend based on Mozilla and Chrome behavior
+	* Removed dependency to X11 in Gnome backend
+	* Allow disabling features at build time using WITH_* cmake options
+	* Module path can now be altered using PX_MODULE_PATH environment
+	* pxgconf helper location can be altered using PX_GCONF environment
+	* Removed proxy scheme filtering, we now trust config modules
+	* socks5:// and socks4:// is now allowed
+	* Fix crash when password is empty string
+	* Complete list of bug fixes:
+	  + 19, 59, 65, 86, 87, 88, 89, 90, 91, 92, 93, 97, 98,
+	    99, 100, 101, 102, 103, 106, 108, 110
+	* Known issues:
+	  + 109 - Scheme comparison is case sensitive
+	  + 112 - Username and password are not URI encoded
+
 Thu Feb 25 20:12:57 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
 	* === Released 0.4.0 ===
         * C++ rewrite
