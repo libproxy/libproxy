@@ -1,8 +1,8 @@
 using Libproxy;
 
 void main () {
-	var proxy_factory = new ProxyFactory ();
-	string[] proxies = proxy_factory.get_proxies ("");
+	var pf = new ProxyFactory ();
+	string[] proxies = pf.get_proxies ("");
 	foreach (string proxy in proxies) {
 		stdout.printf ("%s\n", proxy);
 	}
