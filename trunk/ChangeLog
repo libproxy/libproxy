@@ -1,3 +1,8 @@
+Tue May 18 11:54:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+	* === Released 0.4.2 ===
+	* Fixed python binding that failed on missing px_free symbole
+	* Workaround cmake bug with dynamic libraries in non-standard folders
+
 Tue May 18 10:30:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 	* === Released 0.4.1 ===
 	* Improved cross-platform build
