@@ -1,6 +1,7 @@
 New in version 0.4.2
 ===============================
 * Fixed python binding that failed on missing px_free symbole
+* Workaround cmake bug with dynamic libraries in non-standard folders
 
 New in version 0.4.1
 ===============================
