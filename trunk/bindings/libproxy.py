@@ -21,12 +21,24 @@
 
 import ctypes
 import ctypes.util
+import platform
 
 import sys
+
+# Load C library
+if platform.system() == "Windows":
+    _libc = ctypes.cdll.msvcrt
+else:
+    if not ctypes.util.find_library("c"):
+        raise ImportError, "Unable to import C Library!?!"
+    _libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("c"))
+
 
 # Load libproxy
 if not ctypes.util.find_library("proxy"):
     raise ImportError, "Unable to import libproxy!?!?"
+
+
 _libproxy = ctypes.cdll.LoadLibrary(ctypes.util.find_library("proxy"))
 _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
 
@@ -92,9 +104,9 @@ class ProxyFactory(object):
         i=0
         while array[i]:
             proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
-            _libproxy.px_free(array[i])
+            _libc.free(array[i])
             i += 1
-        _libproxy.px_free(array)
+        _libc.free(array)
         
         return proxies
         
