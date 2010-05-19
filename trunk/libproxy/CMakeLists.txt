@@ -85,13 +85,18 @@ else()
     px_check_modules(WEBKIT      webkit-1.0)
 
     set(MOZJS_SEARCH_ORDER "xulrunner-js;firefox-js;mozilla-js;seamonkey-js" CACHE STRING "MozJS search order")
-    foreach(mozjspc ${MOZJS_SEARCH_ORDER})
-      px_check_modules(MOZJS ${mozjspc})
+    option(WITH_MOZJS "Search for MOZJS package" ON)
+    if (WITH_MOZJS)
+      pkg_search_module(MOZJS ${MOZJS_SEARCH_ORDER})
       if(MOZJS_FOUND)
-        break()
+	include_directories(${MOZJS_INCLUDE_DIRS})
+	set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} ${MOZJS_LIBRARY_DIRS})
+      else()
+	set(MOZJS_FOUND 0)
       endif()
+    else()
       set(MOZJS_FOUND 0)
-    endforeach()
+    endif()
 
     px_check_modules(GNOME gconf-2.0 gobject-2.0)
     
@@ -103,11 +108,13 @@ else()
 	set(KDE4_FOUND 1)
 	set(KDE4_LIBRARIES ${KDE4_KDECORE_LIBS} ${QT_LIBRARIES})
 	include_directories(${KDE4_INCLUDE_DIR} ${QT_INCLUDES})
-	set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} ${KDE4_LIB_DIR} PARENT_SCOPE)
+	set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} ${KDE4_LIB_DIR})
 	string(REGEX REPLACE " *-fno-exceptions" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
       else()
 	set(KDE4_FOUND 0)
       endif()
+    else()
+      set(KDE4_FOUND 0)
     endif()
   endif()
 endif()
@@ -118,8 +125,9 @@ if(MOZJS_FOUND AND WEBKIT_FOUND)
   set(BIPR 0)
 endif()
 
-# Add link directories all at once
+# Add link directories all at once and make it available globally.
 link_directories(${LIBPROXY_LIBRARY_DIRS})
+set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} PARENT_SCOPE)
 
 #
 ## Module definition
