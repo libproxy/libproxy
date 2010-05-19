@@ -1,0 +1,178 @@
+### Modules
+function(px_module name build builtin)
+  if(build)
+    if(builtin)
+      set(built "*")
+      set_property(SOURCE modules/${name}.cpp PROPERTY COMPILE_DEFINITIONS LIBEXECDIR="${libexecdir}";MM_MODULE_BUILTIN=${name})
+      set(LIBPROXY_SOURCES ${LIBPROXY_SOURCES} modules/${name}.cpp PARENT_SCOPE)
+      set(BUILTIN_MODULES "${BUILTIN_MODULES} \"${name}\"," PARENT_SCOPE)
+      if(${ARGC} GREATER 3)
+        set(LIBPROXY_LIBRARIES ${LIBPROXY_LIBRARIES} ${ARGN} PARENT_SCOPE)
+      endif()
+    else()
+      set(built "m")
+      set_property(SOURCE modules/${name}.cpp PROPERTY COMPILE_DEFINITIONS LIBEXECDIR="${libexecdir}")
+      add_library(${name} MODULE modules/${name}.cpp)
+      target_link_libraries(${name} libproxy)
+      set_target_properties(${name} PROPERTIES PREFIX "")
+      install(TARGETS ${name} LIBRARY DESTINATION ${moduledir})
+      if(${ARGC} GREATER 3)
+        target_link_libraries(${name} ${ARGN})
+      endif()
+    endif()
+  endif()
+  message("\t${built}\t${name}")
+endfunction(px_module)
+
+#
+## Dependency detection
+#
+
+if(WIN32)
+  # Make the relevant variables show up in the UI
+  set(MOZJS_INCLUDE_DIR  "MOZJS_INCLUDE_DIR-NOTFOUND"  CACHE PATH "Path to the MOZJS include directory")
+  set(WEBKIT_INCLUDE_DIR "WEBKIT_INCLUDE_DIR-NOTFOUND" CACHE PATH "Path to the WEBKIT include directory")
+  set(MOZJS_LIBRARIES    "MOZJS_LIBRARIES-NOTFOUND"    CACHE FILEPATH "Path to the MOZJS .lib file")
+  set(WEBKIT_LIBRARIES   "WEBKIT_LIBRARIES-NOTFOUND"   CACHE FILEPATH "Path to the WEBKIT .lib file")
+
+  if(MOZJS_LIBRARIES AND MOZJS_INCLUDE_DIR)
+    set(MOZJS_FOUND 1)
+    link_directories(MOZJS_LIBRARIES)
+    include_directories("${MOZJS_INCLUDE_DIR}")
+  endif()
+  if(WEBKIT_LIBRARIES AND WEBKIT_INCLUDE_DIR)
+    set(WEBKIT_FOUND 1)
+    link_directories(WEBKIT_LIBRARIES)
+    include_directories("${WEBKIT_INCLUDE_DIR}")
+  endif()
+
+elseif(APPLE)
+  find_library(WEBKIT_LIBRARIES JavaScriptCore)
+  find_library(SC_LIBRARIES SystemConfiguration)
+  find_library(CF_LIBRARIES CoreFoundation)
+  if(WEBKIT_LIBRARIES)
+    set(WEBKIT_FOUND 1)
+  endif()
+  if(SC_LIBRARIES)
+    set(SC_FOUND 1)
+  endif()
+  if(CF_LIBRARIES)
+    set(CF_FOUND 1)
+  endif()
+
+else()
+  set(ENVVAR_FOUND 1)
+
+  find_package(PkgConfig)
+  if(PKG_CONFIG_FOUND)
+    # Define our magical px_check_modules function
+    function(px_check_modules name)
+      option(WITH_${name} "Search for ${name} package" ON)
+      if (WITH_${name})
+	pkg_check_modules(${name} ${ARGN})
+	if(${${name}_FOUND})
+	  include_directories(${${name}_INCLUDE_DIRS})
+	  set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} ${${name}_LIBRARY_DIRS} PARENT_SCOPE)
+	else()
+	  set(${name}_FOUND 0 PARENT_SCOPE)
+	endif()
+      else()
+	set(${name}_FOUND 0 PARENT_SCOPE)
+      endif()
+    endfunction(px_check_modules)
+
+    px_check_modules(NM          NetworkManager dbus-1)
+    px_check_modules(WEBKIT      webkit-1.0)
+
+    set(MOZJS_SEARCH_ORDER "xulrunner-js;firefox-js;mozilla-js;seamonkey-js" CACHE STRING "MozJS search order")
+    foreach(mozjspc ${MOZJS_SEARCH_ORDER})
+      px_check_modules(MOZJS ${mozjspc})
+      if(MOZJS_FOUND)
+        break()
+      endif()
+      set(MOZJS_FOUND 0)
+    endforeach()
+
+    px_check_modules(GNOME gconf-2.0 gobject-2.0)
+    
+    option(WITH_KDE4 "Search for KDE4 package" ON)
+    if (WITH_KDE4)
+      find_package(KDE4)
+      find_package(Qt4)
+      if(KDE4_FOUND AND QT4_FOUND)
+	set(KDE4_FOUND 1)
+	set(KDE4_LIBRARIES ${KDE4_KDECORE_LIBS} ${QT_LIBRARIES})
+	include_directories(${KDE4_INCLUDE_DIR} ${QT_INCLUDES})
+	set(LIBPROXY_LIBRARY_DIRS ${LIBPROXY_LIBRARY_DIRS} ${KDE4_LIB_DIR} PARENT_SCOPE)
+	string(REGEX REPLACE " *-fno-exceptions" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+      else()
+	set(KDE4_FOUND 0)
+      endif()
+    endif()
+  endif()
+endif()
+
+# Build the pacrunner into libproxy unless we are building for multiple engines
+set(BIPR 1)
+if(MOZJS_FOUND AND WEBKIT_FOUND)
+  set(BIPR 0)
+endif()
+
+# Add link directories all at once
+link_directories(${LIBPROXY_LIBRARY_DIRS})
+
+#
+## Module definition
+#
+message("MODULES TO BUILD:")
+px_module(config_envvar            "${ENVVAR_FOUND}" 1)
+px_module(config_gnome             "${GNOME_FOUND}"  0)
+px_module(config_kde4              "${KDE4_FOUND}"   0       ${KDE4_LIBRARIES})
+px_module(config_macosx            "${SC_FOUND}"     1       ${SC_LIBRARIES} ${CF_LIBRARIES})
+px_module(config_w32reg            "${WIN32}"        1)
+px_module(ignore_domain            1                 1)
+px_module(ignore_hostname          1                 1)
+px_module(ignore_ip                1                 1)
+px_module(network_networkmanager   "${NM_FOUND}"     0       ${NM_LIBRARIES})
+px_module(pacrunner_mozjs          "${MOZJS_FOUND}"  ${BIPR} ${MOZJS_LIBRARIES})
+px_module(pacrunner_webkit         "${WEBKIT_FOUND}" ${BIPR} ${WEBKIT_LIBRARIES})
+px_module(wpad_dns_alias           1                 1)
+message("")
+
+### Misc files
+# PkgConfig file
+if(NOT WIN32 AND NOT APPLE)
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/libproxy-1.0.pc.in ${CMAKE_BINARY_DIR}/libproxy-1.0.pc @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/libproxy-1.0.pc DESTINATION ${libdir}/pkgconfig)
+endif()
+
+# CMake Find helper
+if (NOT WIN32 AND NOT APPLE)
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/Findlibproxy.cmake.in ${CMAKE_BINARY_DIR}/Findlibproxy.cmake @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/Findlibproxy.cmake DESTINATION ${datadir}/cmake/Modules)
+endif()
+
+# GNOME (gconf) helper
+if(${GNOME_FOUND})
+  add_executable(pxgconf modules/pxgconf.cpp)
+  target_link_libraries(pxgconf ${GNOME_LIBRARIES})
+  install(TARGETS pxgconf RUNTIME DESTINATION ${libexecdir})
+endif()
+
+### Main library
+add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+include_directories(../)
+if(WIN32)
+  target_link_libraries(libproxy libmodman;ws2_32;${LIBPROXY_LIBRARIES})
+else()
+  target_link_libraries(libproxy libmodman;m;pthread;dl;${LIBPROXY_LIBRARIES})
+endif()
+file(TO_NATIVE_PATH ${moduledir} moduledir)
+if(WIN32)
+  string(REGEX REPLACE "\\\\" "\\\\\\\\" moduledir ${moduledir})
+endif()
+
+set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS MODULEDIR="${moduledir}";BUILTIN_MODULES=${BUILTIN_MODULES})
+set_target_properties(libproxy PROPERTIES PREFIX "" VERSION 1.0.0 SOVERSION 1)
+install(TARGETS libproxy DESTINATION ${libdir})
+install(FILES   proxy.h  DESTINATION ${includedir})
