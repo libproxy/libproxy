@@ -184,3 +184,9 @@ set_property(SOURCE proxy.cpp PROPERTY COMPILE_DEFINITIONS MODULEDIR="${moduledi
 set_target_properties(libproxy PROPERTIES PREFIX "" VERSION 1.0.0 SOVERSION 1)
 install(TARGETS libproxy DESTINATION ${libdir})
 install(FILES   proxy.h  DESTINATION ${includedir})
+
+
+## Tests
+if (BUILD_TESTING)
+  add_subdirectory(test)
+endif(BUILD_TESTING)
