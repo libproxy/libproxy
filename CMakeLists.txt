@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(libproxy)
 
+INCLUDE(CTest)
+
 ### Enable packaging
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 4)

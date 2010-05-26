@@ -1,0 +1,65 @@
+#####
+## LibModMan Tests
+####
+
+# Functions
+function(mm_create_module MODTYPE MODNAME MODCOND MODSYMB MODSMOD)
+  configure_file(modules/module.cpp.in libmodman/test/${MODTYPE}_${MODNAME}.cpp @ONLY)
+  if(NOT IS_DIRECTORY modules/${MODTYPE})
+    file(MAKE_DIRECTORY modules/${MODTYPE})
+  endif()
+  include_directories(../)
+  add_library(${MODTYPE}_${MODNAME} MODULE libmodman/test/${MODTYPE}_${MODNAME}.cpp)
+  set_target_properties(${MODTYPE}_${MODNAME} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY modules/${MODTYPE})
+  target_link_libraries(${MODTYPE}_${MODNAME} libmodman)
+endfunction(mm_create_module)
+
+function(mm_create_program name EXTTYPE)
+  add_executable(${name} main.cpp)
+  target_link_libraries(${name} libmodman)
+  set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS EXTTYPE=${EXTTYPE}_extension)
+  if(${ARGC} GREATER 2)
+    target_link_libraries(${name} ${ARGN};libmodman)
+    set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS EXTTYPE=${EXTTYPE}_extension;SYMB=1)
+  endif()
+endfunction(mm_create_program)
+
+# Modules
+mm_create_module(condition one false NULL        NULL)
+mm_create_module(condition two true  NULL        NULL)
+mm_create_module(singleton one true  NULL        NULL)
+mm_create_module(singleton two true  NULL        NULL)
+mm_create_module(sorted    one true  NULL        NULL)
+mm_create_module(sorted    two true  NULL        NULL)
+mm_create_module(builtin   one true  NULL        NULL)
+if (WIN32)
+  mm_create_module(symbol    one true  \"asdfoia\" \"ws2_32\")
+  mm_create_module(symbol    two true  \"recv\"    \"ws2_32\")
+else()
+  mm_create_module(symbol    one true  \"asdfoia\" \"z\")
+  mm_create_module(symbol    two true  \"deflate\" \"z\")
+endif()
+
+# Programs
+mm_create_program(condition condition)
+mm_create_program(singleton singleton)
+mm_create_program(sorted    sorted)
+mm_create_program(symbol    symbol)
+if (WIN32)
+  mm_create_program(symbollnk symbol ws2_32)
+else()
+  mm_create_program(symbollnk symbol z)
+endif()
+add_executable(builtin builtin.cpp libmodman/test/builtin_one.cpp)
+target_link_libraries(builtin libmodman)
+set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS EXTTYPE=builtin_extension;BUILTIN_MODULE="extension";MM_MODULE_BUILTIN=extension)
+
+# Tests
+add_test(NAME condition COMMAND condition $<TARGET_FILE_DIR:condition_one> two)
+add_test(NAME singleton COMMAND singleton $<TARGET_FILE_DIR:singleton_one> one)
+add_test(NAME sorted    COMMAND sorted    $<TARGET_FILE_DIR:sorted_one>    two one)
+add_test(NAME symbol    COMMAND symbollnk $<TARGET_FILE_DIR:symbol_one>    two)
+add_test(NAME nosymbol  COMMAND symbol    $<TARGET_FILE_DIR:symbol_one>)
+add_test(NAME nosymreq  COMMAND symbol    $<TARGET_FILE_DIR:symbol_one>    one)
+add_test(NAME builtin   COMMAND builtin)
+
