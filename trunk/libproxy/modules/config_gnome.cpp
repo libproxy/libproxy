@@ -21,6 +21,8 @@
 #include <sys/select.h>   // For select()
 #include <fcntl.h>        // For fcntl()
 #include <errno.h>        // For errno stuff
+#include <sys/types.h>    // For stat()
+#include <sys/stat.h>     // For stat()
 #include <unistd.h>       // For pipe(), close(), vfork(), dup(), execl(), _exit()
 #include <signal.h>       // For kill()
 
