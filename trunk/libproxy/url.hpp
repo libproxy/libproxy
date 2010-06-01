@@ -42,7 +42,7 @@ public:
 
 	~url();
 	url(const url& url);
-	url(string url) throw (parse_error, logic_error);
+	url(string url) throw (parse_error);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
 	url& operator=(string url) throw (parse_error);
@@ -58,14 +58,16 @@ public:
 	char*    get_pac(); // Allocated, must free.  NULL on error.
 
 private:
-	string     host;
-	sockaddr** ips;
-	string     pass;
-	string     path;
-	uint16_t   port;
-	string     scheme;
-	string     orig;
-	string     user;
+	void empty_cache();
+
+	string     m_orig;
+	string     m_scheme;
+	string     m_user;
+	string     m_pass;
+	string     m_host;
+	uint16_t   m_port;
+	string     m_path;
+	sockaddr** m_ips;
 };
 
 }

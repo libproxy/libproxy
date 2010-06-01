@@ -2,6 +2,9 @@
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
  *
+ * Based on work found in GLib GIO:
+ * Copyright (C) 2006-2007 Red Hat, Inc.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -15,6 +18,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ *
  ******************************************************************************/
 #ifdef WIN32
 #include <io.h>
@@ -28,6 +32,7 @@
 #include <cstdio>  // For sscanf()
 #include <cstdlib>    // For atoi()
 #include <sys/stat.h> // For stat()
+#include <algorithm> // For transform()
 
 #ifdef WIN32
 #include <io.h>
@@ -52,9 +57,16 @@ using namespace std;
 #define PAC_MAX_SIZE 102400
 
 static inline int get_default_port(string scheme) {
-        struct servent *serv;
-        if ((serv = getservbyname(scheme.c_str(), NULL))) return ntohs(serv->s_port);
-        return 0;
+	struct servent *serv;
+	size_t plus = scheme.find('+');
+
+	if (plus != string::npos)
+		scheme = scheme.substr(plus + 1);
+
+	if ((serv = getservbyname(scheme.c_str(), NULL)))
+		return ntohs(serv->s_port);
+
+	return 0;
 }
 
 template <class T>
@@ -77,167 +89,202 @@ static inline sockaddr* copyaddr(const struct sockaddr& addr) {
 }
 
 bool url::is_valid(const string url_) {
-	url* tmp;
-	try                  { tmp = new url(url_); }
-	catch (parse_error&) { return false; }
-    delete tmp;
-    return true;
+	bool rtv = true;
+
+	try {
+		url url(url_);
+	} catch (parse_error&) {
+		rtv = false;
+	}
+
+    return rtv;
 }
 
-url::url(const string url) throw(parse_error, logic_error) {
-	char *schm = new char[url.size()];
-	char *auth = new char[url.size()];
-	char *host = new char[url.size()];
-	char *path = new char[url.size()];
-	bool port_specified = false;
-	bool auth_specified = false;
-	bool pass_specified = false;
-	this->ips = NULL;
+url::url(const string url) throw(parse_error)
+	: m_orig(url), m_port(0), m_ips(NULL) {
+	size_t idx = 0;
+	size_t hier_part_start, hier_part_end;
+	size_t path_start, path_end;
+	string hier_part;
 
-	// Break apart our url into 4 sections: scheme, auth (user/pass), host and path
-	// We'll do further parsing of auth and host a bit later
-	// NOTE: reset the unused variable after each scan or we get bleed-through
-	if (sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]/%s", schm, auth, host, path) != 4                    && !((*path = '\0')) &&  // URL with auth, host and path
-		sscanf(url.c_str(),   "%[^:]://%[^@]@%[^/]",    schm, auth, host) != 3                      && !((*auth = '\0')) &&  // URL with auth, host
-		sscanf(url.c_str(),   "%[^:]://%[^/]/%s",       schm, host, path) != 3                      && !((*path = '\0')) &&  // URL with host, path
-		sscanf(url.c_str(),   "%[^:]://%[^/]",          schm, host) != 2                            && !((*host = '\0')) &&  // URL with host
-		!(sscanf(url.c_str(), "%[^:]://%s",             schm, path) == 2 && string("file") == schm) && !((*path = '\0')) &&  // URL with path (ex: file:///foo)
-		!(sscanf(url.c_str(), "%[^:]://",               schm) == 1 && (string("direct") == schm || string("wpad") == schm))) // URL with scheme-only (ex: wpad://, direct://)
-	{
-		delete[] schm;
-		delete[] auth;
-		delete[] host;
-		delete[] path;
+	/* From RFC 3986 Decodes:
+	 * URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+	 */
+
+	idx = 0;
+
+	/* Decode scheme:
+	 * scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+	 */
+
+	if (!isalpha(url[idx]))
 		throw parse_error("Invalid URL: " + url);
+
+	while (1) {
+		char c = url[idx++];
+
+		if (c == ':') break;
+
+		if (!(isalnum(c) ||
+					c == '+' ||
+					c == '-' ||
+					c == '.'))
+			throw parse_error("Invalid URL: " + url);
 	}
 
-	// Set scheme and path
-	this->scheme   = schm;
-	this->path     = *path ? string("/") + path : "";
-	*schm = '\0';
-	*path = '\0';
+	m_scheme = url.substr(0, idx - 1);
+	transform(m_scheme.begin(), m_scheme.end(), m_scheme.begin(), ::tolower);
 
-	// Parse auth further
-	if (*auth) {
-		auth_specified = true;
-		this->user = auth;
-		if (string(auth).find(":") != string:: npos) {
-			pass_specified = true;
-			this->pass = this->user.substr(this->user.find(":")+1);
-			this->user = this->user.substr(0, this->user.find(":"));
+	hier_part_start = idx;
+	hier_part_end = url.find('?', idx);
+	if (hier_part_end == string::npos)
+		hier_part_end = url.find('#', idx);
+
+	hier_part = url.substr(hier_part_start,
+							hier_part_end == string::npos ?
+								string::npos : hier_part_end - hier_part_start);
+
+	/*  3:
+	 *	hier-part   = "//" authority path-abempty
+	 *		      / path-absolute
+	 *		      / path-rootless
+	 *		      / path-empty
+	 */
+
+	if (hier_part[0] == '/' && hier_part[1] == '/') {
+		size_t authority_start, authority_end;
+		size_t userinfo_start, userinfo_end;
+		size_t host_start, host_end;
+
+		authority_start = 2;
+		/* authority is always followed by / or nothing */
+		authority_end = hier_part.find('/', authority_start);
+		path_start = authority_end;
+
+		/* 3.2:
+		 *      authority   = [ userinfo "@" ] host [ ":" port ]
+		 */
+
+		/* Get user and password */
+		userinfo_start = authority_start;
+		userinfo_end = hier_part.find('@', authority_start);
+		if (userinfo_end != string::npos) {
+			size_t user_end;
+
+			user_end = hier_part.rfind(':', userinfo_end);
+			if (user_end == string::npos)
+				user_end = userinfo_end;
+			else
+				m_pass = hier_part.substr(user_end + 1, userinfo_end - (user_end + 1));
+
+			m_user = hier_part.substr(userinfo_start, user_end - userinfo_start);
 		}
-		*auth = '\0';
-	}
 
-	// Parse host further. Basically, we're looking for a port.
-	if (*host) {
-		this->port = get_default_port(this->scheme);
-		if (this->scheme.find('+') != this->scheme.npos)
-			this->port = get_default_port(this->scheme.substr(this->scheme.find('+')+1));
-
-		int hostlen = strlen(host);
-		for (int i=hostlen-1 ; i >= 0 ; i--) {
-			if (host[i] >= '0' && host[i] <= '9') continue;  // Still might be a port
-			if (host[i] != ':' || hostlen - 1 == i) break;   // Definitely not a port
-			if (sscanf(host + i + 1, "%hu", &this->port) != 1) break; // Parse fail, should never happen
-			port_specified = true;
-			host[i] = '\0'; // Terminate at the port ':'
-			break;
-		}
-
-		this->host = host;
-		*host = '\0';
-	}
-
-	// Cleanup
-	delete[] schm;
-	delete[] auth;
-	delete[] host;
-	delete[] path;
-
-	// Verify by re-assembly
-	if (auth_specified)
-		if (pass_specified)
-			this->orig = this->scheme + "://" + this->user + ":" + this->pass + "@" + this->host;
+		/* Get hostname */
+		if (userinfo_end == string::npos)
+			host_start = authority_start;
 		else
-			this->orig = this->scheme + "://" + this->user + "@" + this->host;
-	else
-		this->orig = this->scheme + "://" + this->host;
-	if (port_specified)
-		this->orig = this->orig + ":" + to_string_<int>(this->port) + this->path;
-	else
-		this->orig = this->orig + this->path;
-	if (this->orig != url)
-		throw logic_error("Re-assembly failed!");
+			host_start = userinfo_end + 1;
+
+		/* Check for IPv6 IP */
+		if (hier_part[host_start] == '[') {
+			host_end = hier_part.find(']', host_start);
+			if (host_end == string::npos)
+				throw parse_error("Invalid URL: " + url);
+			host_end++;
+			if (hier_part[host_end] == '\0')
+				host_end = string::npos;
+		} else {
+			host_end = hier_part.find(':', host_start);
+		}
+
+		/* If not port, host ends where path starts */
+		if (host_end == string::npos)
+			host_end = path_start;
+
+		m_host = hier_part.substr(host_start, host_end - host_start);
+		transform(m_host.begin(), m_host.end(), m_host.begin(), ::tolower);
+
+		/* Get port */
+		m_port = get_default_port(m_scheme);
+
+		if (hier_part[host_end] == ':') {
+			size_t port_start = host_end + 1;
+			m_port = atoi(hier_part.c_str() + port_start);
+		}
+	} else {
+		path_start = hier_part_start;
+	}
+
+	/* Get path */
+	if (path_start != string::npos)
+	{
+		path_end = hier_part_end;
+		if (path_end == string::npos)
+			m_path = hier_part.substr(path_start);
+		else
+			m_path = hier_part.substr(path_start, path_end - path_start);
+	}
 }
 
-url::url(const url &url) {
-	this->ips = NULL;
+url::url(const url &url) : m_ips(NULL) {
 	*this = url;
 }
 
 url::~url() {
-	if (this->ips) {
-		for (int i=0 ; this->ips[i] ; i++)
-			delete this->ips[i];
-		delete this->ips;
-	}
+	empty_cache();
 }
 
 bool url::operator==(const url& url) const {
-	return this->orig == url.to_string();
+	return m_orig == url.to_string();
 }
 
 url& url::operator=(const url& url) {
-	int i=0;
-
 	// Ensure these aren't the same objects
 	if (&url == this)
 		return *this;
 
-	this->host   = url.host;
-	this->orig   = url.orig;
-	this->pass   = url.pass;
-	this->path   = url.path;
-	this->port   = url.port;
-	this->scheme = url.scheme;
-	this->user   = url.user;
+	m_host   = url.m_host;
+	m_orig   = url.m_orig;
+	m_pass   = url.m_pass;
+	m_path   = url.m_path;
+	m_port   = url.m_port;
+	m_scheme = url.m_scheme;
+	m_user   = url.m_user;
 
-	if (this->ips) {
-		// Free any existing ip cache
-		for (i=0 ; this->ips[i] ; i++)
-			delete this->ips[i];
-		delete this->ips;
-		this->ips = NULL;
-	}
+	empty_cache();
 
-	if (url.ips) {
+	if (url.m_ips) {
+		int i;
+
 		// Copy the new ip cache
-		for (i=0 ; url.ips[i] ; i++) {};
-		this->ips = new sockaddr*[i];
-		for (i=0 ; url.ips[i] ; i++)
-			this->ips[i] = copyaddr(*url.ips[i]);
+		for (i=0 ; url.m_ips[i] ; i++) {};
+		m_ips = new sockaddr*[i];
+		for (i=0 ; url.m_ips[i] ; i++)
+			m_ips[i] = copyaddr(*url.m_ips[i]);
 	}
+
 	return *this;
 }
 
 url& url::operator=(string strurl) throw (parse_error) {
-	url* tmp = new url(strurl);
-	*this = *tmp;
-	delete tmp;
+	url tmp(strurl);
+	*this = tmp;
 	return *this;
 }
 
 string url::get_host() const {
-	return this->host;
+	return m_host;
 }
 
 sockaddr const* const* url::get_ips(bool usedns) {
 	// Check the cache
-	if (this->ips) return this->ips;
+	if (m_ips)
+		return m_ips;
 
 	// Check without DNS first
-	if (usedns && this->get_ips(false)) return this->ips;
+	if (usedns && get_ips(false))
+		return m_ips;
 
 	// Check DNS for IPs
 	struct addrinfo* info;
@@ -247,7 +294,7 @@ sockaddr const* const* url::get_ips(bool usedns) {
 	flags.ai_socktype = 0;
 	flags.ai_protocol = 0;
 	flags.ai_flags    = AI_NUMERICHOST;
-	if (!getaddrinfo(this->host.c_str(), NULL, usedns ? NULL : &flags, &info)) {
+	if (!getaddrinfo(m_host.c_str(), NULL, usedns ? NULL : &flags, &info)) {
 		struct addrinfo* first = info;
 		unsigned int i = 0;
 
@@ -257,23 +304,23 @@ sockaddr const* const* url::get_ips(bool usedns) {
 
 		// Return NULL if no IPs found
 		if (i == 0)
-			return this->ips = NULL;
+			return m_ips = NULL;
 
 		// Create our array since we actually have a result
-		this->ips = new sockaddr*[++i];
-		memset(this->ips, '\0', sizeof(sockaddr*)*i);
+		m_ips = new sockaddr*[++i];
+		memset(m_ips, '\0', sizeof(sockaddr*)*i);
 
-		// Copy the sockaddr's into this->ips
+		// Copy the sockaddr's into m_ips
 		for (i = 0, info = first ; info ; info = info->ai_next) {
 			if (info->ai_addr->sa_family == AF_INET || info->ai_addr->sa_family == AF_INET6) {
-				this->ips[i] = copyaddr(*(info->ai_addr));
-				if (!this->ips[i]) break;
-				((sockaddr_in **) this->ips)[i++]->sin_port = htons(this->port);
+				m_ips[i] = copyaddr(*(info->ai_addr));
+				if (!m_ips[i]) break;
+				((sockaddr_in **) m_ips)[i++]->sin_port = htons(m_port);
 			}
 		}
 
 		freeaddrinfo(first);
-		return this->ips;
+		return m_ips;
 	}
 
 	// No addresses found
@@ -281,27 +328,27 @@ sockaddr const* const* url::get_ips(bool usedns) {
 }
 
 string url::get_password() const {
-	return this->pass;
+	return m_pass;
 }
 
 string url::get_path() const {
-	return this->path;
+	return m_path;
 }
 
 uint16_t url::get_port() const {
-	return this->port;
+	return m_port;
 }
 
 string url::get_scheme() const {
-	return this->scheme;
+	return m_scheme;
 }
 
 string url::get_username() const {
-	return this->user;
+	return m_user;
 }
 
 string url::to_string() const {
-	return this->orig;
+	return m_orig;
 }
 
 static inline string recvline(int fd) {
@@ -309,7 +356,10 @@ static inline string recvline(int fd) {
 	// If we don't get a character, return empty string.
 	// If we are at the end of the line, return empty string.
 	char c = '\0';
-	if (recv(fd, &c, 1, 0) != 1 || c == '\n') return "";
+	
+	if (recv(fd, &c, 1, 0) != 1 || c == '\n')
+		return "";
+
 	return string(1, c) + recvline(fd);
 }
 
@@ -321,9 +371,9 @@ char* url::get_pac() {
 	string request;
 
 	// In case of a file:// url we open the file and read it
-	if (this->scheme == "file" || this->scheme == "pac+file") {
+	if (m_scheme == "file" || m_scheme == "pac+file") {
 		struct stat st;
-		if ((sock = ::open(this->path.c_str(), O_RDONLY)) < 0)
+		if ((sock = ::open(m_path.c_str(), O_RDONLY)) < 0)
 			return NULL;
 		if (!fstat(sock, &st) && pfsize(st) < PAC_MAX_SIZE) {
 			buffer = new char[pfsize(st)+1];
@@ -336,20 +386,20 @@ char* url::get_pac() {
 	}
 
 	// DNS lookup of host
-	if (!this->get_ips(true))
+	if (!get_ips(true))
 		return NULL;
 
 	// Iterate through each IP trying to make a connection
 	// Stop at the first one
-	for (int i=0 ; this->ips[i] ; i++) {
-		sock = socket(this->ips[i]->sa_family, SOCK_STREAM, 0);
+	for (int i=0 ; m_ips[i] ; i++) {
+		sock = socket(m_ips[i]->sa_family, SOCK_STREAM, 0);
 		if (sock < 0) continue;
 
-		if (this->ips[i]->sa_family == AF_INET &&
-			!connect(sock, this->ips[i], sizeof(struct sockaddr_in)))
+		if (m_ips[i]->sa_family == AF_INET &&
+			!connect(sock, m_ips[i], sizeof(struct sockaddr_in)))
 			break;
-		else if (this->ips[i]->sa_family == AF_INET6 &&
-			!connect(sock, this->ips[i], sizeof(struct sockaddr_in6)))
+		else if (m_ips[i]->sa_family == AF_INET6 &&
+			!connect(sock, m_ips[i], sizeof(struct sockaddr_in6)))
 			break;
 
 		close(sock);
@@ -360,8 +410,8 @@ char* url::get_pac() {
 	if (sock < 0) return NULL;
 
 	// Build the request string
-	request  = "GET " + this->path + " HTTP/1.1\r\n";
-	request += "Host: " + this->host + "\r\n";
+	request  = "GET " + m_path + " HTTP/1.1\r\n";
+	request += "Host: " + m_host + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
 	request += "\r\n";
@@ -429,4 +479,15 @@ char* url::get_pac() {
 	// Clean up
 	shutdown(sock, SHUT_RDWR);
 	return buffer;
+}
+
+void url::empty_cache()
+{
+	if (m_ips) {
+		// Free any existing ip cache
+		for (int i=0 ; m_ips[i] ; i++)
+			delete m_ips[i];
+		delete[] m_ips;
+		m_ips = NULL;
+	}
 }
