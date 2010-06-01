@@ -30,13 +30,13 @@ if platform.system() == "Windows":
     _libc = ctypes.cdll.msvcrt
 else:
     if not ctypes.util.find_library("c"):
-        raise ImportError, "Unable to import C Library!?!"
+        raise ImportError("Unable to import C Library!?!")
     _libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("c"))
 
 
 # Load libproxy
 if not ctypes.util.find_library("proxy"):
-    raise ImportError, "Unable to import libproxy!?!?"
+    raise ImportError("Unable to import libproxy!?!?")
 
 
 _libproxy = ctypes.cdll.LoadLibrary(ctypes.util.find_library("proxy"))
@@ -65,6 +65,11 @@ class ProxyFactory(object):
                 if fetchSucceeded:
                     break    
     """
+
+    class ProxyResolutionError(RuntimeError):
+        """Exception raised when proxy cannot be resolved generally
+           due to invalid URL"""
+        pass
 
     def __init__(self):
         self._pf = _libproxy.px_proxy_factory_new()
@@ -97,10 +102,15 @@ class ProxyFactory(object):
 
         """
         if type(url) != str:
-            raise TypeError, "url must be a string!"
+            raise TypeError("url must be a string!")
         
         proxies = []
         array = _libproxy.px_proxy_factory_get_proxies(self._pf, url)
+    
+        if not bool(array):
+            raise ProxyFactory.ProxyResolutionError(
+                    "Can't resolve proxy for '%s'" % url)
+
         i=0
         while array[i]:
             proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
