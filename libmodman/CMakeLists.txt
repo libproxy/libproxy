@@ -3,7 +3,7 @@ add_library(libmodman SHARED module.hpp module_manager.hpp module_manager.cpp)
 if(NOT WIN32)
   target_link_libraries(libmodman dl)
 endif()
-set_target_properties(libmodman PROPERTIES PREFIX "" VERSION 0 SOVERSION 0.0.0)
+set_target_properties(libmodman PROPERTIES PREFIX "" VERSION 0.0.0 SOVERSION 0)
 install(TARGETS libmodman DESTINATION ${libdir})
 
 ### Tests
