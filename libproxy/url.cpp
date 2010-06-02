@@ -56,6 +56,13 @@ using namespace std;
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
 
+const string url::GENERIC_DELIMITERS(":/?#[]@");
+const string url::SUBCOMPONENT_DELIMITERS("!$&'()*+,;=");
+const string url::ALLOWED_IN_USERINFO_ELEMENT(url::SUBCOMPONENT_DELIMITERS);
+const string url::ALLOWED_IN_USERINFO(url::ALLOWED_IN_USERINFO_ELEMENT + ":");
+const string url::ALLOWED_IN_PATH_ELEMENT(url::SUBCOMPONENT_DELIMITERS + ":@");
+const string url::ALLOWED_IN_PATH(url::ALLOWED_IN_PATH_ELEMENT + "/");
+
 static inline int get_default_port(string scheme) {
 	struct servent *serv;
 	size_t plus = scheme.find('+');
@@ -98,6 +105,21 @@ bool url::is_valid(const string url_) {
 	}
 
     return rtv;
+}
+
+string url::encode(const string &data, const string &valid_reserved) {
+	ostringstream encoded;
+	for (int i=0; data[i]; i++) {
+		if (isalnum(data[i])
+				|| valid_reserved.find(data[i]) != string::npos
+				|| string("-._~").find(data[i]) != string::npos)
+			encoded << data[i];
+		else
+			encoded << '%' 
+					<< ((unsigned char)data[i] < 16 ? "0" : "")
+					<< hex << (((int)data[i]) & 0xff);
+	}
+	return encoded.str();
 }
 
 url::url(const string url) throw(parse_error)
