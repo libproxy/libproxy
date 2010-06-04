@@ -149,6 +149,7 @@ public:
 		// Run the PAC
 		tmp = string("FindProxyForURL(\"") + url_.to_string() + string("\", \"") + url_.get_host() + "\");";
 		str = JSStringCreateWithUTF8CString(tmp.c_str());
+		if (!str) throw bad_alloc();
 		if (!JSCheckScriptSyntax(this->jsctx, str, NULL, 0, NULL))            goto error;
 		if (!(val = JSEvaluateScript(this->jsctx, str, NULL, NULL, 1, NULL))) goto error;
 		if (!JSValueIsString(this->jsctx, val))                               goto error;
@@ -158,8 +159,8 @@ public:
 		return jstr2str(JSValueToStringCopy(this->jsctx, val, NULL), true);
 
 	error:
-		if (str) JSStringRelease(str);
-		throw bad_alloc();
+		JSStringRelease(str);
+		return "";
 	}
 
 private:
