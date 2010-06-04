@@ -49,6 +49,11 @@ public:
 	vector<string> get_proxies(string url);
 
 private:
+	void lock();
+	void unlock();
+
+	void _get_proxies(url *realurl, vector<string> &response);
+
 #ifdef WIN32
 	HANDLE mutex;
 #else
@@ -116,14 +121,15 @@ proxy_factory::proxy_factory() {
 
 #ifdef WIN32
 	this->mutex = CreateMutex(NULL, false, NULL);
-	WaitForSingleObject(this->mutex, INFINITE);
 	WSADATA wsadata;
 	WORD vers = MAKEWORD(2, 2);
 	WSAStartup(vers, &wsadata);
 #else
 	pthread_mutex_init(&this->mutex, NULL);
-	pthread_mutex_lock(&this->mutex);
 #endif
+
+	lock();
+
 	this->pac    = NULL;
 	this->pacurl = NULL;
 	this->wpad   = false;
@@ -146,26 +152,21 @@ proxy_factory::proxy_factory() {
 	this->mm.load_dir(module_dir);
 	this->mm.load_dir(module_dir, false);
 
-#ifdef WIN32
-	ReleaseMutex(this->mutex);
-#else
-	pthread_mutex_unlock(&this->mutex);
-#endif
+	unlock();
 }
 
 proxy_factory::~proxy_factory() {
-#ifdef WIN32
-	WaitForSingleObject(this->mutex, INFINITE);
-#else
-	pthread_mutex_lock(&this->mutex);
-#endif
+	lock();
+
 	if (this->pac) delete this->pac;
 	if (this->pacurl) delete this->pacurl;
+	
+	unlock();
+
 #ifdef WIN32
 	WSACleanup();
 	ReleaseMutex(this->mutex);
 #else
-	pthread_mutex_unlock(&this->mutex);
 	pthread_mutex_destroy(&this->mutex);
 #endif
 }
@@ -173,6 +174,33 @@ proxy_factory::~proxy_factory() {
 
 vector<string> proxy_factory::get_proxies(string url_) {
 	url*                       realurl = NULL;
+	vector<string>             response;
+
+	// Check to make sure our url is valid
+	if (!url::is_valid(url_))
+		goto do_return;
+	realurl = new url(url_);
+
+	lock();
+
+	// Let trap and forward exceptions so we don't deadlock
+	try {
+		_get_proxies(realurl, response);
+		unlock();
+		if (realurl) delete realurl;
+	} catch (exception &e) {
+		unlock();
+		if (realurl) delete realurl;
+		throw e;
+	}
+
+do_return:
+	if (response.size() == 0)
+		response.push_back("direct://");
+	return response;
+}
+
+void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 	url                        confurl("direct://");
 	bool                       ignored = false, invign = false;
 	string                     confign;
@@ -180,19 +208,8 @@ vector<string> proxy_factory::get_proxies(string url_) {
 	vector<network_extension*> networks;
 	vector<config_extension*>  configs;
 	vector<ignore_extension*>  ignores;
-	vector<string>             response;
 	const char*                debug = getenv("_PX_DEBUG");
 
-	// Check to make sure our url is valid
-	if (!url::is_valid(url_))
-		goto do_return;
-	realurl = new url(url_);
-
-#ifdef WIN32
-	WaitForSingleObject(this->mutex, INFINITE);
-#else
-	pthread_mutex_lock(&this->mutex);
-#endif
 
 	// Check to see if our network topology has changed...
 	networks = this->mm.get_extensions<network_extension>();
@@ -249,8 +266,8 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		}
 		i = next+1;
 	}
-	if (!ignored && invign) goto do_return;
-	if (ignored && !invign) goto do_return;
+	if (!ignored && invign) return;
+	if (ignored && !invign) return;
 
 	/* If we have a wpad config */
 	if (debug) cerr << "Config is: " << confurl.to_string() << endl;
@@ -328,7 +345,7 @@ vector<string> proxy_factory::get_proxies(string url_) {
 			this->pac    = confurl.get_pac();
 			if (!this->pac) {
 				if (debug) cerr << "Unable to download PAC!" << endl;
-				goto do_return;
+				return;
 			}
 			if (debug) cerr << "PAC received!" << endl;
 		}
@@ -341,7 +358,7 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		/* No PAC runner found, fall back to direct */
 		if (pacrunners.size() == 0) {
 			if (debug) cerr << "Unable to find a required pacrunner!" << endl;
-			goto do_return;
+			return;
 		}
 
 		/* Run the PAC, but only try one PACRunner */
@@ -360,22 +377,25 @@ vector<string> proxy_factory::get_proxies(string url_) {
 		response.clear();
 		response.push_back(confurl.to_string());
 	}
+}
 
-	/* Actually return, freeing misc stuff */
-	do_return:
+void proxy_factory::lock() {
 #ifdef WIN32
-		ReleaseMutex(this->mutex);
+	WaitForSingleObject(this->mutex, INFINITE);
 #else
-		pthread_mutex_unlock(&this->mutex);
+	pthread_mutex_lock(&this->mutex);
 #endif
-		if (realurl)
-			delete realurl;
-		if (response.size() == 0)
-			response.push_back("direct://");
-		return response;
 }
 
+void proxy_factory::unlock() {
+#ifdef WIN32
+	ReleaseMutex(this->mutex);
+#else
+	pthread_mutex_unlock(&this->mutex);
+#endif
 }
+
+};
 
 struct pxProxyFactory_ {
 	libproxy::proxy_factory pf;
