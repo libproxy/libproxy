@@ -1,3 +1,17 @@
+Mon Jun 7 11:37:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+	* === Released 0.4.3 ===
+	* Test can now be out-compiled using BUILD_TESTING=OFF
+	* Fixed python binding not handling NULL pointer
+	* Pyhton binding now support Python version 3
+	* Implented URL unit test
+	* Rewrote URL parser to comply with unit test
+	* Username and password are now URL encoded
+	* Scheme comparison is now non-case sensitive
+	* Fixed deadlock using WebKit has PAC runner
+	* Fixed OS X compilation of Perl bindings
+	* Complete list of bug fixes:
+		+ 123, 122, 121, 117, 116, 112, 109
+
 Tue May 18 11:54:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 	* === Released 0.4.2 ===
 	* Fixed python binding that failed on missing px_free symbole
