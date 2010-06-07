@@ -1,3 +1,14 @@
+New in version 0.4.3
+===============================
+* Test can now be out-compiled using BUILD_TESTING=OFF
+* Fixed python binding not handling NULL pointer
+* Pyhton binding now support Python version 3
+* Rewrote URL parser to comply with unit test
+* Username and password are now URL encoded
+* Scheme comparison is now non-case sensitive
+* Fixed deadlock using WebKit has PAC runner
+* Fixed OS X compilation of Perl bindings
+
 New in version 0.4.2
 ===============================
 * Fixed python binding that failed on missing px_free symbole
