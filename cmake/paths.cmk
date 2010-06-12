@@ -1,0 +1,22 @@
+# Setup our relative paths
+if(${WIN32})
+  set(rlibdir     .)
+  set(rlibexecdir .)
+  set(rbindir     .)
+  set(rincludedir include/)
+  set(rdatadir    .)
+else()
+  set(rlibdir     lib${LIB_SUFFIX}/)
+  set(rlibexecdir libexec/)
+  set(rbindir     bin/)
+  set(rincludedir include/)
+  set(rdatadir    share/)
+endif()
+
+# Setup our full paths
+set(prefix     ${CMAKE_INSTALL_PREFIX}  CACHE PATH "prefix")
+set(libdir     ${prefix}/${rlibdir}     CACHE PATH "libdir")
+set(libexecdir ${prefix}/${rlibexecdir} CACHE PATH "libexecdir")
+set(bindir     ${prefix}/${rbindir}     CACHE PATH "bindir")
+set(includedir ${prefix}/${rincludedir} CACHE PATH "includedir")
+set(datadir    ${prefix}/${rdatadir}    CACHE PATH "datadir")
