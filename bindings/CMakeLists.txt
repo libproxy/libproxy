@@ -23,5 +23,5 @@ endif()
 # Install Vala bindings / Install only when -DWITH_VALA is passed to cmake.
 option(WITH_VALA "Enables Vala bindings" OFF)
 if(WITH_VALA)
-  install(FILES vala/libproxy-1.0.vapi DESTINATION ${datadir}/vala/vapi)
+  install(FILES vala/libproxy-1.0.vapi DESTINATION ${SHARE_INSTALL_PREFIX}/vala/vapi)
 endif()
