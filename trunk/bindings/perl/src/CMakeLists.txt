@@ -1,4 +1,3 @@
-
 include_directories( ${PERL_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/libproxy )
 link_directories(${LIBPROXY_LIBRARY_DIRS})
 

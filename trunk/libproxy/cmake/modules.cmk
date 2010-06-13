@@ -1,10 +1,9 @@
 # Setup module path
-if(${WIN32})
-  set(rmoduledir modules/)
+if(WIN32)
+  set(MODULE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/modules CACHE PATH "Module install dir")
 else()
-  set(rmoduledir ${rlibdir}${PROJECT_NAME}/${PROJECT_VERSION}/modules/)
+  set(MODULE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${PROJECT_VERSION}/modules CACHE PATH "Module install dir")
 endif()
-set(moduledir ${prefix}/${rmoduledir} CACHE PATH "moduledir")
 
 # Do module determination
 include(cmake/pxmodule.cmk)
