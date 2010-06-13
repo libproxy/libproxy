@@ -20,5 +20,5 @@ include(cmake/devfiles.cmk)
 include(cmake/libproxy.cmk)
 
 ### Tests
-# These tests don't seem to run with "make test"... Why? 
+# These tests don't seem to run with "make test"... Why?
 add_testdirectory(test)
