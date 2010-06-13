@@ -1,3 +1,9 @@
+New in version 0.4.4
+===============================
+* Add support for optionally building using a system libmodman
+* Rework build system to be cleaner
+* Fix two major build system bugs: 127, 128
+
 New in version 0.4.3
 ===============================
 * Test can now be out-compiled using BUILD_TESTING=OFF
