@@ -1,3 +1,9 @@
+Sun Jun 13 11:00:00 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
+	* === Released 0.4.4 ===
+	* Add support for optionally building using a system libmodman
+	* Rework build system to be cleaner
+	* Fix two major build system bugs: 127, 128
+
 Mon Jun 7 11:37:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 	* === Released 0.4.3 ===
 	* Test can now be out-compiled using BUILD_TESTING=OFF
