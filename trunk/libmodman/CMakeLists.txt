@@ -1,10 +1,10 @@
 ### Main library
-add_library(libmodman SHARED module.hpp module_manager.hpp module_manager.cpp)
+add_library(modman SHARED module.hpp module_manager.hpp module_manager.cpp)
 if(NOT WIN32)
-  target_link_libraries(libmodman dl)
+  target_link_libraries(modman dl)
 endif()
-set_target_properties(libmodman PROPERTIES PREFIX "" VERSION 0.0.0 SOVERSION 0)
-install(TARGETS libmodman DESTINATION ${LIB_INSTALL_PREFIX})
+set_target_properties(modman PROPERTIES PREFIX "lib" VERSION 0.0.0 SOVERSION 0)
+install(TARGETS modman DESTINATION ${LIB_INSTALL_DIR})
 
 ### Tests
 if (BUILD_TESTING)
