@@ -1,8 +1,8 @@
 # Setup module path
 if(WIN32)
-  set(MODULE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/modules CACHE PATH "Module install dir")
+  set(MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/modules CACHE PATH "Module install dir")
 else()
-  set(MODULE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${PROJECT_VERSION}/modules CACHE PATH "Module install dir")
+  set(MODULE_INSTALL_DIR ${LIB_INSTALL_DIR}/${PROJECT_NAME}/${PROJECT_VERSION}/modules CACHE PATH "Module install dir")
 endif()
 
 # Do module determination
