@@ -20,7 +20,7 @@ include(cmake/paths.cmk)
 
 ### Subdirectories
 # Conditionally build bundled libmodman
-find_package(libmodman)
+find_package(libmodman QUIET)
 if(LIBMODMAN_FOUND)
     message(STATUS "Building with system libmodman")    
 else()
