@@ -5,5 +5,5 @@ if(NOT WIN32 AND NOT APPLE)
   
   # CMake Find helper
   configure_file(${CMAKE_SOURCE_DIR}/libproxy/Findlibproxy.cmake.in ${CMAKE_BINARY_DIR}/Findlibproxy.cmake @ONLY)
-  install(FILES ${CMAKE_BINARY_DIR}/Findlibproxy.cmake DESTINATION ${SHARE_INSTALL_PREFIX}/cmake/Modules)
+  install(FILES ${CMAKE_BINARY_DIR}/Findlibproxy.cmake DESTINATION ${SHARE_INSTALL_DIR}/cmake/Modules)
 endif()
