@@ -1,5 +1,5 @@
 ### Required
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 ### Make sure we have a build type
 # This fixes an install issue where installs fail
