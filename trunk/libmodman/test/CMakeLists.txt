@@ -21,6 +21,7 @@ function(mm_create_program name EXTTYPE)
   if(${ARGC} GREATER 2)
     target_link_libraries(${name} ${ARGN};modman)
     set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS EXTTYPE=${EXTTYPE}_extension;SYMB=1)
+    set_property(TARGET ${name} PROPERTY LINK_FLAGS -Wl,--no-as-needed)
   endif()
 endfunction(mm_create_program)
 
