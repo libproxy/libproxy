@@ -1,6 +1,6 @@
-prefix=@prefix@
-libdir=@libdir@
-includedir=@includedir@
+prefix=@PKGCONFIG_PREFIX@
+libdir=@PKGCONFIG_LIBDIR@
+includedir=@PKGCONFIG_INCLUDEDIR@
 
 Name: libproxy-1.0
 Description: Proxy Configuration Library
