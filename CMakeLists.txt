@@ -1,5 +1,8 @@
 ### Required
 cmake_minimum_required(VERSION 2.6)
+if(POLICY CMP0011)
+   cmake_policy(SET CMP0011 NEW)
+endif(POLICY CMP0011)
 
 ### Make sure we have a build type
 # This fixes an install issue where installs fail
