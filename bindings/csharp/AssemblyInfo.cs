@@ -1,6 +1,6 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
- * Copyright (C) 2008-2009 Dominique Leuenberger <dominique@leuenberger.net>
+ * Copyright (C) 2008-2010 Dominique Leuenberger <dominique@leuenberger.net>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly:AssemblyVersion("@VERSION@")]
+[assembly:AssemblyVersion("0.4.4")]
 [assembly:AssemblyTitle ("LibProxy#")]
 [assembly:AssemblyDescription ("A library that provides automatic proxy configuration management.")]
 [assembly:AssemblyCopyright ("Copyright (c) 2006-2009 Nathaniel McCallum")]

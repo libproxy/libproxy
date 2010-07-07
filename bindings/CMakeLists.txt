@@ -13,6 +13,10 @@ if (WITH_PYTHON)
 endif()
 
 #TODO c-sharp bindings
+option(WITH_DOTNET "Enables C# bindings" OFF)
+if (WITH_DOTNET)
+  add_subdirectory(csharp)
+endif()
 
 #perl bindings live in their own subdir.
 option(WITH_PERL "Enables Perl bindings" ON)
