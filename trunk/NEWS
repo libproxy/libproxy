@@ -1,3 +1,7 @@
+New in version 0.4.5
+===============================
+* C# bindings are installable (-DWITH_DOTNET=ON)
+
 New in version 0.4.4
 ===============================
 * Add support for optionally building using a system libmodman
