@@ -4,6 +4,9 @@ if(POLICY CMP0011)
    cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
 
+# Make sure we look in our cmake folder for additional definitions
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake )
+
 ### Make sure we have a build type
 # This fixes an install issue where installs fail
 # when find_package(KDE4) is present.  I'm still
