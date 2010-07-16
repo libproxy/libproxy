@@ -39,7 +39,7 @@ cmake \
 [-DCMAKE_INSTALL_PREFIX=/usr] \
 [-Dlibdir=/usr/lib] \
 [-Ddatadir=/usr/share] \
-[-Dmoduledir=/usrlib/libproxy/0.4.0/modules] \
+[-Dmoduledir=/usr/lib/libproxy/0.4.0/modules] \
 [-Dbindir=/usr/bin] \
 [-Dlibexecdir=/usr/libexec] \
 [-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js] \
