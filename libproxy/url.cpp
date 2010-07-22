@@ -181,6 +181,8 @@ url::url(const string url) throw(parse_error)
 		authority_start = 2;
 		/* authority is always followed by / or nothing */
 		authority_end = hier_part.find('/', authority_start);
+                if (authority_end == string::npos)
+                  authority_end = hier_part.size();
 		path_start = authority_end;
 
 		/* 3.2:
