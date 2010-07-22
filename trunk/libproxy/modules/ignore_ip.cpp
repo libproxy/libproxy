@@ -166,15 +166,15 @@ public:
 			if (ign_ip && (ign_ip->sa_family != AF_INET6 || ignore[0] == '['))
 				goto out;
 
-			delete ign_ip;
+			delete[] ign_ip;
 			ign_ip = NULL;
 			port   = 0;
 		}
 
 	out:
 		result = sockaddr_equals(dst_ip, ign_ip, net_ip);
-		free(ign_ip);
-		free(net_ip);
+		delete[] ign_ip;
+		delete[] net_ip;
 		return port != 0 ? (port == url.get_port() && result) : result;
 	}
 };
