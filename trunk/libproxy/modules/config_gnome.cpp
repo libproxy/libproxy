@@ -297,7 +297,7 @@ static base_extension** gnome_config_extension_init() {
 		return retval;
 	}
 	catch (runtime_error) {
-		delete retval;
+		delete[] retval;
 		return NULL;
 	}
 }
