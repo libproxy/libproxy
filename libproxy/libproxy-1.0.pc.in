@@ -4,6 +4,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@
 
 Name: libproxy-1.0
 Description: Proxy Configuration Library
-Version: @CMAKE_PROJECT_VERSION@
+Version: @PROJECT_VERSION@
 Libs: -L${libdir} -lproxy
 Cflags: -I${includedir} 
