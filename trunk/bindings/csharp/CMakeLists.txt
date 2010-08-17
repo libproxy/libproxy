@@ -10,5 +10,5 @@ SET_PROPERTY(TARGET libproxy-sharp PROPERTY pkg-config_template_basename libprox
 GET_LIBRARY_OUTPUT_DIR(library_target_dir)
 FILE(WRITE ${library_target_dir}/libproxy-sharp.dll.config "<configuration><dllmap dll=\"proxy\" target=\"libproxy.so.1\"/></configuration>")
 
-INSTALL_ASSEMBLY(libproxy-sharp DESTINATION lib PACKAGE libproxy-sharp)
+INSTALL_ASSEMBLY(libproxy-sharp DESTINATION ${CSHARP_ASSEMBLY_DIR} PACKAGE libproxy-sharp)
 
