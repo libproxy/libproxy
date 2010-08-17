@@ -12,7 +12,6 @@ if (WITH_PYTHON)
   endif()
 endif()
 
-#TODO c-sharp bindings
 option(WITH_DOTNET "Enables C# bindings" OFF)
 if (WITH_DOTNET)
   add_subdirectory(csharp)
