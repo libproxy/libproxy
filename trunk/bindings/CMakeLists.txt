@@ -29,17 +29,9 @@ endif()
 # Install Vala bindings / Install only when -DWITH_VALA is passed to cmake.
 option(WITH_VALA "Enables Vala bindings" OFF)
 if(WITH_VALA)
-  find_package(PkgConfig)
-  if(PKG_CONFIG_FOUND AND NOT VAPI_DIR)
-    execute_process(COMMAND
-		    ${PKG_CONFIG_EXECUTABLE} vala-1.0 --variable=vapidir
-		      OUTPUT_VARIABLE VAPI_DIR
-		      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if (NOT VAPI_DIR)
+    set(VAPI_DIR ${SHARE_INSTALL_DIR}/vala/vapi)
   endif()
-  if(VAPI_DIR)
-    install(FILES vala/libproxy-1.0.vapi DESTINATION ${VAPI_DIR})
-  else()
-    message(WARNING "Vala API directory not found, please set VAPI_DIR")
-  endif()
+  install(FILES vala/libproxy-1.0.vapi DESTINATION ${VAPI_DIR})
   set(VAPI_DIR ${VAPI_DIR} CACHE PATH "Vala API directory")
 endif()
