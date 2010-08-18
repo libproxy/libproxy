@@ -30,8 +30,7 @@
 			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
-	MM_MODULE_INIT_EZ(name ## _pacrunner_extension); \
-	MM_MODULE_SYMB(symb, smod)
+	MM_MODULE_INIT_EZ(name ## _pacrunner_extension, true, symb, smod)
 
 namespace libproxy {
 using namespace std;
