@@ -3,12 +3,15 @@ if (WITH_PYTHON)
   find_package(PythonInterp)
 
   if(PYTHONINTERP_FOUND)
-    execute_process(COMMAND
-		    ${PYTHON_EXECUTABLE}
-		    -c "import distutils.sysconfig ; print distutils.sysconfig.get_python_lib(plat_specific=0)"
-		    OUTPUT_VARIABLE pysitepkgdir
-		    OUTPUT_STRIP_TRAILING_WHITESPACE)
-    install(FILES libproxy.py DESTINATION ${pysitepkgdir})
+    if(NOT PYTHON_SITEPKG_DIR)
+      execute_process(COMMAND
+		      ${PYTHON_EXECUTABLE}
+		      -c "import distutils.sysconfig ; print distutils.sysconfig.get_python_lib(plat_specific=0)"
+		      OUTPUT_VARIABLE PYTHON_SITEPKG_DIR
+		      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif()
+    set(PYTHON_SITEPKG_DIR "${PYTHON_SITEPKG_DIR}" CACHE PATH "Python site-package directory.")
+    install(FILES libproxy.py DESTINATION ${PYTHON_SITEPKG_DIR})
   endif()
 endif()
 
