@@ -137,20 +137,12 @@ module_manager::~module_manager() {
 
 static int load(map<string, vector<base_extension*> >& extensions,
                              set<string>&              singletons,
-                             pdlmtype                  mod,
+                             mm_module                *mod,
                              bool                      lazy,
-                             bool                      symbreq,
-                             string                    modname="") {
+                             bool                      symbreq) {
 	const char* debug = getenv("_MM_DEBUG");
 
-	// Get the module info
-	const unsigned int*  vers    =            (unsigned int*) pdlsym(mod, __str(__MM_MODULE_VARNAME(vers)) + modname);
-	const char* const (**type)() = (const char* const (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(type)) + modname);
-	base_extension**  (**init)() = (base_extension**  (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(init)) + modname);
-	bool              (**test)() =              (bool (**)()) pdlsym(mod, __str(__MM_MODULE_VARNAME(test)) + modname);
-	const char** const   symb    =       (const char** const) pdlsym(mod, __str(__MM_MODULE_VARNAME(symb)) + modname);
-	const char** const   smod    =       (const char** const) pdlsym(mod, __str(__MM_MODULE_VARNAME(smod)) + modname);
-	if (!vers || !type || !init || !*type || !*init || *vers != __MM_MODULE_VERSION) {
+	if (!mod || mod->vers != __MM_MODULE_VERSION || !mod->type || !mod->init) {
 		if (debug)
 			cerr << "failed!" << endl
 			     << "\tUnable to find basic module info!" << endl;
@@ -158,7 +150,7 @@ static int load(map<string, vector<base_extension*> >& extensions,
 	}
 
 	// Get the module type
-	string types = (*type)();
+	string types = mod->type();
 
 	// Make sure the type is registered
 	if (extensions.find(types) == extensions.end()) {
@@ -178,13 +170,13 @@ static int load(map<string, vector<base_extension*> >& extensions,
 	}
 
 	// If a symbol is defined, we'll search for it in the main process
-	if (symb && *symb && smod && *smod && !pdlsymlinked(*smod, *symb)) {
+	if (mod->symb && mod->smod && !pdlsymlinked(mod->smod, mod->symb)) {
 		// If the symbol is not found and the symbol is required, error
 		if (symbreq) {
 			if (debug)
 				cerr << "failed!" << endl
 					 << "\tUnable to find required symbol: "
-					 << symb << endl;
+					 << mod->symb << endl;
 			return _LOAD_FAIL;
 		}
 
@@ -194,7 +186,7 @@ static int load(map<string, vector<base_extension*> >& extensions,
 			if (debug)
 				cerr << "failed!" << endl
 					 << "\tUnable to find required symbol: "
-					 << symb << endl;
+					 << mod->symb << endl;
 			return _LOAD_FAIL;
 		}
 	}
@@ -203,8 +195,8 @@ static int load(map<string, vector<base_extension*> >& extensions,
 	if (lazy) return _LOAD_LAZY;
 
 	// If our execution test succeeds, call init()
-	if ((test && *test && (*test)()) || !test || !*test) {
-		base_extension** exts = (*init)();
+	if ((mod->test && mod->test()) || !mod->test) {
+		base_extension** exts = mod->init();
 		if (!exts) {
 			if (debug)
 				cerr << "failed!" << endl
@@ -229,26 +221,17 @@ static int load(map<string, vector<base_extension*> >& extensions,
 
 	if (debug)
 		cerr << "failed!" << endl
-			 << "\tTest execution failed: " << symb << endl;
+			 << "\tTest execution failed." << endl;
 	return _LOAD_FAIL;
 }
 
-bool module_manager::load_builtin(string modname, const char* libname) {
+bool module_manager::load_builtin(mm_module *mod) {
 	const char* debug = getenv("_MM_DEBUG");
 	if (debug)
-			cerr << "loading : builtin module " << modname << CR;
-
-	// Open a handle to the main process
-#ifdef WIN32
-	pdlmtype dlobj = GetModuleHandle(libname);
-#else
-	pdlmtype dlobj = pdlopenl(NULL);
-#endif
-	if (dlobj == NULL) return false;
+			cerr << "loading : builtin module " << mod->name << CR;
 
 	// Do the load with the specified prefix
-	int status = load(this->extensions, this->singletons, dlobj, false, false, modname);
-	pdlclose(dlobj);
+	int status = load(this->extensions, this->singletons, mod, false, false);
 	return status == _LOAD_SUCC;
 }
 
@@ -281,7 +264,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	}
 
 	// Try and finish the load
-	int status = load(this->extensions, this->singletons, dlobj, true, symbreq);
+	struct mm_module *mod_info = (mm_module*) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(info)));
+	int status = load(this->extensions, this->singletons, mod_info, true, symbreq);
 	if (status == _LOAD_LAZY) { // Reload the module in non-lazy mode
 		dlobj = pdlreopen(filename.c_str(), dlobj);
 		if (!dlobj) {
@@ -290,7 +274,8 @@ bool module_manager::load_file(string filename, bool symbreq) {
 					 << "\tUnable to reload module: " << pdlerror() << endl;
 			return false;
 		}
-		status = load(this->extensions, this->singletons, dlobj, false, symbreq);
+		mod_info = (mm_module*) pdlsym(dlobj, __str(__MM_MODULE_VARNAME(info)));
+		status = load(this->extensions, this->singletons, mod_info, false, symbreq);
 	}
 	if (status == _LOAD_FAIL) {
 		pdlclose(dlobj);
