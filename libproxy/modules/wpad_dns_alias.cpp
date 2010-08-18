@@ -44,4 +44,4 @@ private:
 	char* lastpac;
 };
 
-MM_MODULE_INIT_EZ(dns_alias_wpad_extension);
+MM_MODULE_INIT_EZ(dns_alias_wpad_extension, true, NULL, NULL);

@@ -56,4 +56,4 @@ public:
 	}
 };
 
-MM_MODULE_INIT_EZ(domain_ignore_extension);
+MM_MODULE_INIT_EZ(domain_ignore_extension, true, NULL, NULL);
