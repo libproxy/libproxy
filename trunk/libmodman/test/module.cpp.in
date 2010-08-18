@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-#include <libmodman/test/main.hpp>
 #include <libmodman/module.hpp>
+#include <libmodman/test/main.hpp>
 
 class @MODNAME@ : public @MODTYPE@_extension {};
 MM_MODULE_INIT_EZ(@MODNAME@, @MODCOND@, @MODSYMB@, @MODSMOD@);
