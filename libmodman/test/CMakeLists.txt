@@ -4,24 +4,32 @@
 
 # Functions
 function(mm_create_module MODTYPE MODNAME MODCOND MODSYMB MODSMOD)
-  configure_file(modules/module.cpp.in libmodman/test/${MODTYPE}_${MODNAME}.cpp @ONLY)
-  if(NOT IS_DIRECTORY modules/${MODTYPE})
-    file(MAKE_DIRECTORY modules/${MODTYPE})
-  endif()
-  include_directories(../../)
-  add_library(${MODTYPE}_${MODNAME} MODULE libmodman/test/${MODTYPE}_${MODNAME}.cpp)
-  set_target_properties(${MODTYPE}_${MODNAME} PROPERTIES PREFIX "" LIBRARY_OUTPUT_DIRECTORY modules/${MODTYPE})
+  configure_file(module.cpp.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/${MODTYPE}_${MODNAME}.cpp
+                 @ONLY)
+  add_library(${MODTYPE}_${MODNAME}
+              MODULE
+              ${CMAKE_CURRENT_BINARY_DIR}/${MODTYPE}_${MODNAME}.cpp)
+  set_target_properties(${MODTYPE}_${MODNAME}
+                        PROPERTIES PREFIX ""
+                        LIBRARY_OUTPUT_DIRECTORY
+                        ${CMAKE_CURRENT_BINARY_DIR}/modules/${MODTYPE})
   target_link_libraries(${MODTYPE}_${MODNAME} modman)
 endfunction(mm_create_module)
 
 function(mm_create_program name EXTTYPE)
   add_executable(${name} main.cpp)
   target_link_libraries(${name} modman)
-  set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS EXTTYPE=${EXTTYPE}_extension)
+  set_property(TARGET ${name} PROPERTY
+               COMPILE_DEFINITIONS
+               EXTTYPE=${EXTTYPE}_extension)
   if(${ARGC} GREATER 2)
     target_link_libraries(${name} ${ARGN};modman)
-    set_property(TARGET ${name} PROPERTY COMPILE_DEFINITIONS EXTTYPE=${EXTTYPE}_extension;SYMB=1)
-    set_property(TARGET ${name} PROPERTY LINK_FLAGS -Wl,--no-as-needed)
+    set_property(TARGET ${name} PROPERTY 
+                 COMPILE_DEFINITIONS
+                 EXTTYPE=${EXTTYPE}_extension;SYMB=1)
+    set_property(TARGET ${name} PROPERTY
+                 LINK_FLAGS -Wl,--no-as-needed)
   endif()
 endfunction(mm_create_program)
 
@@ -34,11 +42,11 @@ mm_create_module(sorted    one true  NULL        NULL)
 mm_create_module(sorted    two true  NULL        NULL)
 mm_create_module(builtin   one true  NULL        NULL)
 if (WIN32)
-  mm_create_module(symbol    one true  \"asdfoia\" \"ws2_32\")
-  mm_create_module(symbol    two true  \"recv\"    \"ws2_32\")
+  mm_create_module(symbol  one true  \"asdfoia\" \"ws2_32\")
+  mm_create_module(symbol  two true  \"recv\"    \"ws2_32\")
 else()
-  mm_create_module(symbol    one true  \"asdfoia\" \"z\")
-  mm_create_module(symbol    two true  \"deflate\" \"z\")
+  mm_create_module(symbol  one true  \"asdfoia\" \"z\")
+  mm_create_module(symbol  two true  \"deflate\" \"z\")
 endif()
 
 # Programs
@@ -51,9 +59,12 @@ if (WIN32)
 else()
   mm_create_program(symbollnk symbol z)
 endif()
-add_executable(builtin builtin.cpp libmodman/test/builtin_one.cpp)
+add_executable(builtin
+               builtin.cpp
+               ${CMAKE_CURRENT_BINARY_DIR}/builtin_one.cpp)
 target_link_libraries(builtin modman)
-set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS EXTTYPE=builtin_extension;BUILTIN_MODULE=extension;MM_MODULE_BUILTIN=extension)
+set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS
+             EXTTYPE=builtin_extension;BUILTIN_MODULE=extension;MM_MODULE_BUILTIN=extension)
 
 # Tests
 add_test(NAME condition COMMAND condition $<TARGET_FILE_DIR:condition_one> two)
