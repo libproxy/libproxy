@@ -21,7 +21,4 @@
 #include <libmodman/module.hpp>
 
 class @MODNAME@ : public @MODTYPE@_extension {};
-bool test() { return @MODCOND@; }
-MM_MODULE_INIT_EZ(@MODNAME@);
-MM_MODULE_TEST(test);
-MM_MODULE_SYMB(@MODSYMB@, @MODSMOD@);
+MM_MODULE_INIT_EZ(@MODNAME@, @MODCOND@, @MODSYMB@, @MODSMOD@);

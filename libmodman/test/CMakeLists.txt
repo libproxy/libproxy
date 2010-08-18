@@ -53,7 +53,7 @@ else()
 endif()
 add_executable(builtin builtin.cpp libmodman/test/builtin_one.cpp)
 target_link_libraries(builtin modman)
-set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS EXTTYPE=builtin_extension;BUILTIN_MODULE="extension";MM_MODULE_BUILTIN=extension)
+set_property(TARGET builtin PROPERTY COMPILE_DEFINITIONS EXTTYPE=builtin_extension;BUILTIN_MODULE=extension;MM_MODULE_BUILTIN=extension)
 
 # Tests
 add_test(NAME condition COMMAND condition $<TARGET_FILE_DIR:condition_one> two)
