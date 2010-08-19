@@ -26,13 +26,22 @@ include(cmake/paths.cmk)
 
 ### Subdirectories
 # Conditionally build bundled libmodman
+option(FORCE_SYSTEM_LIBMODMAN "Force using system libmodman" OFF)
 find_package(libmodman QUIET)
 if(LIBMODMAN_FOUND)
-    message(STATUS "Building with system libmodman")    
+    if(${LIBMODMAN_VERSION_MAJOR} STREQUAL "2")
+      message(STATUS "Building with system libmodman")    
+    else()
+      message(FATAL_ERROR "Found incompatible libmodman on your system (libmodman 2.X is needed)")
+    endif()
 else()
-    message(STATUS "Building with bundled libmodman")
-    add_subdirectory(libmodman)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    if(FORCE_SYSTEM_LIBMODMAN)
+      message(FATAL_ERROR "Libmodman could not be found on your system")
+    else()
+      message(STATUS "Building with bundled libmodman")
+      add_subdirectory(libmodman)
+      include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
 endif()
 
 # Always build these
