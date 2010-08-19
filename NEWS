@@ -1,6 +1,20 @@
 New in version 0.4.5
 ===============================
 * C# bindings are installable (-DWITH_DOTNET=ON)
+* C# bindings installation path can be changed using -DGAC_DIR=
+* Internal libmodman build fixed
+* Installation dirs are now all relative to CMAKE_INSTALL_PREFIX
+* Fixed test while using --as-needed linker flag
+* Fixed generation of libproxy-1.0.pc
+* Basic support for Mingw added (not yet 100% functional)
+* Ruby binding implemented (not yet in the build system)
+* Fixed modules not being found caused by relative LIBEXEC_INSTALL_DIR
+* Fixed bug with builtin plugins (Issue 133)
+* Vala bindings installation path can be changed using -DVAPI_DIR=
+* Python bindings installation path can be changed using -DPYTHON_SITEPKG_DIR=
+* Perl bindings can be installed in vendor directory (-DPERL_VENDORARCH=ON)
+* Perl bindings installation path can be change using -DPX_PERL_ARCH=
+* Unit test now builds on OSX
 
 New in version 0.4.4
 ===============================

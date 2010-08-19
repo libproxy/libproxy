@@ -1,3 +1,23 @@
+Mon Jun 7 11:37:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+	* === Released 0.4.5 ===
+	* C# bindings are installable (-DWITH_DOTNET=ON)
+	* C# bindings installation path can be changed using -DGAC_DIR=
+	* Internal libmodman build fixed
+	* Installation dirs are now all relative to CMAKE_INSTALL_PREFIX
+	* Fixed test while using --as-needed linker flag
+	* Fixed generation of libproxy-1.0.pc
+	* Basic support for Mingw added (not yet 100% functional)
+	* Ruby binding implemented (not yet in the build system)
+	* Fixed modules not being found caused by relative LIBEXEC_INSTALL_DIR
+	* Fixed bug with builtin plugins (Issue 133)
+	* Vala bindings installation path can be changed using -DVAPI_DIR=
+	* Python bindings installation path can be changed using -DPYTHON_SITEPKG_DIR=
+	* Perl bindings can be installed in vendor directory (-DPERL_VENDORARCH=ON)
+	* Perl bindings installation path can be change using -DPX_PERL_ARCH=
+	* Unit test now builds on OSX
+	* Complete list of bug fixes:
+		+ 125, 126, 130, 132, 133
+
 Sun Jun 13 11:00:00 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
 	* === Released 0.4.4 ===
 	* Add support for optionally building using a system libmodman
@@ -46,10 +66,10 @@ Tue May 18 10:30:00 2010 Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 
 Thu Feb 25 20:12:57 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
 	* === Released 0.4.0 ===
-        * C++ rewrite
-        * Small API change (px_proxy_factory_get_proxy() can now return NULL)
+	* C++ rewrite
+	* Small API change (px_proxy_factory_get_proxy() can now return NULL)
 	* SOVERSION bump
-        * libmodman is now a seperate library
+	* libmodman is now a seperate library
 	* Migrate to cmake
 	* Windows support (config_w32reg, ignore_hostname; VC++ support)
 	* MacOSX support (config_macosx, ignore_hostname)
@@ -64,22 +84,22 @@ Thu Feb 25 20:12:57 2010 Nathaniel McCallum <nathaniel@natemccallum.com>
 	
 Thu Oct 08 21:26:00 2009 Dominique Leuenberger <dominique@leuenberger.net>
 	* === Released 0.3.1 ===
-	- Bugfixes
+	* Bugfixes
 	  + config file parser reads all sections
 	  + KDE session detection based on environment varibales,
 	    as suggested by KDE upstream.
-	- KDE configuration module is the first module in C++ and
+	* KDE configuration module is the first module in C++ and
 	  now links to libkdecore4 in order to properly detect the
 	  configuration folder for kde.
-	- At the moment we're not compatible with KDE3. Sorry.
-	- .NET bindings can now properly be installed and it should
+	* At the moment we're not compatible with KDE3. Sorry.
+	* .NET bindings can now properly be installed and it should
 	  be possible for packagers to provide them.
 
 Thu Aug 14 15:38:00 2009  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* === Released 0.3.0 ===
 	* WARNING!!! Slight API change (still ABI compat)!!!
 	  see docs for px_proxy_factory_get_proxies()
-	- Credentials support (see API change above)
+	* Credentials support (see API change above)
 	* A complete rewrite of the module manager
 	* file:// as valid PAC URLs
 	* Sample Mono application
@@ -90,23 +110,27 @@ Thu Aug 14 15:38:00 2009  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* Seamonkey support as JS pacrunner
 	* Bugfixes
 	* Compiles for MS Windows using Mingw
+
 Thu Jun 05 17:05:12 2008  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* === Released 0.2.3 ===
 	* New plugin: webkit (JavaScript)
 	* Massive speed improvements in all javascript plugins
-        * Bug fixes
+	* Bug fixes
 	* Memory leak fixes
 	* pkgconfig support
+
 Wed Jan 09 04:18:45 2008  Jeff Schroeder  <jeffschroeder@computer.org>
 	* === Released 0.2.2 ===
 	* Python bindings fix
 	* Added pthreads support from r191 in trunk
 	* Removed local copy of strdup() in proxy.c for OS X build issues
+
 Wed Dec 20 19:11:23 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* === Released 0.2.1 ===
 	* Build fix for mozjs
 	* Python bindings fix for renamed function
 	* Split off x_has_client() into its own file
+
 Wed Dec 12 20:12:56 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* === Released 0.2 ===
 	* Added Python bindings
@@ -120,8 +144,9 @@ Wed Dec 12 20:12:56 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* Relicense from LGPLv3+ to LGPLv2.1+
 	* Sacrifice re-homeing session support for massive performance gains
 	* Tons of bug fixes, memory leaks, etc
+
 Wed Oct 31 13:09:10 2007  Nathaniel McCallum  <nathaniel@natemccallum.com>
 	* === Released 0.1 ===
 	* AUTHORS: Added authors
 	* README: basic readme info
-        * src/lib/proxy.h: add missing doc line
+	* src/lib/proxy.h: add missing doc line
