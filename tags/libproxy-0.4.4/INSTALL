@@ -1,0 +1,35 @@
+
+Quick Start
+###########
+
+1. cmake ./
+2. make
+3. make install
+
+Or something like that...
+
+
+More advanced installation options:
+###################################
+1. Run cmake with optional arguments (any combination of, some might not make much sense though):
+
+  -DCMAKE_INSTALL_PREFIX=/usr/local 
+  -Dlibdir=/usr/local/lib
+  -Dlibexecdir=/usr/local/libexec 
+  -Ddatadir=/usr/local/share
+  -Dmoduledir=/usr/local/lib/libproxy/0.4.0/modules 
+  -DWITH_VALA=yes 
+  -DPERL_VENDORINSTALL=yes 
+
+Most of the arguments are selfexplanatory.
+-DWITH_VALA=yes can be specified if the Vala bindings shall be installed too
+-DPERL_VENDORINSTALL=yes specifies that the perl bindings should be installed in the vendor-lib folders and not in site-lib (as it would by default).
+
+2. Build the binaries using make
+
+Of course you can use parallel build using "make -j2" (limited testing is done on this. We try to have this functional)
+
+3. Installation
+
+make install [DESTDIR=/any/prefix/to/prepend]
+

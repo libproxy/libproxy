@@ -1,0 +1,9 @@
+if(NOT WIN32 AND NOT APPLE)
+  # PkgConfig file
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/libproxy-1.0.pc.in ${CMAKE_BINARY_DIR}/libproxy-1.0.pc @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/libproxy-1.0.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
+  
+  # CMake Find helper
+  configure_file(${CMAKE_SOURCE_DIR}/libproxy/Findlibproxy.cmake.in ${CMAKE_BINARY_DIR}/Findlibproxy.cmake @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/Findlibproxy.cmake DESTINATION ${SHARE_INSTALL_PREFIX}/cmake/Modules)
+endif()
