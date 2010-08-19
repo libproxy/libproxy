@@ -34,16 +34,10 @@
 #define strdup _strdup
 #endif
 
-#define X(m) MM_DEF_BUILTIN(m);
-BUILTIN_MODULES
-#undef X
-
-#define X(m) &MM_BUILTIN(m),
-static struct mm_module* builtin_modules[] = {
+static const char* builtin_modules[] = {
 	BUILTIN_MODULES
 	NULL
 };
-#undef X
 
 namespace libproxy {
 using namespace std;
@@ -149,7 +143,7 @@ proxy_factory::proxy_factory() {
 
 	// Load builtin modules
 	for (int i=0 ; builtin_modules[i] ; i++)
-		this->mm.load_builtin(builtin_modules[i]);
+		this->mm.load_builtin(builtin_modules[i], "libproxy");
 
 	// Load all modules
 	module_dir = getenv("PX_MODULE_PATH");

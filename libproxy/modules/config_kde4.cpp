@@ -98,4 +98,5 @@ private:
 	KConfigGroup* grp;
 };
 
-MM_MODULE_INIT_EZ(kde_config_extension, getenv("KDE_FULL_SESSION"), NULL, NULL);
+MM_MODULE_INIT_EZ(kde_config_extension);
+MM_MODULE_TEST_EZ(kde_config_extension, getenv("KDE_FULL_SESSION"));

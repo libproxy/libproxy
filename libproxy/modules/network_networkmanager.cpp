@@ -89,4 +89,4 @@ private:
 	DBusConnection *conn;
 };
 
-MM_MODULE_INIT_EZ(networkmanager_network_extension, true, NULL, NULL);
+MM_MODULE_INIT_EZ(networkmanager_network_extension);

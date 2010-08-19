@@ -19,10 +19,8 @@
 
 #include "main.hpp"
 
-MM_DEF_BUILTIN(BUILTIN_MODULE);
-
 int main() {
 	module_manager mm;
 	mm.register_type<EXTTYPE>();
-	return !mm.load_builtin(& MM_BUILTIN(BUILTIN_MODULE));
+	return !mm.load_builtin(BUILTIN_MODULE);
 }

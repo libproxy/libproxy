@@ -162,5 +162,5 @@ public:
 	}
 };
 
-MM_MODULE_INIT_EZ(macosx_config_extension, true, NULL, NULL);
+MM_MODULE_INIT_EZ(macosx_config_extension);
 

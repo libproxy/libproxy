@@ -1,11 +1,5 @@
 ### Required
 cmake_minimum_required(VERSION 2.6)
-if(POLICY CMP0011)
-   cmake_policy(SET CMP0011 NEW)
-endif(POLICY CMP0011)
-
-# Make sure we look in our cmake folder for additional definitions
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake )
 
 ### Make sure we have a build type
 # This fixes an install issue where installs fail
@@ -26,7 +20,7 @@ include(cmake/paths.cmk)
 
 ### Subdirectories
 # Conditionally build bundled libmodman
-find_package(libmodman QUIET)
+find_package(libmodman)
 if(LIBMODMAN_FOUND)
     message(STATUS "Building with system libmodman")    
 else()

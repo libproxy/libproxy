@@ -28,42 +28,40 @@
 
 #ifdef WIN32
 #define __MM_DLL_EXPORT __declspec(dllexport)
+#define __MM_FUNC_DEF_PREFIX extern "C" __MM_DLL_EXPORT
+#define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #else
 #include <typeinfo>
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
+#define __MM_FUNC_DEF_PREFIX            __MM_DLL_EXPORT
+#define __MM_SCLR_DEF_PREFIX extern "C" __MM_DLL_EXPORT
 #endif
 
-#define __MM_MODULE_VERSION 2
+#define __MM_MODULE_VERSION 1
 #define __MM_MODULE_VARNAME__(suffix, name) mm_ ## name ## _ ## suffix
 #define __MM_MODULE_VARNAME_(suffix, name) __MM_MODULE_VARNAME__(suffix, name)
 #define __MM_MODULE_VARNAME(name) __MM_MODULE_VARNAME_(MM_MODULE_BUILTIN, name)
+#define MM_MODULE_INIT(mtype, minit) \
+	__MM_SCLR_DEF_PREFIX const unsigned int  __MM_MODULE_VARNAME(vers)    = __MM_MODULE_VERSION; \
+	__MM_FUNC_DEF_PREFIX const char*       (*__MM_MODULE_VARNAME(type))() = mtype::base_type; \
+	__MM_FUNC_DEF_PREFIX base_extension**  (*__MM_MODULE_VARNAME(init))() = minit;
+#define MM_MODULE_TEST(mtest) \
+	__MM_FUNC_DEF_PREFIX bool              (*__MM_MODULE_VARNAME(test))() = mtest;
+#define MM_MODULE_SYMB(msymb, msmod) \
+	__MM_SCLR_DEF_PREFIX const char* const   __MM_MODULE_VARNAME(symb)    = msymb; \
+	__MM_SCLR_DEF_PREFIX const char* const   __MM_MODULE_VARNAME(smod)    = msmod;
 
-#define MM_MODULE_INIT(mtype, minit, mtest, msymb, msmod) \
-	extern "C" __MM_DLL_EXPORT struct mm_module __MM_MODULE_VARNAME(info); \
-	struct mm_module __MM_MODULE_VARNAME(info) = { \
-		__MM_MODULE_VERSION, \
-		# mtype, \
-		mtype::base_type, \
-		minit, mtest, msymb, msmod \
-	}
-
-#define MM_MODULE_INIT_EZ(clsname, mtest, msymb, msmod) \
+#define MM_MODULE_INIT_EZ(clsname) \
 	static libmodman::base_extension** clsname ## _init() { \
 		libmodman::base_extension** retval = new libmodman::base_extension*[2]; \
 		retval[0] = new clsname(); \
 		retval[1] = NULL; \
 		return retval; \
 	} \
+	MM_MODULE_INIT(clsname, clsname ## _init)
+#define MM_MODULE_TEST_EZ(clsname, mtest) \
 	static bool clsname ## _test() { return mtest; } \
-	MM_MODULE_INIT(clsname, clsname ## _init, clsname ## _test, msymb, msmod)
-
-/* Helper macro for loading builtins */
-
-#define MM_DEF_BUILTIN(modname) \
-  extern struct mm_module __MM_MODULE_VARNAME_(modname,info)
-
-#define MM_BUILTIN(modname) __MM_MODULE_VARNAME_(modname,info)
-
+	MM_MODULE_TEST(clsname ## _test)
 
 namespace libmodman {
 
@@ -88,21 +86,6 @@ public:
 	static  bool            singleton() { return sngl; }
 	virtual const char* get_base_type() const { return basetype::base_type(); }
 	virtual bool            operator<(const base_extension&) const { return false; };
-};
-
-}
-
-extern "C" {
-
-struct mm_module
-{
-  const unsigned int		     vers;
-  const char*                    name;
-  const char*				   (*type)();
-  libmodman::base_extension**  (*init)();
-  bool						   (*test)();
-  const char*					 symb;
-  const char*					 smod;
 };
 
 }

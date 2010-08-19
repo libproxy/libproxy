@@ -1,33 +1,27 @@
 /*******************************************************************************
- * libproxy - A library for proxy configuration
- * Copyright (C) 2008-2010 Dominique Leuenberger <dominique@leuenberger.net>
- * 
+ * libmodman - A library for extending applications
+ * Copyright (C) 2009 Nathaniel McCallum <nathaniel@natemccallum.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
-using System;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+#include <libmodman/test/main.hpp>
+#include <libmodman/module.hpp>
 
-[assembly:AssemblyVersion("0.4.4")]
-[assembly:AssemblyTitle ("LibProxy#")]
-[assembly:AssemblyDescription ("A library that provides automatic proxy configuration management.")]
-[assembly:AssemblyCopyright ("Copyright (c) 2006-2009 Nathaniel McCallum")]
-[assembly:AssemblyCompany ("")]
-[assembly:AssemblyDelaySign(false)]
-[assembly:AssemblyKeyFile("libproxy.snk")]
-[assembly:CLSCompliant(false)]
-
+class @MODNAME@ : public @MODTYPE@_extension {};
+bool test() { return @MODCOND@; }
+MM_MODULE_INIT_EZ(@MODNAME@);
+MM_MODULE_TEST(test);
+MM_MODULE_SYMB(@MODSYMB@, @MODSMOD@);

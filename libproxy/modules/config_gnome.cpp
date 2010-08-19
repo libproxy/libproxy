@@ -297,18 +297,15 @@ static base_extension** gnome_config_extension_init() {
 		return retval;
 	}
 	catch (runtime_error) {
-		delete[] retval;
+		delete retval;
 		return NULL;
 	}
 }
 
-static bool gnome_config_extension_test() {
-	return (getenv("GNOME_DESKTOP_SESSION_ID")
-			|| (getenv("DESKTOP_SESSION")
-				&& string(getenv("DESKTOP_SESSION")) == "gnome"));
-}
-
-MM_MODULE_INIT(gnome_config_extension,
-			   gnome_config_extension_init,
-			   gnome_config_extension_test,
-			   NULL, NULL);
+MM_MODULE_INIT(gnome_config_extension, gnome_config_extension_init);
+MM_MODULE_TEST_EZ(gnome_config_extension,
+                     (
+                         getenv("GNOME_DESKTOP_SESSION_ID") ||
+                         (getenv("DESKTOP_SESSION") && string(getenv("DESKTOP_SESSION")) == "gnome")
+                     )
+                 );

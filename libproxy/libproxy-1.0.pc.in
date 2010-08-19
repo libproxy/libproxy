@@ -1,9 +1,9 @@
-prefix=@PKGCONFIG_PREFIX@
-libdir=@PKGCONFIG_LIBDIR@
-includedir=@PKGCONFIG_INCLUDEDIR@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
 
 Name: libproxy-1.0
 Description: Proxy Configuration Library
-Version: @PROJECT_VERSION@
+Version: @CMAKE_PROJECT_VERSION@
 Libs: -L${libdir} -lproxy
 Cflags: -I${includedir} 
