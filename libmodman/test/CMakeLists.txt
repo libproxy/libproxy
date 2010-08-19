@@ -28,8 +28,10 @@ function(mm_create_program name EXTTYPE)
     set_property(TARGET ${name} PROPERTY 
                  COMPILE_DEFINITIONS
                  EXTTYPE=${EXTTYPE}_extension;SYMB=1)
-    set_property(TARGET ${name} PROPERTY
-                 LINK_FLAGS -Wl,--no-as-needed)
+    if(NOT WIN32 AND NOT APPLE)
+      set_property(TARGET ${name} PROPERTY
+                   LINK_FLAGS -Wl,--no-as-needed)
+    endif()
   endif()
 endfunction(mm_create_program)
 
