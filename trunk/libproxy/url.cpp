@@ -122,7 +122,7 @@ string url::encode(const string &data, const string &valid_reserved) {
 	return encoded.str();
 }
 
-url::url(const string url) throw(parse_error)
+url::url(const string &url) throw(parse_error)
 	: m_orig(url), m_port(0), m_ips(NULL) {
 	size_t idx = 0;
 	size_t hier_part_start, hier_part_end;
@@ -173,7 +173,7 @@ url::url(const string url) throw(parse_error)
 	 *		      / path-empty
 	 */
 
-	if (hier_part[0] == '/' && hier_part[1] == '/') {
+	if (hier_part.size() >= 2 && hier_part[0] == '/' && hier_part[1] == '/') {
 		size_t authority_start, authority_end;
 		size_t userinfo_start, userinfo_end;
 		size_t host_start, host_end;
@@ -237,7 +237,7 @@ url::url(const string url) throw(parse_error)
 			m_port = atoi(hier_part.c_str() + port_start);
 		}
 	} else {
-		path_start = hier_part_start;
+		path_start = 0;
 	}
 
 	/* Get path */
