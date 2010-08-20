@@ -124,6 +124,13 @@ int main()
 		  "", "",
 		  "test.com", 80,
 		  "/ALLO");
+
+  /* This is a very uncommon but valid case that use to cause crash */
+  try_url ("www.google.com:80", rtv,
+		   "www.google.com",
+		   "", "",
+		   "", 0,
+		   "80");
   
   return !rtv;
 }

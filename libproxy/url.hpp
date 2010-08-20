@@ -50,7 +50,7 @@ public:
 
 	~url();
 	url(const url& url);
-	url(string url) throw (parse_error);
+	url(const string& url) throw (parse_error);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
 	url& operator=(string url) throw (parse_error);
