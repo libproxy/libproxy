@@ -24,48 +24,29 @@ libproxy can be build with minimal dependencies or with several additional plugi
 
 || Plugin || Fedora || Ubuntu ||
 || NetworkManager Plugin|| dbus-devel, NetworkManager-devel || libdbus-1-dev, network-manager-dev ||
-|| Gnome Config Plugin || x11-devel, xmu-devel, gconf-devel || libgconf2-dev, libxmu-dev ||
-|| KDE Config Plugin || x11-devel, xmu-devel || libxmu-dev ||
-|| PAC via Firefox/Xulrunner || firefox-devel or xulrunner-devel || firefox-dev or libmozjs-dev ||
-|| PAC via WebKit || WebKit-gtk-devel || ||
+|| Gnome Config Plugin || GConf2-devel || libgconf2-dev ||
+|| KDE Config Plugin || kdelibs-devel || kdelibs5-dev ||
+|| PAC via Firefox/Xulrunner || xulrunner-devel || firefox-dev or libmozjs-dev ||
+|| PAC via WebKit || webkitgtk-devel || libwebkit-dev ||
 
 Information on libproxy bindings coming soon...
 
 
 = Building the Code =
-Libproxy was changed to the cmake build system to better support various operating systems. You can build libproxy like this:
+
+For the most up-to-date information about building and configuring libproxy please refer to the [http://code.google.com/p/libproxy/source/browse/trunk/INSTALL INSTALL] file.
+
+== Quick Start ==
 {{{
-cmake \
-[-DCMAKE_INSTALL_PREFIX=/usr] \
-[-Dlibdir=/usr/lib] \
-[-Ddatadir=/usr/share] \
-[-Dmoduledir=/usr/lib/libproxy/0.4.0/modules] \
-[-Dbindir=/usr/bin] \
-[-Dlibexecdir=/usr/libexec] \
-[-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js] \
-[-DWITH_VALA=YES] \
-[-DPERL_VENDORINSTALL] \
-.
-make
-sudo make install
+1. mkdir build
+2. cd build
+3. cmake ..
+4. make
+5. make install
 }}}
 
-== The cmake parameters explained ==
-[-DCMAKE_INSTALL_PREFIX=/usr/local]: The base directory to be used for the installation<br>
-[-Dlibdir=/usr/local/lib]: Where the libraries are to be installed<br>
-[-Ddatadir=/usr/local/share]: Various data files go here<br>
-[-Dmoduledir=/usr/local/lib/libproxy/0.4.0/modules]: All modules for libproxy go to this folder<br>
-[-Dbindir=/usr/local/bin]: The libproxy utilites will be installed here<br>
-[-Dlibexecdir=/usr/local/libexec]: And library helper goes here<br>
-[-DMOZJS_SEARCH_ORDER:STRING=xulrunner-js;firefox-js;mozilla-js;seamonkey-js]: Specify in which order the different JS libraries shall be probed. The first one found will be used.<br>
-[-DWITH_VALA] Install the Vala bindings in the system<br>
-[-DPERL_VENDORINSTALL] Install the perl bindings into vendor_lib instead of site_lib
-
-All paths defined can of course can changed. The paths The ones noted here are used if the specific parameter is left out and can be considered the defaults.
-
-Note the dot (.) at the end of the cmake call. This is the path to the libproxy source. Dot denotes the current directory and can be used when building directly in the source folder of libproxy (recommended).
-
-= Testing it Out =
+== Testing it Out ==
 {{{
 /usr/local/bin/proxy http://www.google.com
 }}}
+
