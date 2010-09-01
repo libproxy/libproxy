@@ -1,0 +1,10 @@
+if (NOT WIN32 AND NOT APPLE)
+  px_check_modules(GNOME gconf-2.0 gobject-2.0)
+  
+  # GNOME (gconf) helper
+  if(GNOME_FOUND)
+    add_executable(pxgconf modules/pxgconf.cpp)
+    target_link_libraries(pxgconf ${GNOME_LIBRARIES})
+    install(TARGETS pxgconf RUNTIME DESTINATION ${LIBEXEC_INSTALL_DIR})
+  endif()
+endif()
