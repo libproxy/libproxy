@@ -232,7 +232,8 @@ url::url(const string &url) throw(parse_error)
 		/* Get port */
 		m_port = get_default_port(m_scheme);
 
-		if (hier_part[host_end] == ':') {
+		if (host_end != hier_part.size()
+			&& hier_part[host_end] == ':') {
 			size_t port_start = host_end + 1;
 			m_port = atoi(hier_part.c_str() + port_start);
 		}
