@@ -22,7 +22,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly:AssemblyVersion("0.4.5")]
+[assembly:AssemblyVersion("0.4.6")]
 [assembly:AssemblyTitle ("LibProxy#")]
 [assembly:AssemblyDescription ("A library that provides automatic proxy configuration management.")]
 [assembly:AssemblyCopyright ("Copyright (c) 2006-2009 Nathaniel McCallum")]
