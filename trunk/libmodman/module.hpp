@@ -60,7 +60,7 @@
 /* Helper macro for loading builtins */
 
 #define MM_DEF_BUILTIN(modname) \
-  extern struct mm_module __MM_MODULE_VARNAME_(modname,info)
+  extern "C" struct mm_module __MM_MODULE_VARNAME_(modname,info)
 
 #define MM_BUILTIN(modname) __MM_MODULE_VARNAME_(modname,info)
 
@@ -94,7 +94,7 @@ public:
 
 extern "C" {
 
-struct mm_module
+struct __MM_DLL_EXPORT mm_module
 {
   const unsigned int		     vers;
   const char*                    name;
