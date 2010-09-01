@@ -1,3 +1,12 @@
+New in version 0.4.6
+==============================	
+* Fixed a crash in the URL parser
+* Fixed build issues with Visual Studio
+* Updated the INSTALL file
+* Install Python binding in prefix path if site-packages exists
+* Fixed compilation with Visual Studio
+
+
 New in version 0.4.5
 ===============================
 * C# bindings are installable (-DWITH_DOTNET=ON)
