@@ -13,7 +13,7 @@
 || VideoLan Client || http://www.videolan.org || http://www.videolan.org/support/lists.html || http://article.gmane.org/gmane.comp.video.videolan.vlc.devel/43245 || yes || yes ||
 || Telepathy Gabble || http://telepathy.freedesktop.org/ || || || yes || yes (GLib) ||
 || Telepathy Butterfly || || || || yes || yes ||
-|| Telepathy Haze || || http://developer.pidgin.im/ticket/4459 || Pigbin/libpurple uses direct Gnome config || yes || no ||
+|| Telepathy Haze || || || http://developer.pidgin.im/ticket/4459 || yes || no ||
 || Ekiga || || || || no || no ||
 || X-Chat || || || || no || no ||
 || Konqueror || || || || no || no ||
