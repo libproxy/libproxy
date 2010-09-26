@@ -26,10 +26,9 @@
 #define MM_MODULE_BUILTIN
 #endif
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #define __MM_DLL_EXPORT __declspec(dllexport)
 #else
-#include <typeinfo>
 #define __MM_DLL_EXPORT __attribute__ ((visibility("default")))
 #endif
 
@@ -79,10 +78,10 @@ public:
 template <class basetype, bool sngl=false>
 class __MM_DLL_EXPORT extension : public base_extension {
 public:
-#ifdef WIN32
+#ifdef _MSC_VER
 	static  const char*     base_type() { return __FUNCSIG__; }
 #else
-	static  const char*     base_type() { return typeid(basetype).name(); }
+	static  const char*     base_type() { return __PRETTY_FUNCTION__; }
 #endif
 
 	static  bool            singleton() { return sngl; }
