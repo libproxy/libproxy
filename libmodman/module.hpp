@@ -95,7 +95,7 @@ extern "C" {
 
 struct __MM_DLL_EXPORT mm_module
 {
-  const unsigned int		     vers;
+        unsigned int		     vers;
   const char*                    name;
   const char*				   (*type)();
   libmodman::base_extension**  (*init)();
