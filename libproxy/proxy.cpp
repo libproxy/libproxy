@@ -21,6 +21,7 @@
 #include <cstring>   // For strdup()
 #include <iostream>  // For cerr
 #include <stdexcept> // For exception
+#include <typeinfo>  // Only for debug messages.
 
 #include <libmodman/module_manager.hpp>
 
