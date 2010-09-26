@@ -20,6 +20,8 @@
 #ifndef MAIN_HPP_
 #define MAIN_HPP_
 
+#include <typeinfo>
+
 #include "../module_manager.hpp"
 
 using namespace std;
