@@ -1,0 +1,9 @@
+#summary Work in progress
+
+
+|| || GNOME || KDE || Win32 || Mac OS X ||
+|| config || * || * ||  * || * ||
+|| ignore || * || * || * || * ||
+|| network || * || * || || ? ||
+|| pac || * || * || || * ||
+|| wpad || * || * || || * ||
