@@ -44,8 +44,12 @@ else()
     endif()
 endif()
 
+# Conditionally build bindings
+if(WIN32)
+    add_subdirectory(bindings)
+endif()
+
 # Always build these
 add_subdirectory(libproxy)
-add_subdirectory(bindings)
 add_subdirectory(utils)
 
