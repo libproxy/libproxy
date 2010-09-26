@@ -20,6 +20,7 @@
 #include <algorithm>  // For sort()
 #include <sys/stat.h> // For stat()
 #include <iostream>
+#include <typeinfo>
 
 #ifdef WIN32
 #include <windows.h>
@@ -42,7 +43,7 @@ using namespace libmodman;
 #define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
 static void* pdlsym(pdlmtype mod, string sym) {
-	return GetProcAddress(mod, sym.c_str());
+	return (void *) GetProcAddress(mod, sym.c_str());
 }
 
 static pdlmtype pdlreopen(const char* filename, pdlmtype module) {
