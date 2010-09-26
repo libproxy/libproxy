@@ -261,7 +261,7 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
-	invign  = confign[0] == '-';
+	invign  = confign.size() > 0 && confign[0] == '-';
 	if (invign) confign = confign.substr(1);
 	for (size_t i=0 ; i < confign.size() && !ignored;) {
 		size_t next = confign.find(',', i);
