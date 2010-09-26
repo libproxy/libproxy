@@ -173,7 +173,7 @@ url::url(const string &url) throw(parse_error)
 	 *		      / path-empty
 	 */
 
-	if (hier_part.size() >= 2 && hier_part[0] == '/' && hier_part[1] == '/') {
+	if (hier_part.size() > 2 && hier_part[0] == '/' && hier_part[1] == '/') {
 		size_t authority_start, authority_end;
 		size_t userinfo_start, userinfo_end;
 		size_t host_start, host_end;
