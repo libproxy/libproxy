@@ -95,6 +95,10 @@ extern "C" {
 
 struct __MM_DLL_EXPORT mm_module
 {
+/* For some unknown reason, when vers is const VC++ (win32) NULLs out the whole struct.
+ * This obviously breaks module loading.  I'd love to know the reason for this, so if
+ * anyone knows, please tell me.  In the meantime, vers not being const is by design,
+ * so don't change it. */
         unsigned int		     vers;
   const char*                    name;
   const char*				   (*type)();
