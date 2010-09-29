@@ -131,6 +131,13 @@ int main()
 		   "", "",
 		   "", 0,
 		   "80");
+
+  /* Handle the case where there is nothing other than the scheme */
+  try_url ("http://", rtv,
+		   "http",
+		   "", "",
+		   "", 80,
+		   "");
   
   return !rtv;
 }
