@@ -45,7 +45,7 @@ else()
 endif()
 
 # Conditionally build bindings
-if(WIN32)
+if(!WIN32)
     add_subdirectory(bindings)
 endif()
 
