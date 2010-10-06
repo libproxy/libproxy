@@ -110,7 +110,7 @@ bool url::is_valid(const string url_) {
 string url::encode(const string &data, const string &valid_reserved) {
 	ostringstream encoded;
 	for (unsigned int i=0; i < data.size(); i++) {
-		if (isalnum(data[i])
+		if (isalnum((unsigned char)data[i])
 				|| valid_reserved.find(data[i]) != string::npos
 				|| string("-._~").find(data[i]) != string::npos)
 			encoded << data[i];
