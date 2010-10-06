@@ -173,7 +173,7 @@ url::url(const string &url) throw(parse_error)
 	 *		      / path-empty
 	 */
 
-	if (hier_part.size() > 2 && hier_part[0] == '/' && hier_part[1] == '/') {
+	if (hier_part.size() >= 2 && hier_part[0] == '/' && hier_part[1] == '/') {
 		size_t authority_start, authority_end;
 		size_t userinfo_start, userinfo_end;
 		size_t host_start, host_end;
@@ -211,7 +211,8 @@ url::url(const string &url) throw(parse_error)
 			host_start = userinfo_end + 1;
 
 		/* Check for IPv6 IP */
-		if (hier_part[host_start] == '[') {
+		if (host_start < hier_part.size()
+                    && hier_part[host_start] == '[') {
 			host_end = hier_part.find(']', host_start);
 			if (host_end == string::npos)
 				throw parse_error("Invalid URL: " + url);
@@ -232,7 +233,7 @@ url::url(const string &url) throw(parse_error)
 		/* Get port */
 		m_port = get_default_port(m_scheme);
 
-		if (host_end != hier_part.size()
+		if (host_end < hier_part.size()
 			&& hier_part[host_end] == ':') {
 			size_t port_start = host_end + 1;
 			m_port = atoi(hier_part.c_str() + port_start);
