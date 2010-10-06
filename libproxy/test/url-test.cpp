@@ -59,6 +59,12 @@ int main()
 {
   bool rtv = true;
 
+#ifdef WIN32
+  WSADATA wsadata;
+  WORD vers = MAKEWORD(2, 2);
+  WSAStartup(vers, &wsadata);
+#endif
+
   try_url ("file:///allo", rtv,
 		  "file",
 		  "", "",
@@ -138,6 +144,10 @@ int main()
 		   "", "",
 		   "", 80,
 		   "");
+
+#ifdef WIN32
+  WSACleanup();
+#endif
   
   return !rtv;
 }
