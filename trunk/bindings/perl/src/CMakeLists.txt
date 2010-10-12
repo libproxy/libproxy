@@ -10,9 +10,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Libproxy.c
 
 set(Libproxy_LIB_SRCS Libproxy.c)
 
-set(CMAKE_C_COMPILER ${CMAKE_CXX_COMPILER})
-set(CMAKE_C_FLAGS ${PERL_CXX_FLAGS} )
-
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/perl/blib/arch/auto/Net)
 add_library(PLlibproxy SHARED ${Libproxy_LIB_SRCS})
 
