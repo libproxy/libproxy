@@ -102,10 +102,8 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 		if (dup2(rpipe[1], STDOUT_FILENO) != STDOUT_FILENO) _exit(2);
 
 		// Close unneeded fds
-		close(rpipe[0]);
-		close(rpipe[1]);
-		close(wpipe[0]);
-		close(wpipe[1]);
+		for (int i = 3; i < sysconf(_SC_OPEN_MAX); i++)
+			close(i);
 
 		// Exec
 		execl("/bin/sh", "sh", "-c", program, (char*) NULL);
