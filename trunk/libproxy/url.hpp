@@ -27,6 +27,13 @@
 
 #include "config.hpp"
 
+#define URL_GENERIC_DELIMITERS          ":/?#[]@"
+#define URL_SUBCOMPONENT_DELIMITERS     "!$&'()*+,;="
+#define URL_ALLOWED_IN_USERINFO_ELEMENT URL_SUBCOMPONENT_DELIMITERS
+#define URL_ALLOWED_IN_USERINFO         URL_ALLOWED_IN_USERINFO_ELEMENT ":"
+#define URL_ALLOWED_IN_PATH_ELEMENT     URL_SUBCOMPONENT_DELIMITERS ":@"
+#define URL_ALLOWED_IN_PATH             URL_ALLOWED_IN_PATH_ELEMENT "/"
+
 namespace libproxy {
 
 using namespace std;
@@ -38,13 +45,6 @@ public:
 
 class DLL_PUBLIC url {
 public:
-	static const string ALLOWED_IN_PATH;
-	static const string ALLOWED_IN_PATH_ELEMENT;
-	static const string ALLOWED_IN_USERINFO;
-	static const string ALLOWED_IN_USERINFO_ELEMENT;
-	static const string GENERIC_DELIMITERS;
-	static const string SUBCOMPONENT_DELIMITERS;
-
 	static bool is_valid(const string url);
 	static string encode(const string &data, const string &valid_reserved = "");
 

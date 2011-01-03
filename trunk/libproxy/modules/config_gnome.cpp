@@ -192,8 +192,8 @@ public:
 		else if (this->data[PROXY_MODE] == "manual") {
 			string type, host, port;
 			bool       auth = this->data[PROXY_USE_AUTHENTICATION] == "true";
-			string username = url::encode(this->data[PROXY_AUTH_USER], url::ALLOWED_IN_USERINFO_ELEMENT);
-			string password = url::encode(this->data[PROXY_AUTH_PASSWORD], url::ALLOWED_IN_USERINFO_ELEMENT);
+			string username = url::encode(this->data[PROXY_AUTH_USER], URL_ALLOWED_IN_USERINFO_ELEMENT);
+			string password = url::encode(this->data[PROXY_AUTH_PASSWORD], URL_ALLOWED_IN_USERINFO_ELEMENT);
 			bool same_proxy = this->data[PROXY_SAME_FOR_ALL] == "true"; 
 
 			// If socks is set use it (except when same_proxy is set)

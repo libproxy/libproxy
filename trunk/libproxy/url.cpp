@@ -56,13 +56,6 @@ using namespace std;
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
 
-const string url::GENERIC_DELIMITERS(":/?#[]@");
-const string url::SUBCOMPONENT_DELIMITERS("!$&'()*+,;=");
-const string url::ALLOWED_IN_USERINFO_ELEMENT(url::SUBCOMPONENT_DELIMITERS);
-const string url::ALLOWED_IN_USERINFO(url::ALLOWED_IN_USERINFO_ELEMENT + ":");
-const string url::ALLOWED_IN_PATH_ELEMENT(url::SUBCOMPONENT_DELIMITERS + ":@");
-const string url::ALLOWED_IN_PATH(url::ALLOWED_IN_PATH_ELEMENT + "/");
-
 static inline int get_default_port(string scheme) {
 	struct servent *serv;
 	size_t plus = scheme.find('+');
