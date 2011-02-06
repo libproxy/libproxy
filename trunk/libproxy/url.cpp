@@ -36,12 +36,9 @@
 
 #ifdef WIN32
 #include <io.h>
-#define pfsize(st) (st.st_size)
 #define close _close
 #define read _read
 #define SHUT_RDWR SD_BOTH
-#else
-#define pfsize(st) (st.st_blksize * st.st_blocks)
 #endif
 
 #include "url.hpp"
@@ -394,10 +391,11 @@ char* url::get_pac() {
 		struct stat st;
 		if ((sock = ::open(m_path.c_str(), O_RDONLY)) < 0)
 			return NULL;
-		if (!fstat(sock, &st) && pfsize(st) < PAC_MAX_SIZE) {
-			buffer = new char[pfsize(st)+1];
-			memset(buffer, 0, pfsize(st)+1);
-			if (read(sock, buffer, pfsize(st)) == 0) {
+
+		if (!fstat(sock, &st) && st.st_size < PAC_MAX_SIZE) {
+			buffer = new char[st.st_size+1];
+			memset(buffer, 0, st.st_size+1);
+			if (read(sock, buffer, st.st_size) == 0) {
 				delete[] buffer;
 				buffer = NULL;
 			}
