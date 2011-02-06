@@ -396,6 +396,7 @@ char* url::get_pac() {
 			return NULL;
 		if (!fstat(sock, &st) && pfsize(st) < PAC_MAX_SIZE) {
 			buffer = new char[pfsize(st)+1];
+			memset(buffer, 0, pfsize(st)+1);
 			if (read(sock, buffer, pfsize(st)) == 0) {
 				delete buffer;
 				buffer = NULL;
