@@ -165,7 +165,7 @@ proxy_factory::proxy_factory() {
 proxy_factory::~proxy_factory() {
 	lock();
 
-	if (this->pac) delete this->pac;
+	if (this->pac) delete[] this->pac;
 	if (this->pacurl) delete this->pacurl;
 	
 	unlock();
