@@ -24,14 +24,6 @@ using namespace libproxy;
 #include <natus/natus.h>
 #include "pacutils.h"
 
-#ifndef INET_ADDRSTRLEN
-#define INET_ADDRSTRLEN 16
-#endif
-
-#ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
-#endif
-
 using namespace natus;
 
 static Value dnsResolve(Value& ths, Value& fnc, vector<Value>& arg) {
@@ -71,9 +63,9 @@ static Value myIpAddress(Value& ths, Value& fnc, vector<Value>& arg) {
 	return ths.newString("Unable to find hostname!").toException();
 }
 
-class webkit_pacrunner : public pacrunner {
+class natus_pacrunner : public pacrunner {
 public:
-	webkit_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	natus_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
 		Value exc;
 
 		// Create the basic context
@@ -116,4 +108,4 @@ private:
 	Value  glb;
 };
 
-PX_PACRUNNER_MODULE_EZ(webkit, "JSObjectMakeFunctionWithCallback", "webkit");
+PX_PACRUNNER_MODULE_EZ(natus, "nt_engine_init", "natus");
