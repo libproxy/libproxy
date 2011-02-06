@@ -398,7 +398,7 @@ char* url::get_pac() {
 			buffer = new char[pfsize(st)+1];
 			memset(buffer, 0, pfsize(st)+1);
 			if (read(sock, buffer, pfsize(st)) == 0) {
-				delete buffer;
+				delete[] buffer;
 				buffer = NULL;
 			}
 		}
