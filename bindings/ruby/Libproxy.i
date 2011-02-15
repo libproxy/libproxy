@@ -4,7 +4,6 @@
 #include "../../libproxy/proxy.h"
 %}
 
-
 %typemap(out) char ** {
   VALUE arr = rb_ary_new2(255);
   int i;
@@ -15,7 +14,7 @@
 }
 
 %typemap(freearg) char ** {
-	free($source);
+  free($source);
 }
 
 %include "../../libproxy/proxy.h"
