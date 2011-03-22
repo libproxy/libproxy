@@ -116,11 +116,7 @@ public:
 	    //JS_SetOptions(this->jsctx, JSOPTION_VAROBJFIX);
 	    //JS_SetVersion(this->jsctx, JSVERSION_LATEST);
 	    //JS_SetErrorReporter(cx, reportError);
-		#ifdef HAVE_MOZJS_2
 		if (!(this->jsglb = JS_NewCompartmentAndGlobalObject(this->jsctx, &cls, NULL))) goto error;
-		#else
-		if (!(this->jsglb = JS_NewObject(this->jsctx, &cls, NULL, NULL))) goto error;
-		#endif
 		if (!JS_InitStandardClasses(this->jsctx, this->jsglb))            goto error;
 
 		// Define Javascript functions
