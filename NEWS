@@ -1,3 +1,7 @@
+New in version 0.4.7
+==============================
+* Support/require xulrunner 2.0+
+
 New in version 0.4.6
 ==============================	
 * Fixed a crash in the URL parser
