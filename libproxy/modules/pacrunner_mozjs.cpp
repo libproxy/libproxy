@@ -42,12 +42,12 @@ using namespace libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static JSBool dnsResolve(JSContext *cx, JSObject * /*obj*/, uintN /*argc*/, jsval *argv, jsval *rval) {
+static JSBool dnsResolve_(JSContext *cx, jsval hostname, jsval *vp) {
 	// Get hostname argument
-	char *tmp = JS_strdup(cx, JS_GetStringBytes(JS_ValueToString(cx, argv[0])));
+	char *tmp = JS_EncodeString(cx, JS_ValueToString(cx, hostname));
 
 	// Set the default return value
-	*rval = JSVAL_NULL;
+	JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
 	// Look it up
 	struct addrinfo *info = NULL;
@@ -66,7 +66,7 @@ static JSBool dnsResolve(JSContext *cx, JSObject * /*obj*/, uintN /*argc*/, jsva
 					NI_NUMERICHOST)) goto out;
 
 	// We succeeded
-	*rval = STRING_TO_JSVAL(JS_NewString(cx, tmp, strlen(tmp)));
+	JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyN(cx, tmp, strlen(tmp))));
 	tmp = NULL;
 
 	out:
@@ -75,15 +75,20 @@ static JSBool dnsResolve(JSContext *cx, JSObject * /*obj*/, uintN /*argc*/, jsva
 		return true;
 }
 
-static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval * /*argv*/, jsval *rval) {
+static JSBool dnsResolve(JSContext *cx, uintN /*argc*/, jsval *vp) {
+	jsval *argv = JS_ARGV(cx, vp);
+	return dnsResolve_(cx, argv[0], vp);
+}
+
+static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
 	char *hostname = (char *) JS_malloc(cx, 1024);
 	if (!gethostname(hostname, 1023)) {
-		JSString *myhost = JS_NewString(cx, hostname, strlen(hostname));
+		JSString *myhost = JS_NewStringCopyN(cx, hostname, strlen(hostname));
 		jsval arg = STRING_TO_JSVAL(myhost);
-		return dnsResolve(cx, obj, 1, &arg, rval);
+		return dnsResolve_(cx, 1, &arg);
 	}
 	JS_free(cx, hostname);
-	*rval = JSVAL_NULL;
+	JS_SET_RVAL(cx, vp, JSVAL_NULL);
 	return true;
 }
 
@@ -91,7 +96,7 @@ static JSBool myIpAddress(JSContext *cx, JSObject *obj, uintN /*argc*/, jsval * 
 // This MUST be a static global
 static JSClass cls = {
 		"global", JSCLASS_GLOBAL_FLAGS,
-		JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+		JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
 		JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
@@ -111,7 +116,11 @@ public:
 	    //JS_SetOptions(this->jsctx, JSOPTION_VAROBJFIX);
 	    //JS_SetVersion(this->jsctx, JSVERSION_LATEST);
 	    //JS_SetErrorReporter(cx, reportError);
+		#ifdef HAVE_MOZJS_2
+		if (!(this->jsglb = JS_NewCompartmentAndGlobalObject(this->jsctx, &cls, NULL))) goto error;
+		#else
 		if (!(this->jsglb = JS_NewObject(this->jsctx, &cls, NULL, NULL))) goto error;
+		#endif
 		if (!JS_InitStandardClasses(this->jsctx, this->jsglb))            goto error;
 
 		// Define Javascript functions
@@ -147,15 +156,19 @@ public:
 			throw bad_alloc();
 		}
 		jsval args[2] = {
-			STRING_TO_JSVAL(JS_NewString(this->jsctx, tmpurl, strlen(tmpurl))),
-			STRING_TO_JSVAL(JS_NewString(this->jsctx, tmphost, strlen(tmphost)))
+			STRING_TO_JSVAL(JS_NewStringCopyN(this->jsctx, tmpurl, strlen(tmpurl))),
+			STRING_TO_JSVAL(JS_NewStringCopyN(this->jsctx, tmphost, strlen(tmphost)))
 		};
 
 		// Find the proxy (call FindProxyForURL())
 		jsval rval;
 		JSBool result = JS_CallFunctionName(this->jsctx, this->jsglb, "FindProxyForURL", 2, args, &rval);
 		if (!result) return "";
-		string answer = string(JS_GetStringBytes(JS_ValueToString(this->jsctx, rval)));
+		
+		char * tmpanswer = JS_EncodeString(this->jsctx, JS_ValueToString(this->jsctx, rval));
+		string answer = string(tmpanswer);
+		JS_free(this->jsctx, tmpanswer);
+
 		if (answer == "undefined") return "";
 		return answer;
 	}
