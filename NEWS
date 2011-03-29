@@ -1,6 +1,7 @@
 New in version 0.4.7
 ==============================
 * Support/require xulrunner 2.0+
+* Support linking agaings libwebkit-gtk3 (-DWITH_WEBKIT3=ON)
 
 New in version 0.4.6
 ==============================	
