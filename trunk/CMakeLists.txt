@@ -24,6 +24,8 @@ include(cmake/cpack.cmk)
 include(cmake/ctest.cmk)
 include(cmake/paths.cmk)
 
+option(WITH_WEBKIT3 "Build against gtk-3 version of webkitgtk" OFF)
+
 ### Subdirectories
 # Conditionally build bundled libmodman
 option(FORCE_SYSTEM_LIBMODMAN "Force using system libmodman" OFF)
