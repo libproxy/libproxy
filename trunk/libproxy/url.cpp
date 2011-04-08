@@ -428,7 +428,7 @@ char* url::get_pac() {
 	if (sock < 0) return NULL;
 
 	// Build the request string
-	request  = "GET " + m_path + " HTTP/1.1\r\n";
+	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + " HTTP/1.1\r\n";
 	request += "Host: " + m_host + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
