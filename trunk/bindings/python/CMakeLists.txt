@@ -12,21 +12,11 @@ if(PYTHONINTERP_FOUND)
 
     message(STATUS "Found python version ${PYTHON_VERSION}")
 
-    if (IS_ABSOLUTE "${LIB_INSTALL_DIR}")
-      set(libdir "${LIB_INSTALL_DIR}")
-    else()
-      set(libdir "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}")
-    endif()
-
-    if (IS_DIRECTORY "${libdir}/python${PYTHON_VERSION}/site-packages")
-      set(PYTHON_SITEPKG_DIR "${libdir}/python${PYTHON_VERSION}/site-packages")
-    else()
-      execute_process(COMMAND
-		      ${PYTHON_EXECUTABLE}
-		      -c "import distutils.sysconfig ; print distutils.sysconfig.get_python_lib(plat_specific=0)"
-		      OUTPUT_VARIABLE PYTHON_SITEPKG_DIR
-		      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    endif()
+    execute_process(COMMAND
+		    ${PYTHON_EXECUTABLE}
+		    -c "import distutils.sysconfig ; print distutils.sysconfig.get_python_lib(plat_specific=0)"
+		    OUTPUT_VARIABLE PYTHON_SITEPKG_DIR
+		    OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
   
   message(STATUS "Using PYTHON_SITEPKG_DIR=${PYTHON_SITEPKG_DIR}")
