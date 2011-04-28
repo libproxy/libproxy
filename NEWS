@@ -2,12 +2,14 @@ New in version 0.4.7
 ==============================
 * Support/require xulrunner 2.0+
 * Support linking againgst libwebkit-gtk3 (-DWITH_WEBKIT3=ON)
+* Port to gsettings for gnome3. (-DWITH_GNOME3=ON[default])
 * Issues closed:
   - #149: always test for the right python noarch module path
   - #155: Cannot compile with Firefox 4
   - #156: libproxy should build against webkitgtk-3.0
   - #158: Won't compile w/ xulrunner 2.0 final
   - #159: libproxy fails with autoconfiguration "http://proxy.domain.com"
+  - #131: GSettings-based GNOME plugin
 
 New in version 0.4.6
 ==============================	
