@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 	if (argc < 2) return 1;
 
 	// Register sighup handler
-	if (signal(SIGHUP, on_sig) == SIG_ERR || signal(SIGPIPE, on_sig) == SIG_ERR) {
+	if (signal(SIGHUP, on_sig) == SIG_ERR || signal(SIGPIPE, on_sig) == SIG_ERR || signal(SIGABRT, on_sig) == SIG_ERR) {
 		fprintf(stderr, "Unable to trap signals!");
 		return 2;
 	}
