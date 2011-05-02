@@ -49,7 +49,9 @@ static int print_value(GVariant *value, const char *suffix) {
 		int count;
 		const gchar** items;
 		items = g_variant_get_strv(value, NULL);
-		for (count=0; items[count]; printf("%s%s", count < 2 ? "" : ",",  items[count++]) );
+		for (count=0; items[count]; count++) {
+			printf("%s%s", count < 2 ? "" : ",",  items[count]);
+		}
 		printf("%s", suffix);
 		return count;
 	}
