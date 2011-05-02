@@ -18,7 +18,6 @@
  ******************************************************************************/
 
 #include <cstdio>
-#include <iostream>  // For cerr
 
 #include "../extension_ignore.hpp"
 using namespace libproxy;
