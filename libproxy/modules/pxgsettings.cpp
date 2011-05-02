@@ -63,7 +63,7 @@ static int print_value(GVariant *value, const char *suffix) {
 }
 
 static void on_value_change(GSettings *settings, const gchar *key, gpointer user_data) {
-	printf("%s/%s\t", user_data, key);
+	printf("%s/%s\t", (gchar *)user_data, key);
 	print_value(g_settings_get_value(settings, key), "\n");
 }
 
