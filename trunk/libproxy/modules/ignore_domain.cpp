@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <cstdio>
+#include <iostream>  // For cerr
 
 #include "../extension_ignore.hpp"
 using namespace libproxy;
@@ -44,11 +45,11 @@ public:
 			return (iport == 0 || port == iport);
 
 		/* Endswith (.domain.com or .domain.com:80) */
-		if (ihost[0] == '.' && host.find(ihost) == host.size() - ihost.size())
+		if (ihost[0] == '.' && host.find(ihost) == host.size() - ihost.size() && host.size() >= ihost.size())
 			return (iport == 0 || port == iport);
 
 		/* Glob (*.domain.com or *.domain.com:80) */
-		if (ihost[0] == '*' && host.find(ihost.substr(1)) == host.size() - ihost.substr(1).size())
+		if (ihost[0] == '*' && host.find(ihost.substr(1)) == host.size() - ihost.substr(1).size() && host.size() >= ihost.substr(1).size()) 
 			return (iport == 0 || port == iport);
 
 		/* No match was found */
