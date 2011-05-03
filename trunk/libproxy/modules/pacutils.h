@@ -58,21 +58,22 @@
 "                  (bytes[3] & 0xff);\n" \
 "    return result;\n" \
 "}\n" \
-"function isInNet(ipaddr, pattern, maskstr) {\n" \
-"    var test = /^(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})$/(ipaddr);\n" \
-"    if (test == null) {\n" \
-"        ipaddr = dnsResolve(ipaddr);\n" \
-"        if (ipaddr == null)\n" \
-"            return false;\n" \
-"    } else if (test[1] > 255 || test[2] > 255 ||\n" \
-"               test[3] > 255 || test[4] > 255) {\n" \
-"        return false;\n" \
-"    }\n" \
-"    var host = convert_addr(ipaddr);\n" \
-"    var pat = convert_addr(pattern);\n" \
-"    var mask = convert_addr(maskstr);\n" \
-"    return ((host & mask) == (pat & mask));\n" \
-"}\n" \
+"function isInNet(ipaddr, pattern, maskstr) {\n"\
+"    var test = /^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/.exec(ipaddr);\n"\
+"    if (test == null) {\n"\
+"        ipaddr = dnsResolve(ipaddr);\n"\
+"        if (ipaddr == null)\n"\
+"            return false;\n"\
+"    } else if (test[1] > 255 || test[2] > 255 || \n"\
+"               test[3] > 255 || test[4] > 255) {\n"\
+"        return false;    // not an IP address\n"\
+"    }\n"\
+"    var host = convert_addr(ipaddr);\n"\
+"    var pat  = convert_addr(pattern);\n"\
+"    var mask = convert_addr(maskstr);\n"\
+"    return ((host & mask) == (pat & mask));\n"\
+"    \n"\
+"}\n"\
 "function isPlainHostName(host) {\n" \
 "    return (host.search('\\\\.') == -1);\n" \
 "}\n" \
@@ -95,13 +96,12 @@
 "   var newRe = new RegExp('^'+pattern+'$');\n" \
 "   return newRe.test(url);\n" \
 "}\n" \
-"var wdays = new Array('SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT');\n" \
-"var monthes = new Array('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC');\n" \
+"var wdays = {SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6};\n" \
+"var months = {JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11};\n"\
 "function weekdayRange() {\n" \
 "    function getDay(weekday) {\n" \
-"        for (var i = 0; i < 6; i++) {\n" \
-"            if (weekday == wdays[i])\n" \
-"                return i;\n" \
+"        if (weekday in wdays) {\n" \
+"            return wdays[weekday];\n" \
 "        }\n" \
 "        return -1;\n" \
 "    }\n" \
@@ -123,9 +123,8 @@
 "}\n" \
 "function dateRange() {\n" \
 "    function getMonth(name) {\n" \
-"        for (var i = 0; i < 6; i++) {\n" \
-"            if (name == monthes[i])\n" \
-"                return i;\n" \
+"        if (name in months) {\n" \
+"            return months[name];\n" \
 "        }\n" \
 "        return -1;\n" \
 "    }\n" \
