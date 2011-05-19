@@ -135,13 +135,19 @@ public:
 		if (ignore.find('/') != string::npos)
 		{
 			ign_ip = sockaddr_from_string(ignore.substr(0, ignore.find('/')));
-			net_ip = sockaddr_from_string(ignore.substr(ignore.find('/') + 1));
 
-			/* If CIDR notation was used, get the netmask */
-			if (ign_ip && !net_ip)
+			uint32_t cidr = 0;
+			string mask = ignore.substr(ignore.find('/') + 1);
+
+			if (mask.find('.') != string::npos)
 			{
-				uint32_t cidr = 0;
-				if (sscanf(ignore.substr(ignore.find('/') + 1).c_str(), "%d", &cidr) == 1)
+				/* A dotted netmask was used */
+				net_ip = sockaddr_from_string(mask);
+			}
+			else
+			{
+				/* If CIDR notation was used, get the netmask */
+				if (sscanf(mask.c_str(), "%d", &cidr) == 1)
 					net_ip = sockaddr_from_cidr(ign_ip->sa_family, cidr);
 			}
 
