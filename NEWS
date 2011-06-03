@@ -10,6 +10,7 @@ New in version 0.4.7
   - #158: Won't compile w/ xulrunner 2.0 final
   - #159: libproxy fails with autoconfiguration "http://proxy.domain.com"
   - #131: GSettings-based GNOME plugin
+  - #150: SUSE sysconfig/proxy config support
 
 New in version 0.4.6
 ==============================	
