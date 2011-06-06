@@ -381,7 +381,7 @@ static inline string recvline(int fd) {
 
 char* url::get_pac() {
 	int sock = -1;
-	bool correct_mime_type = false, chunked = false;
+	bool chunked = false;
 	unsigned long int content_length = 0, status = 0;
 	char* buffer = NULL;
 	string request;
@@ -445,14 +445,8 @@ char* url::get_pac() {
 	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
 		/* Check for correct mime type and content length */
 		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
-			// Check for content type
-			if (line.find("Content-Type: ") == 0 &&
-				(line.find(PAC_MIME_TYPE) != string::npos ||
-				 line.find(PAC_MIME_TYPE_FB) != string::npos))
-				correct_mime_type = true;
-
 			// Check for chunked encoding
-			else if (line.find("Content-Transfer-Encoding: chunked") == 0)
+			if (line.find("Content-Transfer-Encoding: chunked") == 0)
 				chunked = true;
 
 			// Check for content length
