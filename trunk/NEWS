@@ -1,3 +1,10 @@
+New in version 0.4.8 (not yet released)
+==============================
+* Only support standalone mozjs185 as mozilla js engine.
+  xulrunner being part of the now lightning fast moving firefox
+  is impossible to be tracked as a dependency and it is not
+  supported by Mozilla to be used in this scenario.
+
 New in version 0.4.7
 ==============================
 * Support/require xulrunner 2.0+
