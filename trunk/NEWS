@@ -4,6 +4,8 @@ New in version 0.4.8 (not yet released)
   xulrunner being part of the now lightning fast moving firefox
   is impossible to be tracked as a dependency and it is not
   supported by Mozilla to be used in this scenario.
+* Support building with javascritpcoregtk 1.5
+  (got split out of webkitgtk).
 
 New in version 0.4.7
 ==============================
