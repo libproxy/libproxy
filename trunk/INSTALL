@@ -79,7 +79,10 @@ PERL_VENDORINSTALL:     Default to OFF. Tells cmake to install the perl binding
 
 WITH_DOTNET:            Default to OFF. Enable Mono .NET bindings.
 
-WITH_GNOME:             Default to ON. Enable Gnome/GConf bindings.
+WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
+
+WITH_GNOME3:            Default to ON. Build the Gnome3/GSettings bindings.
+                        instead of Gnome2/GConf based one.
 
 WITH_KDE4:              Default to ON. Enables KDE4/Kconf bindings.
 
@@ -97,6 +100,8 @@ WITH_PYTHON:            Default to ON. Enable Python bindings.
 WITH_VALA:              Default to OFF. Enable Vala bindings.
 
 WITH_WEBKIT:            Default to ON. Enable Webkit Java Script engine.
+
+WITH_WEBKIT3:           Default to OFF: Enable Webkit GTK3 support.
 
 
 Bindings Path:
@@ -126,7 +131,7 @@ To install in a sub-directory, DESTDIR can be used has make parameter.
 CFLAGS in libproxy:
 ===================
 
-We are currently having issue with CMake and CFLAGS. As show in the example,
+We are currently having issue with CMake and CFLAGS. As shown in the example,
 we have found a simple way that prevents CMAKE from choosing for you the
 CFLAGS you want. As being demonstrated, you can disable CMAKE default CFLAGS
 by setting an invalid (but not empty) CMAKE_BUILD_TYPE (e.g. None). You can
