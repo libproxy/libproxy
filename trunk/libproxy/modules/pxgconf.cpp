@@ -30,7 +30,9 @@ static int print_value(const GConfValue *value, const char *suffix) {
 		return printf("false%s", suffix);
 	case GCONF_VALUE_LIST:
 		cursor = gconf_value_get_list(value);
-		for ( ; cursor ; cursor = g_slist_next(cursor))
+		if (g_slist_length (cursor) == 0)
+			count += printf("%s", suffix);
+		else for ( ; cursor ; cursor = g_slist_next(cursor))
 			count += print_value((const GConfValue *) cursor->data, cursor->next ? "," : suffix);
 		return count;
 	case GCONF_VALUE_PAIR:
