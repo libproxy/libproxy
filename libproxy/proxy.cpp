@@ -268,6 +268,7 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 		if (next == string::npos) next = confign.length();
 		if (next > (i+1)) {
 			string ignorestr = confign.substr (i, next - i);
+			ignorestr = ignorestr.substr(ignorestr.find_first_not_of(" \t\n"), ignorestr.find_last_not_of(" \t\n")+1);
 			for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
 				ignored = ((*it)->ignore(*realurl, ignorestr));
 		}
