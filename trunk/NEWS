@@ -6,6 +6,12 @@ New in version 0.4.8 (not yet released)
   supported by Mozilla to be used in this scenario.
 * Support building with javascritpcoregtk 1.5
   (got split out of webkitgtk).
+* Issues fixed:
+  - #166: Libproxy does not parse NO_PROXY correct when the line
+          contains spaces
+  - #164: If gconf's value is an empty list, pxgconf will make
+          /usr/bin/proxy wait forever
+  - #60: use lib js for embedded solutions
 
 New in version 0.4.7
 ==============================
