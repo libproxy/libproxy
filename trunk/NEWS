@@ -12,6 +12,7 @@ New in version 0.4.8 (not yet released)
   - #164: If gconf's value is an empty list, pxgconf will make
           /usr/bin/proxy wait forever
   - #60: use lib js for embedded solutions
+  - #160: strdup and gethostbyname not declared on OSX 10.7
   - #168: .pc file should be installed under OSX as well.
 
 New in version 0.4.7
