@@ -28,16 +28,20 @@ extern "C"
 typedef struct pxProxyFactory_  pxProxyFactory;
 
 /**
+ * px_proxy_factory_new:
+ *
  * Creates a new pxProxyFactory instance. This instance should be kept
  * around as long as possible as it contains cached data to increase
  * performance.  Memory usage should be minimal (cache is small) and the
  * cache lifespan is handled automatically.
  *
- * @return A new pxProxyFactory instance or NULL on error
+ * @returns: (transfer none): A new pxProxyFactory instance or NULL on error
  */
 pxProxyFactory *px_proxy_factory_new(void);
 
 /**
+ * px_proxy_factory_get_proxies:
+ *
  * Get which proxies to use for the specified URL.
  *
  * A NULL-terminated array of proxy strings is returned.
@@ -85,8 +89,9 @@ pxProxyFactory *px_proxy_factory_new(void);
  * RTSP streaming proxy. The expected returned configuration would be:
  *   - rtsp://[username:password@]proxy:port
  * 
- * @url The URL we are trying to reach
- * @return A NULL-terminated array of proxy strings to use
+ * @self:    a Pointed to the ProxyFactory structure
+ * @url:     The URL we are trying to reach
+ * Returns: (transfer full): A NULL-terminated array of proxy strings to use
  */
 char **px_proxy_factory_get_proxies(pxProxyFactory *self, const char *url);
 
