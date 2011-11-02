@@ -1,4 +1,4 @@
-if(NOT WIN32 AND NOT APPLE)
+if(NOT WIN32)
   # PkgConfig file
   set (PKGCONFIG_PREFIX ${CMAKE_INSTALL_PREFIX})
   
