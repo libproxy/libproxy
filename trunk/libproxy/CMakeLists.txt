@@ -6,7 +6,7 @@ set_project_version(0 4 7)
 if (WIN32)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 else(WIN32)
-  add_definitions(-D_POSIX_C_SOURCE=200112L)
+  add_definitions(-D_POSIX_C_SOURCE=1)
   set(CMAKE_CXX_FLAGS "-fvisibility=hidden ${CMAKE_CXX_FLAGS}")
 endif(WIN32)
 
