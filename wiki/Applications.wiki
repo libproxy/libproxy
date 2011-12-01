@@ -15,7 +15,7 @@
 || Telepathy Butterfly || || || || yes || yes ||
 || Telepathy Haze || || || http://developer.pidgin.im/ticket/4459 || yes || no ||
 || Ekiga || || || || no || no ||
-|| X-Chat || || || || no || no ||
+|| X-Chat || || || || no || yes ||
 || Konqueror || || || || no || no ||
 || Vinegre || || || || no || no ||
 || Rhythmbox || || || || no || no ||
