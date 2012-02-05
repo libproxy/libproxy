@@ -446,7 +446,7 @@ char* url::get_pac() {
 		/* Check for correct mime type and content length */
 		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
 			// Check for chunked encoding
-			if (line.find("Content-Transfer-Encoding: chunked") == 0)
+			if (line.find("Content-Transfer-Encoding: chunked") == 0 || line.find("Transfer-Encoding: chunked") == 0)
 				chunked = true;
 
 			// Check for content length
