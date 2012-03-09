@@ -21,6 +21,9 @@
 #include <cstdlib>
 #include <map>
 #include <fstream>
+#include <unistd.h>
+#include <sys/types.h>
+
 
 #include "../extension_config.hpp"
 using namespace libproxy;

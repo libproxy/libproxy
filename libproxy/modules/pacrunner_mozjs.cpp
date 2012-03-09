@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <cstring> // ?
+#include <unistd.h> // gethostname
 
 #include "../extension_pacrunner.hpp"
 using namespace libproxy;
