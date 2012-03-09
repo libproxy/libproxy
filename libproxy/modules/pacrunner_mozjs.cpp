@@ -85,7 +85,7 @@ static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewStringCopyN(cx, hostname, strlen(hostname));
 		jsval arg = STRING_TO_JSVAL(myhost);
-		return dnsResolve_(cx, 1, &arg);
+		return dnsResolve_(cx, arg, vp);
 	}
 	JS_free(cx, hostname);
 	JS_SET_RVAL(cx, vp, JSVAL_NULL);
