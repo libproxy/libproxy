@@ -16,6 +16,7 @@ New in version 0.4.8 (not yet released)
   - #168: .pc file should be installed under OSX as well.
   - #170: Also check for "Transfer-Encoding: chunked".
   - #171: mozjs pacrunner: Fix parameters of dnsResolve_()
+  - #172: Allow to forcibly build pacrunner as module (-DBIPR={ON,OFF})
   - #173: Libproxy doesn't build with gcc 4.7
 
 New in version 0.4.7

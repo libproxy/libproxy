@@ -19,7 +19,7 @@ include(cmake/modules/pacrunner_natus.cmk)
 include(cmake/modules/pacrunner_webkit.cmk)
 
 # Build the pacrunner into libproxy unless we are building for multiple engines
-set(BIPR 1)
+set(BIPR 1 CACHE BOOL "Build internal pacrunner? (Always false when building more than one PR")
 if((MOZJS_FOUND AND WEBKIT_FOUND) OR (MOZJS_FOUND AND NATUS_FOUND) OR (WEBKIT_FOUND AND NATUS_FOUND))
   set(BIPR 0)
 endif()
