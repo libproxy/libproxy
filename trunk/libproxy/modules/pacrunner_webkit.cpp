@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include "../extension_pacrunner.hpp"
+#include <unistd.h> // gethostname
 using namespace libproxy;
 
 #ifdef __APPLE__

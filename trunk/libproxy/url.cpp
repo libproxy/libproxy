@@ -33,6 +33,7 @@
 #include <cstdlib>    // For atoi()
 #include <sys/stat.h> // For stat()
 #include <algorithm> // For transform()
+#include <unistd.h>  // For read() close()
 
 #ifdef WIN32
 #include <io.h>
