@@ -18,6 +18,7 @@ New in version 0.4.8 (not yet released)
   - #171: mozjs pacrunner: Fix parameters of dnsResolve_()
   - #172: Allow to forcibly build pacrunner as module (-DBIPR={ON,OFF})
   - #173: Libproxy doesn't build with gcc 4.7
+  - #147: Use ${CMAKE_DL_LIBS} instead of assuming libdl is correct.
 
 New in version 0.4.7
 ==============================
