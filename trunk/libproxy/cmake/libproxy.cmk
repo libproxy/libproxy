@@ -2,7 +2,7 @@ add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extensi
 if(WIN32)
   target_link_libraries(libproxy modman;ws2_32;${LIBPROXY_LIBRARIES})
 else()
-  target_link_libraries(libproxy modman;m;pthread;dl;${LIBPROXY_LIBRARIES})
+  target_link_libraries(libproxy modman;m;pthread;${CMAKE_DL_LIBS};${LIBPROXY_LIBRARIES})
 endif()
 file(TO_NATIVE_PATH ${MODULE_INSTALL_DIR} MODULE_INSTALL_DIR)
 if(WIN32)
