@@ -68,6 +68,13 @@ MODULE_INSTALL_DIR:   Default to "${LIB_INSTALL_DIR}/${PROJECT_NAME}/${PROJECT_V
 Boolean options:
 ================
 
+BIPR:                   Default to ON. Build Internal Pac Runner.
+                        If only one pacrunner is to be built, then the default
+                        is to link it internal to libproxy. As soon as two are
+                        to be built, they are always made as a module.
+                        Setting this to OFF allows to build a pacrunner as
+                        module even if only one is to be built.
+
 FORCE_SYSTEM_LIBMODMAN: Default to OFF. Forces the build system to generate an
                         error if libmodman cannot be found on your system. By
                         default libmodman will fallback to using internal copy
