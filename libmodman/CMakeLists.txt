@@ -12,7 +12,7 @@ add_library(modman STATIC
             module_manager.hpp
             module_manager.cpp)
 if(NOT WIN32)
-  target_link_libraries(modman dl)
+	target_link_libraries(modman ${CMAKE_DL_LIBS})
 endif()
 
 ### Tests
