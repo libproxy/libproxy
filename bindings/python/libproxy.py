@@ -121,5 +121,6 @@ class ProxyFactory(object):
         return proxies
         
     def __del__(self):
-        _libproxy.px_proxy_factory_free(self._pf)
+        if _libproxy:
+            _libproxy.px_proxy_factory_free(self._pf)
     
