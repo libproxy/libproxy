@@ -20,6 +20,7 @@ New in version 0.4.8 (not yet released)
   - #173: Libproxy doesn't build with gcc 4.7
   - #147: Use ${CMAKE_DL_LIBS} instead of assuming libdl is correct.
   - #176: python bindings: guard the destructor.
+  - #177: Speed up importing of libproxy in python.
 
 New in version 0.4.7
 ==============================
