@@ -25,21 +25,23 @@ import platform
 
 import sys
 
+def _load(name, *versions):
+    for ver in versions:
+        try: return ctypes.cdll.LoadLibrary('lib%s.so.%s' % (name, ver))
+        except: pass
+    name_ver = ctypes.util.find_library(name)
+    if name_ver:
+        return ctypes.cdll.LoadLibrary(name_ver)
+    raise ImportError("Unable to find %s library" % name)
+
 # Load C library
 if platform.system() == "Windows":
     _libc = ctypes.cdll.msvcrt
 else:
-    if not ctypes.util.find_library("c"):
-        raise ImportError("Unable to import C Library!?!")
-    _libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("c"))
-
+    _libc = _load("c", 6)
 
 # Load libproxy
-if not ctypes.util.find_library("proxy"):
-    raise ImportError("Unable to import libproxy!?!?")
-
-
-_libproxy = ctypes.cdll.LoadLibrary(ctypes.util.find_library("proxy"))
+_libproxy = _load("proxy", 1)
 _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
 
 class ProxyFactory(object):
