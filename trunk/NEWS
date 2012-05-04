@@ -21,6 +21,7 @@ New in version 0.4.8 (not yet released)
   - #147: Use ${CMAKE_DL_LIBS} instead of assuming libdl is correct.
   - #176: python bindings: guard the destructor.
   - #177: Speed up importing of libproxy in python.
+  - #179: CMAKE 2.8.8 does not define PKG_CONFIG_FOUND
 
 New in version 0.4.7
 ==============================
