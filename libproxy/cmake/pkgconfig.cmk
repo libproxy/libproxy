@@ -3,7 +3,7 @@ if(NOT WIN32 AND NOT APPLE)
 
   # Define our magical px_check_modules function
   function(px_check_modules name)
-    if(PKG_CONFIG_FOUND)
+    if(PKG_CONFIG_EXECUTABLE)
       option(WITH_${name} "Search for ${name} package" ON)
       if (WITH_${name})
         pkg_check_modules(${name} ${ARGN})
