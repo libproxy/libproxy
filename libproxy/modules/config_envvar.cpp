@@ -24,17 +24,18 @@ using namespace libproxy;
 
 class envvar_config_extension : public config_extension {
 public:
-	url get_config(url url) throw (runtime_error) {
-		char *proxy = NULL;
+	vector<url> get_config(const url &dst) throw (runtime_error) {
+		const char *proxy = NULL;
+                vector<url> response;
 
 		// If the URL is an ftp url, try to read the ftp proxy
-		if (url.get_scheme() == "ftp") {
+		if (dst.get_scheme() == "ftp") {
 			if (!(proxy = getenv("ftp_proxy")))
 				proxy = getenv("FTP_PROXY");
 		}
 
 		// If the URL is an https url, try to read the https proxy
-		if (url.get_scheme() == "https") {
+		if (dst.get_scheme() == "https") {
 			if (!(proxy = getenv("https_proxy")))
 				proxy = getenv("HTTPS_PROXY");
 		}
@@ -47,10 +48,12 @@ public:
 
 		if (!proxy)
 			throw runtime_error("Unable to read configuration");
-		return libproxy::url(proxy);
+
+                response.push_back(url(proxy));
+		return response;
 	}
 
-	string get_ignore(url) {
+	string get_ignore(const url&) {
 		char *ignore = getenv("no_proxy");
 		      ignore = ignore ? ignore : getenv("NO_PROXY");
 		return string(ignore ? ignore : "");

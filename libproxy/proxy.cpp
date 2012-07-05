@@ -59,7 +59,13 @@ private:
 	void lock();
 	void unlock();
 
-	void _get_proxies(url *realurl, vector<string> &response);
+	void check_network_topology();
+	void get_config(url &realurl, vector<url> &configs, string &ignore);
+	bool is_ignored(url &realurl, const string &ignore);
+	bool expand_wpad(const url &confurl);
+	bool expand_pac(url &configurl);
+	void run_pac(url &realurl, const url &confurl, vector<string> &response);
+	void clear_cache();
 
 #ifdef WIN32
 	HANDLE mutex;
@@ -70,6 +76,7 @@ private:
 	char*  pac;
 	url*   pacurl;
 	bool   wpad;
+	bool   debug;
 };
 
 static bool istringcmp(string a, string b) {
@@ -79,18 +86,17 @@ static bool istringcmp(string a, string b) {
 }
 
 // Convert the PAC formatted response into our proxy URL array response
-static vector<string>
-format_pac_response(string response)
+static void format_pac_response(string response, vector<string> &retval)
 {
-	vector<string> retval;
-
 	// Skip ahead one character if we start with ';'
-	if (response[0] == ';')
-		return format_pac_response(response.substr(1));
+	if (response[0] == ';') {
+		format_pac_response(response.substr(1), retval);
+		return;
+	}
 
 	// If the string contains a delimiter (';')
 	if (response.find(';') != string::npos) {
-		retval   = format_pac_response(response.substr(response.find(';')+1));
+		format_pac_response(response.substr(response.find(';') + 1), retval);
 		response = response.substr(0, response.find(';'));
 	}
 
@@ -115,12 +121,12 @@ format_pac_response(string response)
 		retval.insert(retval.begin(), string("socks://") + server);
 	else if (istringcmp(method, "socks4") && url::is_valid("http://" + server))
 		retval.insert(retval.begin(), string("socks4://") + server);
+	else if (istringcmp(method, "socks4a") && url::is_valid("http://" + server))
+		retval.insert(retval.begin(), string("socks4a://") + server);
 	else if (istringcmp(method, "socks5") && url::is_valid("http://" + server))
 		retval.insert(retval.begin(), string("socks5://") + server);
 	else if (istringcmp(method, "direct"))
 		retval.insert(retval.begin(), string("direct://"));
-
-	return retval;
 }
 
 proxy_factory::proxy_factory() {
@@ -159,6 +165,8 @@ proxy_factory::proxy_factory() {
 	this->mm.load_dir(module_dir);
 	this->mm.load_dir(module_dir, false);
 
+	this->debug  = (getenv("_PX_DEBUG") != NULL);
+
 	unlock();
 }
 
@@ -179,25 +187,42 @@ proxy_factory::~proxy_factory() {
 }
 
 
-vector<string> proxy_factory::get_proxies(string url_) {
-	url*                       realurl = NULL;
+vector<string> proxy_factory::get_proxies(string realurl) {
 	vector<string>             response;
 
 	// Check to make sure our url is valid
-	if (!url::is_valid(url_))
+	if (!url::is_valid(realurl))
 		goto do_return;
-	realurl = new url(url_);
 
 	lock();
 
 	// Let trap and forward exceptions so we don't deadlock
 	try {
-		_get_proxies(realurl, response);
+		vector<url> configs;
+		string ignore;
+		url dst(realurl);
+
+		check_network_topology();
+		get_config(dst, configs, ignore);
+		
+		if (debug) cerr << "Config is: " << endl;
+
+		for (vector<url>::iterator i=configs.begin() ; i != configs.end() ; i++) {
+			url confurl(*i);
+
+			if (debug) cerr << "\t" << confurl.to_string() << endl;
+
+			if (expand_wpad(confurl) || expand_pac(confurl)) {
+				run_pac(dst, confurl, response);
+			} else {
+				clear_cache();
+				response.push_back(confurl.to_string());
+			}
+		}
+
 		unlock();
-		if (realurl) delete realurl;
 	} catch (exception &e) {
 		unlock();
-		if (realurl) delete realurl;
 		throw e;
 	}
 
@@ -207,16 +232,8 @@ do_return:
 	return response;
 }
 
-void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
-	url                        confurl("direct://");
-	bool                       ignored = false, invign = false;
-	string                     confign;
-	config_extension*          config = NULL;
+void proxy_factory::check_network_topology() {
 	vector<network_extension*> networks;
-	vector<config_extension*>  configs;
-	vector<ignore_extension*>  ignores;
-	const char*                debug = getenv("_PX_DEBUG");
-
 
 	// Check to see if our network topology has changed...
 	networks = this->mm.get_extensions<network_extension>();
@@ -232,32 +249,40 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 			break;
 		}
 	}
+}
+
+void proxy_factory::get_config(url &realurl, vector<url> &config, string &ignore) {
+	vector<config_extension*>  configs;
 
 	configs = this->mm.get_extensions<config_extension>();
 	for (vector<config_extension*>::iterator i=configs.begin() ; i != configs.end() ; i++) {
-		config = *i;
+		config_extension *configurator = *i;
 
-		// Try to get the confurl
+		// Try to get the configuration
 		try {
-			confurl = config->get_config(*realurl);
-			confign = config->get_ignore(*realurl);
-			config->set_valid(true);
+			ignore = configurator->get_ignore(realurl);
+			if (!is_ignored(realurl, ignore))
+				config = configurator->get_config(realurl);
+			if (debug) {
+				if (configurator) {
+					cerr << "Configuration extension is: " << typeid(*configurator).name() << endl;
+					cerr << "Ingored list is: " << ignore << endl;
+				} else {
+					cerr << "No configuration extension found." << endl;
+				}
+			}
 			break;
 		}
 		catch (runtime_error e) {
-			confurl = "direct://";
-			confign = "";
-			config->set_valid(false);
-			config = NULL;
+			ignore = "";
 		}
 	}
-	if (debug) {
-		if (config)
-			cerr << "Using config: " << typeid(*config).name() << endl;
-		else
-			cerr << "Using config: NULL" << endl;
-		cerr << "Using ignore: " << confign << endl;
-	}
+}
+
+bool proxy_factory::is_ignored(url &realurl, const string &ignore) {
+	vector<ignore_extension*>  ignores;
+	bool                       ignored = false, invign = false;
+	string                     confign = ignore;
 
 	/* Check our ignore patterns */
 	ignores = this->mm.get_extensions<ignore_extension>();
@@ -270,16 +295,22 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 			string ignorestr = confign.substr (i, next - i);
 			ignorestr = ignorestr.substr(ignorestr.find_first_not_of(" \t\n"), ignorestr.find_last_not_of(" \t\n")+1);
 			for (vector<ignore_extension*>::iterator it=ignores.begin() ; it != ignores.end() && !ignored ; it++)
-				ignored = ((*it)->ignore(*realurl, ignorestr));
+				ignored = ((*it)->ignore(realurl, ignorestr));
 		}
 		i = next+1;
 	}
-	if (!ignored && invign) return;
-	if (ignored && !invign) return;
 
-	/* If we have a wpad config */
-	if (debug) cerr << "Config is: " << confurl.to_string() << endl;
+	if (invign)
+		return !ignored;
+	else
+		return ignored;
+}
+
+bool proxy_factory::expand_wpad(const url &confurl)
+{
+	bool rtv = false;
 	if (confurl.get_scheme() == "wpad") {
+		rtv = true;
 		/* If the config has just changed from PAC to WPAD, clear the PAC */
 		if (!this->wpad) {
 			if (this->pac)    delete this->pac;
@@ -331,8 +362,17 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 		}
 	}
 
+	return rtv;
+}
+
+bool proxy_factory::expand_pac(url &confurl)
+{
+	bool rtv = false;
+
 	// If we have a PAC config
-	else if (confurl.get_scheme().substr(0, 4) == "pac+") {
+	if (confurl.get_scheme().substr(0, 4) == "pac+") {
+		rtv = true;  
+
 		/* Save the PAC config */
 		if (this->wpad)
 			this->wpad = false;
@@ -350,15 +390,20 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 		/* Try to load the PAC if it is not already loaded */
 		if (!this->pac) {
 			this->pacurl = new url(confurl);
-			this->pac    = confurl.get_pac();
-			if (!this->pac) {
-				if (debug) cerr << "Unable to download PAC!" << endl;
-				return;
+			this->pac = confurl.get_pac();
+			if (debug) {
+				if (!this->pac)
+					cerr << "Unable to download PAC!" << endl;
+				else
+					cerr << "PAC received!" << endl;
 			}
-			if (debug) cerr << "PAC received!" << endl;
 		}
 	}
 
+	return rtv;
+}
+
+void proxy_factory::run_pac(url &realurl, const url &confurl, vector<string> &response) {
 	/* In case of either PAC or WPAD, we'll run the PAC */
 	if (this->pac && (confurl.get_scheme() == "wpad" || confurl.get_scheme().substr(0, 4) == "pac+") ) {
 		vector<pacrunner_extension*> pacrunners = this->mm.get_extensions<pacrunner_extension>();
@@ -371,20 +416,16 @@ void proxy_factory::_get_proxies(url *realurl, vector<string> &response) {
 
 		/* Run the PAC, but only try one PACRunner */
 		if (debug) cerr << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;
-		string pacresp = pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(*realurl);
+		string pacresp = pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(realurl);
 		if (debug) cerr << "Pacrunner returned: " << pacresp << endl;
-		response = format_pac_response(pacresp);
+		format_pac_response(pacresp, response);
 	}
+}
 
-	/* If we have a manual config (http://..., socks://..., etc.) */
-	else
-	{
-		this->wpad = false;
-		if (this->pac)    { delete this->pac;    this->pac = NULL; }
-		if (this->pacurl) { delete this->pacurl; this->pacurl = NULL; }
-		response.clear();
-		response.push_back(confurl.to_string());
-	}
+void proxy_factory::clear_cache() {
+	this->wpad = false;
+	if (this->pac)    { delete this->pac;    this->pac = NULL; }
+	if (this->pacurl) { delete this->pacurl; this->pacurl = NULL; }
 }
 
 void proxy_factory::lock() {

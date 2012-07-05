@@ -22,9 +22,15 @@ using namespace libproxy;
 
 class dns_alias_wpad_extension : public wpad_extension {
 public:
-	dns_alias_wpad_extension() { rewind(); }
-	bool found()               { return lastpac != NULL; }
-	void rewind()              { lasturl = NULL; lastpac = NULL; }
+	dns_alias_wpad_extension() : lasturl(NULL), lastpac(NULL) { }
+	bool found() { return lastpac != NULL; }
+	
+	void rewind() {
+		if (lasturl) delete lasturl;
+		if (lastpac) delete lastpac;
+		lasturl = NULL;
+		lastpac = NULL;
+	}
 
 	url* next(char** pac) {
 		if (lasturl) return false;
@@ -32,8 +38,8 @@ public:
 		lasturl = new url("http://wpad/wpad.dat");
 		lastpac = *pac = lasturl->get_pac();
 		if (!lastpac) {
-			delete lasturl;
-			return NULL;
+		    delete lasturl;
+		    return NULL;
 		}
 
 		return lasturl;

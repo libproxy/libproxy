@@ -20,11 +20,11 @@
 #include "extension_config.hpp"
 using namespace libproxy;
 
-string config_extension::get_ignore(url) {
+string config_extension::get_ignore(const url&) {
 	return "";
 }
 
-bool config_extension::set_creds(url, string, string) {
+bool config_extension::set_creds(const url&, const string&, const string&) {
 	return false;
 }
 

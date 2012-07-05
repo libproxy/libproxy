@@ -24,7 +24,7 @@ using namespace libproxy;
 
 class hostname_ignore_extension : public ignore_extension {
 public:
-	virtual bool ignore(url& url, string ignorestr) {
+	virtual bool ignore(url& url, const string &ignorestr) {
 		if (ignorestr == "<local>" &&
 			url.get_host().find(':') == string::npos && // Make sure it's not IPv6
 			url.get_host().find('.') == string::npos)

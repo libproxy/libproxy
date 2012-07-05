@@ -124,20 +124,24 @@ public:
 	~sysconfig_config_extension() {
 	}
    
-	url get_config(url url) throw (runtime_error) {
+	vector<url> get_config(const url &dst) throw (runtime_error) {
 		map<string,string>::const_iterator it = _data.find("PROXY_ENABLED");
-		if (it != _data.end() && it->second == "no")
-			return libproxy::url("direct://");
+		vector<url> response;
+
+		if (it != _data.end() && it->second == "no") {
+			response.push_back(url("direct://"));
+			return response;
+		}
             
 		string key;
 		string proxy;
             
 		// If the URL is an ftp url, try to read the ftp proxy
-		if (url.get_scheme() == "ftp")
+		if (dst.get_scheme() == "ftp")
 			key = "FTP_PROXY";
-		else if (url.get_scheme() == "http")
+		else if (dst.get_scheme() == "http")
 			key = "HTTP_PROXY";
-		else if (url.get_scheme() == "https")
+		else if (dst.get_scheme() == "https")
 			key = "HTTPS_PROXY";
             
 		it = _data.find(key);
@@ -147,10 +151,11 @@ public:
 		if (proxy.empty())
 			throw runtime_error("Unable to read configuration");
 
-		return libproxy::url(proxy);
+		response.push_back(url(proxy));
+		return response;
 	}
 
-	string get_ignore(url) {
+	string get_ignore(const url&) {
 		map<string,string>::const_iterator it = _data.find("NO_PROXY");
 		if (it != _data.end())
 			return it->second;
