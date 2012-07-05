@@ -225,7 +225,7 @@ public:
 			// In case nothing matched, try HTTP Connect and fallback to direct.
 			// If there is not secure HTTP proxy, this will only add direct:// to
 			// the response
-			if (response.size() == 0) {
+			if (response.size() == 0 && dest.get_scheme() != "http") {
 				store_response("http", this->data[PROXY_SECURE_HOST],
 					this->data[PROXY_SECURE_PORT], auth, username, password, response);
 				response.push_back(url("direct://"));
