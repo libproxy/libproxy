@@ -212,6 +212,8 @@ url::url(const string &url) throw(parse_error)
 				host_end = string::npos;
 		} else {
 			host_end = hier_part.find(':', host_start);
+                        if (path_start < host_end)
+                            host_end = path_start;
 		}
 
 		/* If not port, host ends where path starts */
