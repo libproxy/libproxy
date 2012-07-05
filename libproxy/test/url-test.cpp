@@ -145,6 +145,28 @@ int main()
 		   "", 80,
 		   "");
 
+  /* Check windows style URL */
+  try_url ("file:///E:/dir/file.pac", rtv,
+		  "file",
+		  "", "",
+		  "", 0,
+#ifdef WIN32
+          "E:\\dir\\file.pac");
+#else
+          "/E:/dir/file.pac");
+#endif
+
+  /* UNC windows URL */
+  try_url ("file://server/dir/file.pac", rtv,
+		  "file",
+		  "", "",
+		  "server", 0,
+#ifdef WIN32
+          "\\\\server\\dir\\file.pac");
+#else
+          "/dir/file.pac");
+#endif
+
 #ifdef WIN32
   WSACleanup();
 #endif
