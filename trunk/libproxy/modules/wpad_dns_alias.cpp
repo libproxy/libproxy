@@ -33,7 +33,7 @@ public:
 	}
 
 	url* next(char** pac) {
-		if (lasturl) return false;
+		if (lasturl) return NULL;
 
 		lasturl = new url("http://wpad/wpad.dat");
 		lastpac = *pac = lasturl->get_pac();
