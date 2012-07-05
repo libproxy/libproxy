@@ -31,11 +31,11 @@ using namespace libmodman;
 class DLL_PUBLIC config_extension : public extension<config_extension> {
 public:
 	// Abstract methods
-	virtual url      get_config(url dst) throw (runtime_error)=0;
+	virtual vector<url>      get_config(const url &dst) throw (runtime_error)=0;
 
 	// Virtual methods
-	virtual string   get_ignore(url dst);
-	virtual bool     set_creds(url proxy, string username, string password);
+	virtual string   get_ignore(const url &dst);
+	virtual bool     set_creds(const url &proxy, const string &username, const string &password);
 
 	// Final methods
 	        bool     get_valid();

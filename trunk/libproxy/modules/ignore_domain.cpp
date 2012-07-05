@@ -24,7 +24,7 @@ using namespace libproxy;
 
 class domain_ignore_extension : public ignore_extension {
 public:
-	virtual bool ignore(url& url, string ignorestr) {
+	virtual bool ignore(url& url, const string &ignorestr) {
 		/* Get our URL's hostname and port */
 		string host = url.get_host();
 		int    port = url.get_port();

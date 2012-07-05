@@ -46,9 +46,11 @@ public:
 		delete this->cfg;
 	}
 
-	url get_config(url dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) throw (runtime_error) {
 		string  tmp;
 		QString prxy;
+		vector<url> response;
+
 		switch (this->grp->readEntry("ProxyType", 0)) {
 			case 1: // Use a manual proxy
 				prxy = this->grp->readEntry(QString(dst.get_scheme().c_str()) + "Proxy", "");
@@ -62,26 +64,31 @@ public:
 				};
 				// The result of toLatin1() is undefined for non-Latin1 strings.
 				// However, KDE saves this entry using IDN and percent-encoding, so no problem...
-				return string(prxy.toLatin1().data());
+				response.push_back(string(prxy.toLatin1().data()));
+				break;
 			case 2: // Use a manual PAC
 				// The result of toLatin1() is undefined for non-Latin1 strings.
 				// However, KDE saves this entry using IDN and percent-encoding, so no problem...
 				tmp = string(this->grp->readEntry("Proxy Config Script", "").toLatin1().data());
 				if (url::is_valid("pac+" + tmp))
-					return url("pac+" + tmp);
-				return url("wpad://");
+					response.push_back(url("pac+" + tmp));
+				else
+				  response.push_back(string("wpad://"));
+				break;	
 			case 3: // Use WPAD
-				return url("wpad://");
+				response.push_back(string("wpad://"));
+				break;
 			case 4: // Use envvar
 				throw runtime_error("User config_envvar"); // We'll bypass this config plugin and let the envvar plugin work
 			default:
-				return url("direct://");
+				response.push_back(url("direct://"));
+				break;
 		};
 
-		// Never get here!
+		return response;
 	}
 
-	string get_ignore(url /*dst*/) {
+	string get_ignore(const url& /*dst*/) {
 		// Apply ignore list only for manual proxy configuration
 		if (this->grp->readEntry("ProxyType", 0) == 1)  { 
 			string prefix = this->grp->readEntry("ReversedException", false) ? "-" : "";

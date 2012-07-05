@@ -113,7 +113,7 @@ sockaddr_from_cidr(sa_family_t af, uint8_t cidr)
 
 class ip_ignore_extension : public ignore_extension {
 public:
-	virtual bool ignore(url& url, string ignore) {
+	virtual bool ignore(url& url, const string &ignore) {
 		bool result   = false;
 		uint16_t port = 0;
 		const struct sockaddr *dst_ip = url.get_ips(false) ? url.get_ips(false)[0] : NULL;

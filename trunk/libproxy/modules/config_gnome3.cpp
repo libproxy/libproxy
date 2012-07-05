@@ -113,7 +113,7 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 	}
 }
 
-static inline uint16_t get_port(string &port)
+static inline uint16_t get_port(const string &port)
 {
 	uint16_t retval;
 
@@ -163,10 +163,28 @@ public:
 		kill(this->pid, SIGTERM);
 	}
 
-	url get_config(url dest) throw (runtime_error) {
+	void store_response(const string &type,
+						const string &host,
+						const string &port,
+						bool auth,
+						const string &username,
+						const string &password,
+						vector<url> &response) {
+		if (host != "" && get_port(port) != 0) {
+			string tmp = type + "://";
+			if (auth)
+			  tmp += username + ":" + password + "@";
+			tmp += host + ":" + port;
+			response.push_back(url(tmp));
+		}
+	}
+
+	vector<url> get_config(const url &dest) throw (runtime_error) {
 		// Check for changes in the config
 		fd_set rfds;
 		struct timeval timeout = { 0, 0 };
+		vector<url> response;
+
 		FD_ZERO(&rfds);
 		FD_SET(fileno(this->read), &rfds);
 		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
@@ -175,72 +193,49 @@ public:
 		// Mode is wpad:// or pac+http://...
 		if (this->data[PROXY_MODE] == "auto") {
 			string pac = this->data[PROXY_AUTOCONFIG_URL];
-			return url::is_valid(pac) ? url(string("pac+") + pac) : url("wpad://");
+			response.push_back(url::is_valid(pac) ? url(string("pac+") + pac) : url("wpad://"));
+			return response;
 		}
 
 		// Mode is http://... or socks://...
 		else if (this->data[PROXY_MODE] == "manual") {
-			string type, host, port;
 			bool       auth = this->data[PROXY_USE_AUTHENTICATION] == "true";
 			string username = url::encode(this->data[PROXY_AUTH_USER], URL_ALLOWED_IN_USERINFO_ELEMENT);
 			string password = url::encode(this->data[PROXY_AUTH_PASSWORD], URL_ALLOWED_IN_USERINFO_ELEMENT);
-			bool same_proxy = this->data[PROXY_SAME_FOR_ALL] == "true"; 
-
-			// If socks is set use it (except when same_proxy is set)
-			if (!same_proxy) {
-				type = "socks";
-				host = this->data[PROXY_SOCKS_HOST];
-				port = this->data[PROXY_SOCKS_PORT];
-			}
 			
-			if (host == "" || get_port(port) == 0) {
-				// Get the per-scheme proxy settings
-				if (dest.get_scheme() == "http") {
-						type = "http";
-						host = this->data[PROXY_HTTP_HOST];
-						port = this->data[PROXY_HTTP_PORT];
-				}
-				else if (dest.get_scheme() == "https") {
-						// It is expected that the configured server is an
-						// HTTP server that support CONNECT method.
-						type = "http";
-						host = this->data[PROXY_SECURE_HOST];
-						port = this->data[PROXY_SECURE_PORT];
-				}
-				else if (dest.get_scheme() == "ftp") {
-						// It is expected that the configured server is an
-						// HTTP server that handles proxying FTP URLs 
-						// (e.g. request with header "Host: ftp://ftp.host.org")
-						type = "http";
-						host = this->data[PROXY_FTP_HOST];
-						port = this->data[PROXY_FTP_PORT];
-				}
+			// Get the per-scheme proxy settings
+			if (dest.get_scheme() == "http")
+				store_response("http", this->data[PROXY_HTTP_HOST],
+					this->data[PROXY_HTTP_PORT], auth, username, password, response);
+			else if (dest.get_scheme() == "https")
+				// It is expected that the configured server is an
+				// HTTP server that support CONNECT method.
+				store_response("http", this->data[PROXY_SECURE_HOST],
+					this->data[PROXY_SECURE_PORT], auth, username, password, response);
+			else if (dest.get_scheme() == "ftp")
+				// It is expected that the configured server is an
+				// HTTP server that handles proxying FTP URLs 
+				// (e.g. request with header "Host: ftp://ftp.host.org")
+				store_response("http", this->data[PROXY_FTP_HOST],
+					this->data[PROXY_FTP_PORT], auth, username, password, response);
 
-				// If no proxy is set and we have the same_proxy option
-				// enabled try socks at the end only.
-				if (same_proxy && (host == "" || get_port(port) == 0)) {
-					type = "socks";
-					host = this->data[PROXY_SOCKS_HOST];
-					port = this->data[PROXY_SOCKS_PORT];
-				}
-			}
+			store_response("socks", this->data[PROXY_SOCKS_HOST],
+				this->data[PROXY_SOCKS_PORT], auth, username, password, response);
 
-
-			// If host and port were found, build config url
-			if (host != "" && get_port(port) != 0) {
-				string tmp = type + "://";
-				if (auth)
-					tmp += username + ":" + password + "@";
-				tmp += host + ":" + port;
-				return url(tmp);
+			// In case nothing matched, try HTTP Connect and fallback to direct.
+			// If there is not secure HTTP proxy, this will only add direct:// to
+			// the response
+			if (response.size() == 0) {
+				store_response("http", this->data[PROXY_SECURE_HOST],
+					this->data[PROXY_SECURE_PORT], auth, username, password, response);
+				response.push_back(url("direct://"));
 			}
 		}
 
-		// Mode is direct://
-		return url("direct://");
+		return response;
 	}
 
-	string get_ignore(url) {
+	string get_ignore(const url&) {
 		return this->data[PROXY_IGNORE_HOSTS];
 	}
 

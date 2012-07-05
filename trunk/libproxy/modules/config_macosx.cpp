@@ -114,40 +114,45 @@ static string capitalize(string str) {
 
 class macosx_config_extension : public config_extension {
 public:
-	url get_config(url url) throw (runtime_error) {
+	vector<url> get_config(const url &url) throw (runtime_error) {
 		string tmp;
 		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
+		vector<url> response;
+
 		if (!proxies) throw runtime_error("Unable to fetch proxy configuration");
 
 		// wpad://
 		if (getbool(proxies, "ProxyAutoDiscoveryEnable")) {
 			CFRelease(proxies);
-			return libproxy::url(string("wpad://"));
+			response.push_back(url("wpad://"));
 		}
 
 		// pac+http://...
-		if (getbool(proxies, "ProxyAutoConfigEnable") &&
+		else if (getbool(proxies, "ProxyAutoConfigEnable") &&
 		    (tmp = str(getobj<CFStringRef>(proxies, "ProxyAutoConfigURLString"))) != "" &&
         	    url::is_valid(tmp)) {
 			CFRelease(proxies);
-			return libproxy::url(string("pac+") + tmp);
+			response.push_back(url(string("pac+") + tmp));
 		}
 
 		// http:// or socks:// (TODO: gopher:// and rtsp:// ???)
-		if ((protocol_url(proxies, toupper(url.get_scheme()), tmp)    && url::is_valid(tmp)) ||
+		else if ((protocol_url(proxies, toupper(url.get_scheme()), tmp)    && url::is_valid(tmp)) ||
 		    (protocol_url(proxies, capitalize(url.get_scheme()), tmp) && url::is_valid(tmp)) ||
 		    (protocol_url(proxies, toupper("http"), tmp)              && url::is_valid(tmp)) ||
 	            (protocol_url(proxies, toupper("socks"), tmp)             && url::is_valid(tmp))) {
 			CFRelease(proxies);
-			return libproxy::url(tmp);
+			response.push_back(url(tmp));
+		}
+		else {
+			// direct://
+			CFRelease(proxies);
+			response.push_back(url("direct://"));
 		}
 
-		// direct://
-		CFRelease(proxies);
-		return libproxy::url(string("direct://"));
+		return response;
 	}
 
-	string get_ignore(url) {
+	string get_ignore(const url&) {
 		// Get config dict
 		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
 		if (!proxies) return "";

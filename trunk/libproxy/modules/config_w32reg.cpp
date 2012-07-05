@@ -108,22 +108,24 @@ static map<string, string> parse_manual(string data) {
 
 class w32reg_config_extension : public config_extension {
 public:
-	url get_config(url dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) throw (runtime_error) {
 		char        *tmp = NULL;
 		uint32_t enabled = 0;
+		vector<url> response;
 
 		// WPAD
 		if (is_enabled(W32REG_OFFSET_WPAD)) {
-			return url("wpad://");
+			response.push_back(url("wpad://"));
+			return response;
 		}
 
 		// PAC
 		if (is_enabled(W32REG_OFFSET_PAC) &&
 			get_registry(W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL) &&
 			url::is_valid(string("pac+") + tmp)) {
-			url cfg(string("pac+") + tmp);
+			response.push_back(url(string("pac+") + tmp));
 			delete tmp;
-			return cfg;
+			return response;
 		}
 
 		// Manual proxy
@@ -135,22 +137,25 @@ public:
 
 			// First we look for an exact match
 			if (manual.find(dst.get_scheme()) != manual.end())
-				return manual[dst.get_scheme()];
+				response.push_back(manual[dst.get_scheme()]);
 
 			// Next we look for http
 			else if (manual.find("http") != manual.end())
-				return manual["http"];
+				response.push_back(manual["http"]);
 
 			// Last we look for socks
 			else if (manual.find("socks") != manual.end())
-				return manual["socks"];
+				response.push_back(manual["socks"]);
+
+			return response;
 		}
 
 		// Direct
-		return url("direct://");
+		response.push_back(url("direct://"));
+		return response;
 	}
 
-	string get_ignore(url dst) {
+	string get_ignore(const url &dst) {
 		char *tmp;
 		if (get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
 			string po = tmp;
