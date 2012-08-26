@@ -6,4 +6,5 @@ Name: libproxy-1.0
 Description: Proxy Configuration Library
 Version: @PROJECT_VERSION@
 Libs: -L${libdir} -lproxy
+Libs.private: -lpthread -lm
 Cflags: -I${includedir} 
