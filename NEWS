@@ -1,4 +1,4 @@
-New in version 0.4.8 (not yet released)
+New in version 0.4.8
 ==============================
 * Only support standalone mozjs185 as mozilla js engine.
   xulrunner being part of the now lightning fast moving firefox
@@ -6,6 +6,7 @@ New in version 0.4.8 (not yet released)
   supported by Mozilla to be used in this scenario.
 * Support building with javascritpcoregtk 1.5
   (got split out of webkitgtk).
+* Support sending multiple results.
 * Issues fixed:
   - #166: Libproxy does not parse NO_PROXY correct when the line
           contains spaces
