@@ -474,8 +474,9 @@ char* url::get_pac() {
 				// Add this chunk to our content length,
 				// ensuring that we aren't over our max size
 				content_length += chunk_length;
-				if (content_length >= PAC_MAX_SIZE) break;
 			}
+
+			if (content_length >= PAC_MAX_SIZE) break;
 
 			while (recvd != content_length) {
 				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
