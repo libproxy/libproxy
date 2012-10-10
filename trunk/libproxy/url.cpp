@@ -490,7 +490,7 @@ char* url::get_pac() {
 		} while (recvd != content_length);
 
 		if (string(buffer).size() != content_length) {
-			delete buffer;
+			delete[] buffer;
 			buffer = NULL;
 		}
 	}
