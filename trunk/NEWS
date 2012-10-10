@@ -1,3 +1,8 @@
+New in version 0.4.9
+==============================
+* CVE-2012-4504 Fixed buffer overflow when downloading PAC
+* Fix infinit loop uppon network errors
+
 New in version 0.4.8
 ==============================
 * Only support standalone mozjs185 as mozilla js engine.
