@@ -480,11 +480,14 @@ char* url::get_pac() {
 
 			while (recvd != content_length) {
 				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
-				if (r < 0) break;
+				if (r < 0) {
+					recvd = content_length;
+					break;
+				}
 				recvd += r;
 			}
 			buffer[content_length] = '\0';
-		} while (chunked);
+		} while (recvd != content_length);
 
 		if (string(buffer).size() != content_length) {
 			delete buffer;
