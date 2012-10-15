@@ -95,7 +95,7 @@ bool url::is_valid(const string url_) {
 		rtv = false;
 	}
 
-    return rtv;
+	return rtv;
 }
 
 string url::encode(const string &data, const string &valid_reserved) {
@@ -172,8 +172,8 @@ url::url(const string &url) throw(parse_error)
 		authority_start = 2;
 		/* authority is always followed by / or nothing */
 		authority_end = hier_part.find('/', authority_start);
-                if (authority_end == string::npos)
-                  authority_end = hier_part.size();
+		if (authority_end == string::npos)
+			authority_end = hier_part.size();
 		path_start = authority_end;
 
 		/* 3.2:
@@ -203,7 +203,7 @@ url::url(const string &url) throw(parse_error)
 
 		/* Check for IPv6 IP */
 		if (host_start < hier_part.size()
-                    && hier_part[host_start] == '[') {
+				&& hier_part[host_start] == '[') {
 			host_end = hier_part.find(']', host_start);
 			if (host_end == string::npos)
 				throw parse_error("Invalid URL: " + url);
@@ -212,8 +212,8 @@ url::url(const string &url) throw(parse_error)
 				host_end = string::npos;
 		} else {
 			host_end = hier_part.find(':', host_start);
-                        if (path_start < host_end)
-                            host_end = path_start;
+			if (path_start < host_end)
+				host_end = path_start;
 		}
 
 		/* If not port, host ends where path starts */
