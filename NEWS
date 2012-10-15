@@ -1,5 +1,11 @@
 New in version 0.4.9
 ==============================
+* Fix http chunk encoded PAC that was broken in previous release
+* Add HTTP client unit test
+* Fix more coding style issues
+
+New in version 0.4.9
+==============================
 * CVE-2012-4504 Fixed buffer overflow when downloading PAC
 * Fix infinit loop uppon network errors
 
