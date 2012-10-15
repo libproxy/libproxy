@@ -460,7 +460,7 @@ char* url::get_pac() {
 		// Get content
 		unsigned int recvd = 0;
 		buffer = new char[PAC_MAX_SIZE];
-		*buffer = '\0';
+		memset(buffer, 0, PAC_MAX_SIZE);
 		do {
 			unsigned int chunk_length;
 
@@ -480,14 +480,13 @@ char* url::get_pac() {
 
 			while (recvd != content_length) {
 				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
-				if (r < 0) {
-					recvd = content_length;
+				if (r <= 0) {
+					chunked = false;
 					break;
 				}
 				recvd += r;
 			}
-			buffer[content_length] = '\0';
-		} while (recvd != content_length);
+		} while (chunked);
 
 		if (string(buffer).size() != content_length) {
 			delete[] buffer;
