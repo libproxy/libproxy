@@ -92,7 +92,11 @@ if (CMAKE_CSharp_COMPILER)
 endif (CMAKE_CSharp_COMPILER)
 
 # configure variables set in this file for fast reload later on
+if(NOT CMAKE_PLATFORM_INFO_DIR) # pre-2.8.10
+  set(CMAKE_PLATFORM_INFO_DIR ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
+endif()
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/CMakeCSharpCompiler.cmake.in 
-  ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeCSharpCompiler.cmake IMMEDIATE @ONLY)
+  ${CMAKE_PLATFORM_INFO_DIR}/CMakeCSharpCompiler.cmake IMMEDIATE @ONLY)
 set(CMAKE_CSharp_COMPILER_ENV_VAR "CSC")
 
