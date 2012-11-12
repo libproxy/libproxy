@@ -1,4 +1,8 @@
-New in version 0.4.9
+New in version <NEXT>
+==============================
+* Build fixes with cmake 2.8.10+
+
+New in version 0.4.10
 ==============================
 * Fix http chunk encoded PAC that was broken in previous release
 * Add HTTP client unit test
