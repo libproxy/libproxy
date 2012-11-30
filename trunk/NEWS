@@ -1,6 +1,7 @@
-New in version <NEXT>
+New in version 0.4.11
 ==============================
 * Build fixes with cmake 2.8.10+
+* Quick release without built binaries / files (Address Bug #184)
 
 New in version 0.4.10
 ==============================
