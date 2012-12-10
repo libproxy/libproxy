@@ -403,6 +403,7 @@ char* url::get_pac() {
 				buffer = NULL;
 			}
 		}
+		close(sock);
 		return buffer;
 	}
 
@@ -496,6 +497,7 @@ char* url::get_pac() {
 
 	// Clean up
 	shutdown(sock, SHUT_RDWR);
+	close(sock);
 	return buffer;
 }
 
