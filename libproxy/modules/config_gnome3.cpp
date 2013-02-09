@@ -288,7 +288,9 @@ static base_extension** gnome_config_extension_init() {
 static bool gnome_config_extension_test() {
 	return (getenv("GNOME_DESKTOP_SESSION_ID")
 			|| (getenv("DESKTOP_SESSION")
-				&& string(getenv("DESKTOP_SESSION")) == "gnome"));
+				&& string(getenv("DESKTOP_SESSION")) == "gnome")
+			|| (getenv("DESKTOP_SESSION")
+				&& string(getenv("DESKTOP_SESSION")) == "mate"));
 }
 
 MM_MODULE_INIT(gnome_config_extension,
