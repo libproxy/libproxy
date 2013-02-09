@@ -143,22 +143,22 @@ int main(int argc, char **argv) {
 	g_io_add_watch(outchan, G_IO_ERR, err, NULL);
 	g_io_add_watch(outchan, G_IO_HUP, err, NULL);
 
-	// Get GConf client
-	GSettings* client;
+	// Get GSettings obkecy
+	GSettings* settings;
 
 	for (int i=1; i<argc; i++) {
-		client = g_settings_new(argv[i]);
-		gchar** keys = g_settings_list_keys(client);
-		for (int j=0; keys[j]; on_value_change(client, keys[j++],argv[i] ));
-		g_signal_connect(client, "changed::", (GCallback) on_value_change, argv[i]);
+		settings = g_settings_new(argv[i]);
+		gchar** keys = g_settings_list_keys(settings);
+		for (int j=0; keys[j]; on_value_change(settings, keys[j++],argv[i] ));
+		g_signal_connect(settings, "changed::", (GCallback) on_value_change, argv[i]);
 	}
 
 
 	g_main_loop_run(loop);
 
 	// Cleanup
-	while (G_IS_OBJECT(client)) {
-		g_object_unref(client);
+	while (G_IS_OBJECT(settings)) {
+		g_object_unref(settings);
 	}
 	g_io_channel_shutdown(inchan,  FALSE, NULL);
 	g_io_channel_shutdown(outchan, FALSE, NULL);
