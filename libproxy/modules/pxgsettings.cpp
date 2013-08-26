@@ -157,9 +157,7 @@ int main(int argc, char **argv) {
 	g_main_loop_run(loop);
 
 	// Cleanup
-	while (G_IS_OBJECT(settings)) {
-		g_object_unref(settings);
-	}
+	g_object_unref(settings);
 	g_io_channel_shutdown(inchan,  FALSE, NULL);
 	g_io_channel_shutdown(outchan, FALSE, NULL);
 	g_io_channel_unref(inchan);
