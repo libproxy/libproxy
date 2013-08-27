@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 
+#include <stdlib.h> // for abort()
+#include <errno.h>  // for EINTR
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -58,7 +60,12 @@ class TestServer {
 
 		void stop()
 		{
-			assert (write(m_pipe[1], (void*)"q", 1) == 1);
+			int ret;
+			do
+			{
+				ret = write(m_pipe[1], (void*)"q", 1);
+			} while (errno == EINTR);
+			if (ret < 0) abort(); // We could not write to the pipe anymore
 			pthread_join (m_thread, NULL);
 			close(m_pipe[1]);
 			m_pipe[1] = -1;
@@ -188,7 +195,8 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			ret = send(csock, (void*)buf, size, 0);
-			assert(ret != size);
+			if (!(errno == EBADF))
+				abort(); // Test failed... the socket did not close on us
 			delete[] buf;
 			shutdown(csock, SHUT_RDWR);
 			close(ret);
@@ -235,21 +243,21 @@ int main()
 	server.start();
 
 	pac = basic.get_pac();
-	assert(pac != NULL);
-	assert(strlen(pac) == 10);
-	assert(!strcmp("0123456789", pac));
-	delete[] pac;
+	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
+		return 1;     // test failed, exit with error code
+	delete[] pac; // test succesful, cleanup
 
 	pac = truncated.get_pac();
-	assert(pac == NULL);
+	if (pac != NULL)
+	       	return 2; // Test failed, exit with error code
 
 	pac = overflow.get_pac();
-	assert(pac == NULL);
+	if (pac != NULL)
+		return 3; // Test failed, exit with error code
 
 	pac = chunked.get_pac();
-	assert(pac != NULL);
-	assert(strlen(pac) == 10);
-	assert(!strcmp("0123456789", pac));
+	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
+		return 4; // Test failed, exit with error code
 	delete[] pac;
 
 	server.stop();
