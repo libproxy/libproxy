@@ -4,6 +4,7 @@ New in version <NEXT>
 * Detect running MATE session (Bug #186, Part1).
 * Fix linking of perl bindings to pthread (Bug #182)
 * Correctly detect spidermonky (mozjs185) (Bug #188)
+* Stop pxgsettings from segfaulting on exit (Bug #192)
 
 New in version 0.4.11
 ==============================
