@@ -5,7 +5,8 @@ New in version <NEXT>
 * Fix linking of perl bindings to pthread (Bug #182)
 * Correctly detect spidermonky (mozjs185) (Bug #188)
 * Stop pxgsettings from segfaulting on exit (Bug #192)
-* Fix test #10 (Bug 189)
+* Fix test #10 (Bug #189)
+* Fix build on Mac OS X (Bug #183)
 
 New in version 0.4.11
 ==============================
