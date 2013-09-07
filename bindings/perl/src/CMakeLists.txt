@@ -12,7 +12,7 @@ set(Libproxy_LIB_SRCS Libproxy.c)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/perl/blib/arch/auto/Net)
 add_library(PLlibproxy SHARED ${Libproxy_LIB_SRCS})
 
-target_link_libraries(PLlibproxy ${PERL_LIBRARY} libproxy pthread)
+target_link_libraries(PLlibproxy libproxy pthread)
 set_target_properties(PLlibproxy PROPERTIES OUTPUT_NAME "Libproxy")
 set_target_properties(PLlibproxy PROPERTIES PREFIX "")
 
