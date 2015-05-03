@@ -149,10 +149,9 @@ int main(int argc, char **argv) {
 	for (int i=1; i<argc; i++) {
 		settings = g_settings_new(argv[i]);
 		gchar** keys = g_settings_list_keys(settings);
+		g_signal_connect(settings, "changed::", G_CALLBACK (on_value_change), argv[i]);
 		for (int j=0; keys[j]; on_value_change(settings, keys[j++],argv[i] ));
-		g_signal_connect(settings, "changed::", (GCallback) on_value_change, argv[i]);
 	}
-
 
 	g_main_loop_run(loop);
 
