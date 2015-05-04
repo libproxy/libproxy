@@ -1,5 +1,6 @@
 add_library(libproxy SHARED proxy.cpp config.hpp)
 add_library(libproxy-private SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy-private.cpp url.cpp ${LIBPROXY_SOURCES})
+add_executable(libproxyd proxyd.cpp)
 if(WIN32)
   target_link_libraries(libproxy-private modman;ws2_32;${LIBPROXY_LIBRARIES})
 else()
@@ -11,6 +12,7 @@ if(WIN32)
 endif()
 
 px_check_modules(GIO gio-2.0>=2.26)
+target_link_libraries(libproxyd libproxy-private ${GIO_LIBRARIES})
 target_link_libraries(libproxy ${GIO_LIBRARIES})
 
 if(IS_ABSOLUTE "${MODULE_INSTALL_DIR}")
