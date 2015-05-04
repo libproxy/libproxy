@@ -1,6 +1,6 @@
 add_library(libproxy SHARED proxy.cpp config.hpp)
 add_library(libproxy-private SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy-private.cpp url.cpp ${LIBPROXY_SOURCES})
-add_executable(libproxyd proxyd.cpp)
+add_executable(libproxyd libproxyd.cpp)
 if(WIN32)
   target_link_libraries(libproxy-private modman;ws2_32;${LIBPROXY_LIBRARIES})
 else()
