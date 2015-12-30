@@ -5,9 +5,11 @@
 
 #include <stdlib.h> // for abort()
 #include <errno.h>  // for EINTR
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/select.h>
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
@@ -34,7 +36,7 @@ class TestServer {
 			int i = 1;
 
 			addr.sin_family = AF_INET;
-			inet_aton("127.0.0.1", &addr.sin_addr);
+			addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 			addr.sin_port = ntohs(m_port);
 
 			if (m_sock != -1)
