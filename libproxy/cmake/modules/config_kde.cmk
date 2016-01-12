@@ -1,0 +1,6 @@
+find_program(KDE4_CONF kreadconfig)
+find_program(KF5_CONF kreadconfig5)
+
+if (KDE4_CONF OR KF5_CONF)
+  set(KDE_FOUND 1)
+endif()
