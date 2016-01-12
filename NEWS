@@ -1,5 +1,6 @@
-New in version <NEXT>
+New in version 0.4.12
 ==============================
+* Move development to github.com/libproxy/libproxy
 * Fix fd leak in get_pac (Bug #185)
 * Detect running MATE session (Bug #186, Part1).
 * Fix linking of perl bindings to pthread (Bug #182)
@@ -7,6 +8,8 @@ New in version <NEXT>
 * Stop pxgsettings from segfaulting on exit (Bug #192)
 * Fix test #10 (Bug #189)
 * Fix build on Mac OS X (Bug #183)
+* Add a generic KDE Config module (fix crashes of Qt5 based
+  apps) (issue#4)
 
 New in version 0.4.11
 ==============================
