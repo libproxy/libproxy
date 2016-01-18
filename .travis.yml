@@ -1,0 +1,9 @@
+langauge: cpp
+compiler:
+  - gcc
+  - clang
+script:
+  - cmake .
+  - make
+  - sudo make install
+  - make test
