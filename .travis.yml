@@ -12,9 +12,24 @@ matrix:
   allow_failures:
     - os: osx
 
+install:
+# create /etc/sysconfig so that the build process enables this module (build test)
+  - |
+  if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+    sudo mkdir /etc/sysconfig
+    sudo apt-get -qq update
+    sudo apt-get install -y libjavascriptcoregtk-3.0-dev
+  fi
+
 script:
-  - $CXX --version
-  - cmake .
+  - |
+    cmake .           \
+    -DWITH_PERL=ON    \
+    -DWITH_PYTHON=ON  \
+    -DWITH_GNOME3=ON  \
+    -DWITH_KDE=ON     \
+    -DWITH_WEBKIT3=ON \
+    -DBIPR=0
   - make
   - sudo make install
   - make test
