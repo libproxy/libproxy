@@ -1,8 +1,19 @@
-langauge: cpp
+language: cpp
+
+os:
+  - linux
+  - osx
+
 compiler:
-  - gcc
   - clang
+  - gcc
+
+matrix:
+  allow_failures:
+    - os: osx
+
 script:
+  - $CXX --version
   - cmake .
   - make
   - sudo make install
