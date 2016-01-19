@@ -84,6 +84,11 @@ PERL_VENDORINSTALL:     Default to OFF. Tells cmake to install the perl binding
                         in the vendor directory, which is the one used by most
                         packagers.
 
+PERL_LINK_LIBPERL:      Default to ON if PERL_VENDORINSTALL is OFF, default to
+                        OFF otherwise. Explicitly links the Perl binding
+                        against libperl.so. It must be ON for linking to work
+                        when --no-undefined is passed to the linker.
+
 WITH_DOTNET:            Default to OFF. Enable Mono .NET bindings.
 
 WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
