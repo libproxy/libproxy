@@ -91,7 +91,10 @@ WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
 WITH_GNOME3:            Default to ON. Build the Gnome3/GSettings bindings.
                         instead of Gnome2/GConf based one.
 
-WITH_KDE4:              Default to ON. Enables KDE4/Kconf bindings.
+WITH_KDE:               Default to ON. Enables plug-in to read proxy settings
+                        from either KDE4 or KDE Frameworks 5.
+                        Note: this plug-in only has a *runtime* dependency on
+                        either kreadconfig or kreadconfig5.
 
 WITH_MOZJS:             Default to ON. Enable Mozilla javascript bindings. As
                         Mozilla Javascript engine is often installed multiple
