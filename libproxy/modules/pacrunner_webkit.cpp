@@ -58,7 +58,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 	struct addrinfo *info;
 	if (getaddrinfo(tmp, NULL, NULL, &info))
 		return NULL;
-	delete tmp;
+	delete[] tmp;
 
 	// Try for IPv4
 	tmp = new char[INET6_ADDRSTRLEN+1];
@@ -67,7 +67,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 					NULL, 0,
 					NI_NUMERICHOST)) {
 			freeaddrinfo(info);
-			delete tmp;
+			delete[] tmp;
 			return NULL;
 		}
 	freeaddrinfo(info);
@@ -76,7 +76,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 	JSStringRef str = JSStringCreateWithUTF8CString(tmp);
 	JSValueRef  ret = JSValueMakeString(ctx, str);
 	JSStringRelease(str);
-	delete tmp;
+	delete[] tmp;
 
 	return ret;
 }
