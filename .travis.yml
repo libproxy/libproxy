@@ -15,11 +15,11 @@ matrix:
 install:
 # create /etc/sysconfig so that the build process enables this module (build test)
   - |
-  if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-    sudo mkdir /etc/sysconfig
-    sudo apt-get -qq update
-    sudo apt-get install -y libjavascriptcoregtk-3.0-dev
-  fi
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sudo mkdir /etc/sysconfig
+      sudo apt-get -qq update
+      sudo apt-get install -y libjavascriptcoregtk-3.0-dev
+    fi
 
 script:
   - |
