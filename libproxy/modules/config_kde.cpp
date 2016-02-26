@@ -18,9 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
+#include <sstream>
 
 #include "../extension_config.hpp"
 using namespace libproxy;
@@ -28,11 +32,18 @@ using namespace libproxy;
 class kde_config_extension : public config_extension {
 public:
     kde_config_extension()
+        : cache_time(0)
     {
         try {
             // Try the KF5 one first
             command = "kreadconfig5";
-            kde_config_val("proxyType", "-1");
+            command_output("kreadconfig5 --key nonexistant");
+
+            try {
+                parse_dir_list(command_output("qtpaths --paths GenericConfigLocation"));
+            }
+            catch(...) {}
+
             return; // Worked
         }
         catch(...) {}
@@ -40,7 +51,13 @@ public:
         try {
             // The KDE4 one next
             command = "kreadconfig";
-            kde_config_val("proxyType", "-1");
+            command_output(command);
+
+            try {
+                parse_dir_list(command_output("kde4-config --path config"));
+            }
+            catch(...) {}
+
             return; // Worked
         }
         catch(...) {}
@@ -117,11 +134,7 @@ public:
 	}
 
 private:
-    // Neither key nor def must contain '
-    string kde_config_val(const string &key, const string &def) throw (runtime_error) {
-        string cmdline =
-                command + " --file kioslaverc --group 'Proxy Settings' --key '" + key + "' --default '" + def + "'";
-
+    string command_output(const string &cmdline) throw (runtime_error) {
         FILE *pipe = popen(cmdline.c_str(), "r");
         if (!pipe)
             throw runtime_error("Unable to run command");
@@ -129,19 +142,84 @@ private:
         char buffer[128];
         string result = "";
         while (!feof(pipe)) {
-         if (fgets(buffer, 128, pipe) != NULL)
-             result += buffer; // TODO: If this throws bad_alloc, pipe is leaked
+            if (fgets(buffer, 128, pipe) != NULL)
+                result += buffer; // TODO: If this throws bad_alloc, pipe is leaked
         }
 
-        pclose(pipe);
+        if(pclose(pipe) != 0)
+            throw runtime_error("Command failed");
 
         // Trim newlines and whitespace at end
         result.erase(result.begin() + (result.find_last_not_of(" \n\t")+1), result.end());
+
         return result;
+    }
+
+    // Neither key nor def must contain '
+    string kde_config_val(const string &key, const string &def) throw (runtime_error) {
+        if (cache_needs_refresh())
+            cache.clear();
+        else
+            try {
+                // Already in cache?
+                return cache.at(key);
+            } catch(...) {} // Not in cache
+
+        string result = command_output(
+                command + " --file kioslaverc --group 'Proxy Settings' --key '" + key + "' --default '" + def + "'");
+
+        // Add result to cache
+        cache[key] = result;
+
+        return result;
+    }
+
+    // Used for cache invalidation
+    struct configfile {
+        string path;
+        time_t mtime; // 0 means it doesn't exist
+    };
+
+    // Parses output of qtpaths/kde4-config to fill config_locs
+    void parse_dir_list(const string &dirs) {
+        string config_path;
+        stringstream config_paths_stream(dirs);
+
+        // Try each of the listed folders, seperated by ':'
+        while (getline(config_paths_stream, config_path, ':')) {
+            configfile config_loc; config_loc.path = config_path + "/kioslaverc";
+            config_locs.push_back(config_loc);
+        }
+    }
+
+    // If any of the locations in config_locs changed (different mtime),
+    // update config_locs and return true.
+    bool cache_needs_refresh() {
+        // Play safe here, if we can't determine the location,
+        // don't cache at all.
+        bool needs_refresh = config_locs.empty();
+        struct stat config_info;
+
+        for (unsigned int i = 0; i < config_locs.size(); ++i) {
+            configfile &config = config_locs[i];
+            time_t current_mtime = stat(config.path.c_str(), &config_info) == 0 ? config_info.st_mtime : 0;
+            if (config.mtime != current_mtime) {
+                config.mtime = current_mtime;
+                needs_refresh = true;
+            }
+        }
+
+        return needs_refresh;
     }
 
     // Whether to use kreadconfig or kreadconfig5
     string command;
+    // When the cache was flushed last
+    time_t cache_time;
+    // Cache for config values
+    map<string, string> cache;
+    // State of the config files at the time of the last cache flush
+    vector<configfile> config_locs;
 };
 
 MM_MODULE_INIT_EZ(kde_config_extension, getenv("KDE_FULL_SESSION"), NULL, NULL);

@@ -43,14 +43,14 @@ static Value dnsResolve(Value& ths, Value& fnc, vector<Value>& arg) {
 					NULL, 0,
 					NI_NUMERICHOST)) {
 			freeaddrinfo(info);
-			delete tmp;
+			delete[] tmp;
 			return NULL;
 		}
 	freeaddrinfo(info);
 
 	// Create the return value
 	Value ret = ths.newString(tmp);
-	delete tmp;
+	delete[] tmp;
 	return ret;
 }
 
