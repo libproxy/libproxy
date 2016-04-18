@@ -147,7 +147,7 @@ public:
 			else
 			{
 				/* If CIDR notation was used, get the netmask */
-				if (sscanf(mask.c_str(), "%d", &cidr) == 1)
+				if (ign_ip && sscanf(mask.c_str(), "%d", &cidr) == 1)
 					net_ip = sockaddr_from_cidr(ign_ip->sa_family, cidr);
 			}
 
