@@ -1,7 +1,14 @@
 New in Version 0.4.13
 ==============================
 * Allow linking webkit pacrunner against javascriptcore-4.0
-  (webkit2)
+  (webkit2).
+* Allow to disable building of the KDE module (-DWITH_KDE=ON/OFF).
+* Fix compilation errors with CLang on MacOSX.
+* bindings: perl: Add an option to explicitly link against libperl.so
+  Some distributions want to do it, other prefer not to, the library
+  is anyway in context of perl.
+* config_kde: Add a basic cache and invalidation: performance improvement
+  for the KDE module.
 
 New in version 0.4.12
 ==============================
