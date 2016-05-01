@@ -23,7 +23,7 @@
 using namespace libproxy;
 
 #include <dbus/dbus.h>
-#include <NetworkManager/NetworkManager.h>
+#include <NetworkManager.h>
 
 class networkmanager_network_extension : public network_extension {
 public:
