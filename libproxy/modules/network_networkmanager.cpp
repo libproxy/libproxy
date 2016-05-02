@@ -25,6 +25,12 @@ using namespace libproxy;
 #include <dbus/dbus.h>
 #include <NetworkManager.h>
 
+// Backwards compatibility: with the switch to libnm, NM_STATE_CONNECTED is no
+// longer defined. NM_STATE_CONNECTED_GLOBAL appeared with NM 0.9 and was aliased
+#ifndef NM_STATE_CONNECTED
+  #define NM_STATE_CONNECTED NM_STATE_CONNECTED_GLOBAL
+#endif
+
 class networkmanager_network_extension : public network_extension {
 public:
 	networkmanager_network_extension() {
