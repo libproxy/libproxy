@@ -135,7 +135,9 @@ public:
 
 private:
     string command_output(const string &cmdline) throw (runtime_error) {
-        FILE *pipe = popen(cmdline.c_str(), "r");
+        // Capture stderr as well
+        const string command = "(" + cmdline + ")2>&1";
+        FILE *pipe = popen(command.c_str(), "r");
         if (!pipe)
             throw runtime_error("Unable to run command");
 
