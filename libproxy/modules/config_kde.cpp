@@ -135,7 +135,9 @@ public:
 
 private:
     string command_output(const string &cmdline) throw (runtime_error) {
-        FILE *pipe = popen(cmdline.c_str(), "r");
+        // Capture stderr as well
+        const string command = "(" + cmdline + ")2>&1";
+        FILE *pipe = popen(command.c_str(), "r");
         if (!pipe)
             throw runtime_error("Unable to run command");
 
@@ -156,22 +158,24 @@ private:
     }
 
     // Neither key nor def must contain '
-    string kde_config_val(const string &key, const string &def) throw (runtime_error) {
+    const string &kde_config_val(const string &key, const string &def) throw (runtime_error) {
         if (cache_needs_refresh())
             cache.clear();
-        else
-            try {
-                // Already in cache?
-                return cache.at(key);
-            } catch(...) {} // Not in cache
+        else {
+            // Already in cache?
+            map<string, string>::iterator it = cache.find(key);
+            if(it != cache.end())
+                return it->second;
+        }
 
-        string result = command_output(
+        // Although all values are specified internally and/or validated,
+        // checking is better than trusting.
+        if(key.find('\'') != string::npos || def.find('\'') != string::npos)
+            return def;
+
+        // Add result to cache and return it
+        return cache[key] = command_output(
                 command + " --file kioslaverc --group 'Proxy Settings' --key '" + key + "' --default '" + def + "'");
-
-        // Add result to cache
-        cache[key] = result;
-
-        return result;
     }
 
     // Used for cache invalidation
