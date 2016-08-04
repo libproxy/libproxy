@@ -1,3 +1,10 @@
+New in Version 0.4.14:
+==============================
+* Parallel build support for python2 and python3.
+  -DWITH_PYTHON has been replaced with -DWITH_PYTHON2 and
+  -DWITH_PYTHON3 to have full control over this. Default is
+  ON for both (issue#22)
+
 New in Version 0.4.13
 ==============================
 * Allow linking webkit pacrunner against javascriptcore-4.0

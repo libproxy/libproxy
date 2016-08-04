@@ -25,7 +25,7 @@ script:
   - |
     cmake .           \
     -DWITH_PERL=ON    \
-    -DWITH_PYTHON=ON  \
+    -DWITH_PYTHON2=ON \
     -DWITH_GNOME3=ON  \
     -DWITH_KDE=ON     \
     -DWITH_WEBKIT3=ON \

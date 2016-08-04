@@ -110,7 +110,9 @@ WITH_NM:                Default to ON. Enable NetworkManager bindings.
 
 WITH_PERL:              Default to ON. Enable Perl bindings.
 
-WITH_PYTHON:            Default to ON. Enable Python bindings.
+WITH_PYTHON2:           Default to ON. Enable Python bindings.
+
+WITH_PYTHON3:           Default to ON. Enable Python bindings.
 
 WITH_VALA:              Default to OFF. Enable Vala bindings.
 
