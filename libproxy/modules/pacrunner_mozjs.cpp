@@ -76,12 +76,12 @@ static JSBool dnsResolve_(JSContext *cx, jsval hostname, jsval *vp) {
 		return true;
 }
 
-static JSBool dnsResolve(JSContext *cx, uintN /*argc*/, jsval *vp) {
+static JSBool dnsResolve(JSContext *cx, unsigned argc, jsval *vp) {
 	jsval *argv = JS_ARGV(cx, vp);
 	return dnsResolve_(cx, argv[0], vp);
 }
 
-static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
+static JSBool myIpAddress(JSContext *cx, unsigned argc, jsval *vp) {
 	char *hostname = (char *) JS_malloc(cx, 1024);
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewStringCopyN(cx, hostname, strlen(hostname));
@@ -97,9 +97,8 @@ static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
 // This MUST be a static global
 static JSClass cls = {
 		"global", JSCLASS_GLOBAL_FLAGS,
-		JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-		JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+		JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
 };
 
 class mozjs_pacrunner : public pacrunner {
@@ -112,25 +111,27 @@ public:
 		this->jsctx = NULL;
 
 		// Initialize Javascript runtime environment
-		if (!(this->jsrun = JS_NewRuntime(1024 * 1024)))                  goto error;
+		if (!(this->jsrun = JS_NewRuntime(1024 * 1024,JS_USE_HELPER_THREADS)))                  goto error;
 		if (!(this->jsctx = JS_NewContext(this->jsrun, 1024 * 1024)))     goto error;
-	    //JS_SetOptions(this->jsctx, JSOPTION_VAROBJFIX);
-	    //JS_SetVersion(this->jsctx, JSVERSION_LATEST);
-	    //JS_SetErrorReporter(cx, reportError);
-		if (!(this->jsglb = JS_NewCompartmentAndGlobalObject(this->jsctx, &cls, NULL))) goto error;
-		if (!JS_InitStandardClasses(this->jsctx, this->jsglb))            goto error;
+		{
+			JS::CompartmentOptions compart_opts;
+			compart_opts.setVersion(JSVERSION_LATEST);
 
-		// Define Javascript functions
-		JS_DefineFunction(this->jsctx, this->jsglb, "dnsResolve", dnsResolve, 1, 0);
-		JS_DefineFunction(this->jsctx, this->jsglb, "myIpAddress", myIpAddress, 0, 0);
-		JS_EvaluateScript(this->jsctx, this->jsglb, JAVASCRIPT_ROUTINES,
-				        strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
+			if (!(this->jsglb = JS_NewGlobalObject (this->jsctx, &cls, NULL, compart_opts))) goto error;
+			if (!(this->jsac = new JSAutoCompartment(this->jsctx,  this->jsglb))) goto error;
+			if (!JS_InitStandardClasses(this->jsctx, this->jsglb))            goto error;
 
-		// Add PAC to the environment
-		JS_EvaluateScript(this->jsctx, this->jsglb, pac.c_str(),
-							strlen(pac.c_str()), pacurl.to_string().c_str(), 0, &rval);
-		return;
+			// Define Javascript functions
+			JS_DefineFunction(this->jsctx, this->jsglb, "dnsResolve", dnsResolve, 1, 0);
+			JS_DefineFunction(this->jsctx, this->jsglb, "myIpAddress", myIpAddress, 0, 0);
+			JS_EvaluateScript(this->jsctx, this->jsglb, JAVASCRIPT_ROUTINES,
+							  strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
 
+			// Add PAC to the environment
+			JS_EvaluateScript(this->jsctx, this->jsglb, pac.c_str(),
+							  strlen(pac.c_str()), pacurl.to_string().c_str(), 0, &rval);
+			return;
+		}
 		error:
 			if (this->jsctx) JS_DestroyContext(this->jsctx);
 			if (this->jsrun) JS_DestroyRuntime(this->jsrun);
@@ -138,6 +139,7 @@ public:
 	}
 
 	~mozjs_pacrunner() {
+		if (this->jsac) delete this->jsac;
 		if (this->jsctx) JS_DestroyContext(this->jsctx);
 		if (this->jsrun) JS_DestroyRuntime(this->jsrun);
 		// JS_ShutDown()?
@@ -174,6 +176,7 @@ private:
 	JSRuntime *jsrun;
 	JSContext *jsctx;
 	JSObject  *jsglb;
+	JSAutoCompartment *jsac;
 };
 
 PX_PACRUNNER_MODULE_EZ(mozjs, "JS_DefineFunction", "mozjs");
