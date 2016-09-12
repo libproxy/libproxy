@@ -53,6 +53,8 @@ using namespace std;
 
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
+// This is the default block size to use when receiving via HTTP
+#define PAC_HTTP_BLOCK_SIZE 512
 
 static inline int get_default_port(string scheme) {
 	struct servent *serv;
@@ -448,6 +450,7 @@ char* url::get_pac() {
 	string line = recvline(sock);
 	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
 		/* Check for correct mime type and content length */
+		content_length = 0;
 		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
 			// Check for chunked encoding
 			if (line.find("Content-Transfer-Encoding: chunked") == 0 || line.find("Transfer-Encoding: chunked") == 0)
@@ -479,8 +482,10 @@ char* url::get_pac() {
 
 			if (content_length >= PAC_MAX_SIZE) break;
 
-			while (recvd != content_length) {
-				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
+			while (content_length == 0 || recvd != content_length) {
+				int r = recv(sock, buffer + recvd,
+				             content_length == 0 ? PAC_HTTP_BLOCK_SIZE
+				                                 : content_length - recvd, 0);
 				if (r <= 0) {
 					chunked = false;
 					break;
@@ -489,7 +494,7 @@ char* url::get_pac() {
 			}
 		} while (chunked);
 
-		if (string(buffer).size() != content_length) {
+		if (content_length != 0 && string(buffer).size() != content_length) {
 			delete[] buffer;
 			buffer = NULL;
 		}
