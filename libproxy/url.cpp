@@ -119,6 +119,7 @@ url::url(const string &url) throw(parse_error)
 	: m_orig(url), m_port(0), m_ips(NULL) {
 	size_t idx = 0;
 	size_t hier_part_start, hier_part_end;
+	size_t query_part_start;
 	size_t path_start, path_end;
 	string hier_part;
 
@@ -151,9 +152,17 @@ url::url(const string &url) throw(parse_error)
 	transform(m_scheme.begin(), m_scheme.end(), m_scheme.begin(), ::tolower);
 
 	hier_part_start = idx;
-	hier_part_end = url.find('?', idx);
-	if (hier_part_end == string::npos)
-		hier_part_end = url.find('#', idx);
+	hier_part_end = url.find('#', idx);
+	query_part_start = url.find('?', idx);
+	if (query_part_start != string::npos)
+	{
+		if (hier_part_end == string::npos)
+			m_query = url.substr(query_part_start);
+		else {
+			m_query = url.substr(query_part_start, hier_part_end - query_part_start);
+		}
+		hier_part_end = query_part_start;
+	}
 
 	hier_part = url.substr(hier_part_start,
 							hier_part_end == string::npos ?
@@ -269,6 +278,7 @@ url& url::operator=(const url& url) {
 	m_orig   = url.m_orig;
 	m_pass   = url.m_pass;
 	m_path   = url.m_path;
+	m_query  = url.m_query;
 	m_port   = url.m_port;
 	m_scheme = url.m_scheme;
 	m_user   = url.m_user;
@@ -356,6 +366,10 @@ string url::get_path() const {
 	return m_path;
 }
 
+string url::get_query() const {
+	return m_query;
+}
+
 uint16_t url::get_port() const {
 	return m_port;
 }
@@ -434,7 +448,7 @@ char* url::get_pac() {
 	if (sock < 0) return NULL;
 
 	// Build the request string
-	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + " HTTP/1.1\r\n";
+	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + m_query + " HTTP/1.1\r\n";
 	request += "Host: " + m_host + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
