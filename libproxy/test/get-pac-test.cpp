@@ -115,6 +115,12 @@ class TestServer {
 			csock = accept(m_sock, (sockaddr*) &addr, &len);
 			assert(csock > 0);
 
+#ifdef __APPLE__
+			int no_pipe = 1;
+			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &no_pipe, sizeof(int));
+#define 	MSG_NOSIGNAL 0
+#endif
+
 			// Read request
 			ptr = buffer;
 			do {
@@ -164,7 +170,7 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
+			close(csock);
 		}
 
 		void sendTruncated(int csock)
@@ -179,7 +185,7 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
+			close(csock);
 		}
 
 		void sendOverflow(int csock)
@@ -196,12 +202,12 @@ done:
 				"\n";
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
-			ret = send(csock, (void*)buf, size, 0);
-			if (!(errno == EBADF))
+			ret = send(csock, (void*)buf, size, MSG_NOSIGNAL);
+			if ( (errno != EBADF) && (errno != EPIPE) )
 				abort(); // Test failed... the socket did not close on us
 			delete[] buf;
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
+			close(csock);
 		}
 
 		void sendChunked(int csock)
@@ -221,7 +227,7 @@ done:
 			ret = send(csock, (void*)chunked, strlen(chunked), 0);
 			assert(ret == strlen(chunked));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
+			close(csock);
 		}
 
 		in_port_t m_port;
