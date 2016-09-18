@@ -114,10 +114,10 @@ class TestServer {
 
 			csock = accept(m_sock, (sockaddr*) &addr, &len);
 			assert(csock > 0);
-
-#ifdef __APPLE__
-			int no_pipe = 1;
-			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &no_pipe, sizeof(int));
+			// OSX/BSD may not have MSG_NOSIGNAL, try SO_NOSIGPIPE instead
+#ifndef MSG_NOSIGNAL
+			int no_sig_pipe = 1;
+			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &no_sig_pipe, sizeof(int));
 #define 	MSG_NOSIGNAL 0
 #endif
 
