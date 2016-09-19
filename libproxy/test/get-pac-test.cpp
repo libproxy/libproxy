@@ -145,6 +145,9 @@ class TestServer {
 				sendChunked(csock);
 			} else if (strstr(buffer, "without_content_length")) {
 				sendWithoutContentLength(csock);
+			} else if (strstr(buffer, "parameterized")) {
+                                assert(strstr(buffer, "?arg1=foo&arg2=bar") != NULL);
+                                sendBasic(csock);
 			} else {
 				assert(!"Unsupported request");
 			}
@@ -258,6 +261,7 @@ int main()
 	url overflow("http://localhost:1983/overflow.js");
 	url chunked("http://localhost:1983/chunked.js");
 	url without_content_length("http://localhost:1983/without_content_length.js");
+	url parameterized("http://localhost:1983/parameterized.js?arg1=foo&arg2=bar");
 
 	server.start();
 
@@ -279,6 +283,11 @@ int main()
 		return 4; // Test failed, exit with error code
 
 	pac = without_content_length.get_pac();
+	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
+		return 5; // Test failed, exit with error code
+	delete[] pac;
+
+	pac = parameterized.get_pac();
 	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
 		return 5; // Test failed, exit with error code
 	delete[] pac;
