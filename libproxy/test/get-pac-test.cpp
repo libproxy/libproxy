@@ -116,9 +116,11 @@ class TestServer {
 			assert(csock > 0);
 			// OSX/BSD may not have MSG_NOSIGNAL, try SO_NOSIGPIPE instead
 #ifndef MSG_NOSIGNAL
+#define 	MSG_NOSIGNAL 0
+#ifdef SO_NOSIGPIPE
 			int no_sig_pipe = 1;
 			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &no_sig_pipe, sizeof(int));
-#define 	MSG_NOSIGNAL 0
+#endif
 #endif
 
 			// Read request
