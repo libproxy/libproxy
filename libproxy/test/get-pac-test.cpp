@@ -169,7 +169,6 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
 		}
 
 		void sendTruncated(int csock)
@@ -184,7 +183,6 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
 		}
 
 		void sendOverflow(int csock)
@@ -206,7 +204,6 @@ done:
 				abort(); // Test failed... the socket did not close on us
 			delete[] buf;
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
 		}
 
 		void sendChunked(int csock)
@@ -226,7 +223,6 @@ done:
 			ret = send(csock, (void*)chunked, strlen(chunked), 0);
 			assert(ret == strlen(chunked));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
 		}
 
 		void sendWithoutContentLength(int csock)
@@ -240,7 +236,6 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
-			close(ret);
 		}
 
 		in_port_t m_port;
