@@ -153,6 +153,7 @@ int main(int argc, char **argv) {
 		gchar** keys = g_settings_list_keys(settings);
 		g_signal_connect(settings, "changed::", G_CALLBACK (on_value_change), argv[i]);
 		for (int j=0; keys[j]; on_value_change(settings, keys[j++],argv[i] ));
+		g_strfreev(keys);
 	}
 
 	g_main_loop_run(loop);
