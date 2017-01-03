@@ -128,7 +128,9 @@ int main(int argc, char **argv) {
 	}
 
 	// Init
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	// Get the main loop
 	loop = g_main_loop_new(NULL, false);
