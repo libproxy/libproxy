@@ -8,10 +8,6 @@ compiler:
   - clang
   - gcc
 
-matrix:
-  allow_failures:
-    - os: osx
-
 install:
 # create /etc/sysconfig so that the build process enables this module (build test)
   - |
