@@ -59,6 +59,7 @@ public:
 	sockaddr const* const* get_ips(bool usedns);
 	string   get_password() const;
 	string   get_path()     const;
+	string   get_query()    const;
 	uint16_t get_port()     const;
 	string   get_scheme()   const;
 	string   get_username() const;
@@ -75,6 +76,7 @@ private:
 	string     m_host;
 	uint16_t   m_port;
 	string     m_path;
+	string     m_query;
 	sockaddr** m_ips;
 };
 

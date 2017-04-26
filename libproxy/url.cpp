@@ -53,6 +53,8 @@ using namespace std;
 
 // This is the maximum pac size (to avoid memory attacks)
 #define PAC_MAX_SIZE 102400
+// This is the default block size to use when receiving via HTTP
+#define PAC_HTTP_BLOCK_SIZE 512
 
 static inline int get_default_port(string scheme) {
 	struct servent *serv;
@@ -117,6 +119,7 @@ url::url(const string &url) throw(parse_error)
 	: m_orig(url), m_port(0), m_ips(NULL) {
 	size_t idx = 0;
 	size_t hier_part_start, hier_part_end;
+	size_t query_part_start;
 	size_t path_start, path_end;
 	string hier_part;
 
@@ -149,9 +152,17 @@ url::url(const string &url) throw(parse_error)
 	transform(m_scheme.begin(), m_scheme.end(), m_scheme.begin(), ::tolower);
 
 	hier_part_start = idx;
-	hier_part_end = url.find('?', idx);
-	if (hier_part_end == string::npos)
-		hier_part_end = url.find('#', idx);
+	hier_part_end = url.find('#', idx);
+	query_part_start = url.find('?', idx);
+	if (query_part_start != string::npos)
+	{
+		if (hier_part_end == string::npos)
+			m_query = url.substr(query_part_start);
+		else {
+			m_query = url.substr(query_part_start, hier_part_end - query_part_start);
+		}
+		hier_part_end = query_part_start;
+	}
 
 	hier_part = url.substr(hier_part_start,
 							hier_part_end == string::npos ?
@@ -267,6 +278,7 @@ url& url::operator=(const url& url) {
 	m_orig   = url.m_orig;
 	m_pass   = url.m_pass;
 	m_path   = url.m_path;
+	m_query  = url.m_query;
 	m_port   = url.m_port;
 	m_scheme = url.m_scheme;
 	m_user   = url.m_user;
@@ -354,6 +366,10 @@ string url::get_path() const {
 	return m_path;
 }
 
+string url::get_query() const {
+	return m_query;
+}
+
 uint16_t url::get_port() const {
 	return m_port;
 }
@@ -432,7 +448,7 @@ char* url::get_pac() {
 	if (sock < 0) return NULL;
 
 	// Build the request string
-	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + " HTTP/1.1\r\n";
+	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + m_query + " HTTP/1.1\r\n";
 	request += "Host: " + m_host + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
@@ -448,6 +464,7 @@ char* url::get_pac() {
 	string line = recvline(sock);
 	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
 		/* Check for correct mime type and content length */
+		content_length = 0;
 		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
 			// Check for chunked encoding
 			if (line.find("Content-Transfer-Encoding: chunked") == 0 || line.find("Transfer-Encoding: chunked") == 0)
@@ -479,8 +496,10 @@ char* url::get_pac() {
 
 			if (content_length >= PAC_MAX_SIZE) break;
 
-			while (recvd != content_length) {
-				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
+			while (content_length == 0 || recvd != content_length) {
+				int r = recv(sock, buffer + recvd,
+				             content_length == 0 ? PAC_HTTP_BLOCK_SIZE
+				                                 : content_length - recvd, 0);
 				if (r <= 0) {
 					chunked = false;
 					break;
@@ -489,7 +508,7 @@ char* url::get_pac() {
 			}
 		} while (chunked);
 
-		if (string(buffer).size() != content_length) {
+		if (content_length != 0 && string(buffer).size() != content_length) {
 			delete[] buffer;
 			buffer = NULL;
 		}

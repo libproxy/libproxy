@@ -266,7 +266,7 @@ void proxy_factory::get_config(url &realurl, vector<url> &config, string &ignore
 			if (debug) {
 				if (configurator) {
 					cerr << "Configuration extension is: " << typeid(*configurator).name() << endl;
-					cerr << "Ingored list is: " << ignore << endl;
+					cerr << "Ignored list is: " << ignore << endl;
 				} else {
 					cerr << "No configuration extension found." << endl;
 				}

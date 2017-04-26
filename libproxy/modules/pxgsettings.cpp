@@ -128,7 +128,9 @@ int main(int argc, char **argv) {
 	}
 
 	// Init
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	// Get the main loop
 	loop = g_main_loop_new(NULL, false);
@@ -148,9 +150,17 @@ int main(int argc, char **argv) {
 
 	for (int i=1; i<argc; i++) {
 		settings = g_settings_new(argv[i]);
+#if GLIB_CHECK_VERSION(2,46,0)
+		GSettingsSchema *schema;
+		g_object_get (settings, "settings-schema", &schema, NULL);
+		gchar** keys = g_settings_schema_list_keys(schema);
+		g_settings_schema_unref(schema);
+#else
 		gchar** keys = g_settings_list_keys(settings);
+#endif
 		g_signal_connect(settings, "changed::", G_CALLBACK (on_value_change), argv[i]);
 		for (int j=0; keys[j]; on_value_change(settings, keys[j++],argv[i] ));
+		g_strfreev(keys);
 	}
 
 	g_main_loop_run(loop);
