@@ -62,7 +62,7 @@ public:
 
 			// If connection was successful, set it up
 			dbus_connection_set_exit_on_disconnect(conn, false);
-			dbus_bus_add_match(conn, "type='signal',interface='" NM_DBUS_INTERFACE "',member='StateChange'", NULL);
+			dbus_bus_add_match(conn, "type='signal',interface='" NM_DBUS_INTERFACE "',member='StateChanged'", NULL);
 			dbus_connection_flush(conn);
 		}
 

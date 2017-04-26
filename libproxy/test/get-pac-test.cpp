@@ -16,6 +16,11 @@
 
 #include "url.hpp"
 
+// macOS does not define MSG_NOSIGNAL, but uses the SO_NOSIGPIPE option instead
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 using namespace libproxy;
 
 class TestServer {
@@ -123,6 +128,11 @@ class TestServer {
 #endif
 #endif
 
+#ifdef SO_NOSIGPIPE
+			int i = 1;
+			setsockopt(c_sock, SOL_SOCKET, SO_NOSIGPIPE, &i, sizeof(i));
+#endif
+
 			// Read request
 			ptr = buffer;
 			do {
@@ -151,6 +161,11 @@ class TestServer {
 				sendOverflow(csock);
 			} else if (strstr(buffer, "chunked")) {
 				sendChunked(csock);
+			} else if (strstr(buffer, "without_content_length")) {
+				sendWithoutContentLength(csock);
+			} else if (strstr(buffer, "parameterized")) {
+                                assert(strstr(buffer, "?arg1=foo&arg2=bar") != NULL);
+                                sendBasic(csock);
 			} else {
 				assert(!"Unsupported request");
 			}
@@ -193,23 +208,23 @@ done:
 		void sendOverflow(int csock)
 		{
 			int ret;
-			int size = 500000;
+			int size = 50000000; // Must be larger than the kernel TCP receive buffer
 			char *buf = new char[size];
 			memset(buf, 1, size);
 
 			const char *basic =
 				"HTTP/1.1 200 OK\n" \
 				"Content-Type: text/plain\n" \
-				"Content-Length: 500000\n" \
+				"Content-Length: 50000000\n" \
 				"\n";
-			ret = send(csock, (void*)basic, strlen(basic), 0);
+			ret = send(csock, (void*)basic, strlen(basic), MSG_NOSIGNAL);
 			assert(ret == strlen(basic));
 			ret = send(csock, (void*)buf, size, MSG_NOSIGNAL);
-			if ( (errno != EBADF) && (errno != EPIPE) )
-				abort(); // Test failed... the socket did not close on us
+			if (ret == size)
+				abort(); // Test failed... the socket should not accept the whole buffer
 			delete[] buf;
 			shutdown(csock, SHUT_RDWR);
-			close(csock);
+      close(csock);
 		}
 
 		void sendChunked(int csock)
@@ -232,6 +247,20 @@ done:
 			close(csock);
 		}
 
+		void sendWithoutContentLength(int csock)
+		{
+			int ret;
+			const char *basic =
+				"HTTP/1.1 200 OK\n" \
+				"Content-Type: text/plain\n" \
+				"\n" \
+				"0123456789";
+			ret = send(csock, (void*)basic, strlen(basic), 0);
+			assert(ret == strlen(basic));
+			shutdown(csock, SHUT_RDWR);
+      close(csock);
+		}
+
 		in_port_t m_port;
 		int m_sock;
 		int m_pipe[2];
@@ -249,6 +278,8 @@ int main()
 	url truncated("http://localhost:1983/truncated.js");
 	url overflow("http://localhost:1983/overflow.js");
 	url chunked("http://localhost:1983/chunked.js");
+	url without_content_length("http://localhost:1983/without_content_length.js");
+	url parameterized("http://localhost:1983/parameterized.js?arg1=foo&arg2=bar");
 
 	server.start();
 
@@ -268,6 +299,15 @@ int main()
 	pac = chunked.get_pac();
 	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
 		return 4; // Test failed, exit with error code
+
+	pac = without_content_length.get_pac();
+	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
+		return 5; // Test failed, exit with error code
+	delete[] pac;
+
+	pac = parameterized.get_pac();
+	if (!(pac != NULL && strlen(pac) == 10 && !strcmp("0123456789", pac)))
+		return 5; // Test failed, exit with error code
 	delete[] pac;
 
 	server.stop();
