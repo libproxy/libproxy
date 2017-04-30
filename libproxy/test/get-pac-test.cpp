@@ -119,6 +119,14 @@ class TestServer {
 
 			csock = accept(m_sock, (sockaddr*) &addr, &len);
 			assert(csock > 0);
+			// OSX/BSD may not have MSG_NOSIGNAL, try SO_NOSIGPIPE instead
+#ifndef MSG_NOSIGNAL
+#define 	MSG_NOSIGNAL 0
+#ifdef SO_NOSIGPIPE
+			int no_sig_pipe = 1;
+			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &no_sig_pipe, sizeof(int));
+#endif
+#endif
 
 #ifdef SO_NOSIGPIPE
 			int i = 1;
@@ -179,6 +187,7 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
+			close(csock);
 		}
 
 		void sendTruncated(int csock)
@@ -193,6 +202,7 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
+			close(csock);
 		}
 
 		void sendOverflow(int csock)
@@ -214,6 +224,7 @@ done:
 				abort(); // Test failed... the socket should not accept the whole buffer
 			delete[] buf;
 			shutdown(csock, SHUT_RDWR);
+			close(csock);
 		}
 
 		void sendChunked(int csock)
@@ -233,6 +244,7 @@ done:
 			ret = send(csock, (void*)chunked, strlen(chunked), 0);
 			assert(ret == strlen(chunked));
 			shutdown(csock, SHUT_RDWR);
+			close(csock);
 		}
 
 		void sendWithoutContentLength(int csock)
@@ -246,6 +258,7 @@ done:
 			ret = send(csock, (void*)basic, strlen(basic), 0);
 			assert(ret == strlen(basic));
 			shutdown(csock, SHUT_RDWR);
+			close(csock);
 		}
 
 		in_port_t m_port;
