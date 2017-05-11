@@ -1,3 +1,11 @@
+New in Version 0.4.15:
+==============================
+* Port to, and require, SpiderMonkey 38.
+* Fix "NetworkManager plugin not being built" (gh#libproxy/libproxy#53).
+* Fix "networkmanager plugin not working (gh#libproxy/libproxy#58).
+* Fix "Invalid read after free" (gh#libproxy/libproxy#59).
+* Fix intermittent unit test failures.
+
 New in Version 0.4.14:
 ==============================
 * Parallel build support for python2 and python3.
