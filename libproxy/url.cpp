@@ -40,6 +40,8 @@
 #define close _close
 #define read _read
 #define SHUT_RDWR SD_BOTH
+#else
+#define closesocket close
 #endif
 
 #include "url.hpp"
@@ -440,7 +442,7 @@ char* url::get_pac() {
 			!connect(sock, m_ips[i], sizeof(struct sockaddr_in6)))
 			break;
 
-		close(sock);
+		closesocket(sock);
 		sock = -1;
 	}
 
@@ -456,7 +458,7 @@ char* url::get_pac() {
 
 	// Send HTTP request
 	if ((size_t) send(sock, request.c_str(), request.size(), 0) != request.size()) {
-		close(sock);
+		closesocket(sock);
 		return NULL;
 	}
 
@@ -516,7 +518,7 @@ char* url::get_pac() {
 
 	// Clean up
 	shutdown(sock, SHUT_RDWR);
-	close(sock);
+	closesocket(sock);
 	return buffer;
 }
 
