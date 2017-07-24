@@ -130,7 +130,7 @@ class TestServer {
 
 #ifdef SO_NOSIGPIPE
 			int i = 1;
-			setsockopt(c_sock, SOL_SOCKET, SO_NOSIGPIPE, &i, sizeof(i));
+			setsockopt(csock, SOL_SOCKET, SO_NOSIGPIPE, &i, sizeof(i));
 #endif
 
 			// Read request
