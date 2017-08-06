@@ -40,13 +40,12 @@ if platform.system() == "Windows":
 else:
     _libc = _load("c", 6)
 
-_libc.free.argtypes = ctypes.c_void_p,
-
 # Load libproxy
 _libproxy = _load("proxy", 1)
 _libproxy.px_proxy_factory_new.restype = ctypes.POINTER(ctypes.c_void_p)
 _libproxy.px_proxy_factory_free.argtypes = ctypes.c_void_p,
 _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
+_libproxy.px_proxy_factory_free_proxies.argtypes = ctypes.POINTER(ctypes.c_void_p)
 
 class ProxyFactory(object):
     """A ProxyFactory object is used to provide potential proxies to use
@@ -120,9 +119,9 @@ class ProxyFactory(object):
         i=0
         while array[i]:
             proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
-            _libc.free(array[i])
             i += 1
-        _libc.free(array)
+
+        _libproxy.px_proxy_factory_free_proxies(proxies)
         
         return proxies
         

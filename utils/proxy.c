@@ -50,11 +50,7 @@ print_proxies(char **proxies)
 	}
 
 	for (j=0; proxies[j] ; j++)
-	{
 		printf("%s%s", proxies[j], proxies[j+1] ? " " : "\n");
-		free(proxies[j]);
-	}
-	free(proxies);
 }
 
 int
@@ -62,6 +58,7 @@ main(int argc, char **argv)
 {
 	int i;
 	char url[102400]; // Should be plently long for most URLs
+	char **proxies;
 
 	/* Create the proxy factory object */
 	pxProxyFactory *pf = px_proxy_factory_new();
@@ -80,7 +77,9 @@ main(int argc, char **argv)
 			 * in the order returned. Only move on to the next proxy
 			 * if the first one fails (etc).
 			 */
-			print_proxies(px_proxy_factory_get_proxies(pf, argv[i]));
+			proxies = px_proxy_factory_get_proxies(pf, argv[i]);
+			print_proxies(proxies);
+			px_proxy_factory_free_proxies(proxies);
 		}
 	}
 	/* Interactive mode */
@@ -96,7 +95,9 @@ main(int argc, char **argv)
 			 * in the order returned. Only move on to the next proxy
 			 * if the first one fails (etc).
 			 */
-			print_proxies(px_proxy_factory_get_proxies(pf, url));
+			proxies = px_proxy_factory_get_proxies(pf, url);
+			print_proxies(proxies);
+			px_proxy_factory_free_proxies(proxies);
 		}
 	}
 	/* Destroy the proxy factory object */

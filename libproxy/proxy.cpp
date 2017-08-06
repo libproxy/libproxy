@@ -483,6 +483,16 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 	return retval;
 }
 
+extern "C" DLL_PUBLIC void px_proxy_factory_free_proxies(char ** const proxies) {
+	if (!proxies)
+		return;
+
+	for (size_t i = 0; proxies[i]; ++i)
+		free(proxies[i]);
+
+	free(proxies);
+}
+
 extern "C" DLL_PUBLIC void px_proxy_factory_free(struct pxProxyFactory_ *self) {
 	delete self;
 }
