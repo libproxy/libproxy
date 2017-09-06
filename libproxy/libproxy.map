@@ -1,0 +1,9 @@
+LIBPROXY {
+  global:
+    px_proxy_factory_new;
+    px_proxy_factory_get_proxies;
+    px_proxy_factory_free;
+  local: *;
+};
+
+
