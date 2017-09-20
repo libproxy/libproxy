@@ -1,4 +1,4 @@
-LIBPROXY {
+LIBPROXY_0.4.16 {
   global:
     px_proxy_factory_new;
     px_proxy_factory_get_proxies;
