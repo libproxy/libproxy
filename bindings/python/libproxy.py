@@ -109,9 +109,9 @@ class ProxyFactory(object):
         """
         if type(url) != str:
             raise TypeError("url must be a string!")
-        
+
         proxies = []
-        array = _libproxy.px_proxy_factory_get_proxies(self._pf, url)
+        array = _libproxy.px_proxy_factory_get_proxies(self._pf, url.encode('ascii'))
     
         if not bool(array):
             raise ProxyFactory.ProxyResolutionError(
@@ -119,7 +119,7 @@ class ProxyFactory(object):
 
         i=0
         while array[i]:
-            proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
+            proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value.decode('ascii')))
             _libc.free(array[i])
             i += 1
         _libc.free(array)
