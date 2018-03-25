@@ -8,6 +8,10 @@ compiler:
   - clang
   - gcc
 
+before_install:
+  - |
+    export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/pyenv/d' | tr "\n" ":" | sed "s|::|:|g")
+
 install:
 # create /etc/sysconfig so that the build process enables this module (build test)
   - |
