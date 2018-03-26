@@ -11,6 +11,12 @@ compiler:
 before_install:
   - |
     export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/pyenv/d' | tr "\n" ":" | sed "s|::|:|g")
+    # work-around for issue https://github.com/travis-ci/travis-ci/issues/6307
+    # might not be necessary in the future
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+     command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+     rvm get stable
+    fi
 
 install:
 # create /etc/sysconfig so that the build process enables this module (build test)
