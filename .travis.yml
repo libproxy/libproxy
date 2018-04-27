@@ -8,6 +8,10 @@ compiler:
   - clang
   - gcc
 
+matrix:
+  allow_failures:
+    - os: osx
+
 before_install:
   - |
     export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/pyenv/d' | tr "\n" ":" | sed "s|::|:|g")
