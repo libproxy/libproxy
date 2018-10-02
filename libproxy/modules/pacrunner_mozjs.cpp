@@ -118,6 +118,8 @@ public:
 		// Initialize Javascript context
 		if (!(this->jsctx = JS_NewContext(1024 * 1024)))     goto error;
 		{
+			if (!JS::InitSelfHostedCode(this->jsctx)) goto error;
+
 			JS::RootedValue  rval(this->jsctx);
 			JS::CompartmentOptions compart_opts;
 
