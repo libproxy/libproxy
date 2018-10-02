@@ -106,7 +106,7 @@ static int popen2(const char *program, FILE** read, FILE** write, pid_t* pid) {
 			close(i);
 
 		// Exec
-		execl("/bin/sh", "sh", "-c", program, (char*) NULL);
+		execlp(program, (char*) NULL);
 		_exit(127);  // Whatever we do, don't return
 
 	default: // Parent
