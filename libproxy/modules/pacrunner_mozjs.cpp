@@ -35,6 +35,7 @@ using namespace libproxy;
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #include <jsapi.h>
 #pragma GCC diagnostic error "-Winvalid-offsetof"
+#include <js/Initialization.h>
 #include <js/CallArgs.h>
 
 #include "pacutils.h"
@@ -111,17 +112,14 @@ public:
 	mozjs_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
 
 		// Set defaults
-		this->jsrun = nullptr;
 		this->jsctx = nullptr;
 		JS_Init();
 
-		// Initialize Javascript runtime environment
-		if (!(this->jsrun = JS_NewRuntime(1024 * 1024)))                  goto error;
-		if (!(this->jsctx = JS_NewContext(this->jsrun, 1024 * 1024)))     goto error;
+		// Initialize Javascript context
+		if (!(this->jsctx = JS_NewContext(1024 * 1024)))     goto error;
 		{
 			JS::RootedValue  rval(this->jsctx);
 			JS::CompartmentOptions compart_opts;
-			compart_opts.setVersion(JSVERSION_LATEST);
 
 			this->jsglb = new JS::Heap<JSObject*>(JS_NewGlobalObject(
 								  this->jsctx, &cls,
@@ -139,16 +137,15 @@ public:
 			JS::CompileOptions options(this->jsctx);
 			options.setUTF8(true);
 
-			JS::Evaluate(this->jsctx, global, options, JAVASCRIPT_ROUTINES,
-				     strlen(JAVASCRIPT_ROUTINES), &rval);
+			JS::Evaluate(this->jsctx, options, JAVASCRIPT_ROUTINES,
+				     strlen(JAVASCRIPT_ROUTINES), JS::MutableHandleValue(&rval));
 
 			// Add PAC to the environment
-			JS::Evaluate(this->jsctx, global, options, pac.c_str(), pac.length(), &rval);
+			JS::Evaluate(this->jsctx, options, pac.c_str(), pac.length(), JS::MutableHandleValue(&rval));
 			return;
 		}
 		error:
 			if (this->jsctx) JS_DestroyContext(this->jsctx);
-			if (this->jsrun) JS_DestroyRuntime(this->jsrun);
 			throw bad_alloc();
 	}
 
@@ -156,7 +153,6 @@ public:
 		if (this->jsac) delete this->jsac;
 		if (this->jsglb) delete this->jsglb;
 		if (this->jsctx) JS_DestroyContext(this->jsctx);
-		if (this->jsrun) JS_DestroyRuntime(this->jsrun);
 		JS_ShutDown();
 	}
 
@@ -178,7 +174,7 @@ public:
 		JS::RootedObject global(this->jsctx,this->jsglb->get());
 		bool result = JS_CallFunctionName(this->jsctx, global, "FindProxyForURL", args, &rval);
 		if (!result) return "";
-		
+
 		char * tmpanswer = JS_EncodeString(this->jsctx, rval.toString());
 		string answer = string(tmpanswer);
 		JS_free(this->jsctx, tmpanswer);
@@ -188,7 +184,6 @@ public:
 	}
 
 private:
-	JSRuntime *jsrun;
 	JSContext *jsctx;
 	JS::Heap<JSObject*> *jsglb;
 	JSAutoCompartment *jsac;
