@@ -1,3 +1,9 @@
+New in version 0.4.16:
+* Port to, and require, SpiderMonkey 52
+* Use closesocket() instead of close() on Windows 
+* Add symbol versions - be ready to introduce new APIs as needed
+* Add public px_proxy_factory_free_proxies function
+
 New in Version 0.4.15:
 ==============================
 * Port to, and require, SpiderMonkey 38.
