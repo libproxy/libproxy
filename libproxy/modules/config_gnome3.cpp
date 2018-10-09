@@ -26,6 +26,7 @@
 #include <unistd.h>       // For pipe(), close(), vfork(), dup(), execl(), _exit()
 #include <sys/wait.h>     // For waitpid()
 #include <signal.h>       // For kill()
+#include <string.h>       // For memset() [used in FD_ZERO() on Solaris]
 
 #include "../extension_config.hpp"
 using namespace libproxy;
