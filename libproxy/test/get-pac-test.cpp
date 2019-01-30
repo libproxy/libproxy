@@ -52,7 +52,7 @@ class TestServer {
 
 			setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 
-			ret = bind(m_sock, (sockaddr*)&addr, sizeof (struct sockaddr_in));
+			ret = ::bind(m_sock, (sockaddr*)&addr, sizeof (struct sockaddr_in));
 			assert(!ret);
 
 			ret = listen(m_sock, 1);
