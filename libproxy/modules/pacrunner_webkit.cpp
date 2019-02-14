@@ -56,8 +56,10 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 
 	// Look it up
 	struct addrinfo *info;
-	if (getaddrinfo(tmp, NULL, NULL, &info))
+	if (getaddrinfo(tmp, NULL, NULL, &info)) {
+		if (tmp)		delete[] tmp;
 		return NULL;
+	}
 	delete[] tmp;
 
 	// Try for IPv4
@@ -146,6 +148,8 @@ public:
 		JSStringRef str = NULL;
 		JSValueRef  val = NULL;
 		string      tmp;
+		char        *retChar = NULL;
+		string      retStr = "";
 
 		// Run the PAC
 		tmp = string("FindProxyForURL(\"") + url_.to_string() + string("\", \"") + url_.get_host() + "\");";
@@ -157,7 +161,12 @@ public:
 		JSStringRelease(str);
 
 		// Convert the return value to a string
-		return jstr2str(JSValueToStringCopy(this->jsctx, val, NULL), true);
+		retChar = jstr2str(JSValueToStringCopy(this->jsctx, val, NULL), true);
+		if (retChar) {
+			retStr = retChar;
+			delete[] retChar;
+		}
+		return retStr; 
 
 	error:
 		JSStringRelease(str);
