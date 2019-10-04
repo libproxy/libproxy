@@ -36,8 +36,8 @@ class __MM_DLL_EXPORT module_manager {
 public:
 	~module_manager();
 	bool load_builtin(mm_module *mod);
-	bool load_file(string filename, bool symbreq=true);
-	bool load_dir(string dirname, bool symbreq=true);
+	bool load_file(const string &filename, bool symbreq=true);
+	bool load_dir(const string &dirname, bool symbreq=true);
 
 	template <class T> vector<T*> get_extensions() const {
 		struct pcmp {

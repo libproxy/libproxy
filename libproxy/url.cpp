@@ -90,7 +90,7 @@ static inline sockaddr* copyaddr(const struct sockaddr& addr) {
 	}
 }
 
-bool url::is_valid(const string url_) {
+bool url::is_valid(const string &url_) {
 	bool rtv = true;
 
 	try {
@@ -300,7 +300,7 @@ url& url::operator=(const url& url) {
 	return *this;
 }
 
-url& url::operator=(string strurl) throw (parse_error) {
+url& url::operator=(const string &strurl) throw (parse_error) {
 	url tmp(strurl);
 	*this = tmp;
 	return *this;

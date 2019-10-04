@@ -60,7 +60,7 @@ sockaddr_equals(const struct sockaddr *ip_a, const struct sockaddr *ip_b, const 
 }
 
 static inline sockaddr *
-sockaddr_from_string(string ip)
+sockaddr_from_string(const string &ip)
 {
 	struct sockaddr *result = NULL;
 

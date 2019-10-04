@@ -31,7 +31,7 @@ void assert_equal_int (const std::string &what,
 	}
 }
 
-void try_url (std::string link, bool &rtv,
+void try_url (const std::string &link, bool &rtv,
 			  const std::string &scheme,
 			  const std::string &user,
 			  const std::string &pass,
