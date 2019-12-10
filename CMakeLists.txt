@@ -1,11 +1,17 @@
 ### Required
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.15.0)
+# MSVC runtime library flags are selected by an abstraction
+# https://cmake.org/cmake/help/latest/policy/CMP0091.html
+cmake_policy(SET CMP0091 NEW) 
 if(POLICY CMP0011)
    cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
 if(POLICY CMP0054)
    cmake_policy(SET CMP0054 NEW)
 endif(POLICY CMP0054)
+
+### Project info
+project(libproxy)
 
 # Make sure we look in our cmake folder for additional definitions
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake )
@@ -28,6 +34,7 @@ include(cmake/ctest.cmk)
 include(cmake/paths.cmk)
 
 option(WITH_WEBKIT3 "Build against gtk-3 version of webkitgtk" OFF)
+option(BUILD_STATIC_LIB "Build the static library" ON)
 
 ### Subdirectories
 # Conditionally build bundled libmodman

@@ -15,5 +15,9 @@ if(NOT WIN32)
 	target_link_libraries(modman ${CMAKE_DL_LIBS})
 endif()
 
+if(WIN32)
+  set_target_properties(modman PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 ### Tests
 add_testdirectory(test)

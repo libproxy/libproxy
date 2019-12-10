@@ -141,7 +141,8 @@ static int load(map<string, vector<base_extension*> >& extensions,
                              mm_module                *mod,
                              bool                      lazy,
                              bool                      symbreq) {
-	const char* debug = getenv("_MM_DEBUG");
+	//const char* debug = getenv("_MM_DEBUG");
+	const char* debug = "";
 
 	if (!mod || mod->vers != __MM_MODULE_VERSION || !mod->type || !mod->init) {
 		if (debug)
@@ -227,7 +228,8 @@ static int load(map<string, vector<base_extension*> >& extensions,
 }
 
 bool module_manager::load_builtin(mm_module *mod) {
-	const char* debug = getenv("_MM_DEBUG");
+	//const char* debug = getenv("_MM_DEBUG");
+	const char* debug = "";
 	if (debug)
 			cerr << "loading : builtin module " << mod->name << CR;
 

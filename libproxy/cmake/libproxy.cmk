@@ -1,5 +1,17 @@
-add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+
+if(${BUILD_STATIC_LIB})
+   add_library(libproxy STATIC extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+else()
+   add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+endif()
+
+if(DUKTAPE_FOUND)
+   target_sources(libproxy PRIVATE modules/duktape/duktape.c)
+   target_include_directories(libproxy PRIVATE modules/duktape)
+endif()
+
 if(WIN32)
+  set_target_properties(libproxy PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   target_link_libraries(libproxy modman;ws2_32;${LIBPROXY_LIBRARIES})
 else()
   target_link_libraries(libproxy modman;m;pthread;${CMAKE_DL_LIBS};${LIBPROXY_LIBRARIES})
@@ -26,3 +38,4 @@ if(NOT APPLE)
 endif()
 install(TARGETS libproxy DESTINATION ${LIB_INSTALL_DIR})
 install(FILES   proxy.h  DESTINATION ${INCLUDE_INSTALL_DIR})
+
