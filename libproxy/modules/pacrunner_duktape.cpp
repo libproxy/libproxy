@@ -32,7 +32,7 @@ static const char* pacUtils =
 "}\n"
 
 "function isInNet(ipaddr, pattern, maskstr) {\n"
-"    var test = /^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/(ipaddr);\n"
+"    var test = /^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/.exec(ipaddr);\n"
 "    if (test == null) {\n"
 "        ipaddr = dnsResolve(ipaddr);\n"
 "        if (ipaddr == null)\n"
@@ -432,16 +432,18 @@ public:
 
         /* We now implement the other functions in JS*/
         duk_push_lstring(ctx, pacUtils, strlen(pacUtils));
-
+        if (duk_peval_noresult(ctx) != 0) {
+            printf("Error: %s\n", duk_safe_to_string(ctx, -1));
+            throw bad_alloc();
+        }
 
         // We push the actual PAC file content
         duk_push_lstring(ctx, pac.c_str(), pac.size());
 
-        if (duk_peval(ctx) != 0) {
+        if (duk_peval_noresult(ctx) != 0) {
             printf("Error: %s\n", duk_safe_to_string(ctx, -1));
             throw bad_alloc();
         }
-        duk_pop(ctx);  /* ignore result */
 	}
 
 	string run(const url& url_) throw (bad_alloc) {
@@ -452,8 +454,6 @@ public:
             printf("Could not find `%s`. Seems that the PAC file is corrupt.\n", "FindProxyForURL");
             return "";
         }
-
-        duk_push_lstring(ctx, pacUtils, strlen(pacUtils));
 
         duk_push_string(ctx, url_.to_string().c_str());
         duk_push_string(ctx, url_.get_host().c_str());
@@ -466,7 +466,6 @@ public:
             const char* tmp_proxy = duk_safe_to_lstring(ctx, -1, &sz);
             if (tmp_proxy != NULL) {
                 retStr = string(tmp_proxy, sz);      
-                printf("%s\n", tmp_proxy);
             }
         }
 

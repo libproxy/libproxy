@@ -33,17 +33,16 @@ public:
 	dns_alias_wpad_extension() : lasturl(NULL), lastpac(NULL) {
         // According to RFC https://tools.ietf.org/html/draft-cooper-webi-wpad-00#page-11
         // We should check for 
-        char hostbuffer[HOST_NAME_MAX] ="laptop01.us.division.company.com";
+        char hostbuffer[HOST_NAME_MAX] = {NULL};
         char tmp[HOST_NAME_MAX] = { NULL };
         char* ptr = NULL;
+
         // To retrieve hostname 
-        //gethostname(hostbuffer, sizeof(hostbuffer));
+        gethostname(hostbuffer, sizeof(hostbuffer));
         std::string hostname(hostbuffer);
-        possible_pac_urls.push_back(new url("http://wpad/wpad.dat"));
+        possible_pac_urls.push_back(new url("http://wpad2/wpad.dat"));
 
         ptr = &hostbuffer[0];
-        // skip the highest subdomain
-        //ptr = strchr(hostbuffer, '.');
         for (int i = 0; i < std::count(hostname.begin(), hostname.end(), '.') -1; i++) {
             // get next subdomain
             ptr = strchr(ptr+1, '.');
@@ -52,7 +51,7 @@ public:
         }
     }
 	bool found() { return lastpac != NULL; }
-	
+
 	void rewind() {
 		if (lasturl) delete lasturl;
 		if (lastpac) delete lastpac;
@@ -65,12 +64,14 @@ public:
             lastpac = *pac = possible_url->get_pac();
             if (!lastpac) {
                 delete possible_url;
+                possible_url = nullptr;
                 lasturl = NULL;
             }
             else {
                 return possible_url;
             } 
         }
+        return NULL;
 	}
 
 private:
