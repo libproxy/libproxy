@@ -18,11 +18,39 @@
  ******************************************************************************/
 
 #include "../extension_wpad.hpp"
+#ifdef _WIN32
+#define HOST_NAME_MAX 256
+#else
+#include <limits.h> // HOST_NAME_MAX
+#endif // _WIN32
+
+#include <list>
+
 using namespace libproxy;
 
 class dns_alias_wpad_extension : public wpad_extension {
 public:
-	dns_alias_wpad_extension() : lasturl(NULL), lastpac(NULL) { }
+	dns_alias_wpad_extension() : lasturl(NULL), lastpac(NULL) {
+        // According to RFC https://tools.ietf.org/html/draft-cooper-webi-wpad-00#page-11
+        // We should check for 
+        char hostbuffer[HOST_NAME_MAX] ="laptop01.us.division.company.com";
+        char tmp[HOST_NAME_MAX] = { NULL };
+        char* ptr = NULL;
+        // To retrieve hostname 
+        //gethostname(hostbuffer, sizeof(hostbuffer));
+        std::string hostname(hostbuffer);
+        possible_pac_urls.push_back(new url("http://wpad/wpad.dat"));
+
+        ptr = &hostbuffer[0];
+        // skip the highest subdomain
+        //ptr = strchr(hostbuffer, '.');
+        for (int i = 0; i < std::count(hostname.begin(), hostname.end(), '.') -1; i++) {
+            // get next subdomain
+            ptr = strchr(ptr+1, '.');
+            snprintf(tmp, sizeof(tmp), "http://wpad%s/wpad.dat", ptr);
+            possible_pac_urls.push_back(new url(tmp));
+        }
+    }
 	bool found() { return lastpac != NULL; }
 	
 	void rewind() {
@@ -33,22 +61,22 @@ public:
 	}
 
 	url* next(char** pac) {
-		if (lasturl) return NULL;
-
-		lasturl = new url("http://wpad/wpad.dat");
-		lastpac = *pac = lasturl->get_pac();
-		if (!lastpac) {
-		    delete lasturl;
-		    lasturl = NULL;
-		    return NULL;
-		}
-
-		return lasturl;
+        for (auto possible_url : possible_pac_urls) {
+            lastpac = *pac = possible_url->get_pac();
+            if (!lastpac) {
+                delete possible_url;
+                lasturl = NULL;
+            }
+            else {
+                return possible_url;
+            } 
+        }
 	}
 
 private:
 	url*  lasturl;
 	char* lastpac;
+    std::list<url*> possible_pac_urls;
 };
 
 MM_MODULE_INIT_EZ(dns_alias_wpad_extension, true, NULL, NULL);

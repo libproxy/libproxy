@@ -317,7 +317,8 @@ static const char* pacUtils =
 "    } else {\n"
 "        return FindProxyForURL(url, host);\n"
 "    }\n"
-"}\n";
+"}\n\n";
+
 
 
 // DNS Resolve function; used by other routines.
@@ -439,7 +440,6 @@ public:
         if (duk_peval(ctx) != 0) {
             printf("Error: %s\n", duk_safe_to_string(ctx, -1));
             throw bad_alloc();
-            //goto finished;
         }
         duk_pop(ctx);  /* ignore result */
 	}
@@ -452,6 +452,9 @@ public:
             printf("Could not find `%s`. Seems that the PAC file is corrupt.\n", "FindProxyForURL");
             return "";
         }
+
+        duk_push_lstring(ctx, pacUtils, strlen(pacUtils));
+
         duk_push_string(ctx, url_.to_string().c_str());
         duk_push_string(ctx, url_.get_host().c_str());
         if (duk_pcall(ctx, 2 /*nargs*/) != 0) {

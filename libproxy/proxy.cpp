@@ -166,6 +166,7 @@ proxy_factory::proxy_factory() {
 	this->mm.load_dir(module_dir, false);
 
 	this->debug  = (getenv("_PX_DEBUG") != NULL);
+    this->debug = true;
 
 	unlock();
 }
