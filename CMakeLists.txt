@@ -2,7 +2,9 @@
 cmake_minimum_required(VERSION 3.15.0)
 # MSVC runtime library flags are selected by an abstraction
 # https://cmake.org/cmake/help/latest/policy/CMP0091.html
-cmake_policy(SET CMP0091 NEW) 
+if(POLICY CMP0091) 
+   cmake_policy(SET CMP0091 NEW) 
+endif(POLICY CMP0091) 
 if(POLICY CMP0011)
    cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
