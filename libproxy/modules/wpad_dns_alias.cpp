@@ -40,7 +40,7 @@ public:
         // To retrieve hostname 
         gethostname(hostbuffer, sizeof(hostbuffer));
         std::string hostname(hostbuffer);
-        possible_pac_urls.push_back(new url("http://wpad2/wpad.dat"));
+        possible_pac_urls.push_back(new url("http://wpad/wpad.dat"));
 
         ptr = &hostbuffer[0];
         for (int i = 0; i < std::count(hostname.begin(), hostname.end(), '.') -1; i++) {
