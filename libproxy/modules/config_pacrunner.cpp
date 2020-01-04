@@ -103,12 +103,16 @@ public:
 		char *str = NULL;
 		dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &str, DBUS_TYPE_INVALID);
 
-		if (!str || !strlen(str) || !::strcmp(str, "DIRECT"))
+		if (!str || !strlen(str) || !strcasecmp(str, "DIRECT"))
 			response.push_back(url("direct://"));
-		else if (!strncmp(str, "PROXY ", 6))
+		else if (!strncasecmp(str, "PROXY ", 6))
 			response.push_back(url("http://" + string(str + 6)));
-		else if (!strncmp(str, "SOCKS ", 6))
+		else if (!strncasecmp(str, "SOCKS ", 6))
 			response.push_back(url("socks://" + string(str + 6)));
+		else if (!strncasecmp(str, "SOCKS4 ", 7))
+			response.push_back(url("socks4://" + string(str + 7)));
+		else if (!strncasecmp(str, "SOCKS5 ", 7))
+			response.push_back(url("socks5://" + string(str + 7)));
 		else {
 			throw runtime_error("Unrecognised proxy response from PacRunner: " + string(str));
 		}
