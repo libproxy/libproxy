@@ -119,4 +119,50 @@ private:
 	DBusConnection *conn;
 };
 
-MM_MODULE_INIT_EZ(pacrunner_config_extension, true, NULL, NULL);
+#define TEST_TIMEOUT_MS 100
+
+static bool is_pacrunner_available(void)
+{
+	DBusMessage *msg, *reply;
+	DBusConnection* system;
+	dbus_bool_t owned;
+	bool found = false;
+	const char *name = "org.pacrunner";
+
+	msg = dbus_message_new_method_call("org.freedesktop.DBus",
+					   "/org/freedesktop/DBus",
+					   "org.freedesktop.DBus",
+					   "NameHasOwner");
+	if (!msg)
+		return false;
+
+	dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
+				 DBUS_TYPE_INVALID);
+
+	system = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
+	if (!system)
+		goto out_msg;
+
+	reply = dbus_connection_send_with_reply_and_block(system, msg,
+							  TEST_TIMEOUT_MS,
+							  NULL);
+	if (!reply)
+		goto out_sys;
+
+	if (dbus_message_get_args(reply, NULL, DBUS_TYPE_BOOLEAN, &owned,
+				  DBUS_TYPE_INVALID))
+		found = owned;
+
+out_reply:
+	dbus_message_unref(reply);
+out_sys:
+	dbus_connection_close(system);
+	dbus_connection_unref(system);
+out_msg:
+	dbus_message_unref(msg);
+
+	return found;
+}
+
+MM_MODULE_INIT_EZ(pacrunner_config_extension, is_pacrunner_available(),
+		  NULL, NULL);
