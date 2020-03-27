@@ -33,7 +33,6 @@
 #include <cstdlib>    // For atoi()
 #include <sys/stat.h> // For stat()
 #include <algorithm> // For transform()
-#include <unistd.h>  // For read() close()
 
 #ifdef WIN32
 #include <io.h>
@@ -41,6 +40,7 @@
 #define read _read
 #define SHUT_RDWR SD_BOTH
 #else
+#include <unistd.h>  // For read() close()
 #define closesocket close
 #endif
 
