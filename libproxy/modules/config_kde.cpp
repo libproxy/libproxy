@@ -181,7 +181,7 @@ private:
     // Used for cache invalidation
     struct configfile {
         string path;
-        time_t mtime; // 0 means it doesn't exist
+        time_t mtime; // 0 means either not refreshed or doesn't exist
     };
 
     // Parses output of qtpaths/kde4-config to fill config_locs
@@ -191,7 +191,9 @@ private:
 
         // Try each of the listed folders, seperated by ':'
         while (getline(config_paths_stream, config_path, ':')) {
-            configfile config_loc; config_loc.path = config_path + "/kioslaverc";
+            configfile config_loc;
+            config_loc.path = config_path + "/kioslaverc";
+            config_loc.mtime = 0;
             config_locs.push_back(config_loc);
         }
     }
