@@ -242,7 +242,7 @@ public:
 		return this->data[PROXY_IGNORE_HOSTS];
 	}
 
-	bool set_creds(url /*proxy*/, string username, string password) {
+	bool set_creds(const url &/*proxy*/, const string &username, const string &password) {
 		string auth = PROXY_USE_AUTHENTICATION "\ttrue\n";
 		string user = string(PROXY_AUTH_USER "\t") + username + "\n";
 		string pass = string(PROXY_AUTH_PASSWORD "\t") + password + "\n";
@@ -265,8 +265,8 @@ private:
 		for (char l[BUFFERSIZE] ; num != 0 && fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
 			string line = l;
 			line        = line.substr(0, line.rfind('\n'));
-			string key  = line.substr(0, line.find("\t"));
-			string val  = line.substr(line.find("\t")+1);
+			string key  = line.substr(0, line.find('\t'));
+			string val  = line.substr(line.find('\t')+1);
 			this->data[key] = val;
 			if (num > 0) num--;
 		}

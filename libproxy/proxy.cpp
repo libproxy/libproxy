@@ -53,7 +53,7 @@ class proxy_factory {
 public:
 	proxy_factory();
 	~proxy_factory();
-	vector<string> get_proxies(string url);
+	vector<string> get_proxies(const string &url);
 
 private:
 	void lock();
@@ -187,7 +187,7 @@ proxy_factory::~proxy_factory() {
 }
 
 
-vector<string> proxy_factory::get_proxies(string realurl) {
+vector<string> proxy_factory::get_proxies(const string &realurl) {
 	vector<string>             response;
 
 	// Check to make sure our url is valid

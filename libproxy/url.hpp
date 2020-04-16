@@ -45,7 +45,7 @@ public:
 
 class DLL_PUBLIC url {
 public:
-	static bool is_valid(const string url);
+	static bool is_valid(const string &url);
 	static string encode(const string &data, const string &valid_reserved = "");
 
 	~url();
@@ -53,7 +53,7 @@ public:
 	url(const string& url) throw (parse_error);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
-	url& operator=(string url) throw (parse_error);
+	url& operator=(const string &url) throw (parse_error);
 
 	string   get_host()     const;
 	sockaddr const* const* get_ips(bool usedns);
