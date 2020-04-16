@@ -37,6 +37,9 @@ using namespace libproxy;
 #pragma GCC diagnostic error "-Winvalid-offsetof"
 #include <js/Initialization.h>
 #include <js/CallArgs.h>
+#include <js/CompilationAndEvaluation.h>
+#include <js/MemoryFunctions.h>
+#include <js/SourceText.h>
 
 #include "pacutils.h"
 
@@ -49,19 +52,21 @@ using namespace libproxy;
 #endif
 
 static void dnsResolve_(JSContext *cx, JSString *hostname, JS::CallArgs *argv) {
+	char *tmp;
 	// Get hostname argument
-	char *tmp = JS_EncodeString(cx, hostname);
+	JS::RootedString str(cx, hostname);
+	JS::UniqueChars chars = JS_EncodeStringToUTF8(cx, str);
+	const char *val = chars.get();
 
 	// Set the default return value
 	argv->rval().setNull();
 
 	// Look it up
 	struct addrinfo *info = nullptr;
-	if (getaddrinfo(tmp, NULL, NULL, &info))
+	if (getaddrinfo(val, NULL, NULL, &info))
 		goto out;
 
 	// Allocate the IP address
-	JS_free(cx, tmp);
 	tmp = (char *) JS_malloc(cx, INET6_ADDRSTRLEN+1);
 	memset(tmp, 0, INET6_ADDRSTRLEN+1);
 
@@ -77,7 +82,6 @@ static void dnsResolve_(JSContext *cx, JSString *hostname, JS::CallArgs *argv) {
 
 	out:
 		if (info) freeaddrinfo(info);
-		JS_free(cx, tmp);
 }
 
 static bool dnsResolve(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -121,29 +125,40 @@ public:
 			if (!JS::InitSelfHostedCode(this->jsctx)) goto error;
 
 			JS::RootedValue  rval(this->jsctx);
-			JS::CompartmentOptions compart_opts;
+			JS::RealmOptions realm_opts;
 
 			this->jsglb = new JS::Heap<JSObject*>(JS_NewGlobalObject(
 								  this->jsctx, &cls,
 								  nullptr, JS::DontFireOnNewGlobalHook,
-								  compart_opts));
+								  realm_opts));
 
 			if (!(this->jsglb)) goto error;
 			JS::RootedObject global(this->jsctx,this->jsglb->get());
-			if (!(this->jsac = new JSAutoCompartment(this->jsctx,  global))) goto error;
-			if (!JS_InitStandardClasses(this->jsctx, global))            goto error;
+			if (!(this->jsar = new JSAutoRealm(this->jsctx,  global))) goto error;
 
 			// Define Javascript functions
 			JS_DefineFunction(this->jsctx, global, "dnsResolve", dnsResolve, 1, 0);
 			JS_DefineFunction(this->jsctx, global, "myIpAddress", myIpAddress, 0, 0);
 			JS::CompileOptions options(this->jsctx);
-			options.setUTF8(true);
 
-			JS::Evaluate(this->jsctx, options, JAVASCRIPT_ROUTINES,
-				     strlen(JAVASCRIPT_ROUTINES), JS::MutableHandleValue(&rval));
+			JS::SourceText<mozilla::Utf8Unit> routines, pac_source;
+			if (!routines.init(this->jsctx,
+					   JAVASCRIPT_ROUTINES,
+					   strlen(JAVASCRIPT_ROUTINES),
+					   JS::SourceOwnership::Borrowed))
+				goto error;
+
+			if (!pac_source.init(this->jsctx,
+					     pac.c_str(),
+					     pac.length(),
+					     JS::SourceOwnership::Borrowed))
+				goto error;
+
+
+			JS::Evaluate(this->jsctx, options, routines, JS::MutableHandleValue(&rval));
 
 			// Add PAC to the environment
-			JS::Evaluate(this->jsctx, options, pac.c_str(), pac.length(), JS::MutableHandleValue(&rval));
+			JS::Evaluate(this->jsctx, options, pac_source, JS::MutableHandleValue(&rval));
 			return;
 		}
 		error:
@@ -152,7 +167,7 @@ public:
 	}
 
 	~mozjs_pacrunner() {
-		if (this->jsac) delete this->jsac;
+		if (this->jsar) delete this->jsar;
 		if (this->jsglb) delete this->jsglb;
 		if (this->jsctx) JS_DestroyContext(this->jsctx);
 		JS_ShutDown();
@@ -160,11 +175,9 @@ public:
 
 	string run(const url& url_) throw (bad_alloc) {
 		// Build arguments to the FindProxyForURL() function
-		char *tmpurl  = JS_strdup(this->jsctx, url_.to_string().c_str());
-		char *tmphost = JS_strdup(this->jsctx, url_.get_host().c_str());
+		const char *tmpurl  = url_.to_string().c_str();
+		const char *tmphost = url_.get_host().c_str();
 		if (!tmpurl || !tmphost) {
-			if (tmpurl) JS_free(this->jsctx, tmpurl);
-			if (tmphost) JS_free(this->jsctx, tmphost);
 			throw bad_alloc();
 		}
 		JS::AutoValueArray<2> args(this->jsctx);
@@ -176,10 +189,13 @@ public:
 		JS::RootedObject global(this->jsctx,this->jsglb->get());
 		bool result = JS_CallFunctionName(this->jsctx, global, "FindProxyForURL", args, &rval);
 		if (!result) return "";
+		if (!rval.isString())
+			return "";
 
-		char * tmpanswer = JS_EncodeString(this->jsctx, rval.toString());
+		JS::RootedString s(this->jsctx, rval.toString());
+		JS::UniqueChars chars = JS_EncodeStringToUTF8(this->jsctx, s);
+		const char *tmpanswer = chars.get();
 		string answer = string(tmpanswer);
-		JS_free(this->jsctx, tmpanswer);
 
 		if (answer == "undefined") return "";
 		return answer;
@@ -188,7 +204,7 @@ public:
 private:
 	JSContext *jsctx;
 	JS::Heap<JSObject*> *jsglb;
-	JSAutoCompartment *jsac;
+	JSAutoRealm *jsar;
 };
 
 PX_PACRUNNER_MODULE_EZ(mozjs, "JS_DefineFunction", "mozjs");
