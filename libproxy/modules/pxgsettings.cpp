@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
 #else
 		gchar** keys = g_settings_list_keys(settings);
 #endif
-		g_signal_connect(settings, "changed::", G_CALLBACK (on_value_change), argv[i]);
+		g_signal_connect(settings, "changed", G_CALLBACK (on_value_change), argv[i]);
 		for (int j=0; keys[j]; on_value_change(settings, keys[j++],argv[i] ));
 		g_strfreev(keys);
 	}
