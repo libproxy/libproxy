@@ -8,6 +8,7 @@ endif()
 # Do module determination
 include(cmake/pxmodule.cmk)
 include(cmake/pkgconfig.cmk)
+include(cmake/modules/config_pacrunner.cmk)
 include(cmake/modules/config_envvar.cmk)
 include(cmake/modules/config_sysconfig.cmk)
 include(cmake/modules/config_gnome.cmk)
@@ -28,6 +29,7 @@ endif()
 ## Module definition
 #
 message("MODULES TO BUILD:")
+px_module(config_pacrunner         "${DBUS_FOUND}"   0       ${DBUS_LIBRARIES})
 px_module(config_envvar            "${ENVVAR_FOUND}" 1)
 px_module(config_sysconfig         "${SYSCONFIG_FOUND}" 1)
 px_module(config_gnome             "${GNOME2_FOUND}" 0)
