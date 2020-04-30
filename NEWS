@@ -1,8 +1,13 @@
 New in version 0.4.16:
-* Port to, and require, SpiderMonkey 52
+==============================
+* Port to, and require, SpiderMonkey 68
 * Use closesocket() instead of close() on Windows 
 * Add symbol versions - be ready to introduce new APIs as needed
 * Add public px_proxy_factory_free_proxies function
+* Add PacRunner config backend (largely untested; feedback welcome!)
+* Small performance improvements
+* pxgsettings: use the correct syntax to connect to the changed signal (silences annoying output on console)
+* Support python3 up to version 3.9
 
 New in Version 0.4.15:
 ==============================
