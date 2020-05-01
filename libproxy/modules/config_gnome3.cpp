@@ -191,7 +191,7 @@ public:
 
 		FD_ZERO(&rfds);
 		FD_SET(fileno(this->read), &rfds);
-		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
+		while (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
 			this->read_data();
 
 		// Mode is wpad:// or pac+http://...
