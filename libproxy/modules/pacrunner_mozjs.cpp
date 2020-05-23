@@ -113,7 +113,7 @@ static JSClass cls = {
 
 class mozjs_pacrunner : public pacrunner {
 public:
-	mozjs_pacrunner(const string &pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	mozjs_pacrunner(const string &pac, const url& pacurl) : pacrunner(pac, pacurl) {
 
 		// Set defaults
 		this->jsctx = nullptr;
@@ -173,7 +173,7 @@ public:
 		JS_ShutDown();
 	}
 
-	string run(const url& url_) throw (bad_alloc) {
+	string run(const url& url_) {
 		// Build arguments to the FindProxyForURL() function
 		const char *tmpurl  = url_.to_string().c_str();
 		const char *tmphost = url_.get_host().c_str();

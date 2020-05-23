@@ -182,7 +182,7 @@ public:
 		}
 	}
 
-	vector<url> get_config(const url &dest) throw (runtime_error) {
+	vector<url> get_config(const url &dest) {
 		// Check for changes in the config
 		fd_set rfds;
 		struct timeval timeout = { 0, 0 };
