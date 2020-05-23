@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 
 #include <stdio.h>
