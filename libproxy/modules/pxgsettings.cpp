@@ -163,6 +163,9 @@ int main(int argc, char **argv) {
 		g_strfreev(keys);
 	}
 
+	// A blank line indicates the end of the initial values
+	printf("\n");
+
 	g_main_loop_run(loop);
 
 	// Cleanup

@@ -127,7 +127,7 @@ static inline uint16_t get_port(const string &port)
 
 class gnome_config_extension : public config_extension {
 public:
-	gnome_config_extension() {
+	gnome_config_extension() : had_initial_values(false) {
 		// Build the command
 		int count;
 		struct stat st;
@@ -147,9 +147,6 @@ public:
 		if (popen2(cmd.c_str(), &this->read, &this->write, &this->pid) != 0)
 			throw runtime_error("Unable to run gconf helper!");
 
-		// Read in our initial data
-		this->read_data(count);
-
 		// Set the read pipe to non-blocking
 		if (fcntl(fileno(this->read), F_SETFL, O_NONBLOCK) == -1) {
 			fclose(this->read);
@@ -157,6 +154,10 @@ public:
 			kill(this->pid, SIGTERM);
 			throw runtime_error("Unable to set pipe to non-blocking!");
 		}
+
+		// Read in our initial data
+		while (!this->had_initial_values)
+			this->read_data();
 	}
 
 	~gnome_config_extension() {
@@ -190,7 +191,7 @@ public:
 
 		FD_ZERO(&rfds);
 		FD_SET(fileno(this->read), &rfds);
-		if (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
+		while (select(fileno(this->read)+1, &rfds, NULL, NULL, &timeout) > 0)
 			this->read_data();
 
 		// Mode is wpad:// or pac+http://...
@@ -257,6 +258,7 @@ private:
 	FILE* write;
 	pid_t pid;
 	map<string, string> data;
+	bool had_initial_values;
 
 	bool read_data(int num=-1) {
 		if (num == 0)    return true;
@@ -265,6 +267,10 @@ private:
 		for (char l[BUFFERSIZE] ; num != 0 && fgets(l, BUFFERSIZE, this->read) != NULL ; ) {
 			string line = l;
 			line        = line.substr(0, line.rfind('\n'));
+			if (line == "") {
+				this->had_initial_values = true;
+				continue;
+			}
 			string key  = line.substr(0, line.find('\t'));
 			string val  = line.substr(line.find('\t')+1);
 			this->data[key] = val;
