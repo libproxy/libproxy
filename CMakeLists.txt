@@ -1,5 +1,8 @@
 ### Required
 cmake_minimum_required(VERSION 2.6)
+
+project(libproxy)
+
 if(POLICY CMP0011)
    cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
