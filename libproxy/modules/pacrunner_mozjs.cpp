@@ -175,14 +175,11 @@ public:
 
 	string run(const url& url_) throw (bad_alloc) {
 		// Build arguments to the FindProxyForURL() function
-		const char *tmpurl  = url_.to_string().c_str();
-		const char *tmphost = url_.get_host().c_str();
-		if (!tmpurl || !tmphost) {
-			throw bad_alloc();
-		}
+		string tmpurl(url_.to_string());
+		string tmphost(url_.get_host());
 		JS::AutoValueArray<2> args(this->jsctx);
-		args[0].setString(JS_NewStringCopyZ(this->jsctx, tmpurl));
-		args[1].setString(JS_NewStringCopyZ(this->jsctx, tmphost));
+		args[0].setString(JS_NewStringCopyZ(this->jsctx, tmpurl.c_str()));
+		args[1].setString(JS_NewStringCopyZ(this->jsctx, tmphost.c_str()));
 
 		// Find the proxy (call FindProxyForURL())
 		JS::RootedValue rval(this->jsctx);
