@@ -54,7 +54,7 @@ using namespace std;
 #define PAC_MIME_TYPE_FB "text/plain"
 
 // This is the maximum pac size (to avoid memory attacks)
-#define PAC_MAX_SIZE 102400
+#define PAC_MAX_SIZE 0x800000
 // This is the default block size to use when receiving via HTTP
 #define PAC_HTTP_BLOCK_SIZE 512
 
@@ -478,15 +478,13 @@ char* url::get_pac() {
 		}
 
 		// Get content
-		unsigned int recvd = 0;
-		buffer = new char[PAC_MAX_SIZE];
-		memset(buffer, 0, PAC_MAX_SIZE);
+		std::vector<char> dynamic_buffer;
 		do {
 			unsigned int chunk_length;
 
 			if (chunked) {
 				// Discard the empty line if we received a previous chunk
-				if (recvd > 0) recvline(sock);
+				if (!dynamic_buffer.empty()) recvline(sock);
 
 				// Get the chunk-length line as an integer
 				if (sscanf(recvline(sock).c_str(), "%x", &chunk_length) != 1 || chunk_length == 0) break;
@@ -498,21 +496,41 @@ char* url::get_pac() {
 
 			if (content_length >= PAC_MAX_SIZE) break;
 
-			while (content_length == 0 || recvd != content_length) {
-				int r = recv(sock, buffer + recvd,
-				             content_length == 0 ? PAC_HTTP_BLOCK_SIZE
-				                                 : content_length - recvd, 0);
+			while (content_length == 0 || dynamic_buffer.size() != content_length) {
+				// Calculate length to recv
+				unsigned int length_to_read = PAC_HTTP_BLOCK_SIZE;
+				if (content_length > 0)
+					length_to_read = content_length - dynamic_buffer.size();
+
+				// Prepare buffer
+				dynamic_buffer.resize(dynamic_buffer.size() + length_to_read);
+
+				int r = recv(sock, dynamic_buffer.data() + dynamic_buffer.size() - length_to_read, length_to_read, 0);
+
+				// Shrink buffer to fit
+				if (r >= 0)
+					dynamic_buffer.resize(dynamic_buffer.size() - length_to_read + r);
+
+				// PAC size too large, discard
+				if (dynamic_buffer.size() >= PAC_MAX_SIZE) {
+					chunked = false;
+					dynamic_buffer.clear();
+					break;
+				}
+
 				if (r <= 0) {
 					chunked = false;
 					break;
 				}
-				recvd += r;
 			}
 		} while (chunked);
 
-		if (content_length != 0 && string(buffer).size() != content_length) {
-			delete[] buffer;
-			buffer = NULL;
+		if (content_length == 0 || content_length == dynamic_buffer.size()) {
+			buffer = new char[dynamic_buffer.size() + 1];
+			if (!dynamic_buffer.empty()) {
+				memcpy(buffer, dynamic_buffer.data(), dynamic_buffer.size());
+			}
+			buffer[dynamic_buffer.size()] = '\0';
 		}
 	}
 
