@@ -416,7 +416,9 @@ void proxy_factory::run_pac(url &realurl, const url &confurl, vector<string> &re
 
 		/* Run the PAC, but only try one PACRunner */
 		if (debug) cerr << "Using pacrunner: " << typeid(*pacrunners[0]).name() << endl;
-		string pacresp = pacrunners[0]->get(this->pac, this->pacurl->to_string())->run(realurl);
+		pacrunner* runner = pacrunners[0]->get(this->pac, this->pacurl->to_string());
+		string pacresp = runner->run(realurl);
+		delete runner;
 		if (debug) cerr << "Pacrunner returned: " << pacresp << endl;
 		format_pac_response(pacresp, response);
 	}
