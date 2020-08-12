@@ -38,7 +38,7 @@ using namespace libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static char *jstr2str(JSStringRef str, bool release) throw (bad_alloc)
+static char *jstr2str(JSStringRef str, bool release)
 {
 	char *tmp = new char[JSStringGetMaximumUTF8CStringSize(str)+1];
 	JSStringGetUTF8CString(str, tmp, JSStringGetMaximumUTF8CStringSize(str)+1);
@@ -103,7 +103,7 @@ public:
 		JSGlobalContextRelease(this->jsctx);
 	}
 
-	webkit_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	webkit_pacrunner(string pac, const url& pacurl) : pacrunner(pac, pacurl) {
 		JSStringRef str  = NULL;
 		JSObjectRef func = NULL;
 
@@ -144,7 +144,7 @@ public:
 		throw bad_alloc();
 	}
 
-	string run(const url& url_) throw (bad_alloc) {
+	string run(const url& url_) {
 		JSStringRef str = NULL;
 		JSValueRef  val = NULL;
 		string      tmp;

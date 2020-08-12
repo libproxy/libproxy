@@ -48,7 +48,7 @@ public:
 		DBusMessage *msg;
 	};
 
-	vector<url> get_config(const url &dest) throw (runtime_error) {
+	vector<url> get_config(const url &dest) {
 		// Make sure we have a valid connection with a proper match
 		DBusConnection *conn = this->conn;
 		vector<url> response;

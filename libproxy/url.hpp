@@ -50,10 +50,10 @@ public:
 
 	~url();
 	url(const url& url);
-	url(const string& url) throw (parse_error);
+	url(const string& url);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
-	url& operator=(const string &url) throw (parse_error);
+	url& operator=(const string &url);
 
 	string   get_host()     const;
 	sockaddr const* const* get_ips(bool usedns);

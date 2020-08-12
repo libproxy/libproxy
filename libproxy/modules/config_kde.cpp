@@ -66,7 +66,7 @@ public:
         command = "";
     }
 
-    vector<url> get_config(const url &dst) throw (runtime_error) {
+    vector<url> get_config(const url &dst) {
         // See constructor
         if(command.empty())
             throw runtime_error("Unable to read configuration");
@@ -134,7 +134,7 @@ public:
 	}
 
 private:
-    string command_output(const string &cmdline) throw (runtime_error) {
+    string command_output(const string &cmdline) {
         // Capture stderr as well
         const string command = "(" + cmdline + ")2>&1";
         FILE *pipe = popen(command.c_str(), "r");
@@ -158,7 +158,7 @@ private:
     }
 
     // Neither key nor def must contain '
-    const string &kde_config_val(const string &key, const string &def) throw (runtime_error) {
+    const string &kde_config_val(const string &key, const string &def) {
         if (cache_needs_refresh())
             cache.clear();
         else {

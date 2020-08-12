@@ -108,7 +108,7 @@ static map<string, string> parse_manual(string data) {
 
 class w32reg_config_extension : public config_extension {
 public:
-	vector<url> get_config(const url &dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) {
 		char        *tmp = NULL;
 		uint32_t enabled = 0;
 		vector<url> response;

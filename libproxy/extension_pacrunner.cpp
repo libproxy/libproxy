@@ -30,7 +30,7 @@ pacrunner_extension::~pacrunner_extension() {
 	if (this->pr) delete this->pr;
 }
 
-pacrunner* pacrunner_extension::get(const string &pac, const url& pacurl) throw (bad_alloc) {
+pacrunner* pacrunner_extension::get(const string &pac, const url& pacurl) {
 	if (this->pr) {
 		if (this->last == pac)
 			return this->pr;
