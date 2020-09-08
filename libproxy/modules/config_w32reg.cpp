@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
+#include <algorithm>
 #include "../extension_config.hpp"
 using namespace libproxy;
 
@@ -160,7 +161,10 @@ public:
 		if (get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
 			string po = tmp;
 			delete tmp;
-			if (po == "<local>")
+			const char windowsDelimiter = ';';
+			const char libproxyDelimiter = ',';
+			replace(po.begin(), po.end(), windowsDelimiter, libproxyDelimiter );
+			if (po.length()>0)
 				return po;
 		}
 		return "";
