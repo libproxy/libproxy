@@ -388,16 +388,24 @@ string url::to_string() const {
 	return m_orig;
 }
 
-static inline string recvline(int fd) {
-	// Read a character.
-	// If we don't get a character, return empty string.
-	// If we are at the end of the line, return empty string.
-	char c = '\0';
-	
-	if (recv(fd, &c, 1, 0) != 1 || c == '\n')
-		return "";
+static string recvline(int fd) {
+	string line;
+	int ret;
 
-	return string(1, c) + recvline(fd);
+	// Reserve arbitrary amount of space to avoid small memory reallocations.
+	line.reserve(128);
+
+	do {
+		char c;
+		ret = recv(fd, &c, 1, 0);
+		if (ret == 1) {
+			if (c == '\n')
+				return line;
+			line += c;
+		}
+	} while (ret == 1 || (ret == -1 && errno == EINTR));
+
+	return line;
 }
 
 char* url::get_pac() {
