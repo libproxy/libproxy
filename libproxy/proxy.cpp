@@ -244,7 +244,7 @@ void proxy_factory::check_network_topology() {
 			vector<wpad_extension*> wpads = this->mm.get_extensions<wpad_extension>();
 			for (vector<wpad_extension*>::iterator j=wpads.begin() ; j != wpads.end() ; j++)
 				(*j)->rewind();
-			if (this->pac) delete this->pac;
+			if (this->pac) delete[] this->pac;
 			this->pac = NULL;
 			break;
 		}
@@ -313,7 +313,7 @@ bool proxy_factory::expand_wpad(const url &confurl)
 		rtv = true;
 		/* If the config has just changed from PAC to WPAD, clear the PAC */
 		if (!this->wpad) {
-			if (this->pac)    delete this->pac;
+			if (this->pac)    delete[] this->pac;
 			if (this->pacurl) delete this->pacurl;
 			this->pac    = NULL;
 			this->pacurl = NULL;
@@ -381,7 +381,7 @@ bool proxy_factory::expand_pac(url &confurl)
 		if (this->pac) {
 			if (this->pacurl->to_string() != confurl.to_string()) {
 				delete this->pacurl;
-				delete this->pac;
+				delete[] this->pac;
 				this->pacurl = NULL;
 				this->pac    = NULL;
 			}
@@ -424,7 +424,7 @@ void proxy_factory::run_pac(url &realurl, const url &confurl, vector<string> &re
 
 void proxy_factory::clear_cache() {
 	this->wpad = false;
-	if (this->pac)    { delete this->pac;    this->pac = NULL; }
+	if (this->pac)    { delete[] this->pac;  this->pac = NULL; }
 	if (this->pacurl) { delete this->pacurl; this->pacurl = NULL; }
 }
 
