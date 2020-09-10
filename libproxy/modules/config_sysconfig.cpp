@@ -124,7 +124,7 @@ public:
 	~sysconfig_config_extension() {
 	}
    
-	vector<url> get_config(const url &dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) {
 		map<string,string>::const_iterator it = _data.find("PROXY_ENABLED");
 		vector<url> response;
 
