@@ -20,12 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  *
  ******************************************************************************/
-#ifdef WIN32
-#include <io.h>
-#define open _open
-#define O_RDONLY _O_RDONLY
-#define close _close
-#endif
+
 #include <fcntl.h> // For ::open()
 #include <cstring> // For memcpy()
 #include <sstream> // For int/string conversion (using stringstream)
@@ -36,6 +31,8 @@
 
 #ifdef WIN32
 #include <io.h>
+#define open _open
+#define O_RDONLY _O_RDONLY
 #define close _close
 #define read _read
 #define SHUT_RDWR SD_BOTH

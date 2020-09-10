@@ -19,12 +19,18 @@
  ******************************************************************************/
 
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <sstream>
+
+#ifdef WIN32
+#define popen _popen
+#define pclose _pclose
+#else
+#include <unistd.h>
+#endif
 
 #include "../extension_config.hpp"
 using namespace libproxy;
