@@ -11,7 +11,7 @@
           msbuild.exe -p:Configuration=Release -p:Platform=x64 -p:libproxyRepoPath="../../" libproxy_msbuild_release.vcxproj
           ```
         - 32-bit build:
-           ```b
+           ```
            msbuild.exe -p:Configuration=Release -p:Platform=Win32 -p:libproxyRepoPath="../../" libproxy_msbuild_release.vcxproj
            ```
 # Building with Visual Studio
