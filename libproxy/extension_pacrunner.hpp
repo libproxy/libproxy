@@ -56,10 +56,6 @@ public:
 protected:
 	// Abstract methods
 	virtual pacrunner* create(string pac, const url& pacurl) =0;
-
-private:
-	pacrunner* pr;
-	string     last;
 };
 
 }

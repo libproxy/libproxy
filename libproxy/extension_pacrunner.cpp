@@ -23,19 +23,11 @@ using namespace libproxy;
 pacrunner::pacrunner(const string &, const url&) {}
 
 pacrunner_extension::pacrunner_extension() {
-	this->pr = NULL;
 }
 
 pacrunner_extension::~pacrunner_extension() {
-	if (this->pr) delete this->pr;
 }
 
 pacrunner* pacrunner_extension::get(const string &pac, const url& pacurl) {
-	if (this->pr) {
-		if (this->last == pac)
-			return this->pr;
-		delete this->pr;
-	}
-
-	return this->pr = this->create(pac, pacurl);
+	return this->create(pac, pacurl);
 }
