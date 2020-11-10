@@ -1,3 +1,4 @@
+# encoding: utf-8
 ###############################################################################
 # libproxy - A library for proxy configuration
 # Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
@@ -108,9 +109,22 @@ class ProxyFactory(object):
         """
         if type(url) != str:
             raise TypeError("url must be a string!")
-        
+
+        if type(url) is bytes:
+            # Python 2: str is bytes
+            url_bytes = url
+        else:
+            # Python 3: str is unicode
+            # TODO: Does this need to be encoded from IRI to ASCII (ACE) URI,
+            # for example http://кц.рф/пример ->
+            # http://xn--j1ay.xn--p1ai/%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80?
+            # Or is libproxy designed to accept IRIs like
+            # http://кц.рф/пример? Passing in an IRI does seem to work
+            # acceptably in practice, so do that for now.
+            url_bytes = url.encode('utf-8')
+
         proxies = []
-        array = _libproxy.px_proxy_factory_get_proxies(self._pf, url)
+        array = _libproxy.px_proxy_factory_get_proxies(self._pf, url_bytes)
     
         if not bool(array):
             raise ProxyFactory.ProxyResolutionError(
@@ -118,7 +132,13 @@ class ProxyFactory(object):
 
         i=0
         while array[i]:
-            proxies.append(str(ctypes.cast(array[i], ctypes.c_char_p).value))
+            proxy_bytes = ctypes.cast(array[i], ctypes.c_char_p).value
+            if type(proxy_bytes) is str:
+                # Python 2
+                proxies.append(proxy_bytes)
+            else:
+                # Python 3
+                proxies.append(proxy_bytes.decode('utf-8', errors='replace'))
             i += 1
 
         _libproxy.px_proxy_factory_free_proxies(proxies)
