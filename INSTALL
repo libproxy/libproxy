@@ -101,7 +101,7 @@ WITH_KDE:               Default to ON. Enables plug-in to read proxy settings
                         Note: this plug-in only has a *runtime* dependency on
                         either kreadconfig or kreadconfig5.
 
-WITH_MOZJS:             Default to ON. Enable Mozilla javascript bindings. As
+WITH_MOZJS:             Default to OFF. Enable Mozilla javascript bindings. As
                         Mozilla Javascript engine is often installed multiple
                         you can set prefered order using MOZJS_SEARCH_ORDER,
                         wich defaults to "xulrunner-js;firefox-js;mozilla-js;seamonkey-js".
