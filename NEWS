@@ -8,6 +8,10 @@ New in version 0.4.16:
 * Small performance improvements
 * pxgsettings: use the correct syntax to connect to the changed signal (silences annoying output on console)
 * Support python3 up to version 3.9
+* Fix buffer overflow when PAC is enabled (CVE-2020-26154)
+* Rewrite url::recvline to be nonrecursive (CVE-2020-25219)
+* Remove nonfunctional and crashy pacrunner caching
+* Never use system libmodman (no other consumers, not maintained)
 
 New in Version 0.4.15:
 ==============================
