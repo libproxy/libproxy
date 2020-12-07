@@ -26,6 +26,7 @@
 #include <sstream> // For int/string conversion (using stringstream)
 #include <cstdio>  // For sscanf()
 #include <cstdlib>    // For atoi()
+#include <cerrno>  // For errno and EINTR
 #include <sys/stat.h> // For stat()
 #include <algorithm> // For transform()
 
