@@ -39,8 +39,8 @@ def _load(name, *versions):
 _libproxy = _load("proxy", 1)
 _libproxy.px_proxy_factory_new.restype = ctypes.POINTER(ctypes.c_void_p)
 _libproxy.px_proxy_factory_free.argtypes = ctypes.c_void_p,
-_libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_void_p)
-_libproxy.px_proxy_factory_free_proxies.argtypes = ctypes.POINTER(ctypes.c_void_p)
+_libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_char_p)
+_libproxy.px_proxy_factory_free_proxies.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
 
 class ProxyFactory(object):
     """A ProxyFactory object is used to provide potential proxies to use
@@ -135,7 +135,7 @@ class ProxyFactory(object):
                 proxies.append(proxy_bytes.decode('utf-8', errors='replace'))
             i += 1
 
-        _libproxy.px_proxy_factory_free_proxies(proxies)
+        _libproxy.px_proxy_factory_free_proxies(array)
         
         return proxies
         
