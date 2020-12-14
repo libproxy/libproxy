@@ -37,8 +37,8 @@ def _load(name, *versions):
 
 # Load libproxy
 _libproxy = _load("proxy", 1)
-_libproxy.px_proxy_factory_new.restype = ctypes.POINTER(ctypes.c_void_p)
-_libproxy.px_proxy_factory_free.argtypes = ctypes.c_void_p,
+_libproxy.px_proxy_factory_new.restype = ctypes.c_void_p
+_libproxy.px_proxy_factory_free.argtypes = [ctypes.c_void_p]
 _libproxy.px_proxy_factory_get_proxies.restype = ctypes.POINTER(ctypes.c_char_p)
 _libproxy.px_proxy_factory_free_proxies.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
 
