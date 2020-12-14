@@ -35,12 +35,6 @@ def _load(name, *versions):
         return ctypes.cdll.LoadLibrary(name_ver)
     raise ImportError("Unable to find %s library" % name)
 
-# Load C library
-if platform.system() == "Windows":
-    _libc = ctypes.cdll.msvcrt
-else:
-    _libc = _load("c", 6)
-
 # Load libproxy
 _libproxy = _load("proxy", 1)
 _libproxy.px_proxy_factory_new.restype = ctypes.POINTER(ctypes.c_void_p)
