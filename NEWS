@@ -1,3 +1,7 @@
+New in version 0.4.17:
+==============================
+* python bindings: fix "TypeError: _argtypes_ must be a sequence of types" (#125)
+
 New in version 0.4.16:
 ==============================
 * Port to, and require, SpiderMonkey 68
