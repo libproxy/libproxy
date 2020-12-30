@@ -74,7 +74,7 @@ pxProxyFactory *px_proxy_factory_new(void);
  * and should be use to authenticate the connection if present.
  *
  * For SOCKS proxies, when the protocol version is specified (socks4:// or
- * sock5://), it is expected that only this version is used. When only
+ * socks5://), it is expected that only this version is used. When only
  * socks:// is set, the client MUST try SOCKS version 5 protocol and, on
  * connection failure, fallback to SOCKS version 4.
  *
