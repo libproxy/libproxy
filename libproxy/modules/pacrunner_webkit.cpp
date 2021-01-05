@@ -38,7 +38,7 @@ using namespace libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static char *jstr2str(JSStringRef str, bool release) throw (bad_alloc)
+static char *jstr2str(JSStringRef str, bool release)
 {
 	char *tmp = new char[JSStringGetMaximumUTF8CStringSize(str)+1];
 	JSStringGetUTF8CString(str, tmp, JSStringGetMaximumUTF8CStringSize(str)+1);
@@ -56,9 +56,11 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 
 	// Look it up
 	struct addrinfo *info;
-	if (getaddrinfo(tmp, NULL, NULL, &info))
+	if (getaddrinfo(tmp, NULL, NULL, &info)) {
+		if (tmp)		delete[] tmp;
 		return NULL;
-	delete tmp;
+	}
+	delete[] tmp;
 
 	// Try for IPv4
 	tmp = new char[INET6_ADDRSTRLEN+1];
@@ -67,7 +69,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 					NULL, 0,
 					NI_NUMERICHOST)) {
 			freeaddrinfo(info);
-			delete tmp;
+			delete[] tmp;
 			return NULL;
 		}
 	freeaddrinfo(info);
@@ -76,7 +78,7 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 	JSStringRef str = JSStringCreateWithUTF8CString(tmp);
 	JSValueRef  ret = JSValueMakeString(ctx, str);
 	JSStringRelease(str);
-	delete tmp;
+	delete[] tmp;
 
 	return ret;
 }
@@ -101,7 +103,7 @@ public:
 		JSGlobalContextRelease(this->jsctx);
 	}
 
-	webkit_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	webkit_pacrunner(string pac, const url& pacurl) : pacrunner(pac, pacurl) {
 		JSStringRef str  = NULL;
 		JSObjectRef func = NULL;
 
@@ -142,10 +144,12 @@ public:
 		throw bad_alloc();
 	}
 
-	string run(const url& url_) throw (bad_alloc) {
+	string run(const url& url_) {
 		JSStringRef str = NULL;
 		JSValueRef  val = NULL;
 		string      tmp;
+		char        *retChar = NULL;
+		string      retStr = "";
 
 		// Run the PAC
 		tmp = string("FindProxyForURL(\"") + url_.to_string() + string("\", \"") + url_.get_host() + "\");";
@@ -157,7 +161,12 @@ public:
 		JSStringRelease(str);
 
 		// Convert the return value to a string
-		return jstr2str(JSValueToStringCopy(this->jsctx, val, NULL), true);
+		retChar = jstr2str(JSValueToStringCopy(this->jsctx, val, NULL), true);
+		if (retChar) {
+			retStr = retChar;
+			delete[] retChar;
+		}
+		return retStr; 
 
 	error:
 		JSStringRelease(str);

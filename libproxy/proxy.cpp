@@ -34,7 +34,7 @@ class proxy_factory {
 public:
 	proxy_factory();
 	~proxy_factory();
-	vector<string> get_proxies(string url);
+	vector<string> get_proxies(const string &url);
 
 private:
 	bool   debug;
@@ -59,7 +59,7 @@ proxy_factory::~proxy_factory() {
 }
 
 
-vector<string> proxy_factory::get_proxies(string realurl) {
+vector<string> proxy_factory::get_proxies(const string &realurl) {
 	vector<string>             response;
 
 
@@ -123,6 +123,16 @@ extern "C" DLL_PUBLIC char** px_proxy_factory_get_proxies(struct pxProxyFactory_
 		}
 	}
 	return retval;
+}
+
+extern "C" DLL_PUBLIC void px_proxy_factory_free_proxies(char ** const proxies) {
+	if (!proxies)
+		return;
+
+	for (size_t i = 0; proxies[i]; ++i)
+		free(proxies[i]);
+
+	free(proxies);
 }
 
 extern "C" DLL_PUBLIC void px_proxy_factory_free(struct pxProxyFactory_ *self) {

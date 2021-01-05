@@ -43,14 +43,14 @@ static Value dnsResolve(Value& ths, Value& fnc, vector<Value>& arg) {
 					NULL, 0,
 					NI_NUMERICHOST)) {
 			freeaddrinfo(info);
-			delete tmp;
+			delete[] tmp;
 			return NULL;
 		}
 	freeaddrinfo(info);
 
 	// Create the return value
 	Value ret = ths.newString(tmp);
-	delete tmp;
+	delete[] tmp;
 	return ret;
 }
 
@@ -66,7 +66,7 @@ static Value myIpAddress(Value& ths, Value& fnc, vector<Value>& arg) {
 
 class natus_pacrunner : public pacrunner {
 public:
-	natus_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
+	natus_pacrunner(string pac, const url& pacurl) : pacrunner(pac, pacurl) {
 		Value exc;
 
 		// Create the basic context
@@ -93,7 +93,7 @@ public:
 		throw bad_alloc();
 	}
 
-	string run(const url& url_) throw (bad_alloc) {
+	string run(const url& url_) {
 		vector<Value> args;
 		args.push_back(glb.newString(url_.to_string()));
 		args.push_back(glb.newString(url_.get_host()));

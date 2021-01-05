@@ -20,22 +20,14 @@
 #include "extension_pacrunner.hpp"
 using namespace libproxy;
 
-pacrunner::pacrunner(string, const url&) {}
+pacrunner::pacrunner(const string &, const url&) {}
 
 pacrunner_extension::pacrunner_extension() {
-	this->pr = NULL;
 }
 
 pacrunner_extension::~pacrunner_extension() {
-	if (this->pr) delete this->pr;
 }
 
-pacrunner* pacrunner_extension::get(string pac, const url& pacurl) throw (bad_alloc) {
-	if (this->pr) {
-		if (this->last == pac)
-			return this->pr;
-		delete this->pr;
-	}
-
-	return this->pr = this->create(pac, pacurl);
+pacrunner* pacrunner_extension::get(const string &pac, const url& pacurl) {
+	return this->create(pac, pacurl);
 }

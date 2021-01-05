@@ -45,20 +45,21 @@ public:
 
 class DLL_PUBLIC url {
 public:
-	static bool is_valid(const string url);
+	static bool is_valid(const string &url);
 	static string encode(const string &data, const string &valid_reserved = "");
 
 	~url();
 	url(const url& url);
-	url(const string& url) throw (parse_error);
+	url(const string& url);
 	bool operator==(const url& url) const;
 	url& operator=(const url& url);
-	url& operator=(string url) throw (parse_error);
+	url& operator=(const string &url);
 
 	string   get_host()     const;
 	sockaddr const* const* get_ips(bool usedns);
 	string   get_password() const;
 	string   get_path()     const;
+	string   get_query()    const;
 	uint16_t get_port()     const;
 	string   get_scheme()   const;
 	string   get_username() const;
@@ -75,6 +76,7 @@ private:
 	string     m_host;
 	uint16_t   m_port;
 	string     m_path;
+	string     m_query;
 	sockaddr** m_ips;
 };
 

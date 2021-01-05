@@ -84,6 +84,11 @@ PERL_VENDORINSTALL:     Default to OFF. Tells cmake to install the perl binding
                         in the vendor directory, which is the one used by most
                         packagers.
 
+PERL_LINK_LIBPERL:      Default to ON if PERL_VENDORINSTALL is OFF, default to
+                        OFF otherwise. Explicitly links the Perl binding
+                        against libperl.so. It must be ON for linking to work
+                        when --no-undefined is passed to the linker.
+
 WITH_DOTNET:            Default to OFF. Enable Mono .NET bindings.
 
 WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
@@ -91,9 +96,12 @@ WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
 WITH_GNOME3:            Default to ON. Build the Gnome3/GSettings bindings.
                         instead of Gnome2/GConf based one.
 
-WITH_KDE4:              Default to ON. Enables KDE4/Kconf bindings.
+WITH_KDE:               Default to ON. Enables plug-in to read proxy settings
+                        from either KDE4 or KDE Frameworks 5.
+                        Note: this plug-in only has a *runtime* dependency on
+                        either kreadconfig or kreadconfig5.
 
-WITH_MOZJS:             Default to ON. Enable Mozilla javascript bindings. As
+WITH_MOZJS:             Default to OFF. Enable Mozilla javascript bindings. As
                         Mozilla Javascript engine is often installed multiple
                         you can set prefered order using MOZJS_SEARCH_ORDER,
                         wich defaults to "xulrunner-js;firefox-js;mozilla-js;seamonkey-js".
@@ -102,7 +110,9 @@ WITH_NM:                Default to ON. Enable NetworkManager bindings.
 
 WITH_PERL:              Default to ON. Enable Perl bindings.
 
-WITH_PYTHON:            Default to ON. Enable Python bindings.
+WITH_PYTHON2:           Default to ON. Enable Python bindings.
+
+WITH_PYTHON3:           Default to ON. Enable Python bindings.
 
 WITH_VALA:              Default to OFF. Enable Vala bindings.
 

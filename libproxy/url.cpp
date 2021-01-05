@@ -20,26 +20,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  *
  ******************************************************************************/
-#ifdef WIN32
-#include <io.h>
-#define open _open
-#define O_RDONLY _O_RDONLY
-#define close _close
-#endif
+
 #include <fcntl.h> // For ::open()
 #include <cstring> // For memcpy()
 #include <sstream> // For int/string conversion (using stringstream)
 #include <cstdio>  // For sscanf()
 #include <cstdlib>    // For atoi()
+#include <cerrno>  // For errno and EINTR
 #include <sys/stat.h> // For stat()
 #include <algorithm> // For transform()
-#include <unistd.h>  // For read() close()
 
 #ifdef WIN32
 #include <io.h>
+#define open _open
+#define O_RDONLY _O_RDONLY
 #define close _close
 #define read _read
 #define SHUT_RDWR SD_BOTH
+#else
+#include <unistd.h>  // For read() close()
+#define closesocket close
 #endif
 
 #include "url.hpp"
@@ -52,7 +52,9 @@ using namespace std;
 #define PAC_MIME_TYPE_FB "text/plain"
 
 // This is the maximum pac size (to avoid memory attacks)
-#define PAC_MAX_SIZE 102400
+#define PAC_MAX_SIZE 0x800000
+// This is the default block size to use when receiving via HTTP
+#define PAC_HTTP_BLOCK_SIZE 512
 
 static inline int get_default_port(string scheme) {
 	struct servent *serv;
@@ -86,7 +88,7 @@ static inline sockaddr* copyaddr(const struct sockaddr& addr) {
 	}
 }
 
-bool url::is_valid(const string url_) {
+bool url::is_valid(const string &url_) {
 	bool rtv = true;
 
 	try {
@@ -113,10 +115,11 @@ string url::encode(const string &data, const string &valid_reserved) {
 	return encoded.str();
 }
 
-url::url(const string &url) throw(parse_error)
+url::url(const string &url)
 	: m_orig(url), m_port(0), m_ips(NULL) {
 	size_t idx = 0;
 	size_t hier_part_start, hier_part_end;
+	size_t query_part_start;
 	size_t path_start, path_end;
 	string hier_part;
 
@@ -149,9 +152,17 @@ url::url(const string &url) throw(parse_error)
 	transform(m_scheme.begin(), m_scheme.end(), m_scheme.begin(), ::tolower);
 
 	hier_part_start = idx;
-	hier_part_end = url.find('?', idx);
-	if (hier_part_end == string::npos)
-		hier_part_end = url.find('#', idx);
+	hier_part_end = url.find('#', idx);
+	query_part_start = url.find('?', idx);
+	if (query_part_start != string::npos)
+	{
+		if (hier_part_end == string::npos)
+			m_query = url.substr(query_part_start);
+		else {
+			m_query = url.substr(query_part_start, hier_part_end - query_part_start);
+		}
+		hier_part_end = query_part_start;
+	}
 
 	hier_part = url.substr(hier_part_start,
 							hier_part_end == string::npos ?
@@ -267,6 +278,7 @@ url& url::operator=(const url& url) {
 	m_orig   = url.m_orig;
 	m_pass   = url.m_pass;
 	m_path   = url.m_path;
+	m_query  = url.m_query;
 	m_port   = url.m_port;
 	m_scheme = url.m_scheme;
 	m_user   = url.m_user;
@@ -286,7 +298,7 @@ url& url::operator=(const url& url) {
 	return *this;
 }
 
-url& url::operator=(string strurl) throw (parse_error) {
+url& url::operator=(const string &strurl) {
 	url tmp(strurl);
 	*this = tmp;
 	return *this;
@@ -354,6 +366,10 @@ string url::get_path() const {
 	return m_path;
 }
 
+string url::get_query() const {
+	return m_query;
+}
+
 uint16_t url::get_port() const {
 	return m_port;
 }
@@ -370,16 +386,24 @@ string url::to_string() const {
 	return m_orig;
 }
 
-static inline string recvline(int fd) {
-	// Read a character.
-	// If we don't get a character, return empty string.
-	// If we are at the end of the line, return empty string.
-	char c = '\0';
-	
-	if (recv(fd, &c, 1, 0) != 1 || c == '\n')
-		return "";
+static string recvline(int fd) {
+	string line;
+	int ret;
 
-	return string(1, c) + recvline(fd);
+	// Reserve arbitrary amount of space to avoid small memory reallocations.
+	line.reserve(128);
+
+	do {
+		char c;
+		ret = recv(fd, &c, 1, 0);
+		if (ret == 1) {
+			if (c == '\n')
+				return line;
+			line += c;
+		}
+	} while (ret == 1 || (ret == -1 && errno == EINTR));
+
+	return line;
 }
 
 char* url::get_pac() {
@@ -424,7 +448,7 @@ char* url::get_pac() {
 			!connect(sock, m_ips[i], sizeof(struct sockaddr_in6)))
 			break;
 
-		close(sock);
+		closesocket(sock);
 		sock = -1;
 	}
 
@@ -432,7 +456,7 @@ char* url::get_pac() {
 	if (sock < 0) return NULL;
 
 	// Build the request string
-	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + " HTTP/1.1\r\n";
+	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + m_query + " HTTP/1.1\r\n";
 	request += "Host: " + m_host + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
@@ -440,7 +464,7 @@ char* url::get_pac() {
 
 	// Send HTTP request
 	if ((size_t) send(sock, request.c_str(), request.size(), 0) != request.size()) {
-		close(sock);
+		closesocket(sock);
 		return NULL;
 	}
 
@@ -448,6 +472,7 @@ char* url::get_pac() {
 	string line = recvline(sock);
 	if (sscanf(line.c_str(), "HTTP/1.%*d %lu", &status) == 1 && status == 200) {
 		/* Check for correct mime type and content length */
+		content_length = 0;
 		for (line = recvline(sock) ; line != "\r" && line != "" ; line = recvline(sock)) {
 			// Check for chunked encoding
 			if (line.find("Content-Transfer-Encoding: chunked") == 0 || line.find("Transfer-Encoding: chunked") == 0)
@@ -459,15 +484,13 @@ char* url::get_pac() {
 		}
 
 		// Get content
-		unsigned int recvd = 0;
-		buffer = new char[PAC_MAX_SIZE];
-		memset(buffer, 0, PAC_MAX_SIZE);
+		std::vector<char> dynamic_buffer;
 		do {
 			unsigned int chunk_length;
 
 			if (chunked) {
 				// Discard the empty line if we received a previous chunk
-				if (recvd > 0) recvline(sock);
+				if (!dynamic_buffer.empty()) recvline(sock);
 
 				// Get the chunk-length line as an integer
 				if (sscanf(recvline(sock).c_str(), "%x", &chunk_length) != 1 || chunk_length == 0) break;
@@ -479,25 +502,47 @@ char* url::get_pac() {
 
 			if (content_length >= PAC_MAX_SIZE) break;
 
-			while (recvd != content_length) {
-				int r = recv(sock, buffer + recvd, content_length - recvd, 0);
+			while (content_length == 0 || dynamic_buffer.size() != content_length) {
+				// Calculate length to recv
+				unsigned int length_to_read = PAC_HTTP_BLOCK_SIZE;
+				if (content_length > 0)
+					length_to_read = content_length - dynamic_buffer.size();
+
+				// Prepare buffer
+				dynamic_buffer.resize(dynamic_buffer.size() + length_to_read);
+
+				int r = recv(sock, dynamic_buffer.data() + dynamic_buffer.size() - length_to_read, length_to_read, 0);
+
+				// Shrink buffer to fit
+				if (r >= 0)
+					dynamic_buffer.resize(dynamic_buffer.size() - length_to_read + r);
+
+				// PAC size too large, discard
+				if (dynamic_buffer.size() >= PAC_MAX_SIZE) {
+					chunked = false;
+					dynamic_buffer.clear();
+					break;
+				}
+
 				if (r <= 0) {
 					chunked = false;
 					break;
 				}
-				recvd += r;
 			}
 		} while (chunked);
 
-		if (string(buffer).size() != content_length) {
-			delete[] buffer;
-			buffer = NULL;
+		if (content_length == 0 || content_length == dynamic_buffer.size()) {
+			buffer = new char[dynamic_buffer.size() + 1];
+			if (!dynamic_buffer.empty()) {
+				memcpy(buffer, dynamic_buffer.data(), dynamic_buffer.size());
+			}
+			buffer[dynamic_buffer.size()] = '\0';
 		}
 	}
 
 	// Clean up
 	shutdown(sock, SHUT_RDWR);
-	close(sock);
+	closesocket(sock);
 	return buffer;
 }
 

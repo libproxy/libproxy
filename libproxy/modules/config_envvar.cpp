@@ -24,7 +24,7 @@ using namespace libproxy;
 
 class envvar_config_extension : public config_extension {
 public:
-	vector<url> get_config(const url &dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) {
 		const char *proxy = NULL;
                 vector<url> response;
 

@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  ******************************************************************************/
 
+#include <algorithm>
 #include "../extension_config.hpp"
 using namespace libproxy;
 
@@ -108,7 +109,7 @@ static map<string, string> parse_manual(string data) {
 
 class w32reg_config_extension : public config_extension {
 public:
-	vector<url> get_config(const url &dst) throw (runtime_error) {
+	vector<url> get_config(const url &dst) {
 		char        *tmp = NULL;
 		uint32_t enabled = 0;
 		vector<url> response;
@@ -160,7 +161,10 @@ public:
 		if (get_registry(W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
 			string po = tmp;
 			delete tmp;
-			if (po == "<local>")
+			const char windowsDelimiter = ';';
+			const char libproxyDelimiter = ',';
+			replace(po.begin(), po.end(), windowsDelimiter, libproxyDelimiter );
+			if (po.length()>0)
 				return po;
 		}
 		return "";

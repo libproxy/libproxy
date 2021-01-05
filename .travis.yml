@@ -1,0 +1,46 @@
+language: cpp
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - clang
+  - gcc
+
+matrix:
+  allow_failures:
+    - os: osx
+
+before_install:
+  - |
+    export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/pyenv/d' | tr "\n" ":" | sed "s|::|:|g")
+    # work-around for issue https://github.com/travis-ci/travis-ci/issues/6307
+    # might not be necessary in the future
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+     command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+     rvm get stable
+    fi
+
+install:
+# create /etc/sysconfig so that the build process enables this module (build test)
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sudo mkdir /etc/sysconfig
+      sudo apt-get -qq update
+      sudo apt-get install -y libjavascriptcoregtk-3.0-dev
+    fi
+
+script:
+  - |
+    cmake .           \
+    -DWITH_PERL=ON    \
+    -DWITH_PYTHON2=ON \
+    -DWITH_GNOME3=ON  \
+    -DWITH_KDE=ON     \
+    -DWITH_WEBKIT3=ON \
+    -DWITH_MOZJS=ON   \
+    -DBIPR=0
+  - make
+  - sudo make install
+  - make test
