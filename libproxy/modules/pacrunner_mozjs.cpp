@@ -32,7 +32,15 @@ using namespace libproxy;
 #define XP_WIN
 #endif
 #endif
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #include <jsapi.h>
+#pragma GCC diagnostic error "-Winvalid-offsetof"
+#include <js/Initialization.h>
+#include <js/CallArgs.h>
+#include <js/CompilationAndEvaluation.h>
+#include <js/MemoryFunctions.h>
+#include <js/SourceText.h>
+
 #include "pacutils.h"
 
 #ifndef INET_ADDRSTRLEN
@@ -43,20 +51,22 @@ using namespace libproxy;
 #define INET6_ADDRSTRLEN 46
 #endif
 
-static JSBool dnsResolve_(JSContext *cx, jsval hostname, jsval *vp) {
+static void dnsResolve_(JSContext *cx, JSString *hostname, JS::CallArgs *argv) {
+	char *tmp;
 	// Get hostname argument
-	char *tmp = JS_EncodeString(cx, JS_ValueToString(cx, hostname));
+	JS::RootedString str(cx, hostname);
+	JS::UniqueChars chars = JS_EncodeStringToUTF8(cx, str);
+	const char *val = chars.get();
 
 	// Set the default return value
-	JS_SET_RVAL(cx, vp, JSVAL_NULL);
+	argv->rval().setNull();
 
 	// Look it up
-	struct addrinfo *info = NULL;
-	if (getaddrinfo(tmp, NULL, NULL, &info))
+	struct addrinfo *info = nullptr;
+	if (getaddrinfo(val, NULL, NULL, &info))
 		goto out;
 
 	// Allocate the IP address
-	JS_free(cx, tmp);
 	tmp = (char *) JS_malloc(cx, INET6_ADDRSTRLEN+1);
 	memset(tmp, 0, INET6_ADDRSTRLEN+1);
 
@@ -67,29 +77,31 @@ static JSBool dnsResolve_(JSContext *cx, jsval hostname, jsval *vp) {
 					NI_NUMERICHOST)) goto out;
 
 	// We succeeded
-	JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyN(cx, tmp, strlen(tmp))));
-	tmp = NULL;
+	argv->rval().setString(JS_NewStringCopyZ(cx, tmp));
+	tmp = nullptr;
 
 	out:
 		if (info) freeaddrinfo(info);
-		JS_free(cx, tmp);
-		return true;
 }
 
-static JSBool dnsResolve(JSContext *cx, uintN /*argc*/, jsval *vp) {
-	jsval *argv = JS_ARGV(cx, vp);
-	return dnsResolve_(cx, argv[0], vp);
+static bool dnsResolve(JSContext *cx, unsigned argc, JS::Value *vp) {
+	JS::CallArgs argv=JS::CallArgsFromVp(argc,vp);
+	dnsResolve_(cx, argv[0].toString(), &argv);
+	return true;
 }
 
-static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
+static bool myIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
+	JS::CallArgs argv=JS::CallArgsFromVp(argc,vp);
 	char *hostname = (char *) JS_malloc(cx, 1024);
+
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewStringCopyN(cx, hostname, strlen(hostname));
-		jsval arg = STRING_TO_JSVAL(myhost);
-		return dnsResolve_(cx, arg, vp);
+		dnsResolve_(cx, myhost, &argv);
+	} else {
+		argv.rval().setNull();
 	}
+
 	JS_free(cx, hostname);
-	JS_SET_RVAL(cx, vp, JSVAL_NULL);
 	return true;
 }
 
@@ -97,83 +109,99 @@ static JSBool myIpAddress(JSContext *cx, uintN /*argc*/, jsval *vp) {
 // This MUST be a static global
 static JSClass cls = {
 		"global", JSCLASS_GLOBAL_FLAGS,
-		JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-		JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 class mozjs_pacrunner : public pacrunner {
 public:
-	mozjs_pacrunner(string pac, const url& pacurl) throw (bad_alloc) : pacrunner(pac, pacurl) {
-		jsval     rval;
+	mozjs_pacrunner(const string &pac, const url& pacurl) : pacrunner(pac, pacurl) {
 
 		// Set defaults
-		this->jsrun = NULL;
-		this->jsctx = NULL;
+		this->jsctx = nullptr;
+		JS_Init();
 
-		// Initialize Javascript runtime environment
-		if (!(this->jsrun = JS_NewRuntime(1024 * 1024)))                  goto error;
-		if (!(this->jsctx = JS_NewContext(this->jsrun, 1024 * 1024)))     goto error;
-	    //JS_SetOptions(this->jsctx, JSOPTION_VAROBJFIX);
-	    //JS_SetVersion(this->jsctx, JSVERSION_LATEST);
-	    //JS_SetErrorReporter(cx, reportError);
-		if (!(this->jsglb = JS_NewCompartmentAndGlobalObject(this->jsctx, &cls, NULL))) goto error;
-		if (!JS_InitStandardClasses(this->jsctx, this->jsglb))            goto error;
+		// Initialize Javascript context
+		if (!(this->jsctx = JS_NewContext(1024 * 1024)))     goto error;
+		{
+			if (!JS::InitSelfHostedCode(this->jsctx)) goto error;
 
-		// Define Javascript functions
-		JS_DefineFunction(this->jsctx, this->jsglb, "dnsResolve", dnsResolve, 1, 0);
-		JS_DefineFunction(this->jsctx, this->jsglb, "myIpAddress", myIpAddress, 0, 0);
-		JS_EvaluateScript(this->jsctx, this->jsglb, JAVASCRIPT_ROUTINES,
-				        strlen(JAVASCRIPT_ROUTINES), "pacutils.js", 0, &rval);
+			JS::RootedValue  rval(this->jsctx);
+			JS::RealmOptions realm_opts;
 
-		// Add PAC to the environment
-		JS_EvaluateScript(this->jsctx, this->jsglb, pac.c_str(),
-							strlen(pac.c_str()), pacurl.to_string().c_str(), 0, &rval);
-		return;
+			this->jsglb = new JS::Heap<JSObject*>(JS_NewGlobalObject(
+								  this->jsctx, &cls,
+								  nullptr, JS::DontFireOnNewGlobalHook,
+								  realm_opts));
 
+			if (!(this->jsglb)) goto error;
+			JS::RootedObject global(this->jsctx,this->jsglb->get());
+			if (!(this->jsar = new JSAutoRealm(this->jsctx,  global))) goto error;
+
+			// Define Javascript functions
+			JS_DefineFunction(this->jsctx, global, "dnsResolve", dnsResolve, 1, 0);
+			JS_DefineFunction(this->jsctx, global, "myIpAddress", myIpAddress, 0, 0);
+			JS::CompileOptions options(this->jsctx);
+
+			JS::SourceText<mozilla::Utf8Unit> routines, pac_source;
+			if (!routines.init(this->jsctx,
+					   JAVASCRIPT_ROUTINES,
+					   strlen(JAVASCRIPT_ROUTINES),
+					   JS::SourceOwnership::Borrowed))
+				goto error;
+
+			if (!pac_source.init(this->jsctx,
+					     pac.c_str(),
+					     pac.length(),
+					     JS::SourceOwnership::Borrowed))
+				goto error;
+
+
+			JS::Evaluate(this->jsctx, options, routines, JS::MutableHandleValue(&rval));
+
+			// Add PAC to the environment
+			JS::Evaluate(this->jsctx, options, pac_source, JS::MutableHandleValue(&rval));
+			return;
+		}
 		error:
 			if (this->jsctx) JS_DestroyContext(this->jsctx);
-			if (this->jsrun) JS_DestroyRuntime(this->jsrun);
 			throw bad_alloc();
 	}
 
 	~mozjs_pacrunner() {
+		if (this->jsar) delete this->jsar;
+		if (this->jsglb) delete this->jsglb;
 		if (this->jsctx) JS_DestroyContext(this->jsctx);
-		if (this->jsrun) JS_DestroyRuntime(this->jsrun);
-		// JS_ShutDown()?
+		JS_ShutDown();
 	}
 
-	string run(const url& url_) throw (bad_alloc) {
+	string run(const url& url_) {
 		// Build arguments to the FindProxyForURL() function
-		char *tmpurl  = JS_strdup(this->jsctx, url_.to_string().c_str());
-		char *tmphost = JS_strdup(this->jsctx, url_.get_host().c_str());
-		if (!tmpurl || !tmphost) {
-			if (tmpurl) JS_free(this->jsctx, tmpurl);
-			if (tmphost) JS_free(this->jsctx, tmphost);
-			throw bad_alloc();
-		}
-		jsval args[2] = {
-			STRING_TO_JSVAL(JS_NewStringCopyN(this->jsctx, tmpurl, strlen(tmpurl))),
-			STRING_TO_JSVAL(JS_NewStringCopyN(this->jsctx, tmphost, strlen(tmphost)))
-		};
+		string tmpurl(url_.to_string());
+		string tmphost(url_.get_host());
+		JS::AutoValueArray<2> args(this->jsctx);
+		args[0].setString(JS_NewStringCopyZ(this->jsctx, tmpurl.c_str()));
+		args[1].setString(JS_NewStringCopyZ(this->jsctx, tmphost.c_str()));
 
 		// Find the proxy (call FindProxyForURL())
-		jsval rval;
-		JSBool result = JS_CallFunctionName(this->jsctx, this->jsglb, "FindProxyForURL", 2, args, &rval);
+		JS::RootedValue rval(this->jsctx);
+		JS::RootedObject global(this->jsctx,this->jsglb->get());
+		bool result = JS_CallFunctionName(this->jsctx, global, "FindProxyForURL", args, &rval);
 		if (!result) return "";
-		
-		char * tmpanswer = JS_EncodeString(this->jsctx, JS_ValueToString(this->jsctx, rval));
+		if (!rval.isString())
+			return "";
+
+		JS::RootedString s(this->jsctx, rval.toString());
+		JS::UniqueChars chars = JS_EncodeStringToUTF8(this->jsctx, s);
+		const char *tmpanswer = chars.get();
 		string answer = string(tmpanswer);
-		JS_free(this->jsctx, tmpanswer);
 
 		if (answer == "undefined") return "";
 		return answer;
 	}
 
 private:
-	JSRuntime *jsrun;
 	JSContext *jsctx;
-	JSObject  *jsglb;
+	JS::Heap<JSObject*> *jsglb;
+	JSAutoRealm *jsar;
 };
 
 PX_PACRUNNER_MODULE_EZ(mozjs, "JS_DefineFunction", "mozjs");

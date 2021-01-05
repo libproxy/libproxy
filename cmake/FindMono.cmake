@@ -12,7 +12,7 @@
 # Redistribution and use is allowed according to the terms of the GPL license.
 
 FIND_PROGRAM (MONO_EXECUTABLE mono)
-FIND_PROGRAM (GMCS_EXECUTABLE gmcs)
+FIND_PROGRAM (GMCS_EXECUTABLE NAMES gmcs mcs)
 FIND_PROGRAM (GACUTIL_EXECUTABLE gacutil)
 
 SET (MONO_FOUND FALSE CACHE INTERNAL "")

@@ -49,6 +49,11 @@ proxy_factory_get_proxies(pf, url)
   OUTPUT:
     RETVAL
 
+void
+proxy_factory_free_proxies(proxies)
+    char ** proxies
+  CODE:
+    px_proxy_factory_free_proxies(proxies);
 
 MODULE = Net::Libproxy PACKAGE = Net::Libproxy::ProxyFactoryPtr
 

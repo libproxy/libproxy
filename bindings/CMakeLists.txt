@@ -1,6 +1,11 @@
-option(WITH_PYTHON "Enables Python bindings" ON)
-if (WITH_PYTHON)
-  add_subdirectory(python)
+option(WITH_PYTHON2 "Enables Python 2 bindings" ON)
+if (WITH_PYTHON2)
+  add_subdirectory(python/python2)
+endif()
+
+option(WITH_PYTHON3 "Enables Python 3 bindings" ON)
+if (WITH_PYTHON3)
+  add_subdirectory(python/python3)
 endif()
 
 option(WITH_DOTNET "Enables C# bindings" OFF)

@@ -31,7 +31,7 @@ using namespace libmodman;
 class DLL_PUBLIC config_extension : public extension<config_extension> {
 public:
 	// Abstract methods
-	virtual vector<url>      get_config(const url &dst) throw (runtime_error)=0;
+	virtual vector<url>      get_config(const url &dst) =0;
 
 	// Virtual methods
 	virtual string   get_ignore(const url &dst);

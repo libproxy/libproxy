@@ -74,7 +74,7 @@ pxProxyFactory *px_proxy_factory_new(void);
  * and should be use to authenticate the connection if present.
  *
  * For SOCKS proxies, when the protocol version is specified (socks4:// or
- * sock5://), it is expected that only this version is used. When only
+ * socks5://), it is expected that only this version is used. When only
  * socks:// is set, the client MUST try SOCKS version 5 protocol and, on
  * connection failure, fallback to SOCKS version 4.
  *
@@ -84,11 +84,20 @@ pxProxyFactory *px_proxy_factory_new(void);
  * previous does not exist. As an example, on Mac OS X you can configure a
  * RTSP streaming proxy. The expected returned configuration would be:
  *   - rtsp://[username:password@]proxy:port
+ *
+ * To free the returned value, call px_proxy_factory_free_proxies.
  * 
  * @url The URL we are trying to reach
  * @return A NULL-terminated array of proxy strings to use
  */
 char **px_proxy_factory_get_proxies(pxProxyFactory *self, const char *url);
+
+/**
+ * Frees the proxy array returned by px_proxy_factory_get_proxies when no
+ * longer used.
+ * @since 0.4.16
+ */
+void px_proxy_factory_free_proxies(char **proxies);
 
 /**
  * Frees the pxProxyFactory instance when no longer used.

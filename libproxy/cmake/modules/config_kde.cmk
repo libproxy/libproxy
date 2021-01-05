@@ -1,0 +1,4 @@
+option(WITH_KDE "Build module to read proxy settings from KDE4/KF5" ON)
+
+# There are no additional detections; kreadconfig (from KDE4) and kreadconfig5
+# (from KF5) are only needed at runtime.

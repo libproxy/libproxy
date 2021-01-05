@@ -114,7 +114,7 @@ static string capitalize(string str) {
 
 class macosx_config_extension : public config_extension {
 public:
-	vector<url> get_config(const url &the_url) throw (runtime_error) {
+	vector<url> get_config(const url &the_url) {
 		string tmp;
 		CFDictionaryRef proxies = SCDynamicStoreCopyProxies(NULL);
 		vector<url> response;

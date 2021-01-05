@@ -86,9 +86,6 @@ int main(int argc, char * argv[]) {
       result = curl_easy_perform(curl);
     }
 
-    /* Free the proxy */
-    free(proxies[i]);
-
     /* If we reached the end of the proxies array and still did not
     succeed to conntect, let's inform the user that we failed. */
     if (proxies[i+1] == NULL && result != 0)
@@ -96,8 +93,8 @@ int main(int argc, char * argv[]) {
 
   }
 
-  /* Free the (now empty) proxy array */
-  free(proxies);
+  /* Free the proxy array */
+  px_proxy_factory_free_proxies(proxies);
 
   /* Free the curl and libproxy handles */
   px_proxy_factory_free(pf);

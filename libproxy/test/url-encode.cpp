@@ -8,7 +8,7 @@
 using namespace libproxy;
 
 #define test(cond,rtv) _test(#cond, (cond), (rtv))
-void _test (string exp, bool condition, bool &rtv)
+void _test (const string &exp, bool condition, bool &rtv)
 {
 	if (!condition) {
 		cerr << "Failed: " << exp << endl;

@@ -26,7 +26,7 @@
 #define PX_PACRUNNER_MODULE_EZ(name, symb, smod) \
 	class name ## _pacrunner_extension : public pacrunner_extension { \
 	protected: \
-		virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc) { \
+		virtual pacrunner* create(string pac, const url& pacurl) { \
 			return new name ## _pacrunner(pac, pacurl); \
 		} \
 	}; \
@@ -39,15 +39,15 @@ using namespace libmodman;
 // PACRunner module
 class DLL_PUBLIC pacrunner {
 public:
-	pacrunner(string pac, const url& pacurl);
+	pacrunner(const string &pac, const url& pacurl);
 	virtual ~pacrunner() {};
-	virtual string run(const url& url) throw (bad_alloc)=0;
+	virtual string run(const url& url) =0;
 };
 
 class DLL_PUBLIC pacrunner_extension : public extension<pacrunner_extension, true> {
 public:
 	// Virtual methods
-	virtual pacrunner* get(string pac, const url& pacurl) throw (bad_alloc);
+	virtual pacrunner* get(const string &pac, const url& pacurl);
 	virtual ~pacrunner_extension();
 
 	// Final methods
@@ -55,11 +55,7 @@ public:
 
 protected:
 	// Abstract methods
-	virtual pacrunner* create(string pac, const url& pacurl) throw (bad_alloc)=0;
-
-private:
-	pacrunner* pr;
-	string     last;
+	virtual pacrunner* create(string pac, const url& pacurl) =0;
 };
 
 }

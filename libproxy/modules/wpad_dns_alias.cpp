@@ -39,6 +39,7 @@ public:
 		lastpac = *pac = lasturl->get_pac();
 		if (!lastpac) {
 		    delete lasturl;
+		    lasturl = NULL;
 		    return NULL;
 		}
 

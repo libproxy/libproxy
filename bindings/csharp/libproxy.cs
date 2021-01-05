@@ -33,6 +33,10 @@ namespace libproxy {
 			IntPtr px_proxy_factory_get_proxies(HandleRef self, string url);
 		
 		[DllImport ("proxy")]
+		private static extern 
+			void px_proxy_factory_free_proxies(IntPtr proxies);
+		
+		[DllImport ("proxy")]
 		private static extern
 			void px_proxy_factory_free(HandleRef self);
 
@@ -61,11 +65,9 @@ namespace libproxy {
 			{
 				IntPtr p = Marshal.ReadIntPtr(array, i * IntPtr.Size);
 				proxies[i] = Marshal.PtrToStringAnsi(p);
-				Marshal.FreeCoTaskMem(p); // Free the string
 			}
-			
-			// Free the array itself
-			Marshal.FreeCoTaskMem(array);
+
+			px_proxy_factory_free_proxies(array);
 			
 			return proxies;
 		}

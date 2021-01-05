@@ -10,6 +10,19 @@ if(PERL_FOUND AND PERLLIBS_FOUND)
     # Some distributions install perl packages in vendor when shipped with the distro.
     # Let's make their lifes easier by offering an install flag for this usecase.
     option(PERL_VENDORINSTALL "Install Perl package in vendor directory" OFF)
+
+    # Offer an option to explicitly link against libperl.so, with a default
+    # that depends on the value of the PERL_VENDORINSTALL option: if the
+    # binding is installed into a version-independent directory such as
+    # vendor_perl the chances of it needing a rebuild on each Perl update are
+    # lower. Note: not linking against libperl.so does not work if
+    # --no-undefined is passed to the linker.
+    if(PERL_VENDORINSTALL)
+        option(PERL_LINK_LIBPERL "Explicitly link against libperl.so" OFF)
+    else()
+        option(PERL_LINK_LIBPERL "Explicitly link against libperl.so" ON)
+    endif()
+
     if(PERL_VENDORINSTALL)
       set (PX_PERL_ARCH ${PERL_VENDORARCH})
       set (PX_PERL_LIB ${PERL_VENDORLIB})

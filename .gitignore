@@ -16,3 +16,8 @@ Temporary
 /libproxy/test/url-test
 /libproxy/test/url-encode
 /utils/proxy
+
+# ignore Visual Studio 2019 Files
+/.vs
+/out
+CMakeSettings.json

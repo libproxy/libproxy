@@ -42,7 +42,7 @@ using namespace libmodman;
 #define pdlmtype HMODULE
 #define pdlopenl(filename) LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define pdlclose(module) FreeLibrary((pdlmtype) module)
-static void* pdlsym(pdlmtype mod, string sym) {
+static void* pdlsym(pdlmtype mod, const string &sym) {
 	return (void *) GetProcAddress(mod, sym.c_str());
 }
 
@@ -87,7 +87,7 @@ static string prep_type_name(string name) {
 #define pdlopenl(filename) dlopen(filename, RTLD_LAZY | RTLD_LOCAL)
 #define pdlclose(module) dlclose((pdlmtype) module)
 #define pdlreopen(filename, module) module
-static void* pdlsym(pdlmtype mod, string sym) {
+static void* pdlsym(pdlmtype mod, const string &sym) {
 	return dlsym(mod, sym.c_str());
 }
 
@@ -236,7 +236,7 @@ bool module_manager::load_builtin(mm_module *mod) {
 	return status == _LOAD_SUCC;
 }
 
-bool module_manager::load_file(string filename, bool symbreq) {
+bool module_manager::load_file(const string &filename, bool symbreq) {
 	const char* debug = getenv("_MM_DEBUG");
 
 	// Stat the file to make sure it is a file
@@ -290,7 +290,7 @@ bool module_manager::load_file(string filename, bool symbreq) {
 	return true;
 }
 
-bool module_manager::load_dir(string dirname, bool symbreq) {
+bool module_manager::load_dir(const string &dirname, bool symbreq) {
 	vector<string> files;
 
 #ifdef WIN32
