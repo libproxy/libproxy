@@ -45,13 +45,13 @@ private:
 proxy_factory::proxy_factory() {
 
   this->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
-                                         G_DBUS_PROXY_FLAGS_NONE,
-                                         NULL, /* GDBusInterfaceInfo */
-                                         "org.libproxy.proxy",
-                                         "/org/libproxy/proxy",
-                                         "org.libproxy.proxy",
-                                         NULL, /* GCancellable */
-                                         this->error);
+                                               G_DBUS_PROXY_FLAGS_NONE,
+                                               NULL, /* GDBusInterfaceInfo */
+                                               "org.libproxy.proxy",
+                                               "/org/libproxy/proxy",
+                                               "org.libproxy.proxy",
+                                               NULL, /* GCancellable */
+                                               this->error);
 }
 
 proxy_factory::~proxy_factory() {
@@ -60,32 +60,29 @@ proxy_factory::~proxy_factory() {
 
 
 vector<string> proxy_factory::get_proxies(const string &realurl) {
+
 	vector<string>             response;
+	GVariant* result;
+	result = g_dbus_proxy_call_sync (proxy,
+					 "query",
+					 g_variant_new("(s)", realurl.c_str()),
+					 G_DBUS_CALL_FLAGS_NONE,
+					 -1,
+					 NULL,
+					 this->error);
 
+	GVariantIter *iter;
+	gchar *str;
 
-GVariant* result;
+	g_variant_get (result, "(as)", &iter);
+	while (g_variant_iter_loop (iter, "s", &str))
+		response.push_back(str);
+	g_variant_iter_free (iter);
 
-result = g_dbus_proxy_call_sync (proxy,
-                        "query",
-                        g_variant_new("(s)", realurl.c_str()),
-                        G_DBUS_CALL_FLAGS_NONE,
-                        -1,
-                        NULL,
-                        this->error);
-
-
-  GVariantIter *iter;
-  gchar *str;
-
-  g_variant_get (result, "(as)", &iter);
-  while (g_variant_iter_loop (iter, "s", &str))
-    response.push_back(str);
-  g_variant_iter_free (iter);
-
-do_return:
-	if (response.size() == 0)
-		response.push_back("direct://");
-	return response;
+	do_return:
+		if (response.size() == 0)
+			response.push_back("direct://");
+		return response;
 }
 
 struct pxProxyFactory_ {
