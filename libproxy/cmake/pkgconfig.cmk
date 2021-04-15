@@ -1,4 +1,4 @@
-if(NOT WIN32 AND NOT APPLE)
+if(NOT WIN32 AND NOT (APPLE AND WITH_APPLE_WEBKIT))
   find_package(PkgConfig)
 
   # Define our magical px_check_modules function

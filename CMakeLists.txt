@@ -31,6 +31,9 @@ include(cmake/ctest.cmk)
 include(cmake/paths.cmk)
 
 option(WITH_WEBKIT3 "Build against gtk-3 version of webkitgtk" OFF)
+if(APPLE)
+    option(WITH_APPLE_WEBKIT "Build against Apple's WebKit" ON)
+endif()
 
 ### Subdirectories
 
