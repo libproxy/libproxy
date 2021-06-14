@@ -18,6 +18,7 @@ include(cmake/modules/network_networkmanager.cmk)
 include(cmake/modules/pacrunner_mozjs.cmk)
 include(cmake/modules/pacrunner_natus.cmk)
 include(cmake/modules/pacrunner_webkit.cmk)
+include(cmake/modules/pacrunner_duktape.cmk)
 
 # Build the pacrunner into libproxy unless we are building for multiple engines
 set(BIPR 1 CACHE BOOL "Build internal pacrunner? (Always false when building more than one PR")
@@ -47,5 +48,6 @@ px_module(network_networkmanager   "${NM_BUILD}"     0       ${NM_LIBRARIES}${NM
 px_module(pacrunner_mozjs          "${MOZJS_FOUND}"  ${BIPR} ${MOZJS_LIBRARIES})
 px_module(pacrunner_natus          "${NATUS_FOUND}"  ${BIPR} ${NATUS_LIBRARIES})
 px_module(pacrunner_webkit         "${WEBKIT_FOUND}" ${BIPR} ${WEBKIT_LIBRARIES})
+px_module(pacrunner_duktape        "${DUKTAPE_FOUND}" ${BIPR} ${DUKTAPE_LIBRARIES})
 px_module(wpad_dns_alias           1                 1)
 message("")

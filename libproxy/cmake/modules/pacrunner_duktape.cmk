@@ -1,0 +1,21 @@
+if(WIN32)
+  set(DUKTAPE_FOUND 0)
+else()
+  set(DUKTAPE_INCLUDE_DIR "DUKTAPE_INCLUDE_DIR-NOTFOUND" CACHE PATH "Path to Duktape headers")
+  set(DUKTAPE_LIBRARIES   "DUKTAPE_LIBRARIES-NOTFOUND"   CACHE FILEPATH "Path to Duktape libraries")
+
+  option(WITH_DUKTAPE "Search for Duktape package" ON)
+
+  if(WITH_DUKTAPE)
+    px_check_modules(DUKTAPE "duktape")
+
+    if(NOT DUKTAPE_FOUND AND DUKTAPE_INCLUDE_DIR AND DUKTAPE_LIBRARIES)
+      message("Duktape headers: " ${DUKTAPE_INCLUDE_DIR})
+      message("Duktape libraries: " ${DUKTAPE_LIBRARIES})
+      set(DUKTAPE_FOUND 1)
+      include_directories(${DUKTAPE_INCLUDE_DIR})
+      link_directories(${DUKTAPE_LIBRARIES})
+      link_libraries(duktape)
+    endif()
+  endif()
+endif()
