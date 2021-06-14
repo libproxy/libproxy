@@ -22,7 +22,9 @@ include(cmake/modules/pacrunner_duktape.cmk)
 
 # Build the pacrunner into libproxy unless we are building for multiple engines
 set(BIPR 1 CACHE BOOL "Build internal pacrunner? (Always false when building more than one PR")
-if((MOZJS_FOUND AND WEBKIT_FOUND) OR (MOZJS_FOUND AND NATUS_FOUND) OR (WEBKIT_FOUND AND NATUS_FOUND))
+
+math(EXPR NUM_PACRUNNER "${MOZJS_FOUND}+${NATUS_FOUND}+${WEBKIT_FOUND}+${DUKTAPE_FOUND}")
+if(NUM_PACRUNNER GREATER 1)
   set(BIPR 0)
 endif()
 
@@ -50,4 +52,5 @@ px_module(pacrunner_natus          "${NATUS_FOUND}"  ${BIPR} ${NATUS_LIBRARIES})
 px_module(pacrunner_webkit         "${WEBKIT_FOUND}" ${BIPR} ${WEBKIT_LIBRARIES})
 px_module(pacrunner_duktape        "${DUKTAPE_FOUND}" ${BIPR} ${DUKTAPE_LIBRARIES})
 px_module(wpad_dns_alias           1                 1)
+message("${NUM_PACRUNNER} pacrunner(s) are enabled")
 message("")
