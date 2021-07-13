@@ -6,7 +6,7 @@ if(PYTHON2INTERP_FOUND)
   if(NOT PYTHON2_SITEPKG_DIR)
     execute_process(COMMAND
 		    ${PYTHON2_EXECUTABLE}
-		    -c "import sys; print (sys.version[0:3])"
+		    -c "import sys; print('{}.{}'.format(*sys.version_info[0:2]))"
 		    OUTPUT_VARIABLE PYTHON2_VERSION
 		    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
