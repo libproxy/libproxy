@@ -56,7 +56,9 @@ static Value dnsResolve(Value& ths, Value& fnc, vector<Value>& arg) {
 
 static Value myIpAddress(Value& ths, Value& fnc, vector<Value>& arg) {
 	char hostname[1024];
-	if (!gethostname(hostname, 1023)) {
+	hostname[sizeof(hostname) - 1] = '\0';
+
+	if (!gethostname(hostname, sizeof(hostname) - 1)) {
 		vector<Value> dnsargs;
 		dnsargs.push_back(ths.newString(hostname));
 		return dnsResolve(ths, fnc, dnsargs);

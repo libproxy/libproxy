@@ -120,6 +120,7 @@ WITH_WEBKIT:            Default to ON. Enable Webkit Java Script engine.
 
 WITH_WEBKIT3:           Default to OFF: Enable Webkit GTK3 support.
 
+WITH_DUKTAPE:           Defaults to ON. Enable Duktape JavaScript engine.
 
 Bindings Path:
 ==============

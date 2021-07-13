@@ -93,6 +93,7 @@ static bool dnsResolve(JSContext *cx, unsigned argc, JS::Value *vp) {
 static bool myIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
 	JS::CallArgs argv=JS::CallArgsFromVp(argc,vp);
 	char *hostname = (char *) JS_malloc(cx, 1024);
+	hostname[1023] = '\0';
 
 	if (!gethostname(hostname, 1023)) {
 		JSString *myhost = JS_NewStringCopyN(cx, hostname, strlen(hostname));

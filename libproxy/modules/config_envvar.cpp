@@ -28,6 +28,12 @@ public:
 		const char *proxy = NULL;
                 vector<url> response;
 
+		// If _PX_DEBUG_PACURL is set, use it as the PAC URL.
+		if (proxy = getenv("_PX_DEBUG_PACURL")) {
+			response.push_back(url(string("pac+") + proxy));
+			return response;
+		}
+
 		// If the URL is an ftp url, try to read the ftp proxy
 		if (dst.get_scheme() == "ftp") {
 			if (!(proxy = getenv("ftp_proxy")))
