@@ -86,7 +86,9 @@ static JSValueRef dnsResolve(JSContextRef ctx, JSObjectRef /*func*/, JSObjectRef
 static JSValueRef myIpAddress(JSContextRef ctx, JSObjectRef func, JSObjectRef self, size_t /*argc*/, const JSValueRef[] /*argv*/, JSValueRef* /*exception*/)
 {
 	char hostname[1024];
-	if (!gethostname(hostname, 1023)) {
+	hostname[sizeof(hostname) - 1] = '\0';
+
+	if (!gethostname(hostname, sizeof(hostname) - 1)) {
 		JSStringRef str = JSStringCreateWithUTF8CString(hostname);
 		JSValueRef  val = JSValueMakeString(ctx, str);
 		JSStringRelease(str);
