@@ -457,7 +457,7 @@ char* url::get_pac() {
 
 	// Build the request string
 	request  = "GET " + (m_path.size() > 0 ? m_path : "/") + m_query + " HTTP/1.1\r\n";
-	request += "Host: " + m_host + "\r\n";
+	request += "Host: " + m_host + (m_port != 80 ? ":" + std::to_string(m_port) : "") + "\r\n";
 	request += "Accept: " + string(PAC_MIME_TYPE) + "\r\n";
 	request += "Connection: close\r\n";
 	request += "\r\n";
