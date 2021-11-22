@@ -46,7 +46,7 @@ public:
             command_output("kreadconfig5 --key nonexistant");
 
             try {
-                parse_dir_list(command_output("qtpaths --paths GenericConfigLocation"));
+                parse_dir_list(command_output("kf5-config --path config"));
             }
             catch(...) {}
 
