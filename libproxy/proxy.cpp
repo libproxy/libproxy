@@ -117,13 +117,13 @@ static void format_pac_response(string response, vector<string> &retval)
 	// Insert our url value
 	if (istringcmp(method, "proxy") && url::is_valid("http://" + server))
 		retval.insert(retval.begin(), string("http://") + server);
-	else if (istringcmp(method, "socks") && url::is_valid("http://" + server))
+	else if (istringcmp(method, "socks") && url::is_valid("socks://" + server))
 		retval.insert(retval.begin(), string("socks://") + server);
-	else if (istringcmp(method, "socks4") && url::is_valid("http://" + server))
+	else if (istringcmp(method, "socks4") && url::is_valid("socks4://" + server))
 		retval.insert(retval.begin(), string("socks4://") + server);
-	else if (istringcmp(method, "socks4a") && url::is_valid("http://" + server))
+	else if (istringcmp(method, "socks4a") && url::is_valid("socks4a://" + server))
 		retval.insert(retval.begin(), string("socks4a://") + server);
-	else if (istringcmp(method, "socks5") && url::is_valid("http://" + server))
+	else if (istringcmp(method, "socks5") && url::is_valid("socks5://" + server))
 		retval.insert(retval.begin(), string("socks5://") + server);
 	else if (istringcmp(method, "direct"))
 		retval.insert(retval.begin(), string("direct://"));
