@@ -299,6 +299,8 @@ static bool gnome_config_extension_test() {
 			|| (getenv("DESKTOP_SESSION")
 				&& string(getenv("DESKTOP_SESSION")) == "gnome")
 			|| (getenv("DESKTOP_SESSION")
+				&& string(getenv("DESKTOP_SESSION")) == "gnome-wayland")
+			|| (getenv("DESKTOP_SESSION")
 				&& string(getenv("DESKTOP_SESSION")) == "mate"));
 }
 
