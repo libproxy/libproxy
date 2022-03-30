@@ -1,7 +1,7 @@
 /*******************************************************************************
  * libproxy - A library for proxy configuration
  * Copyright (C) 2006 Nathaniel McCallum <nathaniel@natemccallum.com>
- * Copyright (C) 2016 Fabian Vogt <fvogt@suse.com>
+ * Copyright (C) 2021 Fabian Vogt <fvogt@suse.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +19,7 @@
  ******************************************************************************/
 
 #include <sys/stat.h>
+#include <pwd.h>
 
 #include <algorithm>
 #include <cstdlib>
@@ -46,7 +47,7 @@ public:
             command_output("kreadconfig5 --key nonexistant");
 
             try {
-                parse_dir_list(command_output("kf5-config --path config"));
+                use_xdg_config_dirs();
             }
             catch(...) {}
 
@@ -190,7 +191,7 @@ private:
         time_t mtime; // 0 means either not refreshed or doesn't exist
     };
 
-    // Parses output of qtpaths/kde4-config to fill config_locs
+    // Parses colon-delimited lists of paths to fill config_locs
     void parse_dir_list(const string &dirs) {
         string config_path;
         stringstream config_paths_stream(dirs);
@@ -202,6 +203,34 @@ private:
             config_loc.mtime = 0;
             config_locs.push_back(config_loc);
         }
+    }
+
+    // Add XDG configuration locations to the configuration paths
+    void use_xdg_config_dirs() {
+        // Return environment value as std::string if set, otherwise def
+        auto getenv_default = [](const char *name, const std::string &def) {
+            const char *ret = getenv(name);
+            return std::string(ret ? ret : def);
+        };
+
+        std::string homedir = getenv_default("HOME", "");
+        if (homedir.empty()) {
+            size_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+            if (bufsize == -1)
+                bufsize = 16384;
+
+            std::vector<char> buf(bufsize);
+            struct passwd pwd, *result;
+            getpwuid_r(getuid(), &pwd, buf.data(), buf.size(), &result);
+            if (result)
+                homedir = pwd.pw_dir;
+        }
+
+        if (homedir.empty())
+            throw std::runtime_error("Failed to get home directory");
+
+        parse_dir_list(getenv_default("XDG_CONFIG_HOME", homedir + "/.config"));
+        parse_dir_list(getenv_default("XDG_CONFIG_DIRS", "/etc/xdg"));
     }
 
     // If any of the locations in config_locs changed (different mtime),
