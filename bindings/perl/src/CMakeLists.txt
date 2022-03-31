@@ -9,7 +9,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Libproxy.c
 
 set(Libproxy_LIB_SRCS Libproxy.c)
 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/perl/blib/arch/auto/Net)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/perl/auto/Net/Libproxy)
 add_library(PLlibproxy SHARED ${Libproxy_LIB_SRCS})
 
 set(PLlibproxy_LIB_DEPENDENCIES libproxy pthread)
