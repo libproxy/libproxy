@@ -1,6 +1,6 @@
 ### Project info
 project(libproxy)
-set_project_version(0 4 17)
+set_project_version(0 4 18)
 
 ### Add a global compilation stuff
 if (WIN32)
