@@ -56,7 +56,7 @@
 
 unset(_Python3_NAMES)
 
-set(_Python3_VERSIONS 3.10 3.9 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0)
+set(_Python3_VERSIONS 3.11 3.10 3.9 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0)
 
 if(Python3Interp_FIND_VERSION)
     if(Python3Interp_FIND_VERSION_COUNT GREATER 1)
