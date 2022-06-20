@@ -1,3 +1,13 @@
+New in version 0.4.18:
+==============================
+* build: Allow configuration of sysconfig module
+* config_envvar: Add environment variable for pacrunner debugging
+* build: disable mozjs by default
+* python: Support Python 3.10 and above
+* Add Duktape pacrunner module
+* config_kde: Compute list of config file locations ourselves
+* cpmfog_gnome3: Add gnome-wayland to permitted DESKTOP_SESSION
+
 New in version 0.4.17:
 ==============================
 * python bindings: fix "TypeError: _argtypes_ must be a sequence of types" (#125)
