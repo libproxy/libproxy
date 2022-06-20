@@ -15,6 +15,37 @@ void XS_pack_charPtrPtr( SV * arg, char ** array, int count) {
   SvSetSV( arg, newRV((SV*)avref));
 }
 
+/* http://www.perlmonks.org/?node_id=680842 */
+static char **
+XS_unpack_charPtrPtr (SV *arg) {
+  char **ret;
+  AV *av;
+  I32 i;
+
+  if (!arg || !SvOK (arg) || !SvROK (arg) || SvTYPE (SvRV (arg)) != SVt_PVAV)
+    croak ("array reference expected");
+
+  av = (AV *)SvRV (arg);
+  ret = malloc ((av_len (av) + 1 + 1) * sizeof (char *));
+  if (!ret)
+    croak ("malloc failed");
+
+  for (i = 0; i <= av_len (av); i++) {
+    SV **elem = av_fetch (av, i, 0);
+
+    if (!elem || !*elem) {
+      free (ret);
+      croak ("missing element in list");
+    }
+
+    ret[i] = SvPV_nolen (*elem);
+  }
+
+  ret[i] = NULL;
+
+  return ret;
+}
+
 
 MODULE = Net::Libproxy PACKAGE = Net::Libproxy
 
