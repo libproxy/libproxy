@@ -91,7 +91,7 @@ PERL_LINK_LIBPERL:      Default to ON if PERL_VENDORINSTALL is OFF, default to
 
 WITH_DOTNET:            Default to OFF. Enable Mono .NET bindings.
 
-WITH_GNOME:             Default to ON. Enable Gnome2/GConf bindings.
+WITH_GNOME2:            Default to OFF. Enable Gnome2/GConf bindings.
 
 WITH_GNOME3:            Default to ON. Build the Gnome3/GSettings bindings.
                         instead of Gnome2/GConf based one.
