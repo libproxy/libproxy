@@ -33,6 +33,13 @@ if(PERL_FOUND AND PERLLIBS_FOUND)
         OUTPUT_VARIABLE PX_PERL_ARCH)
       set (PX_PERL_LIB ${PERL_SITELIB})
     endif()
+
+    # PERL_EXTRA_C_FLAGS is not complete, we need full flags (including e.g.
+    # _FILE_OFFSET_BITS=64) for compatibility.
+    EXECUTE_PROCESS(COMMAND ${PERL_EXECUTABLE} -MConfig -e "print \$Config{ccflags}"
+      OUTPUT_VARIABLE PX_PERL_CCFLAGS)
+    # Convert it to a "list" suitable for target_compile_options.
+    string(REPLACE " " ";" PX_PERL_CCFLAGS ${PX_PERL_CCFLAGS})
   endif()
 
   add_subdirectory(lib)

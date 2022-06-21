@@ -18,6 +18,7 @@ if(PERL_LINK_LIBPERL)
 endif()
 
 target_link_libraries(PLlibproxy ${PLlibproxy_LIB_DEPENDENCIES})
+target_compile_options(PLlibproxy PRIVATE ${PX_PERL_CCFLAGS})
 set_target_properties(PLlibproxy PROPERTIES OUTPUT_NAME "Libproxy")
 set_target_properties(PLlibproxy PROPERTIES PREFIX "")
 
