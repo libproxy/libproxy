@@ -295,13 +295,14 @@ static base_extension** gnome_config_extension_init() {
 }
 
 static bool gnome_config_extension_test() {
-	return (getenv("GNOME_DESKTOP_SESSION_ID")
-			|| (getenv("DESKTOP_SESSION")
-				&& string(getenv("DESKTOP_SESSION")) == "gnome")
-			|| (getenv("DESKTOP_SESSION")
-				&& string(getenv("DESKTOP_SESSION")) == "gnome-wayland")
-			|| (getenv("DESKTOP_SESSION")
-				&& string(getenv("DESKTOP_SESSION")) == "mate"));
+	const char *desktops;
+
+	desktops = getenv ("XDG_CURRENT_DESKTOP");
+	if (!desktops)
+		return false;
+
+	/* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
+	return strstr (desktops, "GNOME") != NULL;
 }
 
 MM_MODULE_INIT(gnome_config_extension,
