@@ -19,7 +19,13 @@
  ******************************************************************************/
 
 #include "../extension_pacrunner.hpp"
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#else
 #include <unistd.h> // gethostname
+#endif
 using namespace libproxy;
 
 #include <duktape.h>
