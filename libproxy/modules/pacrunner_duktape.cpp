@@ -115,7 +115,7 @@ public:
 	~duktape_pacrunner() {
 		duk_destroy_heap(this->ctx);
 #ifdef _WIN32
-    	WSACleanup();
+		WSACleanup();
 #endif
 	}
 

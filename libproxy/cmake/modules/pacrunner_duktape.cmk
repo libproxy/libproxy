@@ -1,7 +1,7 @@
 option(WITH_DUKTAPE "Search for Duktape package" ON)
 
 if(WIN32)
-  set(DUKTAPE_FOUND 0)  
+  set(DUKTAPE_FOUND 0)
   if(WITH_DUKTAPE)
     find_package(duktape QUIET)
     if(DUKTAPE_FOUND)
@@ -9,7 +9,7 @@ if(WIN32)
       link_libraries(${DUKTAPE_LIBRARY})
       set(DUKTAPE_FOUND 1) # find_package sets DUKTAPE_FOUND to True and not 0
     endif()
-  endif()  
+  endif()
 else()
   set(DUKTAPE_INCLUDE_DIR "DUKTAPE_INCLUDE_DIR-NOTFOUND" CACHE PATH "Path to Duktape headers")
   set(DUKTAPE_LIBRARIES   "DUKTAPE_LIBRARIES-NOTFOUND"   CACHE FILEPATH "Path to Duktape libraries")
