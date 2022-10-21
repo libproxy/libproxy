@@ -81,6 +81,11 @@ static duk_ret_t myIpAddress(duk_context *ctx) {
 class duktape_pacrunner : public pacrunner {
 public:
 	duktape_pacrunner(string pac, const url& pacurl) : pacrunner(pac, pacurl) {
+#ifdef _WIN32
+		// On windows, we need to initialize the winsock dll first.
+		WSADATA WsaData;
+		WSAStartup(MAKEWORD(2, 0), &WsaData);
+#endif
 		this->ctx = duk_create_heap_default();
 		if (!this->ctx) goto error;
 		duk_push_c_function(this->ctx, dnsResolve, 1);
@@ -109,6 +114,9 @@ public:
 
 	~duktape_pacrunner() {
 		duk_destroy_heap(this->ctx);
+#ifdef _WIN32
+    	WSACleanup();
+#endif
 	}
 
 	string run(const url& url_) override {
