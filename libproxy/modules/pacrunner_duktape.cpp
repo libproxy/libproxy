@@ -19,13 +19,10 @@
  ******************************************************************************/
 
 #include "../extension_pacrunner.hpp"
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
-#else
+#ifndef WIN32
 #include <unistd.h> // gethostname
 #endif
+
 using namespace libproxy;
 
 #include <duktape.h>
@@ -81,7 +78,7 @@ static duk_ret_t myIpAddress(duk_context *ctx) {
 class duktape_pacrunner : public pacrunner {
 public:
 	duktape_pacrunner(string pac, const url& pacurl) : pacrunner(pac, pacurl) {
-#ifdef _WIN32
+#ifdef WIN32
 		// On windows, we need to initialize the winsock dll first.
 		WSADATA WsaData;
 		WSAStartup(MAKEWORD(2, 0), &WsaData);
@@ -114,7 +111,7 @@ public:
 
 	~duktape_pacrunner() {
 		duk_destroy_heap(this->ctx);
-#ifdef _WIN32
+#ifdef WIN32
 		WSACleanup();
 #endif
 	}
