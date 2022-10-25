@@ -1,5 +1,5 @@
 ### Required
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.15)
 
 project(libproxy)
 
@@ -31,6 +31,14 @@ include(cmake/ctest.cmk)
 include(cmake/paths.cmk)
 
 option(WITH_WEBKIT3 "Build against gtk-3 version of webkitgtk" OFF)
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+
+if(WIN32)
+  option(MSVC_STATIC "Use statically-linked runtime library" ON)
+  if(MSVC_STATIC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  endif()
+endif()
 
 ### Subdirectories
 

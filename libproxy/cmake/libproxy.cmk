@@ -1,4 +1,11 @@
-add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+if(BUILD_SHARED_LIBS)
+  add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+else ()
+  add_library(libproxy STATIC extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+endif()
+
+message(INFO ${LIBPROXY_LIBRARIES})
+
 if(WIN32)
   target_link_libraries(libproxy modman;ws2_32;${LIBPROXY_LIBRARIES})
 else()
