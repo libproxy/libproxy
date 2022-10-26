@@ -8,7 +8,6 @@ if(WIN32)
       include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
       link_libraries(${DUKTAPE_LIBRARY})
       set(DUKTAPE_FOUND 1) # find_package sets DUKTAPE_FOUND to True and not 0
-      set(LIBPROXY_LIBRARIES ${LIBPROXY_LIBRARIES} ${DUKTAPE_LIBRARY} PARENT_SCOPE)
     endif()
   endif()
 else()
