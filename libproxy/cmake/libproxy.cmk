@@ -1,7 +1,10 @@
+set(LIBPROXY_SOURCES ${LIBPROXY_SOURCES} extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp)
+
+
 if(BUILD_SHARED_LIBS)
-  add_library(libproxy SHARED extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+  add_library(libproxy SHARED ${LIBPROXY_SOURCES})
 else ()
-  add_library(libproxy STATIC extension_config.cpp extension_pacrunner.cpp extension_wpad.cpp proxy.cpp url.cpp ${LIBPROXY_SOURCES})
+  add_library(libproxy STATIC ${LIBPROXY_SOURCES})
 endif()
 
 if(WIN32)
