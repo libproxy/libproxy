@@ -1,0 +1,62 @@
+option(
+  'docs',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to generate the API reference for libproxy'
+)
+
+option(
+  'tests',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to compile test cases for libproxy'
+)
+
+option(
+  'dbus',
+  type: 'boolean',
+  value: false,
+  description: 'Whether to build dbus service'
+)
+
+option(
+  'config-env',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for environment configuration'
+)
+
+option(
+  'config-gnome',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for GNOME configuration'
+)
+
+option(
+  'config-windows',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for Windows configuration'
+)
+
+option(
+  'config-sysconfig',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for sysconfig configuration'
+)
+
+option(
+  'config-osx',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for OS X configuration'
+)
+
+option(
+  'pacrunner-duktape',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for PAC Runner Duktape'
+)

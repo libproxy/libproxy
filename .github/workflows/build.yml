@@ -1,0 +1,109 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Dependencies
+      run: |
+        sudo apt install \
+          libglib2.0-dev \
+          libgirepository1.0-dev \
+          duktape-dev \
+          libsoup-3.0-dev \
+          meson \
+          gcovr \
+          gi-docgen \
+          libpeas-dev \
+          gsettings-desktop-schemas-dev
+    - name: Build setup
+      run: meson setup build -Db_coverage=true
+    - name: Build
+      run: ninja -C build
+    - name: Tests and Coverage
+      run: |
+        ninja test -C build
+        ninja coverage -C build
+
+        # ninja coverage-html -C build
+        # mkdir build/docs/px-0/coverage/
+        # cp -r build/meson-logs/coveragereport/* build/docs/px-0/coverage/
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: ./build/docs/px-0/
+    - name: CodeCov
+      uses: codecov/codecov-action@v3
+
+  build-osx:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: |
+          3.10
+    - name: Setup
+      run: |
+        pip install meson ninja
+        brew install libsoup icu4c gobject-introspection duktape gcovr gi-docgen libpeas
+        echo 'PKG_CONFIG_PATH=/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/gi-docgen/lib/pkgconfig' >> $GITHUB_ENV
+    - name: Build and Test
+      run: |
+        meson setup build
+        ninja -C build
+        ninja -C build test
+
+  build-windows:
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            base-devel
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-ccache
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-gobject-introspection
+            mingw-w64-x86_64-python-gobject
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-glib2
+            mingw-w64-x86_64-duktape
+            mingw-w64-x86_64-gi-docgen
+            mingw-w64-x86_64-libsoup3
+            mingw-w64-x86_64-libpeas
+      - uses: actions/checkout@v3
+      - name: Build and Test
+       # Disable docs for the moment until msys2 gi-docgen update has landed
+        run: |
+          meson setup build -Ddocs=false -Dconfig-sysconfig=false
+          ninja -C build
+          ninja -C build test
+
+  # Deploy job
+  deploy:
+    # needs: [build-linux, build-osx, build-windows]
+    needs: build-linux
+
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

@@ -1,0 +1,124 @@
+project('libproxy', 'c',
+          version: '0.5.0',
+    meson_version: '>= 0.59.0',
+  default_options: [ 'warning_level=2', 'werror=false', 'c_std=gnu11', ],
+)
+
+cc = meson.get_compiler('c')
+
+root_dir = include_directories('.')
+
+px_prefix = get_option('prefix')
+px_libdir = join_paths(px_prefix, get_option('libdir'))
+px_plugins_dir = join_paths(px_libdir, meson.project_name().to_lower(), 'plugins')
+
+config_h = configuration_data()
+config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
+config_h.set_quoted('PX_PLUGINS_DIR', px_plugins_dir)
+configure_file(output: 'config.h', configuration: config_h)
+add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
+
+version_arr = meson.project_version().split('-')[0].split('.')
+libproxy_version_major = version_arr[0].to_int()
+libproxy_version_minor = version_arr[1].to_int()
+apiversion = libproxy_version_major.to_string()
+
+libproxy_prefix = get_option('prefix')
+datadir = get_option('datadir')
+
+project_c_args = []
+test_c_args = [
+  '-Wcast-align',
+  '-Wdeclaration-after-statement',
+  '-Werror=address',
+  '-Werror=array-bounds',
+  '-Werror=empty-body',
+  '-Werror=implicit',
+  '-Werror=implicit-function-declaration',
+  '-Werror=incompatible-pointer-types',
+  '-Werror=init-self',
+  '-Werror=int-conversion',
+  '-Werror=int-to-pointer-cast',
+  '-Werror=main',
+  '-Werror=misleading-indentation',
+  '-Werror=missing-braces',
+  '-Werror=missing-include-dirs',
+  '-Werror=nonnull',
+  '-Werror=overflow',
+  '-Werror=parenthesis',
+  '-Werror=pointer-arith',
+  '-Werror=pointer-to-int-cast',
+  '-Werror=redundant-decls',
+  '-Werror=return-type',
+  '-Werror=sequence-point',
+  '-Werror=shadow',
+  '-Werror=strict-prototypes',
+  '-Werror=trigraphs',
+  '-Werror=undef',
+  '-Werror=write-strings',
+  '-Wformat-nonliteral',
+  '-Wignored-qualifiers',
+  '-Wimplicit-function-declaration',
+  '-Wlogical-op',
+  '-Wmissing-declarations',
+  '-Wmissing-format-attribute',
+  '-Wmissing-include-dirs',
+  '-Wmissing-noreturn',
+  '-Wnested-externs',
+  '-Wno-cast-function-type',
+  '-Wno-dangling-pointer',
+  '-Wno-missing-field-initializers',
+  '-Wno-sign-compare',
+  '-Wno-unused-parameter',
+  '-Wold-style-definition',
+  '-Wpointer-arith',
+  '-Wredundant-decls',
+  '-Wstrict-prototypes',
+  '-Wswitch-default',
+  '-Wswitch-enum',
+  '-Wundef',
+  '-Wuninitialized',
+  '-Wunused',
+  '-fno-strict-aliasing',
+  ['-Werror=format-security', '-Werror=format=2'],
+]
+#if get_option('buildtype') != 'plain'
+#  test_c_args += '-fstack-protector-strong'
+#endif
+foreach arg: test_c_args
+  if cc.has_multi_arguments(arg)
+    project_c_args += arg
+  endif
+endforeach
+add_project_arguments(project_c_args, language: 'c')
+
+_platforms = []
+host_system = host_machine.system()
+if host_machine.system() == 'windows'
+    _platforms = ['windows']
+endif
+with_platform_windows = _platforms.contains('windows')
+
+module_suffix = []
+# Keep the autotools convention for shared module suffix because GModule
+# depends on it.
+if ['darwin', 'ios'].contains(host_system)
+  module_suffix = 'so'
+endif
+
+glib_dep = dependency('glib-2.0', version: '>= 2.71.3')
+gio_dep = dependency('gio-2.0', version: '>= 2.71.3')
+peas_dep = dependency('libpeas-1.0')
+soup_dep = dependency('libsoup-3.0')
+ws2_32_dep = cc.find_library('ws2_32', required : with_platform_windows)
+gsettings_desktop_schema = dependency('gsettings-desktop-schemas', required: get_option('config-gnome'))
+
+subdir('src')
+subdir('docs')
+
+summary({
+  'host cpu' : host_machine.cpu_family(),
+  'host endian' : host_machine.endian(),
+  'host system' : host_system,
+  'C Compiler' : cc.get_id(),
+}, section: 'Build environment')

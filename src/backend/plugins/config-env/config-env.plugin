@@ -1,0 +1,7 @@
+[Plugin]
+Authors=Jan-Michael Brummer <jan.brummer@tabos.org>
+Copyright=Copyright © 2023 Jan-Michael Brummer
+Description=Read proxy configuration from environment variables
+Module=config-env
+Name=Environment Variables
+Builtin=True

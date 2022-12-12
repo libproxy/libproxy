@@ -1,0 +1,60 @@
+#!/bin/bash
+
+SOURCE_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
+UNCRUSTIFY=$(command -v uncrustify)
+if [ -z "$UNCRUSTIFY" ];
+then
+    echo "Uncrustify is not installed on your system."
+    exit 1
+fi
+
+LINEUP_PARAMETERS="$SOURCE_ROOT/data/lineup-parameters"
+if [ ! -x "$LINEUP_PARAMETERS" ];
+then
+    echo "lineup-parameters script is missing"
+    exit 1
+fi
+
+# create a filename to store our generated patch
+prefix="libproxy-ccs"
+suffix="$(date +%C%y-%m-%d_%Hh%Mm%Ss)"
+patch="/tmp/$prefix-$suffix.patch"
+
+# clean up old patches
+rm -f /tmp/$prefix*.patch
+
+pushd $SOURCE_ROOT
+for DIR in src
+do
+   # Aligning prototypes is not working yet, so avoid headers
+   for FILE in $(find "$DIR" -name "*.c" ! -path "*/contrib/*")
+    do
+        "$UNCRUSTIFY" -q -c "data/uncrustify.cfg" -f "$FILE" -o "$FILE.uncrustify"
+        "$LINEUP_PARAMETERS" "$FILE.uncrustify" > "$FILE.temp" && mv "$FILE.temp" "$FILE.uncrustify"
+        diff -urN "$FILE" "$FILE.uncrustify" | \
+            sed -e "1s|--- |--- a/|" -e "2s|+++ |+++ b/|" >> "$patch"
+        rm "$FILE.uncrustify"
+   done
+done
+popd
+
+if [ ! -s "$patch" ] ; then
+  printf "** Commit is valid. \\o/\n"
+  rm -f "$patch"
+  exit 0
+fi
+
+printf "** Commit does not comply to the correct style :(\n\n"
+
+if hash colordiff 2> /dev/null; then
+  colordiff < $patch
+else
+  cat "$patch"
+fi
+
+printf "\n"
+printf "You can apply these changed with: git apply $patch\n"
+printf "\n"
+
+exit 1
