@@ -7,7 +7,7 @@ else(WIN32)
 endif(WIN32)
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_library(modman STATIC
+add_library(modman OBJECT
             module.hpp
             module_manager.hpp
             module_manager.cpp)
