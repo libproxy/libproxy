@@ -5,6 +5,7 @@
 name: Coverity
 
 on:
+  workflow_dispatch:
   schedule:
     # Run Coverity daily at midnight
     - cron:  '0 0 * * *'
