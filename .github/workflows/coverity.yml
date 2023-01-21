@@ -34,6 +34,7 @@ jobs:
           libsoup-3.0-dev \
           meson \
           gcovr \
+          gi-docgen \
           libpeas-dev \
           gsettings-desktop-schemas-dev
       - name: Build & upload the results
