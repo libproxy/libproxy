@@ -41,9 +41,6 @@ test_config_sysconfig (void)
 {
   int idx;
 
-  /* Overwrite libproxy configuration plugin */
-  g_setenv ("PX_CONFIG_PLUGIN", "config-sysconfig", TRUE);
-
   for (idx = 0; idx < G_N_ELEMENTS (config_sysconfig_test_set); idx++) {
     g_autoptr (PxManager) manager = NULL;
     g_autoptr (GError) error = NULL;
@@ -54,7 +51,7 @@ test_config_sysconfig (void)
 
     g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE);
 
-    manager = px_test_manager_new ();
+    manager = px_test_manager_new ("config-sysconfig");
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);

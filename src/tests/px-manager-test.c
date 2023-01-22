@@ -33,27 +33,12 @@ typedef struct {
 
 static void
 server_callback (SoupServer *server,
-#if SOUP_CHECK_VERSION(2, \
-                       99, \
-                       4)
                  SoupServerMessage *msg,
-#else
-                 SoupMessage       *msg,
-#endif
                  const char        *path,
                  GHashTable        *query,
-#if !SOUP_CHECK_VERSION(2, \
-                        99, \
-                        4)
-                 SoupClientContext *old,
-#endif
                  gpointer           data)
 {
-#if SOUP_CHECK_VERSION (2, 99, 4)
   soup_server_message_set_status (SOUP_SERVER_MESSAGE (msg), SOUP_STATUS_OK, NULL);
-#else
-  soup_message_set_status (SOUP_MESSAGE (msg), SOUP_STATUS_OK);
-#endif
 }
 
 static void
@@ -61,7 +46,7 @@ fixture_setup (Fixture       *fixture,
                gconstpointer  data)
 {
   fixture->loop = g_main_loop_new (NULL, FALSE);
-  fixture->manager = px_test_manager_new ();
+  fixture->manager = px_test_manager_new (NULL);
 }
 
 static void

@@ -31,6 +31,7 @@
 enum {
   PROP_0,
   PROP_PLUGINS_DIR,
+  PROP_CONFIG_PLUGIN,
   LAST_PROP
 };
 
@@ -52,6 +53,8 @@ struct _PxManager {
   GCancellable *cancellable;
   SoupSession *session;
 
+  char *config_plugin;
+
   gboolean wpad;
   GBytes *pac_data;
   char *pac_url;
@@ -66,7 +69,6 @@ px_manager_constructed (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
   const GList *list;
-  const char *requested_config_plugin = g_getenv ("PX_CONFIG_PLUGIN");
 
   self->session = soup_session_new ();
 
@@ -84,8 +86,8 @@ px_manager_constructed (GObject *object)
 
     if (!peas_plugin_info_is_loaded (info)) {
       /* In case user requested a specific module, just load that one */
-      if (requested_config_plugin) {
-        if (g_strcmp0 (peas_plugin_info_get_module_name (info), requested_config_plugin) == 0)
+      if (self->config_plugin) {
+        if (g_strcmp0 (peas_plugin_info_get_module_name (info), self->config_plugin) == 0)
           peas_engine_load_plugin (self->engine, info);
       } else {
         peas_engine_load_plugin (self->engine, info);
@@ -109,8 +111,11 @@ px_manager_dispose (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
 
-  g_cancellable_cancel (self->cancellable);
-  g_clear_object (&self->cancellable);
+  if (self->cancellable) {
+    g_cancellable_cancel (self->cancellable);
+    g_clear_object (&self->cancellable);
+  }
+
   g_clear_pointer (&self->plugins_dir, g_free);
   g_clear_object (&self->engine);
 
@@ -129,6 +134,9 @@ px_manager_set_property (GObject      *object,
     case PROP_PLUGINS_DIR:
       self->plugins_dir = g_strdup (g_value_get_string (value));
       break;
+    case PROP_CONFIG_PLUGIN:
+      self->config_plugin = g_strdup (g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -142,6 +150,8 @@ px_manager_get_property (GObject    *object,
 {
   switch (prop_id) {
     case PROP_PLUGINS_DIR:
+      break;
+    case PROP_CONFIG_PLUGIN:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -160,8 +170,14 @@ px_manager_class_init (PxManagerClass *klass)
   object_class->get_property = px_manager_get_property;
 
   obj_properties[PROP_PLUGINS_DIR] = g_param_spec_string ("plugins-dir",
-                                                          "Plugins Dir",
-                                                          "The directory where plugins are stored.",
+                                                          NULL,
+                                                          NULL,
+                                                          NULL,
+                                                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_CONFIG_PLUGIN] = g_param_spec_string ("config-plugin",
+                                                          NULL,
+                                                          NULL,
                                                           NULL,
                                                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 

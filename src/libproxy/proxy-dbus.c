@@ -88,7 +88,7 @@ px_proxy_factory_get_proxies (struct px_proxy_factory *self,
   g_variant_get (result, "(as)", &iter);
 
   while (g_variant_iter_loop (iter, "&s", &str)) {
-    list = g_list_prepend (list, g_strdup (str));
+    list = g_list_prepend (list, str);
   }
 
   len = g_list_length (list);
@@ -99,7 +99,7 @@ px_proxy_factory_get_proxies (struct px_proxy_factory *self,
     return retval;
   }
 
-  retval = g_malloc0 (sizeof (char *) * (len + 1));
+  retval = g_malloc0_n (len + 1, sizeof (char *));
   for (tmp = list, idx = 0; tmp && tmp->data; tmp = tmp->next, idx++) {
     char *value = tmp->data;
     retval[idx] = g_strdup (value);
