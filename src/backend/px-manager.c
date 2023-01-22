@@ -116,6 +116,7 @@ px_manager_dispose (GObject *object)
     g_clear_object (&self->cancellable);
   }
 
+  g_clear_pointer (&self->config_plugin, g_free);
   g_clear_pointer (&self->plugins_dir, g_free);
   g_clear_object (&self->engine);
 
