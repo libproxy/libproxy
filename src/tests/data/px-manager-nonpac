@@ -1,0 +1,5 @@
+PROXY_ENABLED="yes"
+HTTP_PROXY="http://127.0.0.1:1983"
+HTTPS_PROXY="http://127.0.0.1:1983"
+FTP_PROXY="http://127.0.0.1:1983"
+NO_PROXY="localhost, 127.0.0.1"

@@ -78,6 +78,7 @@ px_manager_constructed (GObject *object)
 
   self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, NULL);
   self->pacrunner_set = peas_extension_set_new (self->engine, PX_TYPE_PACRUNNER, NULL);
+
   list = peas_engine_get_plugin_list (self->engine);
   for (; list && list->data; list = list->next) {
     PeasPluginInfo *info = PEAS_PLUGIN_INFO (list->data);

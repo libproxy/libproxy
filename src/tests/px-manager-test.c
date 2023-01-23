@@ -39,6 +39,15 @@ server_callback (SoupServer *server,
                  gpointer           data)
 {
   soup_server_message_set_status (SOUP_SERVER_MESSAGE (msg), SOUP_STATUS_OK, NULL);
+
+  if (g_strcmp0 (path, "/test.pac") == 0) {
+    g_autofree char *pac = g_test_build_filename (G_TEST_DIST, "data", "px-manager-sample.pac", NULL);
+    g_autofree char *pac_data = NULL;
+    gsize len;
+
+    g_file_get_contents (pac, &pac_data, &len, NULL);
+    soup_server_message_set_response (msg, "text/plain", SOUP_MEMORY_COPY, pac_data, len);
+  }
 }
 
 static void
@@ -46,13 +55,20 @@ fixture_setup (Fixture       *fixture,
                gconstpointer  data)
 {
   fixture->loop = g_main_loop_new (NULL, FALSE);
-  fixture->manager = px_test_manager_new ("config-env");
+
+  if (data) {
+    g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", data, NULL);
+    g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE);
+  }
+
+  fixture->manager = px_test_manager_new ("config-sysconfig");
 }
 
 static void
 fixture_teardown (Fixture       *fixture,
                   gconstpointer  data)
 {
+  g_unsetenv ("PX_CONFIG_SYSCONFIG");
   g_clear_object (&fixture->manager);
 }
 
@@ -75,14 +91,12 @@ test_pac_download (Fixture    *self,
                    const void *user_data)
 {
   g_thread_new ("test", (GThreadFunc)download_pac, self);
-  /* pac = px_manager_pac_download (self->manager, "http://127.0.0.1:1983"); */
-  /* g_assert_nonnull (pac); */
   g_main_loop_run (self->loop);
 }
 
 static void
-test_get_proxies (Fixture    *self,
-                  const void *user_data)
+test_get_proxies_direct (Fixture    *self,
+                         const void *user_data)
 {
   g_auto (GStrv) config = NULL;
 
@@ -94,9 +108,43 @@ test_get_proxies (Fixture    *self,
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
 
-  config = px_manager_get_proxies_sync (self->manager, "http://www.example.com", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
+}
+
+static void
+test_get_proxies_nonpac (Fixture    *self,
+                         const void *user_data)
+{
+  g_auto (GStrv) config = NULL;
+
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1983");
+}
+
+static gpointer
+get_proxies_pac (gpointer data)
+{
+  Fixture *self = data;
+  g_auto (GStrv) config = NULL;
+
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "PROXY 127.0.0.1:1983");
+
+  g_main_loop_quit (self->loop);
+
+  return NULL;
+}
+
+static void
+test_get_proxies_pac (Fixture    *self,
+                      const void *user_data)
+{
+  g_thread_new ("test", (GThreadFunc)get_proxies_pac, self);
+  g_main_loop_run (self->loop);
 }
 
 int
@@ -116,8 +164,10 @@ main (int    argc,
 
   soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
 
-  g_test_add ("/pac/download", Fixture, NULL, fixture_setup, test_pac_download, fixture_teardown);
-  g_test_add ("/pac/get_proxies", Fixture, NULL, fixture_setup, test_get_proxies, fixture_teardown);
+  g_test_add ("/pac/download", Fixture, "px-manager-direct", fixture_setup, test_pac_download, fixture_teardown);
+  g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
+  g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
+  g_test_add ("/pac/get_proxies_pac", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac, fixture_teardown);
 
   return g_test_run ();
 }
