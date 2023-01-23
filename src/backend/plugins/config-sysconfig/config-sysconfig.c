@@ -62,13 +62,13 @@ px_config_sysconfig_init (PxConfigSysConfig *self)
 
   file = g_file_new_for_path (self->proxy_file);
   if (!file) {
-    g_debug ("Could not create file\n");
+    g_print ("Could not create file\n");
     return;
   }
 
   istr = g_file_read(file, NULL, NULL);
   if (!istr) {
-    g_debug ("Could not read file\n");
+    g_print ("Could not read file\n");
     return;
   }
 
@@ -90,9 +90,10 @@ px_config_sysconfig_init (PxConfigSysConfig *self)
 
       value = g_string_new (kv[1]);
       g_string_replace (value, "\"", "", 0);
+      g_string_replace (value, "\r", "", 0);
 
       if (strcmp (kv[0], "PROXY_ENABLED") == 0) {
-        self->proxy_enabled = g_ascii_strncasecmp (value->str, "yes", 4) == 0;
+        self->proxy_enabled = g_ascii_strncasecmp (value->str, "yes", 3) == 0;
       } else if (strcmp (kv[0], "HTTPS_PROXY") == 0) {
         self->https_proxy = g_strdup (value->str);
       } else if (strcmp (kv[0], "HTTP_PROXY") == 0) {

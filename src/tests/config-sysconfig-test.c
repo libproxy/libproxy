@@ -47,7 +47,7 @@ test_config_sysconfig (void)
     g_autoptr (GUri) uri = NULL;
     g_auto (GStrv) config = NULL;
     ConfigSysConfigTest test = config_sysconfig_test_set[idx];
-    g_autofree char *path = g_build_filename (g_getenv ("G_TEST_SRCDIR"), "data", "sample-sysconfig-proxy", NULL);
+    g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-sysconfig-proxy", NULL);
 
     g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE);
 

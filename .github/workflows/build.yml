@@ -108,7 +108,7 @@ jobs:
       - name: Build and Test
        # Disable docs for the moment until msys2 gi-docgen update has landed
         run: |
-          meson setup build -Ddocs=false -Dconfig-sysconfig=false
+          meson setup build -Ddocs=false
           ninja -C build
           ninja -C build test
 
