@@ -102,6 +102,9 @@ jobs:
             mingw-w64-x86_64-libsoup3
             mingw-w64-x86_64-libpeas
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
       - name: Build and Test
        # Disable docs for the moment until msys2 gi-docgen update has landed
         run: |
