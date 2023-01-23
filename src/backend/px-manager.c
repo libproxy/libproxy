@@ -110,10 +110,19 @@ static void
 px_manager_dispose (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
+  const GList *list;
 
   if (self->cancellable) {
     g_cancellable_cancel (self->cancellable);
     g_clear_object (&self->cancellable);
+  }
+
+  list = peas_engine_get_plugin_list (self->engine);
+  for (; list && list->data; list = list->next) {
+    PeasPluginInfo *info = PEAS_PLUGIN_INFO (list->data);
+
+    if (peas_plugin_info_is_loaded (info))
+      peas_engine_unload_plugin (self->engine, info);
   }
 
   g_clear_pointer (&self->config_plugin, g_free);
@@ -239,6 +248,11 @@ struct ConfigData {
   GError **error;
 };
 
+/**
+ * Strategy:
+ *  - Traverse through all plugins in extension set and ask for configuration data.
+ *  - A plugin can either return the proxy server for given uri OR nothing! for direc access.
+ */
 static void
 get_config (PeasExtensionSet *set,
             PeasPluginInfo   *info,

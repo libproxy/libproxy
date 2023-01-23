@@ -28,7 +28,7 @@ typedef struct {
   const char *proxy;
   const char *no_proxy;
   const char *url;
-  gboolean success;
+  gboolean config_is_proxy;
 } ConfigEnvTest;
 
 static const ConfigEnvTest config_env_test_set[] = {
@@ -37,12 +37,16 @@ static const ConfigEnvTest config_env_test_set[] = {
   { "HTTP_PROXY", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", TRUE},
   { "HTTP_PROXY", "http://127.0.0.1:8080", "www.example.com", "https://www.example.com", FALSE},
   { "HTTP_PROXY", "http://127.0.0.1:8080", "www.test.com", "https://www.example.com", TRUE},
+  { "HTTP_PROXY", "http://127.0.0.1:8080", "*", "https://www.example.com", FALSE},
+  { "http_proxy", "http://127.0.0.1:8080", NULL, "https://www.example.com", TRUE},
   { "HTTPS_PROXY", "http://127.0.0.1:8080", NULL, "https://www.example.com", TRUE},
   { "HTTPS_PROXY", "http://127.0.0.1:8080", NULL, "http://www.example.com", FALSE},
   { "HTTPS_PROXY", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", FALSE},
+  { "https_proxy", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", FALSE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "https://www.example.com", FALSE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "http://www.example.com", FALSE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", TRUE},
+  { "ftp_proxy", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", TRUE},
 };
 
 static void
@@ -66,19 +70,15 @@ test_config_env (void)
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
-    if (!uri) {
-      g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
-      g_assert_not_reached ();
-    }
-
     config = px_manager_get_configuration (manager, uri, &error);
-    if (test.success)
+    if (test.config_is_proxy)
       g_assert_cmpstr (config[0], ==, test.proxy);
     else
       g_assert_cmpstr (config[0], !=, test.proxy);
 
     g_unsetenv (test.env);
     g_unsetenv ("NO_PROXY");
+
     g_clear_object (&manager);
   }
 }

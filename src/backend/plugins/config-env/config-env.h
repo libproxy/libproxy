@@ -30,10 +30,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PxConfigEnv, px_config_env, PX, CONFIG_ENV, GObject)
 
-struct _PxConfigEnv {
-  GObject parent_instance;
-};
-
 G_END_DECLS
 
 
