@@ -113,7 +113,7 @@ store_response (GStrvBuilder *builder,
 
     g_string_append_printf (tmp, "%s:%d", host, port);
 
-    g_strv_builder_add (builder, g_string_free (tmp, TRUE));
+    g_strv_builder_add (builder, g_string_free (tmp, FALSE));
   }
 }
 

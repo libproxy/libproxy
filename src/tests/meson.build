@@ -2,6 +2,7 @@ if get_option('tests')
   envs = [
     'G_TEST_SRCDIR=' + meson.current_source_dir(),
     'G_TEST_BUILDDIR=' + meson.current_build_dir(),
+    'GSETTINGS_BACKEND=memory',
   ]
 
   test_cargs = ['-UG_DISABLE_ASSERT']
@@ -37,6 +38,18 @@ if get_option('tests')
     test('Config sysconfig test',
          config_sysconfig_test,
          env: envs
+    )
+  endif
+
+  if get_option('config-gnome')
+    config_gnome_test = executable('test-config-gnome',
+      ['config-gnome-test.c', 'px-manager-helper.c'],
+      include_directories: px_backend_inc,
+      dependencies: [glib_dep, px_backend_dep],
+    )
+    test('Config GNOMEtest',
+         config_gnome_test,
+         env: [envs, 'XDG_CURRENT_DESKTOP=GNOME'],
     )
   endif
 endif
