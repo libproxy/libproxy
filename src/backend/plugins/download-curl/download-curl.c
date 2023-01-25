@@ -77,7 +77,7 @@ px_download_curl_download (PxDownload *download, const char *uri)
 
   res = curl_easy_perform (self->curl);
   if (res != CURLE_OK) {
-    g_warning ("Could not download data: %s", curl_easy_strerror (res));
+    g_debug ("Could not download data: %s", curl_easy_strerror (res));
     return NULL;
   }
 
