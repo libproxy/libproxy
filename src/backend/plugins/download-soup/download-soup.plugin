@@ -1,0 +1,6 @@
+[Plugin]
+Authors=Jan-Michael Brummer <jan.brummer@tabos.org>
+Copyright=Copyright © 2023 Jan-Michael Brummer
+Description=Donwload data using SOUP
+Module=download-soup
+Name=SOUP

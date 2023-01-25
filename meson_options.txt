@@ -60,3 +60,10 @@ option(
   value: true,
   description: 'Whether to build plugin for PAC Runner Duktape'
 )
+
+option(
+  'download-soup',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for downloading with SOUP'
+)

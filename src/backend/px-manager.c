@@ -24,8 +24,8 @@
 #include "px-manager.h"
 #include "px-plugin-config.h"
 #include "px-plugin-pacrunner.h"
+#include "px-plugin-download.h"
 
-#include <libsoup/soup.h>
 #include <libpeas/peas.h>
 
 enum {
@@ -49,9 +49,9 @@ struct _PxManager {
   PeasEngine *engine;
   PeasExtensionSet *config_set;
   PeasExtensionSet *pacrunner_set;
+  PeasExtensionSet *download_set;
   char *plugins_dir;
   GCancellable *cancellable;
-  SoupSession *session;
 
   char *config_plugin;
 
@@ -70,14 +70,13 @@ px_manager_constructed (GObject *object)
   PxManager *self = PX_MANAGER (object);
   const GList *list;
 
-  self->session = soup_session_new ();
-
   self->engine = peas_engine_get_default ();
 
   peas_engine_add_search_path (self->engine, self->plugins_dir, NULL);
 
   self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, NULL);
   self->pacrunner_set = peas_extension_set_new (self->engine, PX_TYPE_PACRUNNER, NULL);
+  self->download_set = peas_extension_set_new (self->engine, PX_TYPE_DOWNLOAD, NULL);
 
   list = peas_engine_get_plugin_list (self->engine);
   for (; list && list->data; list = list->next) {
@@ -213,6 +212,26 @@ px_manager_new (void)
   return g_object_new (PX_TYPE_MANAGER, "plugins-dir", PX_PLUGINS_DIR, NULL);
 }
 
+struct DownloadData {
+  const char *uri;
+  GBytes *bytes;
+  GError **error;
+};
+
+static void
+download_pac (PeasExtensionSet *set,
+              PeasPluginInfo   *info,
+              PeasExtension    *extension,
+              gpointer          data)
+{
+  PxDownloadInterface *ifc = PX_DOWNLOAD_GET_IFACE (extension);
+  struct DownloadData *download_data = data;
+
+  g_print ("%s: Download PAC using plugin '%s'\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  if (!download_data->bytes)
+    download_data->bytes = ifc->download (PX_DOWNLOAD (extension), download_data->uri);
+}
+
 /**
  * px_manager_pac_download:
  * @self: a px manager
@@ -226,21 +245,13 @@ GBytes *
 px_manager_pac_download (PxManager  *self,
                          const char *uri)
 {
-  g_autoptr (SoupMessage) msg = soup_message_new (SOUP_METHOD_GET, uri);
-  g_autoptr (GError) error = NULL;
-  g_autoptr (GBytes) bytes = NULL;
+  struct DownloadData download_data = {
+    .uri = uri,
+    .bytes = NULL,
+  };
 
-  bytes = soup_session_send_and_read (
-    self->session,
-    msg,
-    NULL,     /* Pass a GCancellable here if you want to cancel a download */
-    &error);
-  if (!bytes || soup_message_get_status (msg) != SOUP_STATUS_OK) {
-    g_debug ("Failed to download: %s\n", error ? error->message : "");
-    return NULL;
-  }
-
-  return g_steal_pointer (&bytes);
+  peas_extension_set_foreach (self->download_set, download_pac, &download_data);
+  return download_data.bytes;
 }
 
 struct ConfigData {
@@ -333,7 +344,7 @@ px_manager_expand_wpad (PxManager *self,
     }
 
     if (!self->pac_data) {
-      GUri *wpad_url = g_uri_parse ("http://wpad/wpad.data", G_URI_FLAGS_PARSE_RELAXED, NULL);
+      GUri *wpad_url = g_uri_parse ("download://wpad/wpad.data", G_URI_FLAGS_PARSE_RELAXED, NULL);
 
       g_print ("Trying to find the PAC using WPAD...\n");
       self->pac_url = g_uri_to_string (wpad_url);
