@@ -66,13 +66,13 @@ px_config_sysconfig_init (PxConfigSysConfig *self)
     return;
   }
 
-  istr = g_file_read(file, NULL, NULL);
+  istr = g_file_read (file, NULL, NULL);
   if (!istr) {
     g_print ("Could not read file\n");
     return;
   }
 
-  dstr = g_data_input_stream_new(G_INPUT_STREAM(istr));
+  dstr = g_data_input_stream_new (G_INPUT_STREAM (istr));
   if (!dstr)
     return;
 

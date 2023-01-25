@@ -123,3 +123,7 @@ summary({
   'host system' : host_system,
   'C Compiler' : cc.get_id(),
 }, section: 'Build environment')
+
+# Install pre-commit hook
+git_hook_installer = find_program('data/install-git-hook.sh')
+run_command(git_hook_installer)

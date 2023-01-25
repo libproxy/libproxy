@@ -65,7 +65,7 @@ getobj (CFDictionaryRef  settings,
   if (!k)
     return NULL;
 
-  retval = (CFNumberRef) CFDictionaryGetValue(settings, k);
+  retval = (CFNumberRef)CFDictionaryGetValue (settings, k);
 
   CFRelease (k);
   return retval;
@@ -73,7 +73,7 @@ getobj (CFDictionaryRef  settings,
 
 static CFStringRef
 getobj_str (CFDictionaryRef  settings,
-        char            *key)
+            char            *key)
 {
   CFStringRef k;
   CFStringRef retval;
@@ -85,7 +85,7 @@ getobj_str (CFDictionaryRef  settings,
   if (!k)
     return NULL;
 
-  retval = (CFStringRef) CFDictionaryGetValue(settings, k);
+  retval = (CFStringRef)CFDictionaryGetValue (settings, k);
 
   CFRelease (k);
   return retval;
@@ -113,7 +113,7 @@ getbool (CFDictionaryRef  settings,
 {
   int64_t i = 0;
 
-  if (!getint(settings, key, &i))
+  if (!getint (settings, key, &i))
     return FALSE;
 
   return i != 0;
@@ -133,7 +133,7 @@ px_config_osx_get_config (PxConfig      *self,
     return FALSE;
   }
 
-  if (getbool(proxies, "ProxyAutoDiscoveryEnable")) {
+  if (getbool (proxies, "ProxyAutoDiscoveryEnable")) {
     CFRelease (proxies);
     g_strv_builder_add (builder, "wpad://");
     return TRUE;
@@ -143,7 +143,7 @@ px_config_osx_get_config (PxConfig      *self,
     CFStringRef ref = getobj_str (proxies, "ProxyAutoConfigURLString");
     const char *tmp = CFStringGetCStringPtr (ref, CFStringGetFastestEncoding (ref));
     GUri *tmp_uri = g_uri_parse (tmp, G_URI_FLAGS_PARSE_RELAXED, NULL);
-    
+
     if (tmp_uri) {
       g_autofree char *ret = g_strdup_printf ("pac+%s", g_uri_to_string (tmp_uri));
       CFRelease (proxies);

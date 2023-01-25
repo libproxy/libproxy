@@ -32,7 +32,7 @@ typedef struct {
 } Fixture;
 
 static void
-server_callback (SoupServer *server,
+server_callback (SoupServer        *server,
                  SoupServerMessage *msg,
                  const char        *path,
                  GHashTable        *query,
@@ -47,8 +47,8 @@ server_callback (SoupServer *server,
     gsize len;
 
     if (!g_file_get_contents (pac, &pac_data, &len, &error)) {
-        g_warning ("Could not read pac file: %s", error ? error->message : "");
-        return;
+      g_warning ("Could not read pac file: %s", error ? error->message : "");
+      return;
     }
     soup_server_message_set_response (msg, "text/plain", SOUP_MEMORY_COPY, pac_data, len);
   }

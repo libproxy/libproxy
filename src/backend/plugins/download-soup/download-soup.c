@@ -47,7 +47,8 @@ px_download_soup_class_init (PxDownloadSoupClass *klass)
 }
 
 static GBytes *
-px_download_soup_download (PxDownload *download, const char *uri)
+px_download_soup_download (PxDownload *download,
+                           const char *uri)
 {
   PxDownloadSoup *self = PX_DOWNLOAD_SOUP (download);
   g_autoptr (SoupMessage) msg = soup_message_new (SOUP_METHOD_GET, uri);

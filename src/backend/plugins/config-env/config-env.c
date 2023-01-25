@@ -57,7 +57,7 @@ px_config_env_init (PxConfigEnv *self)
     self->no_proxy = g_strsplit (no_proxy, ",", -1);
 
   self->ftp_proxy = g_getenv ("ftp_proxy");
-  if (!self->ftp_proxy )
+  if (!self->ftp_proxy)
     self->ftp_proxy = g_getenv ("FTP_PROXY");
 
   self->https_proxy = g_getenv ("https_proxy");
@@ -67,7 +67,6 @@ px_config_env_init (PxConfigEnv *self)
   self->http_proxy = g_getenv ("http_proxy");
   if (!self->http_proxy)
     self->http_proxy = g_getenv ("HTTP_PROXY");
-
 }
 
 static void

@@ -60,7 +60,8 @@ store_data (void   *contents,
 }
 
 static GBytes *
-px_download_curl_download (PxDownload *download, const char *uri)
+px_download_curl_download (PxDownload *download,
+                           const char *uri)
 {
   PxDownloadCurl *self = PX_DOWNLOAD_CURL (download);
   g_autoptr (GBytes) bytes = NULL;
