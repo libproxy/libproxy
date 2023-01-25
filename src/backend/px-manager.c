@@ -344,13 +344,15 @@ px_manager_expand_wpad (PxManager *self,
     }
 
     if (!self->pac_data) {
-      GUri *wpad_url = g_uri_parse ("download://wpad/wpad.data", G_URI_FLAGS_PARSE_RELAXED, NULL);
+      GUri *wpad_url = g_uri_parse ("http://wpad/wpad.dat", G_URI_FLAGS_PARSE_RELAXED, NULL);
 
       g_print ("Trying to find the PAC using WPAD...\n");
       self->pac_url = g_uri_to_string (wpad_url);
       self->pac_data = px_manager_pac_download (self, self->pac_url);
-      if (!self->pac_data)
-        g_clear_object (&self->pac_url);
+      if (!self->pac_data) {
+        g_clear_pointer (&self->pac_url, g_free);
+        ret = FALSE;
+      }
     }
   }
 
@@ -433,7 +435,7 @@ px_manager_get_proxies_sync (PxManager   *self,
         .builder = builder,
       };
       peas_extension_set_foreach (self->pacrunner_set, px_manager_run_pac, &pac_data);
-    } else {
+    } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad")) {
       g_strv_builder_add (builder, g_uri_to_string (conf_url));
     }
   }

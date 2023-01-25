@@ -158,6 +158,31 @@ test_get_proxies_pac (Fixture    *self,
   g_main_loop_run (self->loop);
 }
 
+static gpointer
+get_wpad (gpointer data)
+{
+  Fixture *self = data;
+  g_auto (GStrv) config = NULL;
+
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "direct://");
+
+  g_main_loop_quit (self->loop);
+
+  return NULL;
+}
+
+static void
+test_get_wpad (Fixture    *self,
+               const void *user_data)
+{
+  g_autoptr (GThread) thread = NULL;
+
+  thread = g_thread_new ("test", (GThreadFunc)get_wpad, self);
+  g_main_loop_run (self->loop);
+}
+
 int
 main (int    argc,
       char **argv)
@@ -179,6 +204,7 @@ main (int    argc,
   g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
   g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac, fixture_teardown);
+  g_test_add ("/pac/wpad", Fixture, "px-manager-wpad", fixture_setup, test_get_wpad, fixture_teardown);
 
   return g_test_run ();
 }
