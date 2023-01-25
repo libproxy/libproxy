@@ -67,3 +67,10 @@ option(
   value: true,
   description: 'Whether to build plugin for downloading with SOUP'
 )
+
+option(
+  'download-curl',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for downloading with cURL'
+)
