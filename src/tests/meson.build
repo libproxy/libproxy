@@ -47,7 +47,7 @@ if get_option('tests')
       include_directories: px_backend_inc,
       dependencies: [glib_dep, px_backend_dep],
     )
-    test('Config GNOMEtest',
+    test('Config GNOME test',
          config_gnome_test,
          env: [envs, 'XDG_CURRENT_DESKTOP=GNOME'],
     )

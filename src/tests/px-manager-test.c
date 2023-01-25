@@ -43,9 +43,13 @@ server_callback (SoupServer *server,
   if (g_strcmp0 (path, "/test.pac") == 0) {
     g_autofree char *pac = g_test_build_filename (G_TEST_DIST, "data", "px-manager-sample.pac", NULL);
     g_autofree char *pac_data = NULL;
+    g_autoptr (GError) error = NULL;
     gsize len;
 
-    g_file_get_contents (pac, &pac_data, &len, NULL);
+    if (!g_file_get_contents (pac, &pac_data, &len, &error)) {
+        g_warning ("Could not read pac file: %s", error ? error->message : "");
+        return;
+    }
     soup_server_message_set_response (msg, "text/plain", SOUP_MEMORY_COPY, pac_data, len);
   }
 }
@@ -58,7 +62,10 @@ fixture_setup (Fixture       *fixture,
 
   if (data) {
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", data, NULL);
-    g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE);
+    if (!g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE)) {
+      g_warning ("Failed to set environment");
+      return;
+    }
   }
 
   fixture->manager = px_test_manager_new ("config-sysconfig");
@@ -90,7 +97,9 @@ static void
 test_pac_download (Fixture    *self,
                    const void *user_data)
 {
-  g_thread_new ("test", (GThreadFunc)download_pac, self);
+  g_autoptr (GThread) thread = NULL;
+
+  thread = g_thread_new ("test", (GThreadFunc)download_pac, self);
   g_main_loop_run (self->loop);
 }
 
@@ -143,7 +152,9 @@ static void
 test_get_proxies_pac (Fixture    *self,
                       const void *user_data)
 {
-  g_thread_new ("test", (GThreadFunc)get_proxies_pac, self);
+  g_autoptr (GThread) thread = NULL;
+
+  thread = g_thread_new ("test", (GThreadFunc)get_proxies_pac, self);
   g_main_loop_run (self->loop);
 }
 

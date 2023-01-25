@@ -62,7 +62,11 @@ test_config_env (void)
     ConfigEnvTest test = config_env_test_set[idx];
 
     /* Set proxy environment variable. Must be done before px_test_manager_new()! */
-    g_setenv (test.env, test.proxy, TRUE);
+    if (!g_setenv (test.env, test.proxy, TRUE)) {
+      g_warning ("Could not set environment");
+      continue;
+    }
+
     if (test.no_proxy)
       g_setenv ("NO_PROXY", test.no_proxy, TRUE);
 
