@@ -50,6 +50,7 @@ struct _PxManager {
   PeasExtensionSet *config_set;
   PeasExtensionSet *pacrunner_set;
   PeasExtensionSet *download_set;
+  GNetworkMonitor *network_monitor;
   char *plugins_dir;
   GCancellable *cancellable;
 
@@ -63,6 +64,20 @@ struct _PxManager {
 G_DEFINE_TYPE (PxManager, px_manager, G_TYPE_OBJECT)
 
 G_DEFINE_QUARK (px - manager - error - quark, px_manager_error)
+
+static void
+px_manager_on_network_changed (GNetworkMonitor *monitor,
+                               gboolean         network_available,
+                               gpointer         user_data)
+{
+  PxManager *self = PX_MANAGER (user_data);
+
+  g_debug ("%s: Network connection changed, clearing pac data\n", __FUNCTION__);
+
+  self->wpad = FALSE;
+  g_clear_pointer (&self->pac_url, g_free);
+  g_clear_object (&self->pac_data);
+}
 
 static void
 px_manager_constructed (GObject *object)
@@ -104,6 +119,9 @@ px_manager_constructed (GObject *object)
     if (!available)
       peas_engine_unload_plugin (self->engine, info);
   }
+
+  self->network_monitor = g_network_monitor_get_default ();
+  g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
 }
 
 static void
