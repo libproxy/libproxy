@@ -52,4 +52,16 @@ if get_option('tests')
          env: [envs, 'XDG_CURRENT_DESKTOP=GNOME'],
     )
   endif
+
+  if get_option('config-kde')
+    config_kde_test = executable('test-config-kde',
+      ['config-kde-test.c', 'px-manager-helper.c'],
+      include_directories: px_backend_inc,
+      dependencies: [glib_dep, px_backend_dep],
+    )
+    test('Config KDE test',
+         config_kde_test,
+         env: [envs, 'KDE_FULL_SESSION=1'],
+    )
+  endif
 endif

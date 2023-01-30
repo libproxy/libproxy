@@ -55,6 +55,13 @@ option(
 )
 
 option(
+  'config-kde',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build plugin for KDE System Settings'
+)
+
+option(
   'pacrunner-duktape',
   type: 'boolean',
   value: true,
