@@ -1,6 +1,12 @@
 if get_option('dbus')
   gdbus_codegen = find_program('gdbus-codegen')
 
+  unitdir = ''
+  systemd = dependency('systemd', required: false)
+  if systemd.found()
+    unitdir = systemd.get_variable(pkgconfig: 'systemduserunitdir')
+  endif
+
   px_interface = [
     'org.libproxy.proxy.xml'
   ]
@@ -43,6 +49,20 @@ if get_option('dbus')
     'proxyd',
     proxyd_sources,
     dependencies: proxyd_deps,
+    install_dir: join_paths(px_prefix, get_option('libexecdir')),
     install: true,
   )
+
+  service_data = configuration_data()
+  service_data.set('LIBEXECDIR', join_paths(px_prefix, get_option('libexecdir')))
+
+  service = configure_file(
+    input: 'proxyd.service.in',
+    output: 'proxyd.service',
+    configuration: service_data
+  )
+
+  if unitdir != ''
+    install_data(service, install_dir: unitdir)
+  endif
 endif
