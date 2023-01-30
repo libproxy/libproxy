@@ -147,18 +147,22 @@ px_pacrunner_duktape_class_init (PxPacRunnerDuktapeClass *klass)
   object_class->dispose = px_pacrunner_duktape_dispose;
 }
 
-static void
+static gboolean
 px_pacrunner_duktape_set_pac (PxPacRunner *pacrunner,
                               GBytes      *pac_data)
 {
   PxPacRunnerDuktape *self = PX_PACRUNNER_DUKTAPE (pacrunner);
+  gsize len;
+  gconstpointer content = g_bytes_get_data (pac_data, &len);
+  g_autoptr (GString) pac = g_string_new_len (content, len);
 
-
-  duk_push_string (self->ctx, g_bytes_get_data (pac_data, NULL));
+  duk_push_string (self->ctx, pac->str);
 
   if (duk_peval_noresult (self->ctx)) {
-    return;
+    return FALSE;
   }
+
+  return TRUE;
 }
 
 static char *

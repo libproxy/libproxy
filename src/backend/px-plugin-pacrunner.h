@@ -34,7 +34,7 @@ struct _PxPacRunnerInterface
 {
   GTypeInterface parent_iface;
 
-  void (*set_pac) (PxPacRunner *pacrunner, GBytes *pac_data);
+  gboolean (*set_pac) (PxPacRunner *pacrunner, GBytes *pac_data);
   char *(*run) (PxPacRunner *self, GUri *uri);
 };
 

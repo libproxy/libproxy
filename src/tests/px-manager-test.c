@@ -38,6 +38,7 @@ server_callback (SoupServer        *server,
                  GHashTable        *query,
                  gpointer           data)
 {
+  g_print ("%s: path %s\n", __FUNCTION__, path);
   soup_server_message_set_status (SOUP_SERVER_MESSAGE (msg), SOUP_STATUS_OK, NULL);
 
   if (g_strcmp0 (path, "/test.pac") == 0) {
@@ -85,7 +86,7 @@ download_pac (gpointer data)
   Fixture *self = data;
   GBytes *pac;
 
-  pac = px_manager_pac_download (self->manager, "http://127.0.0.1:1983");
+  pac = px_manager_pac_download (self->manager, "http://127.0.0.1:1983/test.pac");
   g_assert_nonnull (pac);
 
   g_main_loop_quit (self->loop);

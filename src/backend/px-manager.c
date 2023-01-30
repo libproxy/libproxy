@@ -339,7 +339,10 @@ px_manager_run_pac (PeasExtensionSet *set,
   struct PacData *pac_data = data;
   char *ret;
 
-  ifc->set_pac (PX_PAC_RUNNER (extension), pac_data->pac);
+  if (!ifc->set_pac (PX_PAC_RUNNER (extension), pac_data->pac)) {
+    return;
+  }
+
   ret = ifc->run (PX_PAC_RUNNER (extension), pac_data->uri);
   if (ret)
     g_strv_builder_add (pac_data->builder, ret);

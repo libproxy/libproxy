@@ -52,10 +52,11 @@ store_data (void   *contents,
             size_t  nmemb,
             void   *user_pointer)
 {
-  GString *string = user_pointer;
+  GByteArray *byte_array = user_pointer;
   size_t real_size = size * nmemb;
 
-  g_string_append_len (string, contents, real_size);
+  g_byte_array_append (byte_array, contents, real_size);
+
   return real_size;
 }
 
@@ -64,9 +65,8 @@ px_download_curl_download (PxDownload *download,
                            const char *uri)
 {
   PxDownloadCurl *self = PX_DOWNLOAD_CURL (download);
-  g_autoptr (GBytes) bytes = NULL;
+  GByteArray *byte_array = g_byte_array_new ();
   CURLcode res;
-  g_autoptr (GString) data = g_string_new ("");
   const char *url = uri;
 
   if (g_str_has_prefix (url, "pac+"))
@@ -74,7 +74,7 @@ px_download_curl_download (PxDownload *download,
 
   curl_easy_setopt (self->curl, CURLOPT_URL, url);
   curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, store_data);
-  curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, data);
+  curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, byte_array);
 
   res = curl_easy_perform (self->curl);
   if (res != CURLE_OK) {
@@ -82,7 +82,7 @@ px_download_curl_download (PxDownload *download,
     return NULL;
   }
 
-  return g_steal_pointer (&bytes);
+  return g_byte_array_free_to_bytes (byte_array);
 }
 
 static void
