@@ -35,7 +35,7 @@ px_backend_gir = gnome.generate_gir(
   symbol_prefix: 'px',
   identifier_prefix: 'Px',
   includes: [ 'Gio-2.0' ],
-  install: true,
+  install: false,
 )
 
 px_backend_dep = declare_dependency(

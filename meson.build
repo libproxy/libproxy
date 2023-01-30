@@ -21,7 +21,7 @@ add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
 version_arr = meson.project_version().split('-')[0].split('.')
 libproxy_version_major = version_arr[0].to_int()
 libproxy_version_minor = version_arr[1].to_int()
-apiversion = libproxy_version_major.to_string()
+apiversion = '1.0'
 
 libproxy_prefix = get_option('prefix')
 datadir = get_option('datadir')
