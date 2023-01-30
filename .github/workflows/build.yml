@@ -28,6 +28,27 @@ jobs:
       run: |
         ninja test -C build
         ninja coverage -C build
+    - name: Extract Coverage Percentage
+      run: |
+        RATE=$(grep -o -m 1 -P '(?<=line-rate=").*?(?=")' ./build/meson-logs/coverage.xml | head -1)
+        PERCENT="$(echo "($RATE * 100)/1" | bc)"
+
+        BADGE_COLOR=red
+        if [ $PERCENT -ge 60 ]; then BADGE_COLOR=orange; fi
+        if [ $PERCENT -ge 80 ]; then BADGE_COLOR=yellow; fi
+        if [ $PERCENT -ge 95 ]; then BADGE_COLOR=brightgreen; fi
+        echo "$RATE -> $PERCENT : $BADGE_COLOR"
+        echo "COVERAGE_PERCENT=$PERCENT" >> $GITHUB_ENV
+        echo "COVERAGE_COLOR=$BADGE_COLOR" >> $GITHUB_ENV
+    - name: Create Coverage Badge
+      uses: schneegans/dynamic-badges-action@v1.1.0
+      with:
+       auth: ${{ secrets.GIST_TOKEN }}
+       gistID: 713fa369e20d1c0fdb5896b9a167c3b4
+       filename: greeter-coverage.json
+       label: Coverage
+       message: ${{ env.COVERAGE_PERCENT }}
+       color: ${{ env.COVERAGE_COLOR }}
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v1
       with:

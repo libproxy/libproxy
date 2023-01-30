@@ -1,4 +1,6 @@
-![build](https://github.com/janbrummer/libproxy2/actions/workflows/build.yml/badge.svg) [![codecov](https://codecov.io/github/janbrummer/libproxy2/branch/main/graph/badge.svg?token=LS7B1CZKMY)](https://codecov.io/github/janbrummer/libproxy2)
+![build](https://github.com/janbrummer/libproxy2/actions/workflows/build.yml/badge.svg)
+[![codecov](https://codecov.io/github/janbrummer/libproxy2/branch/main/graph/badge.svg?token=LS7B1CZKMY)](https://codecov.io/github/janbrummer/libproxy2)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/janbrummer/713fa369e20d1c0fdb5896b9a167c3b4/raw/greeter-coverage.json)](https://github.com/janbrummer/repo/actions/workflows/build.yaml)
 [![Coverity](https://github.com/janbrummer/libproxy2/actions/workflows/coverity.yml/badge.svg)](https://github.com/janbrummer/libproxy2/actions/workflows/coverity.yml)
 
 # Libproxy
