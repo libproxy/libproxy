@@ -7,15 +7,17 @@ if get_option('tests')
 
   test_cargs = ['-UG_DISABLE_ASSERT']
 
-  px_manager_test = executable('test-px-manager',
-    ['px-manager-test.c', 'px-manager-helper.c'],
-    include_directories: px_backend_inc,
-    dependencies: [soup_dep, glib_dep, px_backend_dep],
-  )
-  test('PX Manager test',
-       px_manager_test,
-       env: envs
-  )
+  if soup_dep.found()
+    px_manager_test = executable('test-px-manager',
+      ['px-manager-test.c', 'px-manager-helper.c'],
+      include_directories: px_backend_inc,
+      dependencies: [soup_dep, glib_dep, px_backend_dep],
+    )
+    test('PX Manager test',
+         px_manager_test,
+         env: envs
+    )
+  endif
 
   if get_option('config-env')
     config_env_test = executable('test-config-env',
