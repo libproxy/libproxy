@@ -23,11 +23,21 @@ libproxy_deps = [
   px_backend_dep,
 ]
 
+mapfile = 'libproxy.map'
+vscript = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
+vflag = []
+if cc.has_multi_link_arguments(vscript)
+  vflag += vscript
+endif
+
 libproxy_lib = shared_library(
-  'proxy-@0@'.format(api_version),
+  'proxy',
   libproxy_sources,
   include_directories: px_backend_inc,
   dependencies: libproxy_deps,
+  link_args : vflag,
+  link_depends : mapfile,
+  soversion: '1',
   install: true,
 )
 
