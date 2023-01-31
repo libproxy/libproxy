@@ -142,7 +142,7 @@ get_proxies_pac (gpointer data)
 
   config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
   g_assert_nonnull (config);
-  g_assert_cmpstr (config[0], ==, "PROXY 127.0.0.1:1983");
+  g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1983");
 
   g_main_loop_quit (self->loop);
 

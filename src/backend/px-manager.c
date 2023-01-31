@@ -120,6 +120,8 @@ px_manager_constructed (GObject *object)
       peas_engine_unload_plugin (self->engine, info);
   }
 
+  self->pac_data = NULL;
+
   self->network_monitor = g_network_monitor_get_default ();
   g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
 }
@@ -337,15 +339,55 @@ px_manager_run_pac (PeasExtensionSet *set,
 {
   PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (extension);
   struct PacData *pac_data = data;
-  char *ret;
+  g_auto (GStrv) proxies_split = NULL;
+  char *pac_response;
 
-  if (!ifc->set_pac (PX_PAC_RUNNER (extension), pac_data->pac)) {
+  if (!ifc->set_pac (PX_PAC_RUNNER (extension), pac_data->pac))
     return;
-  }
 
-  ret = ifc->run (PX_PAC_RUNNER (extension), pac_data->uri);
-  if (ret)
-    g_strv_builder_add (pac_data->builder, ret);
+  pac_response = ifc->run (PX_PAC_RUNNER (extension), pac_data->uri);
+
+  /* Split line to handle multiple proxies */
+  proxies_split = g_strsplit (pac_response, ";", -1);
+
+  for (int idx = 0; idx < g_strv_length (proxies_split); idx++) {
+    char *line = g_strstrip (proxies_split[idx]);
+    g_auto (GStrv) word_split = g_strsplit (line, " ", -1);
+    g_autoptr (GUri) uri = NULL;
+    char *method;
+    char *server;
+
+    /* Check for syntax "METHOD SERVER" */
+    if (g_strv_length (word_split) == 2) {
+      g_autofree char *uri_string = NULL;
+      g_autofree char *proxy_string = NULL;
+
+      method = word_split[0];
+      server = word_split[1];
+
+      uri_string = g_strconcat ("http://", server, NULL);
+      uri = g_uri_parse (uri_string, G_URI_FLAGS_PARSE_RELAXED, NULL);
+      if (!uri)
+        continue;
+
+      if (g_ascii_strncasecmp (method, "proxy", 5) == 0) {
+        proxy_string = g_uri_to_string (uri);
+      } else if (g_ascii_strncasecmp (method, "socks", 5) == 0) {
+        proxy_string = g_strconcat ("socks://", server, NULL);
+      } else if (g_ascii_strncasecmp (method, "socks4", 6) == 0) {
+        proxy_string = g_strconcat ("socks4://", server, NULL);
+      } else if (g_ascii_strncasecmp (method, "socks4a", 7) == 0) {
+        proxy_string = g_strconcat ("socks4a://", server, NULL);
+      } else if (g_ascii_strncasecmp (method, "socks5", 6) == 0) {
+        proxy_string = g_strconcat ("socks5://", server, NULL);
+      }
+
+      g_strv_builder_add (pac_data->builder, proxy_string);
+    } else {
+      /* Syntax not found, returning direct */
+      g_strv_builder_add (pac_data->builder, "direct://");
+    }
+  }
 }
 
 static gboolean
