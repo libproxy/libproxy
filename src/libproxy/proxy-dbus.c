@@ -73,6 +73,9 @@ px_proxy_factory_get_proxies (struct px_proxy_factory *self,
   gsize len;
   gsize idx;
 
+  if (!self->proxy)
+    return NULL;
+
   result = g_dbus_proxy_call_sync (self->proxy,
                                    "query",
                                    g_variant_new ("(s)", url),
