@@ -38,7 +38,6 @@ G_DEFINE_FINAL_TYPE_WITH_CODE (PxDownloadCurl,
 static void
 px_download_curl_init (PxDownloadCurl *self)
 {
-  self->curl = curl_easy_init ();
 }
 
 static void
@@ -68,6 +67,9 @@ px_download_curl_download (PxDownload *download,
   GByteArray *byte_array = g_byte_array_new ();
   CURLcode res;
   const char *url = uri;
+
+  if (!self->curl)
+    self->curl = curl_easy_init ();
 
   if (g_str_has_prefix (url, "pac+"))
     url += 4;

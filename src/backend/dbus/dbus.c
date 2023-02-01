@@ -124,7 +124,7 @@ on_name_lost (GDBusConnection *connection,
     g_warning ("Can't connect proxy bus");
     g_main_loop_quit (user_data);
   } else {
-    g_warning ("Unknown name lost error");
+    g_error ("Unknown name lost error");
   }
 }
 

@@ -76,7 +76,7 @@ px_manager_on_network_changed (GNetworkMonitor *monitor,
 
   self->wpad = FALSE;
   g_clear_pointer (&self->pac_url, g_free);
-  g_clear_object (&self->pac_data);
+  g_clear_pointer (&self->pac_data, g_bytes_unref);
 }
 
 static void
@@ -247,7 +247,7 @@ download_pac (PeasExtensionSet *set,
   PxDownloadInterface *ifc = PX_DOWNLOAD_GET_IFACE (extension);
   struct DownloadData *download_data = data;
 
-  g_print ("%s: Download PAC using plugin '%s'\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  g_debug ("%s: Download PAC using plugin '%s'\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
   if (!download_data->bytes)
     download_data->bytes = ifc->download (PX_DOWNLOAD (extension), download_data->uri);
 }
@@ -294,7 +294,7 @@ get_config (PeasExtensionSet *set,
   PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (extension);
   struct ConfigData *config_data = data;
 
-  g_print ("%s: Asking plugin '%s' for configuration\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  g_debug ("%s: Asking plugin '%s' for configuration\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
   ifc->get_config (PX_CONFIG (extension), config_data->uri, config_data->builder, config_data->error);
 }
 
@@ -401,7 +401,7 @@ px_manager_expand_wpad (PxManager *self,
     ret = TRUE;
 
     if (!self->wpad) {
-      g_clear_object (&self->pac_data);
+      g_clear_pointer (&self->pac_data, g_bytes_unref);
       g_clear_pointer (&self->pac_url, g_free);
       self->wpad = TRUE;
     }
@@ -409,7 +409,7 @@ px_manager_expand_wpad (PxManager *self,
     if (!self->pac_data) {
       GUri *wpad_url = g_uri_parse ("http://wpad/wpad.dat", G_URI_FLAGS_PARSE_RELAXED, NULL);
 
-      g_print ("Trying to find the PAC using WPAD...\n");
+      g_debug ("Trying to find the PAC using WPAD...\n");
       self->pac_url = g_uri_to_string (wpad_url);
       self->pac_data = px_manager_pac_download (self, self->pac_url);
       if (!self->pac_data) {
@@ -440,7 +440,7 @@ px_manager_expand_pac (PxManager *self,
 
       if (g_strcmp0 (self->pac_url, uri_str) != 0) {
         g_clear_pointer (&self->pac_url, g_free);
-        g_clear_object (&self->pac_data);
+        g_clear_pointer (&self->pac_data, g_bytes_unref);
       }
     }
 
@@ -485,11 +485,11 @@ px_manager_get_proxies_sync (PxManager   *self,
   /* TODO: Check topology */
   config = px_manager_get_configuration (self, uri, error);
 
-  g_print ("Config is:\n");
+  g_debug ("Config is:\n");
   for (int idx = 0; idx < g_strv_length (config); idx++) {
     GUri *conf_url = g_uri_parse (config[idx], G_URI_FLAGS_PARSE_RELAXED, NULL);
 
-    g_print ("\t- %s\n", config[idx]);
+    g_debug ("\t- %s\n", config[idx]);
 
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
       struct PacData pac_data = {
