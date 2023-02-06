@@ -72,7 +72,7 @@ px_manager_on_network_changed (GNetworkMonitor *monitor,
 {
   PxManager *self = PX_MANAGER (user_data);
 
-  g_debug ("%s: Network connection changed, clearing pac data\n", __FUNCTION__);
+  g_debug ("%s: Network connection changed, clearing pac data", __FUNCTION__);
 
   self->wpad = FALSE;
   g_clear_pointer (&self->pac_url, g_free);
@@ -84,6 +84,21 @@ px_manager_constructed (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
   const GList *list;
+
+  if (g_getenv ("PX_DEBUG")) {
+    const gchar *g_messages_debug;
+
+    g_messages_debug = g_getenv ("G_MESSAGES_DEBUG");
+
+    if (!g_messages_debug) {
+      g_setenv ("G_MESSAGES_DEBUG", G_LOG_DOMAIN, TRUE);
+    } else {
+      g_autofree char *new_g_messages_debug = NULL;
+
+      new_g_messages_debug = g_strconcat (g_messages_debug, " ", G_LOG_DOMAIN, NULL);
+      g_setenv ("G_MESSAGES_DEBUG", new_g_messages_debug, TRUE);
+    }
+  }
 
   self->engine = peas_engine_get_default ();
 
@@ -247,7 +262,7 @@ download_pac (PeasExtensionSet *set,
   PxDownloadInterface *ifc = PX_DOWNLOAD_GET_IFACE (extension);
   struct DownloadData *download_data = data;
 
-  g_debug ("%s: Download PAC using plugin '%s'\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  g_debug ("%s: Download PAC using plugin '%s'", __FUNCTION__, peas_plugin_info_get_module_name (info));
   if (!download_data->bytes)
     download_data->bytes = ifc->download (PX_DOWNLOAD (extension), download_data->uri);
 }
@@ -294,7 +309,7 @@ get_config (PeasExtensionSet *set,
   PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (extension);
   struct ConfigData *config_data = data;
 
-  g_debug ("%s: Asking plugin '%s' for configuration\n", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  g_debug ("%s: Asking plugin '%s' for configuration", __FUNCTION__, peas_plugin_info_get_module_name (info));
   ifc->get_config (PX_CONFIG (extension), config_data->uri, config_data->builder, config_data->error);
 }
 
@@ -409,7 +424,7 @@ px_manager_expand_wpad (PxManager *self,
     if (!self->pac_data) {
       GUri *wpad_url = g_uri_parse ("http://wpad/wpad.dat", G_URI_FLAGS_PARSE_RELAXED, NULL);
 
-      g_debug ("Trying to find the PAC using WPAD...\n");
+      g_debug ("%s: Trying to find the PAC using WPAD...", __FUNCTION__);
       self->pac_url = g_uri_to_string (wpad_url);
       self->pac_data = px_manager_pac_download (self, self->pac_url);
       if (!self->pac_data) {
@@ -449,9 +464,9 @@ px_manager_expand_pac (PxManager *self,
       self->pac_data = px_manager_pac_download (self, self->pac_url);
 
       if (!self->pac_data)
-        g_error ("Unable to download PAC!");
+        g_warning ("%s: Unable to download PAC from %s!", __FUNCTION__, self->pac_url);
       else
-        g_debug ("PAC recevied!\n");
+        g_debug ("%s: PAC recevied!", __FUNCTION__);
     }
   }
 
@@ -477,6 +492,7 @@ px_manager_get_proxies_sync (PxManager   *self,
   g_autoptr (GUri) uri = g_uri_parse (url, G_URI_FLAGS_PARSE_RELAXED, error);
   g_auto (GStrv) config = NULL;
 
+  g_debug ("%s: url=%s", __FUNCTION__, url ? url : "?");
   if (!uri) {
     g_strv_builder_add (builder, "direct://");
     return g_strv_builder_end (builder);
@@ -485,11 +501,11 @@ px_manager_get_proxies_sync (PxManager   *self,
   /* TODO: Check topology */
   config = px_manager_get_configuration (self, uri, error);
 
-  g_debug ("Config is:\n");
+  g_debug ("%s: Config is:", __FUNCTION__);
   for (int idx = 0; idx < g_strv_length (config); idx++) {
     GUri *conf_url = g_uri_parse (config[idx], G_URI_FLAGS_PARSE_RELAXED, NULL);
 
-    g_debug ("\t- %s\n", config[idx]);
+    g_debug ("%s:\t- Config[%d] = %s\n", __FUNCTION__, idx, config[idx]);
 
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
       struct PacData pac_data = {

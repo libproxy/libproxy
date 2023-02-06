@@ -48,6 +48,7 @@ if get_option('dbus')
   executable(
     'proxyd',
     proxyd_sources,
+    c_args: px_backend_c_args,
     dependencies: proxyd_deps,
     install_dir: join_paths(px_prefix, get_option('libexecdir')),
     install: true,

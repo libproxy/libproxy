@@ -17,12 +17,17 @@ px_backend_deps = [
   peas_dep,
 ]
 
+px_backend_c_args = [
+  '-DG_LOG_DOMAIN="libpxbackend"',
+]
+
 px_backend_inc = include_directories('.')
 
 px_backend_lib = shared_library(
   'pxbackend-@0@'.format(api_version),
   px_backend_sources,
   dependencies: px_backend_deps,
+  c_args: px_backend_c_args,
   install: true
 )
 

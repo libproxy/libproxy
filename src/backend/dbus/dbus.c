@@ -61,9 +61,13 @@ handle_method_call (GDBusConnection       *connection,
 
   result = g_variant_builder_new (G_VARIANT_TYPE ("as"));
   if (proxies) {
+    g_debug ("%s: Proxies:", __FUNCTION__);
     for (idx = 0; proxies[idx]; idx++) {
+      g_debug ("%s: \t- Proxy[%d] = %s", __FUNCTION__, idx, proxies[idx]);
       g_variant_builder_add (result, "s", proxies[idx]);
     }
+  } else {
+    g_debug ("%s: No Proxy required", __FUNCTION__);
   }
 
   g_dbus_method_invocation_return_value (invocation,

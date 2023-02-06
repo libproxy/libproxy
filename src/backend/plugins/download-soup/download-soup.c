@@ -61,7 +61,7 @@ px_download_soup_download (PxDownload *download,
     NULL,     /* Pass a GCancellable here if you want to cancel a download */
     &error);
   if (!bytes || soup_message_get_status (msg) != SOUP_STATUS_OK) {
-    g_debug ("Failed to download: %s\n", error ? error->message : "");
+    g_debug ("%s: Failed to download: %s", __FUNCTION__, error ? error->message : "");
     return NULL;
   }
 

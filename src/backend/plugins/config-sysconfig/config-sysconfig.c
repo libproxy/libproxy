@@ -62,13 +62,13 @@ px_config_sysconfig_init (PxConfigSysConfig *self)
 
   file = g_file_new_for_path (self->proxy_file);
   if (!file) {
-    g_print ("Could not create file\n");
+    g_debug ("%s: Could not create file", __FUNCTION__);
     return;
   }
 
   istr = g_file_read (file, NULL, NULL);
   if (!istr) {
-    g_print ("Could not read file\n");
+    g_debug ("%s: Could not read file", __FUNCTION__);
     return;
   }
 
