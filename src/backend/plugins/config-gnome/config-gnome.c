@@ -117,11 +117,10 @@ store_response (GStrvBuilder *builder,
   }
 }
 
-static gboolean
-px_config_gnome_get_config (PxConfig      *config,
-                            GUri          *uri,
-                            GStrvBuilder  *builder,
-                            GError       **error)
+static void
+px_config_gnome_get_config (PxConfig     *config,
+                            GUri         *uri,
+                            GStrvBuilder *builder)
 {
   PxConfigGnome *self = PX_CONFIG_GNOME (config);
   g_autofree char *proxy = NULL;
@@ -181,8 +180,6 @@ px_config_gnome_get_config (PxConfig      *config,
                       password);
     }
   }
-
-  return TRUE;
 }
 
 static void

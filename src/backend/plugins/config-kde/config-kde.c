@@ -152,21 +152,20 @@ px_config_kde_is_available (PxConfig *config)
   return self->available && g_getenv ("KDE_FULL_SESSION") != NULL;
 }
 
-static gboolean
-px_config_kde_get_config (PxConfig      *config,
-                          GUri          *uri,
-                          GStrvBuilder  *builder,
-                          GError       **error)
+static void
+px_config_kde_get_config (PxConfig     *config,
+                          GUri         *uri,
+                          GStrvBuilder *builder)
 {
   PxConfigKde *self = PX_CONFIG_KDE (config);
   const char *scheme = g_uri_get_scheme (uri);
   g_autofree char *proxy = NULL;
 
   if (!self->proxy_type)
-    return TRUE;
+    return;
 
   if (self->no_proxy && strstr (self->no_proxy, g_uri_get_host (uri)))
-    return TRUE;
+    return;
 
   switch (self->proxy_type) {
     case KDE_PROXY_TYPE_MANUAL:
@@ -194,8 +193,6 @@ px_config_kde_get_config (PxConfig      *config,
 
   if (proxy)
     g_strv_builder_add (builder, proxy);
-
-  return TRUE;
 }
 
 static void

@@ -34,7 +34,7 @@ struct _PxConfigInterface
   GTypeInterface parent_iface;
 
   gboolean (*is_available) (PxConfig *self);
-  gboolean (*get_config) (PxConfig *self, GUri *uri, GStrvBuilder *builder, GError **error);
+  void (*get_config) (PxConfig *self, GUri *uri, GStrvBuilder *builder);
 };
 
 G_END_DECLS

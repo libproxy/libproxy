@@ -293,7 +293,6 @@ px_manager_pac_download (PxManager  *self,
 struct ConfigData {
   GStrvBuilder *builder;
   GUri *uri;
-  GError **error;
 };
 
 /**
@@ -311,7 +310,7 @@ get_config (PeasExtensionSet *set,
   struct ConfigData *config_data = data;
 
   g_debug ("%s: Asking plugin '%s' for configuration", __FUNCTION__, peas_plugin_info_get_module_name (info));
-  ifc->get_config (PX_CONFIG (extension), config_data->uri, config_data->builder, config_data->error);
+  ifc->get_config (PX_CONFIG (extension), config_data->uri, config_data->builder);
 }
 
 /**
@@ -333,7 +332,6 @@ px_manager_get_configuration (PxManager  *self,
   struct ConfigData config_data = {
     .uri = uri,
     .builder = builder,
-    .error = error,
   };
 
   peas_extension_set_foreach (self->config_set, get_config, &config_data);

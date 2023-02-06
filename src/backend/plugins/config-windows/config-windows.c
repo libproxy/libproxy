@@ -123,11 +123,10 @@ is_enabled (char type)
   return result;
 }
 
-static gboolean
-px_config_windows_get_config (PxConfig      *self,
-                              GUri          *uri,
-                              GStrvBuilder  *builder,
-                              GError       **error)
+static void
+px_config_windows_get_config (PxConfig     *self,
+                              GUri         *uri,
+                              GStrvBuilder *builder)
 {
   char *tmp = NULL;
   guint32 enabled = 0;
@@ -139,7 +138,7 @@ px_config_windows_get_config (PxConfig      *self,
   /* WPAD */
   if (is_enabled (W32REG_OFFSET_WPAD)) {
     g_strv_builder_add (builder, "wpad://");
-    return TRUE;
+    return;
   }
 
   /* PAC */
@@ -149,7 +148,7 @@ px_config_windows_get_config (PxConfig      *self,
 
     if (ac_uri) {
       g_strv_builder_add (builder, pac_uri);
-      return TRUE;
+      return;
     }
   }
 
@@ -158,10 +157,8 @@ px_config_windows_get_config (PxConfig      *self,
     g_autofree char *http_proxy = g_strconcat ("http://", tmp, NULL);
     /* TODO */
     g_strv_builder_add (builder, http_proxy);
-    return TRUE;
+    return;
   }
-
-  return TRUE;
 }
 
 static void

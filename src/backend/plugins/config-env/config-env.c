@@ -93,11 +93,10 @@ px_config_env_is_available (PxConfig *self)
   return TRUE;
 }
 
-static gboolean
-px_config_env_get_config (PxConfig      *config,
-                          GUri          *uri,
-                          GStrvBuilder  *builder,
-                          GError       **error)
+static void
+px_config_env_get_config (PxConfig     *config,
+                          GUri         *uri,
+                          GStrvBuilder *builder)
 {
   PxConfigEnv *self = PX_CONFIG_ENV (config);
   const char *proxy = NULL;
@@ -108,7 +107,7 @@ px_config_env_get_config (PxConfig      *config,
    * - case insensitive check?
    */
   if (self->no_proxy && (g_strv_contains ((const char * const *)self->no_proxy, g_uri_get_host (uri)) || g_strv_contains ((const char * const *)self->no_proxy, "*"))) {
-    return TRUE;
+    return;
   }
 
   if (g_strcmp0 (scheme, "ftp") == 0)
@@ -123,8 +122,6 @@ px_config_env_get_config (PxConfig      *config,
   /* TODO: Where should we add proxy url validation ? */
   if (proxy)
     g_strv_builder_add (builder, proxy);
-
-  return TRUE;
 }
 
 static void

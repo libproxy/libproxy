@@ -122,21 +122,20 @@ px_config_sysconfig_is_available (PxConfig *config)
   return self->available;
 }
 
-static gboolean
-px_config_sysconfig_get_config (PxConfig      *config,
-                                GUri          *uri,
-                                GStrvBuilder  *builder,
-                                GError       **error)
+static void
+px_config_sysconfig_get_config (PxConfig     *config,
+                                GUri         *uri,
+                                GStrvBuilder *builder)
 {
   PxConfigSysConfig *self = PX_CONFIG_SYSCONFIG (config);
   const char *scheme = g_uri_get_scheme (uri);
   g_autofree char *proxy = NULL;
 
   if (!self->proxy_enabled)
-    return TRUE;
+    return;
 
   if (self->no_proxy && strstr (self->no_proxy, g_uri_get_host (uri)))
-    return TRUE;
+    return;
 
   if (g_strcmp0 (scheme, "ftp") == 0) {
     proxy = g_strdup (self->ftp_proxy);
@@ -148,8 +147,6 @@ px_config_sysconfig_get_config (PxConfig      *config,
 
   if (proxy)
     g_strv_builder_add (builder, proxy);
-
-  return TRUE;
 }
 
 static void

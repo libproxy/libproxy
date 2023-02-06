@@ -119,24 +119,23 @@ getbool (CFDictionaryRef  settings,
   return i != 0;
 }
 
-static gboolean
-px_config_osx_get_config (PxConfig      *self,
-                          GUri          *uri,
-                          GStrvBuilder  *builder,
-                          GError       **error)
+static void
+px_config_osx_get_config (PxConfig     *self,
+                          GUri         *uri,
+                          GStrvBuilder *builder)
 {
   const char *proxy = NULL;
   CFDictionaryRef proxies = SCDynamicStoreCopyProxies (NULL);
 
   if (!proxies) {
     g_warning ("Unable to fetch proxy configuration");
-    return FALSE;
+    return;
   }
 
   if (getbool (proxies, "ProxyAutoDiscoveryEnable")) {
     CFRelease (proxies);
     g_strv_builder_add (builder, "wpad://");
-    return TRUE;
+    return;
   }
 
   if (getbool (proxies, "ProxyAutoConfigEnable")) {
@@ -148,15 +147,13 @@ px_config_osx_get_config (PxConfig      *self,
       g_autofree char *ret = g_strdup_printf ("pac+%s", g_uri_to_string (tmp_uri));
       CFRelease (proxies);
       g_strv_builder_add (builder, ret);
-      return TRUE;
+      return;
     }
   }
 
   g_print ("%s: Whatever", __FUNCTION__);
   if (proxy)
     g_strv_builder_add (builder, proxy);
-
-  return TRUE;
 }
 
 static void
