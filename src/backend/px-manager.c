@@ -463,10 +463,13 @@ px_manager_expand_pac (PxManager *self,
       self->pac_url = g_uri_to_string (uri);
       self->pac_data = px_manager_pac_download (self, self->pac_url);
 
-      if (!self->pac_data)
+      if (!self->pac_data) {
         g_warning ("%s: Unable to download PAC from %s!", __FUNCTION__, self->pac_url);
-      else
+        g_clear_pointer (&self->pac_url, g_free);
+        ret = FALSE;
+      } else {
         g_debug ("%s: PAC recevied!", __FUNCTION__);
+      }
     }
   }
 
