@@ -71,8 +71,17 @@ px_download_curl_download (PxDownload *download,
   if (!self->curl)
     self->curl = curl_easy_init ();
 
+  if (!self->curl)
+    return NULL;
+
   if (g_str_has_prefix (url, "pac+"))
     url += 4;
+
+  curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, 1);
+  curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, 1);
+  curl_easy_setopt (self->curl, CURLOPT_NOPROXY, "*");
+  curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy");
 
   curl_easy_setopt (self->curl, CURLOPT_URL, url);
   curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, store_data);
