@@ -116,14 +116,12 @@ px_manager_constructed (GObject *object)
     PeasExtension *extension = peas_extension_set_get_extension (self->config_set, info);
     gboolean available = TRUE;
 
-    if (!peas_plugin_info_is_loaded (info)) {
-      /* In case user requested a specific module, just load that one */
-      if (self->config_plugin && g_str_has_prefix (peas_plugin_info_get_module_name (info), "config-")) {
-        if (g_strcmp0 (peas_plugin_info_get_module_name (info), self->config_plugin) == 0)
-          peas_engine_load_plugin (self->engine, info);
-      } else {
+    /* In case user requested a specific module, just load that one */
+    if (self->config_plugin && g_str_has_prefix (peas_plugin_info_get_module_name (info), "config-")) {
+      if (g_strcmp0 (peas_plugin_info_get_module_name (info), self->config_plugin) == 0)
         peas_engine_load_plugin (self->engine, info);
-      }
+    } else {
+      peas_engine_load_plugin (self->engine, info);
     }
 
     extension = peas_extension_set_get_extension (self->config_set, info);
