@@ -56,6 +56,7 @@ struct _PxManager {
 
   char *config_plugin;
 
+  gboolean online;
   gboolean wpad;
   GBytes *pac_data;
   char *pac_url;
@@ -75,6 +76,7 @@ px_manager_on_network_changed (GNetworkMonitor *monitor,
   g_debug ("%s: Network connection changed, clearing pac data", __FUNCTION__);
 
   self->wpad = FALSE;
+  self->online = network_available;
   g_clear_pointer (&self->pac_url, g_free);
   g_clear_pointer (&self->pac_data, g_bytes_unref);
 }
@@ -138,6 +140,7 @@ px_manager_constructed (GObject *object)
   self->pac_data = NULL;
 
   self->network_monitor = g_network_monitor_get_default ();
+  self->online = g_network_monitor_get_network_available (self->network_monitor);
   g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
 }
 
@@ -464,7 +467,7 @@ px_manager_expand_pac (PxManager *self,
       self->pac_data = px_manager_pac_download (self, self->pac_url);
 
       if (!self->pac_data) {
-        g_warning ("%s: Unable to download PAC from %s!", __FUNCTION__, self->pac_url);
+        g_warning ("%s: Unable to download PAC from %s while online = %d!", __FUNCTION__, self->pac_url, self->online);
         g_clear_pointer (&self->pac_url, g_free);
         ret = FALSE;
       } else {
@@ -495,13 +498,12 @@ px_manager_get_proxies_sync (PxManager   *self,
   g_autoptr (GUri) uri = g_uri_parse (url, G_URI_FLAGS_PARSE_RELAXED, error);
   g_auto (GStrv) config = NULL;
 
-  g_debug ("%s: url=%s", __FUNCTION__, url ? url : "?");
-  if (!uri) {
+  g_debug ("%s: url=%s online=%d", __FUNCTION__, url ? url : "?", self->online);
+  if (!uri || !self->online) {
     g_strv_builder_add (builder, "direct://");
     return g_strv_builder_end (builder);
   }
 
-  /* TODO: Check topology */
   config = px_manager_get_configuration (self, uri, error);
 
   g_debug ("%s: Config is:", __FUNCTION__);
