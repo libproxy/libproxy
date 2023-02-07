@@ -154,9 +154,8 @@ px_pacrunner_duktape_set_pac (PxPacRunner *pacrunner,
   PxPacRunnerDuktape *self = PX_PACRUNNER_DUKTAPE (pacrunner);
   gsize len;
   gconstpointer content = g_bytes_get_data (pac_data, &len);
-  g_autoptr (GString) pac = g_string_new_len (content, len);
 
-  duk_push_string (self->ctx, pac->str);
+  duk_push_lstring (self->ctx, content, len);
 
   if (duk_peval_noresult (self->ctx)) {
     return FALSE;
