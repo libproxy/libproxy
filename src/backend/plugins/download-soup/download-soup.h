@@ -1,6 +1,6 @@
 /* download-soup.h
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,19 +22,12 @@
 #pragma once
 
 #include <glib.h>
-#include <libpeas/peas.h>
 
 G_BEGIN_DECLS
 
 #define PX_DOWNLOAD_TYPE_SOUP         (px_download_soup_get_type ())
 
 G_DECLARE_FINAL_TYPE (PxDownloadSoup, px_download_soup, PX, DOWNLOAD_SOUP, GObject)
-
-struct _PxDownloadSoup {
-  GObject parent_instance;
-
-  SoupSession *session;
-};
 
 G_END_DECLS
 

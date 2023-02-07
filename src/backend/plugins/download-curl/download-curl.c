@@ -1,6 +1,6 @@
 /* download-curl.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,11 @@
 
 static void px_download_iface_init (PxDownloadInterface *iface);
 G_MODULE_EXPORT void peas_register_types (PeasObjectModule *module);
+
+struct _PxDownloadCurl {
+  GObject parent_instance;
+  CURL *curl;
+};
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxDownloadCurl,
                                px_download_curl,
