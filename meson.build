@@ -127,5 +127,7 @@ summary({
 }, section: 'Build environment')
 
 # Install pre-commit hook
-git_hook_installer = find_program('data/install-git-hook.sh')
-run_command(git_hook_installer)
+hook = run_command(join_paths(meson.project_source_root(), 'data/install-git-hook.sh'), check: false)
+if hook.returncode() == 0
+  message(hook.stdout().strip())
+endif
