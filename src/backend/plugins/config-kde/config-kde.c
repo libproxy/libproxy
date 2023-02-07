@@ -1,6 +1,6 @@
 /* config-kde.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,16 +66,15 @@ px_config_kde_read_config (PxConfigKde *self,
   g_autoptr (GFileInputStream) istr = NULL;
   g_autoptr (GDataInputStream) dstr = NULL;
 
-
   file = g_file_new_for_path (proxy_file);
   if (!file) {
-    g_print ("Could not create file\n");
+    g_debug ("%s: Could not create file", __FUNCTION__);
     return;
   }
 
   istr = g_file_read (file, NULL, NULL);
   if (!istr) {
-    g_print ("Could not read file\n");
+    g_debug ("%s: Could not read file", __FUNCTION__);
     return;
   }
 

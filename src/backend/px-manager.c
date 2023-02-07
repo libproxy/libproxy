@@ -263,7 +263,7 @@ download_pac (PeasExtensionSet *set,
   PxDownloadInterface *ifc = PX_DOWNLOAD_GET_IFACE (extension);
   struct DownloadData *download_data = data;
 
-  g_debug ("%s: Download PAC using plugin '%s'", __FUNCTION__, peas_plugin_info_get_module_name (info));
+  g_debug ("%s: Download PAC '%s' using plugin '%s'", __FUNCTION__, download_data->uri, peas_plugin_info_get_module_name (info));
   if (!download_data->bytes)
     download_data->bytes = ifc->download (PX_DOWNLOAD (extension), download_data->uri);
 }

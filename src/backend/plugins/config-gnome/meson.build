@@ -14,6 +14,7 @@ plugin_lib = shared_module(
   plugin_name,
   plugin_src,
   include_directories: px_backend_inc,
+  c_args: px_backend_c_args,
   dependencies: [peas_dep, px_backend_dep],
   install_dir: join_paths(px_plugins_dir, plugin_name),
   install: true,

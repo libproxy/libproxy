@@ -1,6 +1,6 @@
 /* config-windows.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -107,6 +107,33 @@ get_registry (const char  *key,
   return FALSE;
 }
 
+static GHashTable *
+parse_manual (char *manual)
+{
+  g_auto (GStrv) split = NULL;
+  GHashTable *ret = g_hash_table_new (g_str_hash, g_str_equal);
+
+  /* We have to check for two formats:
+   * - 1.2.3.4:8080
+   * - ftp=1.2.4.5:8080;https=1.2.3.4:8080
+   */
+
+  split = g_strsplit (manual, ";", -1);
+  for (int idx = 0; idx < g_strv_length (split); idx++) {
+    if (!strchr (split[idx], '=')) {
+      g_hash_table_insert (ret, (char *)"http", g_strdup_printf ("http://%s", split[idx]));
+    } else {
+      g_auto (GStrv) split_kv = g_strsplit (split[idx], "=", -1);
+
+      if (g_strv_length (split_kv) == 2) {
+        g_hash_table_insert (ret, g_strdup (split_kv[0]), g_strdup_printf ("%s://%s", split_kv[0], split_kv[1]));
+      }
+    }
+  }
+
+  return ret;
+}
+
 static gboolean
 is_enabled (char type)
 {
@@ -132,7 +159,10 @@ px_config_windows_get_config (PxConfig     *self,
   guint32 enabled = 0;
 
   if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
-    g_print ("Override: %s\n", tmp);
+    const char *host = g_uri_get_host (uri);
+
+    if (g_strcmp0 (tmp, "<local>") == 0 && g_strcmp0 (host, "127.0.0.1") == 0)
+      return;
   }
 
   /* WPAD */
@@ -154,10 +184,28 @@ px_config_windows_get_config (PxConfig     *self,
 
   /* Manual proxy */
   if (get_registry (W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled && get_registry (W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
-    g_autofree char *http_proxy = g_strconcat ("http://", tmp, NULL);
-    /* TODO */
-    g_strv_builder_add (builder, http_proxy);
-    return;
+    g_autoptr (GHashTable) table = parse_manual (tmp);
+    const char *scheme = g_uri_get_scheme (uri);
+
+    if (table) {
+      char *ret = g_hash_table_lookup (table, scheme);
+      if (ret) {
+        g_strv_builder_add (builder, ret);
+        return;
+      }
+
+      ret = g_hash_table_lookup (table, "http");
+      if (ret) {
+        g_strv_builder_add (builder, ret);
+        return;
+      }
+
+      ret = g_hash_table_lookup (table, "socks");
+      if (ret) {
+        g_strv_builder_add (builder, ret);
+        return;
+      }
+    }
   }
 }
 

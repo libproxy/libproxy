@@ -1,6 +1,6 @@
 /* config-env.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,8 @@
 
 #include "config-env.h"
 
-#include "px-plugin-config.h"
 #include "px-manager.h"
+#include "px-plugin-config.h"
 
 static void px_config_iface_init (PxConfigInterface *iface);
 G_MODULE_EXPORT void peas_register_types (PeasObjectModule *module);
@@ -102,10 +102,6 @@ px_config_env_get_config (PxConfig     *config,
   const char *proxy = NULL;
   const char *scheme = g_uri_get_scheme (uri);
 
-  /* TODO:
-   * - Are host names resolved to IPs??
-   * - case insensitive check?
-   */
   if (self->no_proxy && (g_strv_contains ((const char * const *)self->no_proxy, g_uri_get_host (uri)) || g_strv_contains ((const char * const *)self->no_proxy, "*"))) {
     return;
   }
@@ -115,11 +111,9 @@ px_config_env_get_config (PxConfig     *config,
   else if (g_strcmp0 (scheme, "https") == 0)
     proxy = self->https_proxy;
 
-  /* TODO: Is this what we want as a fallback? What about ALL_PROXY? */
   if (!proxy)
     proxy = self->http_proxy;
 
-  /* TODO: Where should we add proxy url validation ? */
   if (proxy)
     g_strv_builder_add (builder, proxy);
 }

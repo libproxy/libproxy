@@ -1,6 +1,6 @@
-/*******************************************************************************
- * libproxy - A library for proxy configuration
- * Copyright (C) 2022-2023 Jan-Michael Brummer <jan.brummer@tabos.org>
+/* config-env-test.c
+ *
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,8 +14,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
- ******************************************************************************/
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
 #include "px-manager.h"
 
@@ -67,8 +69,12 @@ test_config_env (void)
       continue;
     }
 
-    if (test.no_proxy)
-      g_setenv ("NO_PROXY", test.no_proxy, TRUE);
+    if (test.no_proxy) {
+      if (test.config_is_proxy)
+        g_setenv ("NO_PROXY", test.no_proxy, TRUE);
+      else
+        g_setenv ("no_proxy", test.no_proxy, TRUE);
+    }
 
     manager = px_test_manager_new ("config-env");
     g_clear_error (&error);
@@ -82,6 +88,7 @@ test_config_env (void)
 
     g_unsetenv (test.env);
     g_unsetenv ("NO_PROXY");
+    g_unsetenv ("no_proxy");
 
     g_clear_object (&manager);
   }

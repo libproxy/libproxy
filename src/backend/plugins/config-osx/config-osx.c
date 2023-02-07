@@ -1,6 +1,6 @@
 /* config-osx.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -91,6 +91,37 @@ getobj_str (CFDictionaryRef  settings,
   return retval;
 }
 
+static CFArrayRef
+getobj_array (CFDictionaryRef  settings,
+              char            *key)
+{
+  CFStringRef k;
+  CFArrayRef retval;
+
+  if (!settings)
+    return NULL;
+
+  k = CFStringCreateWithCString (NULL, key, kCFStringEncodingMacRoman);
+  if (!k)
+    return NULL;
+
+  retval = (CFArrayRef)CFDictionaryGetValue (settings, k);
+
+  CFRelease (k);
+  return retval;
+}
+
+static char *
+str (CFStringRef ref)
+{
+  CFIndex size = CFStringGetLength (ref) + 1;
+  char *ret = g_malloc0 (size);
+
+  CFStringGetCString (ref, ret, size, kCFStringEncodingUTF8);
+
+  return ret;
+}
+
 static gboolean
 getint (CFDictionaryRef  settings,
         char            *key,
@@ -119,6 +150,94 @@ getbool (CFDictionaryRef  settings,
   return i != 0;
 }
 
+static char *
+str_to_upper (const char *str)
+{
+  char *ret = NULL;
+  int idx;
+
+  if (!str)
+    return NULL;
+
+  ret = g_malloc0 (strlen (str) + 1);
+
+  for (idx = 0; idx < strlen (str); idx++)
+    ret[idx] = g_ascii_toupper (str[idx]);
+
+  return ret;
+}
+
+static char *
+protocol_url (CFDictionaryRef  settings,
+              char            *protocol)
+{
+  g_autofree char *tmp = NULL;
+  g_autoptr (GString) ret = NULL;
+  g_autofree char *host = NULL;
+  int64_t port;
+  CFStringRef ref;
+
+  /* Check ProtocolEnabled */
+  tmp = g_strconcat (protocol, "Enable", NULL);
+  if (!getbool (settings, tmp)) {
+    g_debug ("%s: %s not set", __FUNCTION__, tmp);
+    return NULL;
+  }
+  g_clear_pointer (&tmp, g_free);
+
+  /* Get ProtocolPort */
+  tmp = g_strconcat (protocol, "Port", NULL);
+  getint (settings, tmp, &port);
+  if (!port) {
+    g_debug ("%s: %s not set", __FUNCTION__, tmp);
+    return NULL;
+  }
+  g_clear_pointer (&tmp, g_free);
+
+  /* Get ProtocolProxy */
+  tmp = g_strconcat (protocol, "Proxy", NULL);
+  ref = getobj_str (settings, tmp);
+  g_clear_pointer (&tmp, g_free);
+
+  host = str (ref);
+  if (!host || strlen (host) == 0)
+    return NULL;
+
+  if (strcmp (protocol, "HTTP") == 0 || strcmp (protocol, "HTTPS") == 0 || strcmp (protocol, "FTP") == 0 || strcmp (protocol, "Gopher") == 0)
+    ret = g_string_new ("http://");
+  else if (strcmp (protocol, "RTSP") == 0)
+    ret = g_string_new ("rtsp://");
+  else if (strcmp (protocol, "SOCKS") == 0)
+    ret = g_string_new ("socks://");
+  else
+    return NULL;
+
+  g_string_append_printf (ret, "%s:%lld", host, port);
+
+  return g_strdup (ret->str);
+}
+
+static GStrv
+get_ignore_list (CFDictionaryRef proxies)
+{
+  CFArrayRef ref = getobj_array (proxies, "ExceptionsList");
+  g_autoptr (GStrvBuilder) ret = g_strv_builder_new ();
+
+  if (!ref)
+    return g_strv_builder_end (ret);
+
+  for (int idx = 0; idx < CFArrayGetCount (ref); idx++) {
+    CFStringRef s = (CFStringRef)CFArrayGetValueAtIndex (ref, idx);
+
+    g_strv_builder_add (ret, str (s));
+  }
+
+  if (getbool (proxies, "ExcludeSimpleHostnames"))
+    g_strv_builder_add (ret, "127.0.0.1");
+
+  return g_strv_builder_end (ret);
+}
+
 static void
 px_config_osx_get_config (PxConfig     *self,
                           GUri         *uri,
@@ -126,11 +245,17 @@ px_config_osx_get_config (PxConfig     *self,
 {
   const char *proxy = NULL;
   CFDictionaryRef proxies = SCDynamicStoreCopyProxies (NULL);
+  g_auto (GStrv) ignore_list = NULL;
 
   if (!proxies) {
     g_warning ("Unable to fetch proxy configuration");
     return;
   }
+
+  ignore_list = get_ignore_list (proxies);
+
+  if (ignore_list && g_strv_contains ((const char * const *)ignore_list, g_uri_get_host (uri)))
+    return;
 
   if (getbool (proxies, "ProxyAutoDiscoveryEnable")) {
     CFRelease (proxies);
@@ -140,7 +265,7 @@ px_config_osx_get_config (PxConfig     *self,
 
   if (getbool (proxies, "ProxyAutoConfigEnable")) {
     CFStringRef ref = getobj_str (proxies, "ProxyAutoConfigURLString");
-    const char *tmp = CFStringGetCStringPtr (ref, CFStringGetFastestEncoding (ref));
+    g_autofree char *tmp = str (ref);
     GUri *tmp_uri = g_uri_parse (tmp, G_URI_FLAGS_PARSE_RELAXED, NULL);
 
     if (tmp_uri) {
@@ -149,9 +274,19 @@ px_config_osx_get_config (PxConfig     *self,
       g_strv_builder_add (builder, ret);
       return;
     }
+  } else {
+    const char *scheme = g_uri_get_scheme (uri);
+    g_autofree char *capital_scheme = str_to_upper (scheme);
+
+    proxy = protocol_url (proxies, capital_scheme);
+
+    if (!proxy)
+      proxy = protocol_url (proxies, "HTTP");
+
+    if (!proxy)
+      proxy = protocol_url (proxies, "SOCKS");
   }
 
-  g_print ("%s: Whatever", __FUNCTION__);
   if (proxy)
     g_strv_builder_add (builder, proxy);
 }

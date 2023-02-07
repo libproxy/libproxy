@@ -1,6 +1,6 @@
 /* config-gnome.c
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  */
 
 #include <libpeas/peas.h>
-#include <glib.h>
 
 #include "config-gnome.h"
+
 #include "px-plugin-config.h"
 
 struct _PxConfigGnome {
@@ -35,11 +35,11 @@ struct _PxConfigGnome {
   gboolean settings_found;
 };
 
-enum {
+typedef enum {
   GNOME_PROXY_MODE_NONE,
   GNOME_PROXY_MODE_MANUAL,
   GNOME_PROXY_MODE_AUTO
-};
+} GnomeProxyMode;
 
 static void px_config_iface_init (PxConfigInterface *iface);
 void peas_register_types (PeasObjectModule *module);
@@ -104,8 +104,8 @@ store_response (GStrvBuilder *builder,
                 char         *username,
                 char         *password)
 {
-  if (host && port != 0) {
-    GString *tmp = g_string_new (type);
+  if (type && host && port != 0) {
+    g_autoptr (GString) tmp = g_string_new (type);
 
     g_string_append (tmp, "://");
     if (auth)
@@ -113,7 +113,7 @@ store_response (GStrvBuilder *builder,
 
     g_string_append_printf (tmp, "%s:%d", host, port);
 
-    g_strv_builder_add (builder, g_string_free (tmp, FALSE));
+    g_strv_builder_add (builder, tmp->str);
   }
 }
 
@@ -124,7 +124,7 @@ px_config_gnome_get_config (PxConfig     *config,
 {
   PxConfigGnome *self = PX_CONFIG_GNOME (config);
   g_autofree char *proxy = NULL;
-  int mode;
+  GnomeProxyMode mode;
 
   mode = g_settings_get_enum (self->proxy_settings, "mode");
   if (mode == GNOME_PROXY_MODE_AUTO) {
@@ -137,10 +137,10 @@ px_config_gnome_get_config (PxConfig     *config,
 
     g_strv_builder_add (builder, proxy);
   } else if (mode == GNOME_PROXY_MODE_MANUAL) {
-    gboolean auth = g_settings_get_boolean (self->http_proxy_settings, "use-authentication");
     g_autofree char *username = g_settings_get_string (self->http_proxy_settings, "authentication-user");
     g_autofree char *password = g_settings_get_string (self->http_proxy_settings, "authentication-password");
     const char *scheme = g_uri_get_scheme (uri);
+    gboolean auth = g_settings_get_boolean (self->http_proxy_settings, "use-authentication");
 
     if (g_strcmp0 (scheme, "http") == 0) {
       g_autofree char *host = g_settings_get_string (self->http_proxy_settings, "host");
@@ -174,7 +174,7 @@ px_config_gnome_get_config (PxConfig     *config,
       store_response (builder,
                       "socks",
                       host,
-                      g_settings_get_int (self->ftp_proxy_settings, "port"),
+                      g_settings_get_int (self->socks_proxy_settings, "port"),
                       auth,
                       username,
                       password);

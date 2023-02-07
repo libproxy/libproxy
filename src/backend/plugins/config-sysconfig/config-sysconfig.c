@@ -1,6 +1,6 @@
 /* config-sysconfig.c
  *
- * Copyright 2023 Jan-Michael Brummer
+ * Copyright 2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,8 @@
 
 #include "config-sysconfig.h"
 
-#include "px-plugin-config.h"
 #include "px-manager.h"
+#include "px-plugin-config.h"
 
 struct _PxConfigSysConfig {
   GObject parent_instance;

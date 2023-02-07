@@ -1,6 +1,6 @@
 /* config-sysconfig.h
  *
- * Copyright 2022-2023 Jan-Michael Brummer
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,6 @@
 #pragma once
 
 #include <glib.h>
-#include <libpeas/peas.h>
 
 G_BEGIN_DECLS
 

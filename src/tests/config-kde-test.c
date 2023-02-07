@@ -1,6 +1,6 @@
-/*******************************************************************************
- * libproxy - A library for proxy configuration
- * Copyright (C) 2022-2023 Jan-Michael Brummer <jan.brummer@tabos.org>
+/* config-kde-test.c
+ *
+ * Copyright 2022-2023 The Libproxy Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,8 +14,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
- ******************************************************************************/
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
 #include "px-manager.h"
 
@@ -33,6 +35,7 @@ static const ConfigKdeTest config_kde_manual_test_set[] = {
   { "https://www.example.com", "http://127.0.0.1:8080", TRUE},
   { "http://www.example.com", "http://127.0.0.1:8080", TRUE},
   { "ftp://www.example.com", "ftp://127.0.0.1:8080", TRUE},
+  { "socks://www.example.com", "socks://127.0.0.1:8080", TRUE},
   { "http://localhost:1234", "http://127.0.0.1:8080", FALSE},
   { "socks://localhost:1234", "http://127.0.0.1:8080", FALSE},
   { "socks://localhost:1234", "socks://127.0.0.1:8080", FALSE},
@@ -194,6 +197,30 @@ test_config_kde_pac (void)
   }
 }
 
+static void
+test_config_kde_fail (void)
+{
+  g_autoptr (PxManager) manager = NULL;
+  g_autoptr (GError) error = NULL;
+  g_autoptr (GUri) uri = NULL;
+  g_auto (GStrv) config = NULL;
+  g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-pac", NULL);
+
+  if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
+    g_warning ("Failed to set kde environment");
+  }
+
+  /* Disable KDE support */
+  g_unsetenv ("KDE_FULL_SESSION");
+
+  manager = px_test_manager_new ("config-kde");
+
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
+
+  config = px_manager_get_configuration (manager, uri, &error);
+  g_assert_null (config[0]);
+}
+
 int
 main (int    argc,
       char **argv)
@@ -204,6 +231,7 @@ main (int    argc,
   g_test_add_func ("/config/kde/manual", test_config_kde_manual);
   g_test_add_func ("/config/kde/wpad", test_config_kde_wpad);
   g_test_add_func ("/config/kde/pac", test_config_kde_pac);
+  g_test_add_func ("/config/kde/fail", test_config_kde_fail);
 
   return g_test_run ();
 }
