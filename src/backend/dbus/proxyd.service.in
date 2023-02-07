@@ -6,13 +6,9 @@ Type=dbus
 BusName=org.libproxy.proxy
 ExecStart=@LIBEXECDIR@/proxyd
 #Environment="G_MESSAGES_DEBUG=all"
-Restart=on-failure
 
 MemoryDenyWriteExecute=yes
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
 RestrictRealtime=yes
-
-[Install]
-WantedBy=default.target

@@ -114,6 +114,8 @@ curl_dep = dependency('libcurl', required: get_option('download-curl'))
 ws2_32_dep = cc.find_library('ws2_32', required : with_platform_windows)
 gsettings_desktop_schema = dependency('gsettings-desktop-schemas', required: get_option('config-gnome'))
 
+build_dbus = get_option('dbus').disable_auto_if(['window', 'darwin'].contains(host_system)).allowed()
+
 subdir('src')
 subdir('docs')
 

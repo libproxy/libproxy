@@ -4,7 +4,7 @@ libproxy_inc = include_directories('.')
 
 libproxy_sources = []
 
-if get_option('dbus')
+if build_dbus
 libproxy_sources += [
   'proxy-dbus.c',
 ]

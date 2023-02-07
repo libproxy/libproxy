@@ -1,7 +1,12 @@
-if get_option('dbus')
+if build_dbus
   gdbus_codegen = find_program('gdbus-codegen')
 
   unitdir = ''
+  dbus_data_dir = join_paths(get_option('prefix'), get_option('datadir'), 'dbus-1')
+  dbus_interfaces_dir = join_paths(dbus_data_dir, 'interfaces')
+  dbus_services_dir = join_paths(dbus_data_dir, 'services')
+  dbus_sysconf_dir = join_paths(dbus_data_dir, 'session.d')
+
   systemd = dependency('systemd', required: false)
   if systemd.found()
     unitdir = systemd.get_variable(pkgconfig: 'systemduserunitdir')
@@ -53,6 +58,19 @@ if get_option('dbus')
     install_dir: join_paths(px_prefix, get_option('libexecdir')),
     install: true,
   )
+
+  service_data = configuration_data()
+  service_data.set('LIBEXECDIR', join_paths(px_prefix, get_option('libexecdir')))
+
+  dbus_service = configure_file(
+    input: 'org.libproxy.proxy.service.in',
+    output: 'org.libproxy.proxy.service',
+    configuration: service_data
+  )
+
+  install_data('org.libproxy.proxy.conf', install_dir : dbus_sysconf_dir)
+  install_data(dbus_service, install_dir : dbus_services_dir)
+  install_data('org.libproxy.proxy.xml', install_dir : dbus_interfaces_dir)
 
   service_data = configuration_data()
   service_data.set('LIBEXECDIR', join_paths(px_prefix, get_option('libexecdir')))

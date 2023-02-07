@@ -51,3 +51,7 @@ px_backend_dep = declare_dependency(
 
 subdir('dbus')
 subdir('plugins')
+
+summary({
+  'D-Bus Service' : build_dbus,
+}, section: 'Architecture')

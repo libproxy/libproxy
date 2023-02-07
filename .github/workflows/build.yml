@@ -22,7 +22,7 @@ jobs:
           gsettings-desktop-schemas-dev \
           libcurl4-openssl-dev
     - name: Build setup
-      run: meson setup build -Db_coverage=true
+      run: meson setup build -Db_coverage=true -Ddbus=disabled
     - name: Build
       run: ninja -C build
     - name: Tests and Coverage
@@ -76,7 +76,7 @@ jobs:
           gsettings-desktop-schemas-dev \
           libcurl4-openssl-dev
     - name: Build setup
-      run: meson setup build -Db_coverage=true -Ddbus=true
+      run: meson setup build -Db_coverage=true -Ddbus=enabled
     - name: Build
       run: ninja -C build
     - name: Tests

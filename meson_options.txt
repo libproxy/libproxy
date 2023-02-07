@@ -14,8 +14,8 @@ option(
 
 option(
   'dbus',
-  type: 'boolean',
-  value: false,
+  type: 'feature',
+  value: 'auto',
   description: 'Whether to build dbus service'
 )
 
