@@ -7,11 +7,10 @@ px_backend_sources = [
   'px-plugin-config.h',
   'px-plugin-pacrunner.c',
   'px-plugin-pacrunner.h',
-  'px-plugin-download.c',
-  'px-plugin-download.h',
 ]
 
 px_backend_deps = [
+  curl_dep,
   gio_dep,
   glib_dep,
   peas_dep,

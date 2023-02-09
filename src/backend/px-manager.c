@@ -24,8 +24,8 @@
 #include "px-manager.h"
 #include "px-plugin-config.h"
 #include "px-plugin-pacrunner.h"
-#include "px-plugin-download.h"
 
+#include <curl/curl.h>
 #include <libpeas/peas.h>
 
 enum {
@@ -49,8 +49,8 @@ struct _PxManager {
   PeasEngine *engine;
   PeasExtensionSet *config_set;
   PeasExtensionSet *pacrunner_set;
-  PeasExtensionSet *download_set;
   GNetworkMonitor *network_monitor;
+  CURL *curl;
   char *plugins_dir;
   GCancellable *cancellable;
 
@@ -108,7 +108,6 @@ px_manager_constructed (GObject *object)
 
   self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, NULL);
   self->pacrunner_set = peas_extension_set_new (self->engine, PX_TYPE_PACRUNNER, NULL);
-  self->download_set = peas_extension_set_new (self->engine, PX_TYPE_DOWNLOAD, NULL);
 
   list = peas_engine_get_plugin_list (self->engine);
   for (; list && list->data; list = list->next) {
@@ -249,24 +248,18 @@ px_manager_new (void)
   return g_object_new (PX_TYPE_MANAGER, "plugins-dir", PX_PLUGINS_DIR, NULL);
 }
 
-struct DownloadData {
-  const char *uri;
-  GBytes *bytes;
-  GError **error;
-};
-
-static void
-download_pac (PeasExtensionSet *set,
-              PeasPluginInfo   *info,
-              PeasExtension    *extension,
-              gpointer          data)
+static size_t
+store_data (void   *contents,
+            size_t  size,
+            size_t  nmemb,
+            void   *user_pointer)
 {
-  PxDownloadInterface *ifc = PX_DOWNLOAD_GET_IFACE (extension);
-  struct DownloadData *download_data = data;
+  GByteArray *byte_array = user_pointer;
+  size_t real_size = size * nmemb;
 
-  g_debug ("%s: Download PAC '%s' using plugin '%s'", __FUNCTION__, download_data->uri, peas_plugin_info_get_module_name (info));
-  if (!download_data->bytes)
-    download_data->bytes = ifc->download (PX_DOWNLOAD (extension), download_data->uri);
+  g_byte_array_append (byte_array, contents, real_size);
+
+  return real_size;
 }
 
 /**
@@ -282,13 +275,36 @@ GBytes *
 px_manager_pac_download (PxManager  *self,
                          const char *uri)
 {
-  struct DownloadData download_data = {
-    .uri = uri,
-    .bytes = NULL,
-  };
+  GByteArray *byte_array = g_byte_array_new ();
+  CURLcode res;
+  const char *url = uri;
 
-  peas_extension_set_foreach (self->download_set, download_pac, &download_data);
-  return download_data.bytes;
+  if (!self->curl)
+    self->curl = curl_easy_init ();
+
+  if (!self->curl)
+    return NULL;
+
+  if (g_str_has_prefix (url, "pac+"))
+    url += 4;
+
+  curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, 1);
+  curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, 1);
+  curl_easy_setopt (self->curl, CURLOPT_NOPROXY, "*");
+  curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy");
+
+  curl_easy_setopt (self->curl, CURLOPT_URL, url);
+  curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, store_data);
+  curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, byte_array);
+
+  res = curl_easy_perform (self->curl);
+  if (res != CURLE_OK) {
+    g_debug ("%s: Could not download data: %s", __FUNCTION__, curl_easy_strerror (res));
+    return NULL;
+  }
+
+  return g_byte_array_free_to_bytes (byte_array);
 }
 
 struct ConfigData {
