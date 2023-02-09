@@ -140,6 +140,7 @@ px_manager_constructed (GObject *object)
   self->network_monitor = g_network_monitor_get_default ();
   self->online = g_network_monitor_get_network_available (self->network_monitor);
   g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
+  g_debug ("%s: Up and running", __FUNCTION__);
 }
 
 static void
@@ -502,11 +503,10 @@ px_manager_get_proxies_sync (PxManager   *self,
 
   config = px_manager_get_configuration (self, uri, error);
 
-  g_debug ("%s: Config is:", __FUNCTION__);
   for (int idx = 0; idx < g_strv_length (config); idx++) {
     GUri *conf_url = g_uri_parse (config[idx], G_URI_FLAGS_PARSE_RELAXED, NULL);
 
-    g_debug ("%s:\t- Config[%d] = %s\n", __FUNCTION__, idx, config[idx]);
+    g_debug ("%s: Config[%d] = %s", __FUNCTION__, idx, config[idx]);
 
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
       struct PacData pac_data = {
@@ -523,6 +523,9 @@ px_manager_get_proxies_sync (PxManager   *self,
   /* In case no proxy could be found, assume direct connection */
   if (((GPtrArray *)builder)->len == 0)
     g_strv_builder_add (builder, "direct://");
+
+  for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++)
+    g_debug ("%s: Proxy[%d] = %s", __FUNCTION__, idx, (char *)((GPtrArray *)builder)->pdata[idx]);
 
   return g_strv_builder_end (builder);
 }
