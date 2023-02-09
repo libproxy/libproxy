@@ -3,7 +3,7 @@ Slug: building
 
 # Compiling with Libproxy
 
-The current stable API provides a small synchronnous function set which makes it easy to add it to existing application and libraries.
+The current stable API provides a small synchronous function set which makes it easy to add it to existing application and libraries.
 
 The following example is written in C but can be translated as well to every other programming language thanks to gobject-introspection. Furthermore there are
 several language samples provided in 'docs/samples' and also linked here in this main documentation.
