@@ -117,6 +117,7 @@ gsettings_desktop_schema = dependency('gsettings-desktop-schemas', required: get
 build_dbus = get_option('dbus').disable_auto_if(['window', 'darwin'].contains(host_system)).allowed()
 
 subdir('src')
+subdir('tests')
 subdir('docs')
 
 summary({
