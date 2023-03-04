@@ -27,7 +27,6 @@
 #else
 #include <netdb.h>
 #endif
-#include <glib-object.h>
 
 #include "pacrunner-duktape.h"
 #include "pacutils.h"

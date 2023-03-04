@@ -38,6 +38,7 @@ jobs:
           gi-docgen \
           libpeas-dev \
           gsettings-desktop-schemas-dev \
-          libcurl4-openssl-dev
+          libcurl4-openssl-dev \
+          valac
       - name: Build & upload the results
         run: .github/coverity.sh

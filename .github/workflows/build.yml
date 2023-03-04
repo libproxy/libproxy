@@ -20,7 +20,8 @@ jobs:
           gi-docgen \
           libpeas-dev \
           gsettings-desktop-schemas-dev \
-          libcurl4-openssl-dev
+          libcurl4-openssl-dev \
+          valac
     - name: Build setup
       run: meson setup build -Db_coverage=true -Ddbus=disabled
     - name: Build
@@ -74,7 +75,8 @@ jobs:
           gi-docgen \
           libpeas-dev \
           gsettings-desktop-schemas-dev \
-          libcurl4-openssl-dev
+          libcurl4-openssl-dev \
+          valac
     - name: Build setup
       run: meson setup build -Db_coverage=true -Ddbus=enabled
     - name: Build
@@ -94,7 +96,7 @@ jobs:
     - name: Setup
       run: |
         pip install meson ninja
-        brew install libsoup icu4c gobject-introspection duktape gcovr gi-docgen libpeas curl
+        brew install libsoup icu4c gobject-introspection duktape gcovr gi-docgen libpeas curl vala
         echo 'PKG_CONFIG_PATH=/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/gi-docgen/lib/pkgconfig' >> $GITHUB_ENV
     - name: Build and Test
       run: |
@@ -127,6 +129,7 @@ jobs:
             mingw-w64-x86_64-libsoup3
             mingw-w64-x86_64-libpeas
             mingw-w64-x86_64-curl
+            mingw-w64-x86_64-vala
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:

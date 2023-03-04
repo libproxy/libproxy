@@ -23,8 +23,6 @@
 
 #include "px-manager-helper.h"
 
-#include <glib.h>
-
 typedef struct {
   const char *url;
   const char *proxy;

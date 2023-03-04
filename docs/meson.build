@@ -18,7 +18,7 @@ gidocgen = find_program('gi-docgen')
 docs_dir = datadir / 'doc'
 
 custom_target('px-doc',
-  input: [ px_toml, px_backend_gir[0] ],
+  input: [ px_toml, libproxy_gir[0] ],
   output: 'libproxy-@0@'.format(apiversion),
   command: [
     gidocgen,
@@ -31,7 +31,7 @@ custom_target('px-doc',
     '--content-dir=@0@'.format(meson.current_source_dir()),
     '@INPUT1@',
   ],
-  depend_files: [ expand_content_md_files ],
+  #depend_files: [ expand_content_md_files ],
   build_by_default: true,
   install: true,
   install_dir: docs_dir,

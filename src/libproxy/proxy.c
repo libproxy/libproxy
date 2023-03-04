@@ -31,10 +31,17 @@
  * Test 123
  */
 
-struct px_proxy_factory {
+struct _pxProxyFactory {
   PxManager *manager;
   GCancellable *cancellable;
 };
+
+pxProxyFactory *px_proxy_factory_copy (pxProxyFactory *self);
+
+G_DEFINE_BOXED_TYPE (pxProxyFactory,
+                     px_proxy_factory,
+                     (GBoxedCopyFunc)px_proxy_factory_copy,
+                     (GFreeFunc)px_proxy_factory_new);
 
 /**
  * px_proxy_factory_new:
@@ -42,10 +49,10 @@ struct px_proxy_factory {
  *
  * Returns: pointer to #px_proxy_factory
  */
-struct px_proxy_factory *
+pxProxyFactory *
 px_proxy_factory_new (void)
 {
-  struct px_proxy_factory *self = g_malloc0 (sizeof (struct px_proxy_factory));
+  pxProxyFactory *self = g_slice_new0 (pxProxyFactory);
 
   self->cancellable = g_cancellable_new ();
   self->manager = px_manager_new ();
@@ -53,9 +60,15 @@ px_proxy_factory_new (void)
   return self;
 }
 
+pxProxyFactory *
+px_proxy_factory_copy (pxProxyFactory *self)
+{
+  return g_slice_dup (pxProxyFactory, self);
+}
+
 char **
-px_proxy_factory_get_proxies (struct px_proxy_factory *self,
-                              const char              *url)
+px_proxy_factory_get_proxies (pxProxyFactory *self,
+                              const char     *url)
 {
   g_auto (GStrv) result = NULL;
   g_autoptr (GError) error = NULL;
@@ -82,7 +95,7 @@ px_proxy_factory_free_proxies (char **proxies)
  * Free px_proxy_factory
  */
 void
-px_proxy_factory_free (struct px_proxy_factory *self)
+px_proxy_factory_free (pxProxyFactory *self)
 {
   g_cancellable_cancel (self->cancellable);
   g_clear_object (&self->cancellable);

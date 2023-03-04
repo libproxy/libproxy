@@ -338,7 +338,7 @@ get_config (PeasExtensionSet *set,
  *
  * Get raw proxy configuration for gien @uri.
  *
- * Returns: (nullable): a newly created `GStrv` containing configuration data for @uri.
+ * Returns: (transfer full) (nullable): a newly created `GStrv` containing configuration data for @uri.
  */
 char **
 px_manager_get_configuration (PxManager  *self,
@@ -499,7 +499,7 @@ px_manager_expand_pac (PxManager *self,
  *
  * Get proxies for giben @url.
  *
- * Returns: (nullable): a newly created `GStrv` containing proxy related information.
+ * Returns: (transfer full) (nullable): a newly created `GStrv` containing proxy related information.
  */
 char **
 px_manager_get_proxies_sync (PxManager   *self,

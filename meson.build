@@ -11,6 +11,9 @@ root_dir = include_directories('.')
 px_prefix = get_option('prefix')
 px_libdir = join_paths(px_prefix, get_option('libdir'))
 px_plugins_dir = join_paths(px_libdir, meson.project_name().to_lower(), 'plugins')
+girdir     = get_option('datadir') / 'gir-1.0'
+typelibdir = get_option('libdir')  / 'girepository-1.0'
+vapidir = get_option('datadir') / 'vala' / 'vapi'
 
 config_h = configuration_data()
 config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
@@ -21,7 +24,9 @@ add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
 version_arr = meson.project_version().split('-')[0].split('.')
 libproxy_version_major = version_arr[0].to_int()
 libproxy_version_minor = version_arr[1].to_int()
+
 apiversion = '1.0'
+package_api_name = '@0@-@1@'.format(meson.project_name(), apiversion)
 
 libproxy_prefix = get_option('prefix')
 datadir = get_option('datadir')
@@ -126,6 +131,10 @@ summary({
   'host system' : host_system,
   'C Compiler' : cc.get_id(),
 }, section: 'Build environment')
+
+summary({
+  'Vapi' : get_option('vapi'),
+}, section: 'Options')
 
 # Install pre-commit hook
 hook = run_command(join_paths(meson.project_source_root(), 'data/install-git-hook.sh'), check: false)

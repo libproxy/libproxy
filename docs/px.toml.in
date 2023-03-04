@@ -8,15 +8,21 @@ repository_url = "https://github.com/janbrummer/libproxy2"
 website_url = "https://janbrummer.github.io/libproxy2/"
 logo_url = "libproxy.svg"
 dependencies = [
-  "GObject-2.0",
+  "Gio-2.0",
 ]
 devhelp = true
 search_index = true
 
+
+[dependencies."Gio-2.0"]
+name = "Gio"
+description = "The base type system library"
+docs_url = "https://developer.gnome.org/gio/stable"
+
 [theme]
 name = "basic"
-show_index_summary = true
-show_class_hierarchy = true
+show_index_summary = false
+show_class_hierarchy = false
 
 [source-location]
 # The base URL for the web UI

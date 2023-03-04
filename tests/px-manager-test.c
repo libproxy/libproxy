@@ -22,8 +22,6 @@
 #include "px-manager.h"
 #include "px-manager-helper.h"
 
-#include <glib.h>
-
 #include <libsoup/soup.h>
 
 #define SERVER_PORT 1983

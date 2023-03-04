@@ -23,7 +23,6 @@
 
 #include "px-manager-helper.h"
 
-#include <glib.h>
 #include <gio/gio.h>
 
 typedef struct {
