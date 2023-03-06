@@ -52,7 +52,7 @@ G_DEFINE_BOXED_TYPE (pxProxyFactory,
 pxProxyFactory *
 px_proxy_factory_new (void)
 {
-  pxProxyFactory *self = g_slice_new0 (pxProxyFactory);
+  pxProxyFactory *self = g_new0 (pxProxyFactory, 1);
 
   self->cancellable = g_cancellable_new ();
   self->manager = px_manager_new ();
@@ -63,7 +63,7 @@ px_proxy_factory_new (void)
 pxProxyFactory *
 px_proxy_factory_copy (pxProxyFactory *self)
 {
-  return g_slice_dup (pxProxyFactory, self);
+  return g_memdup2 (self, sizeof (pxProxyFactory));
 }
 
 char **

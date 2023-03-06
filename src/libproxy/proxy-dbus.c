@@ -44,7 +44,7 @@ G_DEFINE_BOXED_TYPE (pxProxyFactory,
 pxProxyFactory *
 px_proxy_factory_copy (pxProxyFactory *self)
 {
-  return g_slice_dup (pxProxyFactory, self);
+  return g_memdup2 (self, sizeof (pxProxyFactory));
 }
 
 /**
@@ -62,7 +62,7 @@ pxProxyFactory *
 px_proxy_factory_new (void)
 {
   g_autoptr (GError) error = NULL;
-  pxProxyFactory *self = g_slice_new0 (pxProxyFactory);
+  pxProxyFactory *self = g_new0 (pxProxyFactory, 1);
 
   self->cancellable = g_cancellable_new ();
   self->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
