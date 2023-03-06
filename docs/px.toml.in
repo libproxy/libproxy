@@ -8,16 +8,45 @@ repository_url = "https://github.com/janbrummer/libproxy2"
 website_url = "https://janbrummer.github.io/libproxy2/"
 logo_url = "libproxy.svg"
 dependencies = [
+  "GObject-2.0",
   "Gio-2.0",
+  "GLib-2.0",
+  "Peas-1.0",
+  "Soup-3.0",
+  "curl-1.0",
 ]
 devhelp = true
 search_index = true
 
+[dependencies."GObject-2.0"]
+name = "GObject"
+description = "The base type system library"
+docs_url = "https://developer.gnome.org/gobject/stable"
 
 [dependencies."Gio-2.0"]
 name = "Gio"
-description = "The base type system library"
+description = "Gio is a library providing useful classes for general purpose I/O, networking, IPC, settings, and other high level application functionality"
 docs_url = "https://developer.gnome.org/gio/stable"
+
+[dependencies."GLib-2.0"]
+name = "GLib"
+description = "The base utility library"
+docs_url = "https://developer.gnome.org/glib/stable"
+
+[dependencies."Peas-1.0"]
+name = "Peas"
+description = "GObject-based plugins engine"
+docs_url = "https://gnome.pages.gitlab.gnome.org/libpeas/libpeas-1.0/"
+
+[dependencies."Soup-3.0"]
+name = "Soup"
+description = "HTTP client/server library for GNOME"
+docs_url = "https://libsoup.org/libsoup-3.0/index.html"
+
+[dependencies."curl-1.0"]
+name = "cURL"
+description = "Library for transferring data"
+docs_url = "https://github.com/curl/curl"
 
 [theme]
 name = "basic"
