@@ -1,6 +1,7 @@
 if get_option('docs')
 
 expand_content_md_files = [
+  'configuration-logic.md',
   'build-howto.md',
 ]
 
@@ -31,7 +32,7 @@ custom_target('px-doc',
     '--content-dir=@0@'.format(meson.current_source_dir()),
     '@INPUT1@',
   ],
-  #depend_files: [ expand_content_md_files ],
+  depend_files: [ expand_content_md_files ],
   build_by_default: true,
   install: true,
   install_dir: docs_dir,
