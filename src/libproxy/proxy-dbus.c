@@ -50,12 +50,13 @@ px_proxy_factory_copy (pxProxyFactory *self)
 /**
  * px_proxy_factory_new:
  *
- * Creates a new #pxProxyFactory instance. This instance should be kept
- * around as long as possible as it contains cached data to increase
- * performance.  Memory usage should be minimal (cache is small) and the
- * cache lifespan is handled automatically.
+ * Creates a new `pxProxyFactory` instance.
  *
- * Returns: (transfer full): A new #pxProxyFactory instance or %NULL on error
+ * This instance should be kept around as long as possible as it contains
+ * cached data to increase performance.  Memory usage should be minimal
+ * (cache is small) and the cache lifespan is handled automatically.
+ *
+ * Returns: The newly created `pxProxyFactory`
  */
 pxProxyFactory *
 px_proxy_factory_new (void)
@@ -83,12 +84,12 @@ px_proxy_factory_new (void)
  * @self: a #pxProxyFactory
  * @url: Get proxxies for specificed URL
  *
- * Get which proxies to use for the specified URL.
+ * Get which proxies to use for the specified @URL.
  *
- * A NULL-terminated array of proxy strings is returned.
+ * A %NULL-terminated array of proxy strings is returned.
  * If the first proxy fails, the second should be tried, etc...
  * Don't forget to free the strings/array when you are done.
- * If an unrecoverable error occurs, this function returns NULL.
+ * If an unrecoverable error occurs, this function returns %NULL.
  *
  * Regarding performance: this method always blocks and may be called
  * in a separate thread (is thread-safe).  In most cases, the time
@@ -109,12 +110,19 @@ px_proxy_factory_new (void)
  * performance (described above) applies.
  *
  * The format of the returned proxy strings are as follows:
+ *
  *   - http://[username:password@]proxy:port
+ *
  *   - socks://[username:password@]proxy:port
+ *
  *   - socks5://[username:password@]proxy:port
+ *
  *   - socks4://[username:password@]proxy:port
+ *
  *   - <procotol>://[username:password@]proxy:port
+ *
  *   - direct://
+ *
  * Please note that the username and password in the above URLs are optional
  * and should be use to authenticate the connection if present.
  *
@@ -128,9 +136,10 @@ px_proxy_factory_new (void)
  * proxy protocol or the service name of the protocol being proxied if the
  * previous does not exist. As an example, on Mac OS X you can configure a
  * RTSP streaming proxy. The expected returned configuration would be:
+ *
  *   - rtsp://[username:password@]proxy:port
  *
- * To free the returned value, call px_proxy_factory_free_proxies.
+ * To free the returned value, call @px_proxy_factory_free_proxies.
  *
  * Returns: (transfer full): a list of proxies
  */
@@ -190,7 +199,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
  * px_proxy_factory_free_proxies
  * @proxies: proxy array
  *
- * Frees the proxy array returned by #px_proxy_factory_get_proxies when no
+ * Frees the proxy array returned by @px_proxy_factory_get_proxies when no
  * longer used.
  *
  * @since 0.4.16
@@ -205,7 +214,7 @@ px_proxy_factory_free_proxies (char **proxies)
  * px_proxy_factory_free:
  * @self: a #pxProxyFactory
  *
- * Frees the pxProxyFactory instance when no longer used.
+ * Frees the `pxProxyFactory`.
  */
 void
 px_proxy_factory_free (pxProxyFactory *self)
