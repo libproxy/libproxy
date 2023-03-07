@@ -2,7 +2,10 @@ if get_option('docs')
 
 expand_content_md_files = [
   'configuration-logic.md',
-  'build-howto.md',
+  'perl.md',
+  'python.md',
+  'ruby.md',
+  'vala.md',
 ]
 
 toml_data = configuration_data()

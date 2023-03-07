@@ -72,7 +72,7 @@ libproxy_gir = gnome.generate_gir(
   libproxy_lib,
   sources: libproxy_headers + libproxy_sources,
   nsversion: api_version,
-  namespace: 'Px',
+  namespace: 'Libproxy',
   export_packages: package_api_name,
   symbol_prefix: 'px',
   identifier_prefix: 'px',

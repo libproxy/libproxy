@@ -62,7 +62,10 @@ file_format = "{filename}#L{line}"
 [extra]
 content_files = [
   "configuration-logic.md",
-  "build-howto.md",
+  "perl.md",
+  "python.md",
+  "ruby.md",
+  "vala.md",
 ]
 
 content_images = [

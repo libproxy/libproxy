@@ -197,7 +197,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
 
 /**
  * px_proxy_factory_free_proxies
- * @proxies: proxy array
+ * @proxies: (array zero-terminated=1): a %NULL-terminated array of proxies
  *
  * Frees the proxy array returned by @px_proxy_factory_get_proxies when no
  * longer used.
