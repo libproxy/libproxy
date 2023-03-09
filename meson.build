@@ -15,10 +15,6 @@ girdir     = get_option('datadir') / 'gir-1.0'
 typelibdir = get_option('libdir')  / 'girepository-1.0'
 vapidir = get_option('datadir') / 'vala' / 'vapi'
 
-config_h = configuration_data()
-config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
-config_h.set_quoted('PX_PLUGINS_DIR', px_plugins_dir)
-configure_file(output: 'config.h', configuration: config_h)
 add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
 
 version_arr = meson.project_version().split('-')[0].split('.')
@@ -115,11 +111,17 @@ glib_dep = dependency('glib-2.0', version: '>= 2.71.3')
 gio_dep = dependency('gio-2.0', version: '>= 2.71.3')
 peas_dep = dependency('libpeas-1.0')
 soup_dep = dependency('libsoup-3.0', required: get_option('tests'))
-curl_dep = dependency('libcurl')
+curl_dep = dependency('libcurl', required: get_option('curl'))
 ws2_32_dep = cc.find_library('ws2_32', required : with_platform_windows)
 gsettings_desktop_schema = dependency('gsettings-desktop-schemas', required: get_option('config-gnome'))
 
 build_dbus = get_option('dbus').disable_auto_if(['window', 'darwin'].contains(host_system)).allowed()
+
+config_h = configuration_data()
+config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
+config_h.set_quoted('PX_PLUGINS_DIR', px_plugins_dir)
+config_h.set10('HAVE_CURL', get_option('curl'))
+configure_file(output: 'config.h', configuration: config_h)
 
 subdir('src')
 subdir('tests')

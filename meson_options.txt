@@ -74,3 +74,10 @@ option(
   value: true,
   description: 'Whether to build vapi support'
 )
+
+option(
+  'curl',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build cURL support'
+)

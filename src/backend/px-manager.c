@@ -25,7 +25,9 @@
 #include "px-plugin-config.h"
 #include "px-plugin-pacrunner.h"
 
+#ifdef HAVE_CURL
 #include <curl/curl.h>
+#endif
 #include <libpeas/peas.h>
 
 enum {
@@ -51,7 +53,9 @@ struct _PxManager {
   PeasExtensionSet *config_set;
   PeasExtensionSet *pacrunner_set;
   GNetworkMonitor *network_monitor;
+#ifdef HAVE_CURL
   CURL *curl;
+#endif
   char *plugins_dir;
   GCancellable *cancellable;
 
@@ -309,6 +313,7 @@ GBytes *
 px_manager_pac_download (PxManager  *self,
                          const char *uri)
 {
+#ifdef HAVE_CURL
   GByteArray *byte_array = g_byte_array_new ();
   CURLcode res;
   const char *url = uri;
@@ -339,6 +344,9 @@ px_manager_pac_download (PxManager  *self,
   }
 
   return g_byte_array_free_to_bytes (byte_array);
+#else
+  return NULL;
+#endif
 }
 
 struct ConfigData {
