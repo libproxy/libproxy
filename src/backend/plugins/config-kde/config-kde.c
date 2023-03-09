@@ -40,6 +40,7 @@ typedef enum {
 struct _PxConfigKde {
   GObject parent_instance;
 
+  char *config_option;
   gboolean available;
 
   char *no_proxy;
@@ -55,6 +56,11 @@ G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigKde,
                                px_config_kde,
                                G_TYPE_OBJECT,
                                G_IMPLEMENT_INTERFACE (PX_TYPE_CONFIG, px_config_iface_init))
+
+enum {
+  PROP_0,
+  PROP_CONFIG_OPTION
+};
 
 static void
 px_config_kde_read_config (PxConfigKde *self,
@@ -118,15 +124,27 @@ px_config_kde_read_config (PxConfigKde *self,
   } while (line);
 }
 
-static void
-px_config_kde_init (PxConfigKde *self)
+static
+void
+px_config_kde_set_config_file (PxConfigKde *self,
+                               const char  *file)
 {
-  const char *test_file = g_getenv ("PX_CONFIG_KDE");
-  g_autofree char *config = test_file ? g_strdup (test_file) : g_build_filename (g_get_user_config_dir (), "kioslaverc", NULL);
+  g_autofree char *config = NULL;
+
+  g_clear_pointer (&self->config_option, g_free);
+  self->config_option = file ? g_strdup (file) : NULL;
+
+  config = self->config_option ? g_strdup (self->config_option) : g_build_filename (g_get_user_config_dir (), "kioslaverc", NULL);
 
   self->available = g_file_test (config, G_FILE_TEST_EXISTS);
   if (self->available)
     px_config_kde_read_config (self, config);
+}
+
+static void
+px_config_kde_init (PxConfigKde *self)
+{
+  px_config_kde_set_config_file (self, NULL);
 }
 
 static void
@@ -136,11 +154,53 @@ px_config_kde_dispose (GObject *object)
 }
 
 static void
+px_config_kde_set_property (GObject      *object,
+                            guint         prop_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
+{
+  PxConfigKde *config = PX_CONFIG_KDE (object);
+
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      px_config_kde_set_config_file (config, g_value_dup_string (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+px_config_kde_get_property (GObject    *object,
+                            guint       prop_id,
+                            GValue     *value,
+                            GParamSpec *pspec)
+{
+  PxConfigKde *config = PX_CONFIG_KDE (object);
+
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      g_value_set_string (value, config->config_option);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 px_config_kde_class_init (PxConfigKdeClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = px_config_kde_dispose;
+  object_class->set_property = px_config_kde_set_property;
+  object_class->get_property = px_config_kde_get_property;
+
+  g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
 static gboolean

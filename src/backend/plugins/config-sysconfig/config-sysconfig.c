@@ -30,6 +30,7 @@ struct _PxConfigSysConfig {
   GObject parent_instance;
 
   char *proxy_file;
+  char *config_option;
   gboolean available;
 
   gboolean proxy_enabled;
@@ -47,17 +48,27 @@ G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigSysConfig,
                                G_TYPE_OBJECT,
                                G_IMPLEMENT_INTERFACE (PX_TYPE_CONFIG, px_config_iface_init))
 
-static void
-px_config_sysconfig_init (PxConfigSysConfig *self)
+enum {
+  PROP_0,
+  PROP_CONFIG_OPTION
+};
+
+static
+void
+px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
+                                     const char        *config_file)
 {
+  g_autofree char *config = NULL;
   g_autoptr (GFile) file = NULL;
   g_autoptr (GError) error = NULL;
   g_autoptr (GFileInputStream) istr = NULL;
   g_autoptr (GDataInputStream) dstr = NULL;
-  const char *test_file = g_getenv ("PX_CONFIG_SYSCONFIG");
   char *line = NULL;
 
-  self->proxy_file = g_strdup (test_file ? test_file : "/etc/sysconfig/proxy");
+  g_clear_pointer (&self->config_option, g_free);
+  self->config_option = config_file ? g_strdup (config_file) : NULL;
+
+  self->proxy_file = g_strdup (self->config_option ? self->config_option : "/etc/sysconfig/proxy");
   self->available = FALSE;
 
   file = g_file_new_for_path (self->proxy_file);
@@ -110,8 +121,58 @@ px_config_sysconfig_init (PxConfigSysConfig *self)
 }
 
 static void
+px_config_sysconfig_init (PxConfigSysConfig *self)
+{
+  px_config_sysconfig_set_config_file (self, NULL);
+}
+
+static void
+px_config_sysconfig_set_property (GObject      *object,
+                                  guint         prop_id,
+                                  const GValue *value,
+                                  GParamSpec   *pspec)
+{
+  PxConfigSysConfig *config = PX_CONFIG_SYSCONFIG (object);
+
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      px_config_sysconfig_set_config_file (config, g_value_dup_string (value));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+px_config_sysconfig_get_property (GObject    *object,
+                                  guint       prop_id,
+                                  GValue     *value,
+                                  GParamSpec *pspec)
+{
+  PxConfigSysConfig *config = PX_CONFIG_SYSCONFIG (object);
+
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      g_value_set_string (value, config->config_option);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 px_config_sysconfig_class_init (PxConfigSysConfigClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = px_config_sysconfig_set_property;
+  object_class->get_property = px_config_sysconfig_get_property;
+
+  g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
 static gboolean

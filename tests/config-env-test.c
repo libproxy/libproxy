@@ -75,7 +75,7 @@ test_config_env (void)
         g_setenv ("no_proxy", test.no_proxy, TRUE);
     }
 
-    manager = px_test_manager_new ("config-env");
+    manager = px_test_manager_new ("config-env", NULL);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);

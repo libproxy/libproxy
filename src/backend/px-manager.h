@@ -49,6 +49,8 @@ typedef enum {
 
 
 PxManager *px_manager_new (void);
+PxManager *px_manager_new_with_options (const char *optname1, ...);
+
 char **px_manager_get_proxies_sync (PxManager   *self,
                                     const char  *url,
                                     GError     **error);

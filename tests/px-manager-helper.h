@@ -21,4 +21,4 @@
 
 #pragma once
 
-PxManager *px_test_manager_new (const char *config_plugin);
+PxManager *px_test_manager_new (const char *config_plugin, const char *config_option);

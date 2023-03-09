@@ -27,4 +27,12 @@ G_DEFINE_INTERFACE (PxConfig, px_config, G_TYPE_OBJECT)
 static void
 px_config_default_init (PxConfigInterface *iface)
 {
+  g_object_interface_install_property (iface,
+                                       g_param_spec_string ("config-option",
+                                                            NULL,
+                                                            NULL,
+                                                            NULL,
+                                                            G_PARAM_READWRITE |
+                                                            G_PARAM_CONSTRUCT_ONLY |
+                                                            G_PARAM_STATIC_STRINGS));
 }

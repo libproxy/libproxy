@@ -23,12 +23,12 @@
 #include "px-manager-helper.h"
 
 PxManager *
-px_test_manager_new (const char *config_plugin)
+px_test_manager_new (const char *config_plugin, const char *config_option)
 {
   g_autofree char *path = g_test_build_filename (G_TEST_BUILT, "../src/backend/plugins", NULL);
 
-  return g_object_new (PX_TYPE_MANAGER,
-                       "plugins-dir", path,
-                       "config-plugin", config_plugin,
-                       NULL);
+  return px_manager_new_with_options ("plugins-dir", path,
+                                      "config-plugin", config_plugin,
+                                      "config-option", config_option,
+                                      NULL);
 }

@@ -32,6 +32,7 @@ enum {
   PROP_0,
   PROP_PLUGINS_DIR,
   PROP_CONFIG_PLUGIN,
+  PROP_CONFIG_OPTION,
   LAST_PROP
 };
 
@@ -55,6 +56,7 @@ struct _PxManager {
   GCancellable *cancellable;
 
   char *config_plugin;
+  char *config_option;
 
   gboolean online;
   gboolean wpad;
@@ -106,7 +108,7 @@ px_manager_constructed (GObject *object)
 
   peas_engine_add_search_path (self->engine, self->plugins_dir, NULL);
 
-  self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, NULL);
+  self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, "config-option", self->config_option, NULL);
   self->pacrunner_set = peas_extension_set_new (self->engine, PX_TYPE_PACRUNNER, NULL);
 
   list = peas_engine_get_plugin_list (self->engine);
@@ -183,6 +185,9 @@ px_manager_set_property (GObject      *object,
     case PROP_CONFIG_PLUGIN:
       self->config_plugin = g_strdup (g_value_get_string (value));
       break;
+    case PROP_CONFIG_OPTION:
+      self->config_option = g_strdup (g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -227,12 +232,41 @@ px_manager_class_init (PxManagerClass *klass)
                                                             NULL,
                                                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_CONFIG_OPTION] = g_param_spec_string ("config-option",
+                                                            NULL,
+                                                            NULL,
+                                                            NULL,
+                                                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (object_class, LAST_PROP, obj_properties);
 }
 
 static void
 px_manager_init (PxManager *self)
 {
+}
+
+/**
+ * px_manager_new_with_options:
+ * @optname1: name of first property to set
+ * @...: value of @optname1, followed by additional property/value pairs
+ *
+ * Create a new `PxManager` with the specified options.
+ *
+ * Returns: the newly created `PxManager`
+ */
+PxManager *
+px_manager_new_with_options (const char *optname1,
+                             ...)
+{
+  PxManager *self;
+  va_list ap;
+
+  va_start (ap, optname1);
+  self = (PxManager *)g_object_new_valist (PX_TYPE_MANAGER, optname1, ap);
+  va_end (ap);
+
+  return self;
 }
 
 /**
@@ -245,7 +279,7 @@ px_manager_init (PxManager *self)
 PxManager *
 px_manager_new (void)
 {
-  return g_object_new (PX_TYPE_MANAGER, "plugins-dir", PX_PLUGINS_DIR, NULL);
+  return px_manager_new_with_options ("plugins-dir", PX_PLUGINS_DIR, NULL);
 }
 
 static size_t

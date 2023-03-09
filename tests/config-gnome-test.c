@@ -96,7 +96,7 @@ test_config_gnome_manual (Fixture    *self,
     g_settings_set_string (self->socks_proxy_settings, "host", test.proxy);
     g_settings_set_int (self->socks_proxy_settings, "port", test.proxy_port);
 
-    manager = px_test_manager_new ("config-gnome");
+    manager = px_test_manager_new ("config-gnome", NULL);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -128,7 +128,7 @@ test_config_gnome_manual_auth (Fixture    *self,
   g_settings_set_string (self->http_proxy_settings, "authentication-user", "test");
   g_settings_set_string (self->http_proxy_settings, "authentication-password", "pwd");
 
-  manager = px_test_manager_new ("config-gnome");
+  manager = px_test_manager_new ("config-gnome", NULL);
   g_clear_error (&error);
 
   uri = g_uri_parse ("http://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -146,7 +146,7 @@ test_config_gnome_auto (Fixture    *self,
   g_auto (GStrv) config = NULL;
   g_autoptr (GUri) uri = NULL;
 
-  manager = px_test_manager_new ("config-gnome");
+  manager = px_test_manager_new ("config-gnome", NULL);
   g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
   g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
 
@@ -171,7 +171,7 @@ test_config_gnome_fail (Fixture    *self,
   /* Disable GNOME support */
   g_setenv ("XDG_CURRENT_DESKTOP", "unknown", TRUE);
 
-  manager = px_test_manager_new ("config-gnome");
+  manager = px_test_manager_new ("config-gnome", NULL);
   g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
   g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
 

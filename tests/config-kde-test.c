@@ -64,12 +64,7 @@ test_config_kde_disabled (void)
     ConfigKdeTest test = config_kde_manual_test_set[idx];
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-disabled", NULL);
 
-    if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
-      g_warning ("Failed to set kde environment");
-      continue;
-    }
-
-    manager = px_test_manager_new ("config-kde");
+    manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -98,12 +93,7 @@ test_config_kde_manual (void)
     ConfigKdeTest test = config_kde_manual_test_set[idx];
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-manual", NULL);
 
-    if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
-      g_warning ("Failed to set kde environment");
-      continue;
-    }
-
-    manager = px_test_manager_new ("config-kde");
+    manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -135,12 +125,7 @@ test_config_kde_wpad (void)
     ConfigKdeTest test = config_kde_wpad_test_set[idx];
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-wpad", NULL);
 
-    if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
-      g_warning ("Failed to set kde environment");
-      continue;
-    }
-
-    manager = px_test_manager_new ("config-kde");
+    manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -172,12 +157,7 @@ test_config_kde_pac (void)
     ConfigKdeTest test = config_kde_pac_test_set[idx];
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-pac", NULL);
 
-    if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
-      g_warning ("Failed to set kde environment");
-      continue;
-    }
-
-    manager = px_test_manager_new ("config-kde");
+    manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
@@ -205,14 +185,10 @@ test_config_kde_fail (void)
   g_auto (GStrv) config = NULL;
   g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-pac", NULL);
 
-  if (!g_setenv ("PX_CONFIG_KDE", path, TRUE)) {
-    g_warning ("Failed to set kde environment");
-  }
-
   /* Disable KDE support */
   g_unsetenv ("KDE_FULL_SESSION");
 
-  manager = px_test_manager_new ("config-kde");
+  manager = px_test_manager_new ("config-kde", path);
 
   uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
 

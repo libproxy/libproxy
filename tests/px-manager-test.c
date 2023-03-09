@@ -59,24 +59,20 @@ static void
 fixture_setup (Fixture       *fixture,
                gconstpointer  data)
 {
+  g_autofree char *path = NULL;
+
   fixture->loop = g_main_loop_new (NULL, FALSE);
 
-  if (data) {
-    g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", data, NULL);
-    if (!g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE)) {
-      g_warning ("Failed to set environment");
-      return;
-    }
-  }
+  if (data)
+    path = g_test_build_filename (G_TEST_DIST, "data", data, NULL);
 
-  fixture->manager = px_test_manager_new ("config-sysconfig");
+  fixture->manager = px_test_manager_new ("config-sysconfig", path);
 }
 
 static void
 fixture_teardown (Fixture       *fixture,
                   gconstpointer  data)
 {
-  g_unsetenv ("PX_CONFIG_SYSCONFIG");
   g_clear_object (&fixture->manager);
 }
 

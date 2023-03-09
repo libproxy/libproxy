@@ -49,6 +49,11 @@ G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigGnome,
                                G_TYPE_OBJECT,
                                G_IMPLEMENT_INTERFACE (PX_TYPE_CONFIG, px_config_iface_init))
 
+enum {
+  PROP_0,
+  PROP_CONFIG_OPTION
+};
+
 static void
 px_config_gnome_init (PxConfigGnome *self)
 {
@@ -74,8 +79,46 @@ px_config_gnome_init (PxConfigGnome *self)
 }
 
 static void
+px_config_gnome_set_property (GObject      *object,
+                              guint         prop_id,
+                              const GValue *value,
+                              GParamSpec   *pspec)
+{
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+px_config_gnome_get_property (GObject    *object,
+                              guint       prop_id,
+                              GValue     *value,
+                              GParamSpec *pspec)
+{
+  switch (prop_id) {
+    case PROP_CONFIG_OPTION:
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 px_config_gnome_class_init (PxConfigGnomeClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = px_config_gnome_set_property;
+  object_class->get_property = px_config_gnome_get_property;
+
+  g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
 static gboolean

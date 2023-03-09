@@ -49,12 +49,7 @@ test_config_sysconfig (void)
     ConfigSysConfigTest test = config_sysconfig_test_set[idx];
     g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-sysconfig-proxy", NULL);
 
-    if (!g_setenv ("PX_CONFIG_SYSCONFIG", path, TRUE)) {
-      g_warning ("Failed to set sysconfig environment");
-      continue;
-    }
-
-    manager = px_test_manager_new ("config-sysconfig");
+    manager = px_test_manager_new ("config-sysconfig", path);
     g_clear_error (&error);
 
     uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
