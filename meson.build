@@ -120,7 +120,7 @@ build_dbus = get_option('dbus').disable_auto_if(['window', 'darwin'].contains(ho
 config_h = configuration_data()
 config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h.set_quoted('PX_PLUGINS_DIR', px_plugins_dir)
-config_h.set10('HAVE_CURL', get_option('curl'))
+config_h.set('HAVE_CURL', get_option('curl'))
 configure_file(output: 'config.h', configuration: config_h)
 
 subdir('src')
