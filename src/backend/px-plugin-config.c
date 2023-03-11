@@ -19,7 +19,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-
 #include "px-plugin-config.h"
 
 G_DEFINE_INTERFACE (PxConfig, px_config, G_TYPE_OBJECT)

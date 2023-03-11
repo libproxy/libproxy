@@ -6,7 +6,7 @@ license = "LGPL-2.1-or-later"
 browse_url = "https://github.com/janbrummer/libproxy2"
 repository_url = "https://github.com/janbrummer/libproxy2"
 website_url = "https://janbrummer.github.io/libproxy2/"
-logo_url = "libproxy.svg"
+# logo_url = "libproxy.svg"
 dependencies = [
   "GObject-2.0",
   "Gio-2.0",

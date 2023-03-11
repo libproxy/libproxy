@@ -4,11 +4,14 @@ project('libproxy', 'c',
   default_options: [ 'warning_level=2', 'werror=false', 'c_std=gnu11', ],
 )
 
-cc = meson.get_compiler('c')
+version_arr = meson.project_version().split('-')[0].split('.')
+libproxy_version_major = version_arr[0].to_int()
+libproxy_version_minor = version_arr[1].to_int()
 
 root_dir = include_directories('.')
 
 px_prefix = get_option('prefix')
+datadir = get_option('datadir')
 px_libdir = join_paths(px_prefix, get_option('libdir'))
 px_plugins_dir = join_paths(px_libdir, meson.project_name().to_lower(), 'plugins')
 girdir     = get_option('datadir') / 'gir-1.0'
@@ -17,15 +20,11 @@ vapidir = get_option('datadir') / 'vala' / 'vapi'
 
 add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
 
-version_arr = meson.project_version().split('-')[0].split('.')
-libproxy_version_major = version_arr[0].to_int()
-libproxy_version_minor = version_arr[1].to_int()
+# The major api version as encoded in the libraries name
+api_version = '1.0'
+package_api_name = '@0@-@1@'.format(meson.project_name(), api_version)
 
-apiversion = '1.0'
-package_api_name = '@0@-@1@'.format(meson.project_name(), apiversion)
-
-libproxy_prefix = get_option('prefix')
-datadir = get_option('datadir')
+cc = meson.get_compiler('c')
 
 project_c_args = []
 test_c_args = [
@@ -83,9 +82,7 @@ test_c_args = [
   '-fno-strict-aliasing',
   ['-Werror=format-security', '-Werror=format=2'],
 ]
-#if get_option('buildtype') != 'plain'
-#  test_c_args += '-fstack-protector-strong'
-#endif
+
 foreach arg: test_c_args
   if cc.has_multi_arguments(arg)
     project_c_args += arg

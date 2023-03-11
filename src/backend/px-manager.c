@@ -46,7 +46,6 @@ static GParamSpec *obj_properties[LAST_PROP];
  * Manage libproxy modules
  */
 
-/* TODO: Move to private structure */
 struct _PxManager {
   GObject parent_instance;
   PeasEngine *engine;
@@ -286,6 +285,7 @@ px_manager_new (void)
   return px_manager_new_with_options ("plugins-dir", PX_PLUGINS_DIR, NULL);
 }
 
+#ifdef HAVE_CURL
 static size_t
 store_data (void   *contents,
             size_t  size,
@@ -299,6 +299,7 @@ store_data (void   *contents,
 
   return real_size;
 }
+#endif
 
 /**
  * px_manager_pac_download:
@@ -548,7 +549,6 @@ px_manager_get_proxies_sync (PxManager   *self,
                              const char  *url,
                              GError     **error)
 {
-  /* GList *list; */
   g_autoptr (GStrvBuilder) builder = g_strv_builder_new ();
   g_autoptr (GUri) uri = g_uri_parse (url, G_URI_FLAGS_PARSE_RELAXED, error);
   g_auto (GStrv) config = NULL;

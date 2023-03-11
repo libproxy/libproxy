@@ -81,3 +81,10 @@ option(
   value: true,
   description: 'Whether to build cURL support'
 )
+
+option(
+  'introspection',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build introspection support'
+)

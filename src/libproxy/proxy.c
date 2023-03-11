@@ -27,8 +27,6 @@
 /**
  * SECTION:px-proxy
  * @short_description: A convient helper for using proxy servers
- *
- * Test 123
  */
 
 struct _pxProxyFactory {

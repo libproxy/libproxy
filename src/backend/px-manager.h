@@ -26,17 +26,6 @@
 G_BEGIN_DECLS
 
 #define PX_TYPE_MANAGER (px_manager_get_type())
-// #define PX_MANAGER(o) (G_TYPE_CHECK_INSTANCE_CAST ((o), PX_TYPE_MANAGER, PxManager))
-
-// typedef struct _PxManager PxManager;
-// typedef struct _PxManagerClass PxManagerClass;
-
-// struct _PxManagerClass
-// {
-//   GObjectClass parent_class;
-
-//   gboolean (*get_config) (PxManager *self, GUri *uri);
-// };
 
 G_DECLARE_FINAL_TYPE (PxManager, px_manager, PX, MANAGER, GObject)
 

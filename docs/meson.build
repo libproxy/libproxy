@@ -23,7 +23,7 @@ docs_dir = datadir / 'doc'
 
 custom_target('px-doc',
   input: [ px_toml, libproxy_gir[0] ],
-  output: 'libproxy-@0@'.format(apiversion),
+  output: 'libproxy-@0@'.format(api_version),
   command: [
     gidocgen,
     'generate',

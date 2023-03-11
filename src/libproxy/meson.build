@@ -1,5 +1,3 @@
-api_version = '1.0'
-
 libproxy_inc = include_directories('.')
 
 libproxy_sources = []
@@ -30,7 +28,7 @@ if cc.has_multi_link_arguments(vscript)
   vflag += vscript
 endif
 
-libproxy_lib = shared_library(
+libproxy = shared_library(
   'proxy',
   libproxy_sources,
   include_directories: px_backend_inc,
@@ -43,7 +41,7 @@ libproxy_lib = shared_library(
 
 libproxy_dep = declare_dependency (
   include_directories: libproxy_inc,
-  link_with: libproxy_lib,
+  link_with: libproxy,
   dependencies: libproxy_deps
 )
 
@@ -51,7 +49,7 @@ install_headers(libproxy_headers, subdir: 'libproxy')
 
 pkg = import('pkgconfig')
 pkg.generate(
-  libraries: [libproxy_lib],
+  libraries: [libproxy],
   subdirs: 'libproxy',
   version: meson.project_version(),
   name: 'libproxy',
@@ -61,35 +59,37 @@ pkg.generate(
   install_dir: join_paths(get_option('libdir'), 'pkgconfig')
 )
 
-gnome = import('gnome')
+if get_option('introspection')
+  gnome = import('gnome')
 
-libproxy_gir_extra_args = [
-  '--c-include=proxy.h',
-  '--quiet',
-]
+  libproxy_gir_extra_args = [
+    '--c-include=proxy.h',
+    '--quiet',
+  ]
 
-libproxy_gir = gnome.generate_gir(
-  libproxy_lib,
-  sources: libproxy_headers + libproxy_sources,
-  nsversion: api_version,
-  namespace: 'Libproxy',
-  export_packages: package_api_name,
-  symbol_prefix: 'px',
-  identifier_prefix: 'px',
-  link_with: libproxy_lib,
-  includes: [ 'Gio-2.0' ],
-  install: true,
-  install_dir_gir: girdir,
-  install_dir_typelib: typelibdir,
-  extra_args: libproxy_gir_extra_args,
-)
-
-if get_option('vapi')
-  libproxy_vapi = gnome.generate_vapi(package_api_name,
-       sources: libproxy_gir[0],
-      packages: [ 'gio-2.0' ],
-       install: true,
-   install_dir: vapidir,
-  metadata_dirs: [ meson.current_source_dir() ],
+  libproxy_gir = gnome.generate_gir(
+    libproxy,
+    sources: libproxy_headers + libproxy_sources,
+    nsversion: api_version,
+    namespace: 'Libproxy',
+    export_packages: package_api_name,
+    symbol_prefix: 'px',
+    identifier_prefix: 'px',
+    link_with: libproxy,
+    includes: [ 'Gio-2.0' ],
+    install: true,
+    install_dir_gir: girdir,
+    install_dir_typelib: typelibdir,
+    extra_args: libproxy_gir_extra_args,
   )
+
+  if get_option('vapi')
+    libproxy_vapi = gnome.generate_vapi(package_api_name,
+         sources: libproxy_gir[0],
+        packages: [ 'gio-2.0' ],
+         install: true,
+     install_dir: vapidir,
+    metadata_dirs: [ meson.current_source_dir() ],
+    )
+  endif
 endif

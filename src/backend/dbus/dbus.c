@@ -1,4 +1,4 @@
-/* main.c
+/* dbus.c
  *
  * Copyright 2022-2023 The Libproxy Team
  *
