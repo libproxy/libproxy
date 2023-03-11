@@ -56,7 +56,6 @@ struct _PxManager {
   CURL *curl;
 #endif
   char *plugins_dir;
-  GCancellable *cancellable;
 
   char *config_plugin;
   char *config_option;
@@ -142,8 +141,8 @@ px_manager_constructed (GObject *object)
   self->pac_data = NULL;
 
   self->network_monitor = g_network_monitor_get_default ();
-  self->online = g_network_monitor_get_network_available (self->network_monitor);
   g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
+  px_manager_on_network_changed (self->network_monitor, g_network_monitor_get_network_available (self->network_monitor), self);
   g_debug ("%s: Up and running", __FUNCTION__);
 }
 
@@ -152,11 +151,6 @@ px_manager_dispose (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
   const GList *list;
-
-  if (self->cancellable) {
-    g_cancellable_cancel (self->cancellable);
-    g_clear_object (&self->cancellable);
-  }
 
   list = peas_engine_get_plugin_list (self->engine);
   for (; list && list->data; list = list->next) {
@@ -446,14 +440,14 @@ px_manager_run_pac (PeasExtensionSet *set,
 
       if (g_ascii_strncasecmp (method, "proxy", 5) == 0) {
         proxy_string = g_uri_to_string (uri);
-      } else if (g_ascii_strncasecmp (method, "socks", 5) == 0) {
-        proxy_string = g_strconcat ("socks://", server, NULL);
-      } else if (g_ascii_strncasecmp (method, "socks4", 6) == 0) {
-        proxy_string = g_strconcat ("socks4://", server, NULL);
       } else if (g_ascii_strncasecmp (method, "socks4a", 7) == 0) {
         proxy_string = g_strconcat ("socks4a://", server, NULL);
+      } else if (g_ascii_strncasecmp (method, "socks4", 6) == 0) {
+        proxy_string = g_strconcat ("socks4://", server, NULL);
       } else if (g_ascii_strncasecmp (method, "socks5", 6) == 0) {
         proxy_string = g_strconcat ("socks5://", server, NULL);
+      } else if (g_ascii_strncasecmp (method, "socks", 5) == 0) {
+        proxy_string = g_strconcat ("socks://", server, NULL);
       }
 
       g_strv_builder_add (pac_data->builder, proxy_string);

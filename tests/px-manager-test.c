@@ -140,6 +140,22 @@ get_proxies_pac (gpointer data)
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1983");
 
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.4", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "socks://127.0.0.1:1983");
+
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.5", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "socks4://127.0.0.1:1983");
+
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.6", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "socks4a://127.0.0.1:1983");
+
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.7", NULL);
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "socks5://127.0.0.1:1983");
+
   g_main_loop_quit (self->loop);
 
   return NULL;
