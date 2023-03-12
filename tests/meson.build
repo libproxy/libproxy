@@ -7,6 +7,16 @@ if get_option('tests')
 
   test_cargs = ['-UG_DISABLE_ASSERT']
 
+  libproxy_test = executable('test-libproxy',
+    ['libproxy-test.c'],
+    include_directories: libproxy_inc,
+    dependencies: [libproxy_test_dep],
+  )
+  test('Libproxy test',
+       libproxy_test,
+       env: envs
+  )
+
   if soup_dep.found()
     px_manager_test = executable('test-px-manager',
       ['px-manager-test.c', 'px-manager-helper.c'],

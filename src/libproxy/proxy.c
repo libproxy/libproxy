@@ -31,7 +31,6 @@
 
 struct _pxProxyFactory {
   PxManager *manager;
-  GCancellable *cancellable;
 };
 
 pxProxyFactory *px_proxy_factory_copy (pxProxyFactory *self);
@@ -52,7 +51,6 @@ px_proxy_factory_new (void)
 {
   pxProxyFactory *self = g_new0 (pxProxyFactory, 1);
 
-  self->cancellable = g_cancellable_new ();
   self->manager = px_manager_new ();
 
   return self;
@@ -72,10 +70,8 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
   g_autoptr (GError) error = NULL;
 
   result = px_manager_get_proxies_sync (self->manager, url, &error);
-  if (!result) {
+  if (error)
     g_warning ("Could not query proxy: %s", error ? error->message : "");
-    return NULL;
-  }
 
   return g_steal_pointer (&result);
 }
@@ -95,8 +91,6 @@ px_proxy_factory_free_proxies (char **proxies)
 void
 px_proxy_factory_free (pxProxyFactory *self)
 {
-  g_cancellable_cancel (self->cancellable);
-  g_clear_object (&self->cancellable);
   g_clear_object (&self->manager);
   g_clear_pointer (&self, g_free);
 }
