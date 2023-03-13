@@ -36,9 +36,6 @@ jobs:
         path: ./build/docs/libproxy-1.0/
     - name: CodeCov
       uses: codecov/codecov-action@v3
-      ignore:
-        - tests
-        - src/tools
 
   build-linux-dbus:
     runs-on: ubuntu-latest
