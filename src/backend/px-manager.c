@@ -567,7 +567,7 @@ px_manager_get_proxies_sync (PxManager   *self,
         .builder = builder,
       };
       peas_extension_set_foreach (self->pacrunner_set, px_manager_run_pac, &pac_data);
-    } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad")) {
+    } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
       g_strv_builder_add (builder, g_uri_to_string (conf_url));
     }
   }
