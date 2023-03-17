@@ -124,7 +124,8 @@ on_name_lost (GDBusConnection *connection,
     g_warning ("Can't connect proxy bus");
     g_main_loop_quit (user_data);
   } else {
-    g_error ("Unknown name lost error");
+    g_warning ("Unknown name lost error");
+    g_main_loop_quit (user_data);
   }
 }
 
@@ -133,12 +134,43 @@ main (int    argc,
       char **argv)
 {
   GMainLoop *loop;
+  GBusNameOwnerFlags flags;
+  gboolean replace;
+  gboolean use_system;
+  GOptionContext *context;
+  g_autoptr (GError) error = NULL;
+  const GOptionEntry options[] = {
+    { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace old daemon.", NULL },
+    { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system session.", NULL },
+    { NULL }
+  };
+
+  replace = FALSE;
+  use_system = FALSE;
+
+  context = g_option_context_new ("");
+  g_option_context_set_summary (context, "Libproxy D-Bus Service");
+  g_option_context_add_main_entries (context, options, "libproxy");
+
+  if (!g_option_context_parse (context, &argc, &argv, &error)) {
+    g_printerr ("%s: %s", g_get_application_name (), error->message);
+    g_printerr ("\n");
+    g_printerr ("Try \"%s --help\" for more information.",
+                g_get_prgname ());
+    g_printerr ("\n");
+    g_option_context_free (context);
+    return 1;
+  }
 
   loop = g_main_loop_new (NULL, FALSE);
 
-  g_bus_own_name (G_BUS_TYPE_SESSION,
+  flags = G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT;
+  if (replace)
+    flags |= G_BUS_NAME_OWNER_FLAGS_REPLACE;
+
+  g_bus_own_name (use_system ? G_BUS_TYPE_SYSTEM : G_BUS_TYPE_SESSION,
                   "org.libproxy.proxy",
-                  G_BUS_NAME_OWNER_FLAGS_NONE,
+                  flags,
                   on_bus_acquired,
                   NULL,
                   on_name_lost,

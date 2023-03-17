@@ -16,7 +16,14 @@ option(
   'dbus',
   type: 'feature',
   value: 'auto',
-  description: 'Whether to build dbus service'
+  description: 'Whether to build D-Bus service'
+)
+
+option(
+  'dbus-system-user',
+  type: 'string',
+  value: 'root',
+  description: 'Which user should be used on D-Bus system session'
 )
 
 option(

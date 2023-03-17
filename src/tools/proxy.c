@@ -54,7 +54,7 @@ print_proxies (char **proxies)
     return;
   }
 
-  for (j = 0; proxies[j] ; j++)
+  for (j = 0; proxies[j]; j++)
     printf ("%s%s", proxies[j], proxies[j + 1] ? " " : "\n");
 }
 
@@ -74,7 +74,7 @@ main (int    argc,
   }
   /* User entered some arguments on startup. skip interactive */
   if (argc > 1) {
-    for (i = 1; i < argc ; i++) {
+    for (i = 1; i < argc; i++) {
       /*
        * Get an array of proxies to use. These should be used
        * in the order returned. Only move on to the next proxy
@@ -88,7 +88,7 @@ main (int    argc,
   /* Interactive mode */
   else {
     /* For each URL we read on STDIN, get the proxies to use */
-    for (url[0] = '\0' ; fgets (url, 102400, stdin) != NULL ; ) {
+    for (url[0] = '\0'; fgets (url, 102400, stdin) != NULL;) {
       if (url[strlen (url) - 1] == '\n') url[strlen (url) - 1] = '\0';
 
       /*

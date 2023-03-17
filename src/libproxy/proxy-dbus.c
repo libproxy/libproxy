@@ -73,6 +73,20 @@ px_proxy_factory_new (void)
                                                "org.libproxy.proxy",
                                                self->cancellable, /* GCancellable */
                                                &error);
+
+  if (!self->proxy) {
+    g_clear_error (&error);
+
+    self->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                                 G_DBUS_PROXY_FLAGS_NONE,
+                                                 NULL, /* GDBusInterfaceInfo */
+                                                 "org.libproxy.proxy",
+                                                 "/org/libproxy/proxy",
+                                                 "org.libproxy.proxy",
+                                                 self->cancellable, /* GCancellable */
+                                                 &error);
+  }
+
   if (!self->proxy)
     g_warning ("Could not create libproxy dbus proxy: %s", error->message);
 
