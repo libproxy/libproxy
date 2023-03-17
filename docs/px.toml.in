@@ -65,6 +65,7 @@ content_files = [
   "build-steps.md",
   "configuration-logic.md",
   "perl.md",
+  "proxy-authentication.md",
   "python.md",
   "ruby.md",
   "vala.md",
