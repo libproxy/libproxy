@@ -24,6 +24,7 @@
 #include "config-gnome.h"
 
 #include "px-plugin-config.h"
+#include "px-manager.h"
 
 struct _PxConfigGnome {
   GObject parent_instance;
@@ -156,7 +157,7 @@ store_response (GStrvBuilder *builder,
 
     g_string_append_printf (tmp, "%s:%d", host, port);
 
-    g_strv_builder_add (builder, tmp->str);
+    px_strv_builder_add_proxy (builder, tmp->str);
   }
 }
 
@@ -178,7 +179,7 @@ px_config_gnome_get_config (PxConfig     *config,
     else
       proxy = g_strdup ("wpad://");
 
-    g_strv_builder_add (builder, proxy);
+    px_strv_builder_add_proxy (builder, proxy);
   } else if (mode == GNOME_PROXY_MODE_MANUAL) {
     g_autofree char *username = g_settings_get_string (self->http_proxy_settings, "authentication-user");
     g_autofree char *password = g_settings_get_string (self->http_proxy_settings, "authentication-password");

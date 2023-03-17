@@ -167,7 +167,7 @@ px_config_windows_get_config (PxConfig     *self,
 
   /* WPAD */
   if (is_enabled (W32REG_OFFSET_WPAD)) {
-    g_strv_builder_add (builder, "wpad://");
+    px_strv_builder_add_proxy (builder, "wpad://");
     return;
   }
 
@@ -177,7 +177,7 @@ px_config_windows_get_config (PxConfig     *self,
     GUri *ac_uri = g_uri_parse (tmp, G_URI_FLAGS_PARSE_RELAXED, NULL);
 
     if (ac_uri) {
-      g_strv_builder_add (builder, pac_uri);
+      px_strv_builder_add_proxy (builder, pac_uri);
       return;
     }
   }
@@ -190,19 +190,19 @@ px_config_windows_get_config (PxConfig     *self,
     if (table) {
       char *ret = g_hash_table_lookup (table, scheme);
       if (ret) {
-        g_strv_builder_add (builder, ret);
+        px_strv_builder_add_proxy (builder, ret);
         return;
       }
 
       ret = g_hash_table_lookup (table, "http");
       if (ret) {
-        g_strv_builder_add (builder, ret);
+        px_strv_builder_add_proxy (builder, ret);
         return;
       }
 
       ret = g_hash_table_lookup (table, "socks");
       if (ret) {
-        g_strv_builder_add (builder, ret);
+        px_strv_builder_add_proxy (builder, ret);
         return;
       }
     }

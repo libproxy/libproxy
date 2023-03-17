@@ -156,7 +156,7 @@ px_config_env_get_config (PxConfig     *config,
     proxy = self->http_proxy;
 
   if (proxy)
-    g_strv_builder_add (builder, proxy);
+    px_strv_builder_add_proxy (builder, proxy);
 }
 
 static void

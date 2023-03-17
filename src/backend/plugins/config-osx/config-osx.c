@@ -229,11 +229,11 @@ get_ignore_list (CFDictionaryRef proxies)
   for (int idx = 0; idx < CFArrayGetCount (ref); idx++) {
     CFStringRef s = (CFStringRef)CFArrayGetValueAtIndex (ref, idx);
 
-    g_strv_builder_add (ret, str (s));
+    px_strv_builder_add_proxy (ret, str (s));
   }
 
   if (getbool (proxies, "ExcludeSimpleHostnames"))
-    g_strv_builder_add (ret, "127.0.0.1");
+    px_strv_builder_add_proxy (ret, "127.0.0.1");
 
   return g_strv_builder_end (ret);
 }
@@ -259,7 +259,7 @@ px_config_osx_get_config (PxConfig     *self,
 
   if (getbool (proxies, "ProxyAutoDiscoveryEnable")) {
     CFRelease (proxies);
-    g_strv_builder_add (builder, "wpad://");
+    px_strv_builder_add_proxy (builder, "wpad://");
     return;
   }
 
@@ -271,7 +271,7 @@ px_config_osx_get_config (PxConfig     *self,
     if (tmp_uri) {
       g_autofree char *ret = g_strdup_printf ("pac+%s", g_uri_to_string (tmp_uri));
       CFRelease (proxies);
-      g_strv_builder_add (builder, ret);
+      px_strv_builder_add_proxy (builder, ret);
       return;
     }
   } else {
@@ -288,7 +288,7 @@ px_config_osx_get_config (PxConfig     *self,
   }
 
   if (proxy)
-    g_strv_builder_add (builder, proxy);
+    px_strv_builder_add_proxy (builder, proxy);
 }
 
 static void

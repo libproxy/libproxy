@@ -51,4 +51,7 @@ char **px_manager_get_configuration (PxManager  *self,
                                      GUri       *uri,
                                      GError    **error);
 
+void px_strv_builder_add_proxy (GStrvBuilder *builder,
+                                const char   *value);
+
 G_END_DECLS

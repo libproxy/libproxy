@@ -238,7 +238,7 @@ px_config_sysconfig_get_config (PxConfig     *config,
   }
 
   if (proxy)
-    g_strv_builder_add (builder, proxy);
+    px_strv_builder_add_proxy (builder, proxy);
 }
 
 static void

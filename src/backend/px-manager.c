@@ -450,10 +450,10 @@ px_manager_run_pac (PeasExtensionSet *set,
         proxy_string = g_strconcat ("socks://", server, NULL);
       }
 
-      g_strv_builder_add (pac_data->builder, proxy_string);
+      px_strv_builder_add_proxy (pac_data->builder, proxy_string);
     } else {
       /* Syntax not found, returning direct */
-      g_strv_builder_add (pac_data->builder, "direct://");
+      px_strv_builder_add_proxy (pac_data->builder, "direct://");
     }
   }
 }
@@ -549,7 +549,7 @@ px_manager_get_proxies_sync (PxManager   *self,
 
   g_debug ("%s: url=%s online=%d", __FUNCTION__, url ? url : "?", self->online);
   if (!uri || !self->online) {
-    g_strv_builder_add (builder, "direct://");
+    px_strv_builder_add_proxy (builder, "direct://");
     return g_strv_builder_end (builder);
   }
 
@@ -568,16 +568,28 @@ px_manager_get_proxies_sync (PxManager   *self,
       };
       peas_extension_set_foreach (self->pacrunner_set, px_manager_run_pac, &pac_data);
     } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
-      g_strv_builder_add (builder, g_uri_to_string (conf_url));
+      px_strv_builder_add_proxy (builder, g_uri_to_string (conf_url));
     }
   }
 
   /* In case no proxy could be found, assume direct connection */
   if (((GPtrArray *)builder)->len == 0)
-    g_strv_builder_add (builder, "direct://");
+    px_strv_builder_add_proxy (builder, "direct://");
 
   for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++)
     g_debug ("%s: Proxy[%d] = %s", __FUNCTION__, idx, (char *)((GPtrArray *)builder)->pdata[idx]);
 
   return g_strv_builder_end (builder);
+}
+
+void
+px_strv_builder_add_proxy (GStrvBuilder *builder,
+                           const char   *value)
+{
+  for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++) {
+    if (strcmp ((char *)((GPtrArray *)builder)->pdata[idx], value) == 0)
+      return;
+  }
+
+  g_strv_builder_add (builder, value);
 }
