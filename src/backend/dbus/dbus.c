@@ -24,6 +24,17 @@
 
 #include <gio/gio.h>
 
+static gboolean replace;
+static gboolean use_system;
+
+static GApplication *app;
+
+const GOptionEntry options[] = {
+  { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace old daemon.", NULL },
+  { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system session.", NULL },
+  { NULL }
+};
+
 static void
 handle_method_call (GDBusConnection       *connection,
                     const gchar           *sender,
@@ -41,12 +52,14 @@ handle_method_call (GDBusConnection       *connection,
   const gchar *url;
   int idx;
 
+  g_application_hold (app);
   if (g_strcmp0 (method_name, "query") != 0) {
     g_warning ("Invalid method name '%s', aborting.", method_name);
     g_dbus_method_invocation_return_error (invocation,
                                            PX_MANAGER_ERROR,
                                            PX_MANAGER_ERROR_UNKNOWN_METHOD,
                                            "Unknown method");
+    g_application_release (app);
     return;
   }
 
@@ -56,6 +69,7 @@ handle_method_call (GDBusConnection       *connection,
   if (error) {
     g_warning ("Could not query proxy servers: %s", error->message);
     g_dbus_method_invocation_return_gerror (invocation, error);
+    g_application_release (app);
     return;
   }
 
@@ -68,6 +82,7 @@ handle_method_call (GDBusConnection       *connection,
 
   g_dbus_method_invocation_return_value (invocation,
                                          g_variant_new ("(as)", result));
+  g_application_release (app);
 }
 
 static GVariant *
@@ -108,9 +123,11 @@ on_bus_acquired (GDBusConnection *connection,
                                      manager,
                                      g_object_unref,
                                      &error);
+  g_application_release (user_data);
+
   if (error) {
     g_warning ("Could not register dbus object: %s", error->message);
-    g_main_loop_quit (user_data);
+    g_application_quit (user_data);
     return;
   }
 }
@@ -122,28 +139,40 @@ on_name_lost (GDBusConnection *connection,
 {
   if (!connection) {
     g_warning ("Can't connect proxy bus");
-    g_main_loop_quit (user_data);
+    g_application_quit (user_data);
   } else {
     g_warning ("Unknown name lost error");
-    g_main_loop_quit (user_data);
+    g_application_quit (user_data);
   }
+}
+
+static void
+activate (GApplication *application)
+{
+  GBusNameOwnerFlags flags;
+
+  flags = G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT;
+  if (replace)
+    flags |= G_BUS_NAME_OWNER_FLAGS_REPLACE;
+
+  g_bus_own_name (use_system ? G_BUS_TYPE_SYSTEM : G_BUS_TYPE_SESSION,
+                  "org.libproxy.proxy",
+                  flags,
+                  on_bus_acquired,
+                  NULL,
+                  on_name_lost,
+                  app,
+                  NULL);
+
+  g_application_hold (app);
 }
 
 int
 main (int    argc,
       char **argv)
 {
-  GMainLoop *loop;
-  GBusNameOwnerFlags flags;
-  gboolean replace;
-  gboolean use_system;
   GOptionContext *context;
   g_autoptr (GError) error = NULL;
-  const GOptionEntry options[] = {
-    { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace old daemon.", NULL },
-    { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system session.", NULL },
-    { NULL }
-  };
 
   replace = FALSE;
   use_system = FALSE;
@@ -162,22 +191,16 @@ main (int    argc,
     return 1;
   }
 
-  loop = g_main_loop_new (NULL, FALSE);
+  app = g_application_new ("org.libproxy.proxy-service",
+#if GLIB_CHECK_VERSION (2, 73, 0)
+                           G_APPLICATION_DEFAULT_FLAGS
+#else
+                           G_APPLICATION_FLAGS_NONE
+#endif
+                           );
 
-  flags = G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT;
-  if (replace)
-    flags |= G_BUS_NAME_OWNER_FLAGS_REPLACE;
+  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+  g_application_set_inactivity_timeout (app, 60000);
 
-  g_bus_own_name (use_system ? G_BUS_TYPE_SYSTEM : G_BUS_TYPE_SESSION,
-                  "org.libproxy.proxy",
-                  flags,
-                  on_bus_acquired,
-                  NULL,
-                  on_name_lost,
-                  loop,
-                  NULL);
-
-  g_main_loop_run (loop);
-
-  return 0;
+  return g_application_run (app, argc, argv);
 }
