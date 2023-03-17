@@ -40,8 +40,9 @@ typedef enum {
 struct _PxConfigKde {
   GObject parent_instance;
 
-  char *config_option;
+  char *config_file;
   gboolean available;
+  GFileMonitor *monitor;
 
   char *no_proxy;
   char *http_proxy;
@@ -62,9 +63,25 @@ enum {
   PROP_CONFIG_OPTION
 };
 
+static void px_config_kde_set_config_file (PxConfigKde *self,
+                                           char        *proxy_file);
+
 static void
-px_config_kde_read_config (PxConfigKde *self,
-                           char        *proxy_file)
+on_file_changed (GFileMonitor      *monitor,
+                 GFile             *file,
+                 GFile             *other_file,
+                 GFileMonitorEvent  event_type,
+                 gpointer           user_data)
+{
+  PxConfigKde *self = PX_CONFIG_KDE (user_data);
+
+  g_debug ("%s: Reloading configuration\n", __FUNCTION__);
+  px_config_kde_set_config_file (self, g_file_get_path (file));
+}
+
+static void
+px_config_kde_set_config_file (PxConfigKde *self,
+                               char        *proxy_file)
 {
   g_autoptr (GError) error = NULL;
   g_autofree char *line = NULL;
@@ -72,21 +89,32 @@ px_config_kde_read_config (PxConfigKde *self,
   g_autoptr (GFileInputStream) istr = NULL;
   g_autoptr (GDataInputStream) dstr = NULL;
 
-  file = g_file_new_for_path (proxy_file);
+  g_clear_pointer (&self->config_file, g_free);
+  self->config_file = proxy_file ? g_strdup (proxy_file) : g_build_filename (g_get_user_config_dir (), "kioslaverc", NULL);
+  self->available = FALSE;
+
+  file = g_file_new_for_path (self->config_file);
   if (!file) {
-    g_debug ("%s: Could not create file", __FUNCTION__);
+    g_debug ("%s: Could not create file for %s", __FUNCTION__, self->config_file);
     return;
   }
 
   istr = g_file_read (file, NULL, NULL);
   if (!istr) {
-    g_debug ("%s: Could not read file", __FUNCTION__);
+    g_debug ("%s: Could not read file %s", __FUNCTION__, self->config_file);
     return;
   }
 
   dstr = g_data_input_stream_new (G_INPUT_STREAM (istr));
   if (!dstr)
     return;
+
+  g_clear_object (&self->monitor);
+  self->monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, &error);
+  if (!self->monitor)
+    g_warning ("Could not add a file monitor for %s, error: %s", g_file_get_uri (file), error->message);
+  else
+    g_signal_connect_object (G_OBJECT (self->monitor), "changed", G_CALLBACK (on_file_changed), self, 0);
 
   do {
     g_clear_pointer (&line, g_free);
@@ -122,24 +150,10 @@ px_config_kde_read_config (PxConfigKde *self,
       }
     }
   } while (line);
+
+  self->available = TRUE;
 }
 
-static
-void
-px_config_kde_set_config_file (PxConfigKde *self,
-                               const char  *file)
-{
-  g_autofree char *config = NULL;
-
-  g_clear_pointer (&self->config_option, g_free);
-  self->config_option = file ? g_strdup (file) : NULL;
-
-  config = self->config_option ? g_strdup (self->config_option) : g_build_filename (g_get_user_config_dir (), "kioslaverc", NULL);
-
-  self->available = g_file_test (config, G_FILE_TEST_EXISTS);
-  if (self->available)
-    px_config_kde_read_config (self, config);
-}
 
 static void
 px_config_kde_init (PxConfigKde *self)
@@ -150,6 +164,10 @@ px_config_kde_init (PxConfigKde *self)
 static void
 px_config_kde_dispose (GObject *object)
 {
+  PxConfigKde *self = PX_CONFIG_KDE (object);
+
+  g_clear_object (&self->monitor);
+
   G_OBJECT_CLASS (px_config_kde_parent_class)->dispose (object);
 }
 
@@ -182,7 +200,7 @@ px_config_kde_get_property (GObject    *object,
 
   switch (prop_id) {
     case PROP_CONFIG_OPTION:
-      g_value_set_string (value, config->config_option);
+      g_value_set_string (value, config->config_file);
       break;
 
     default:

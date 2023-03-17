@@ -28,9 +28,9 @@
 
 struct _PxConfigSysConfig {
   GObject parent_instance;
+  GFileMonitor *monitor;
 
-  char *proxy_file;
-  char *config_option;
+  char *config_file;
   gboolean available;
 
   gboolean proxy_enabled;
@@ -53,6 +53,22 @@ enum {
   PROP_CONFIG_OPTION
 };
 
+static void px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
+                                                 const char        *config_file);
+
+static void
+on_file_changed (GFileMonitor      *monitor,
+                 GFile             *file,
+                 GFile             *other_file,
+                 GFileMonitorEvent  event_type,
+                 gpointer           user_data)
+{
+  PxConfigSysConfig *self = PX_CONFIG_SYSCONFIG (user_data);
+
+  g_debug ("%s: Reloading configuration", __FUNCTION__);
+  px_config_sysconfig_set_config_file (self, g_file_get_path (file));
+}
+
 static
 void
 px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
@@ -65,27 +81,32 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
   g_autoptr (GDataInputStream) dstr = NULL;
   char *line = NULL;
 
-  g_clear_pointer (&self->config_option, g_free);
-  self->config_option = config_file ? g_strdup (config_file) : NULL;
-
-  self->proxy_file = g_strdup (self->config_option ? self->config_option : "/etc/sysconfig/proxy");
+  g_clear_pointer (&self->config_file, g_free);
+  self->config_file = g_strdup (config_file ? config_file : "/etc/sysconfig/proxy");
   self->available = FALSE;
 
-  file = g_file_new_for_path (self->proxy_file);
+  file = g_file_new_for_path (self->config_file);
   if (!file) {
-    g_debug ("%s: Could not create file", __FUNCTION__);
+    g_debug ("%s: Could not create file for %s", __FUNCTION__, self->config_file);
     return;
   }
 
   istr = g_file_read (file, NULL, NULL);
   if (!istr) {
-    g_debug ("%s: Could not read file", __FUNCTION__);
+    g_debug ("%s: Could not read file %s", __FUNCTION__, self->config_file);
     return;
   }
 
   dstr = g_data_input_stream_new (G_INPUT_STREAM (istr));
   if (!dstr)
     return;
+
+  g_clear_object (&self->monitor);
+  self->monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, &error);
+  if (!self->monitor)
+    g_warning ("Could not add a file monitor for %s, error: %s", g_file_get_uri (file), error->message);
+  else
+    g_signal_connect_object (G_OBJECT (self->monitor), "changed", G_CALLBACK (on_file_changed), self, 0);
 
   do {
     g_clear_pointer (&line, g_free);
@@ -123,7 +144,6 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
 static void
 px_config_sysconfig_init (PxConfigSysConfig *self)
 {
-  px_config_sysconfig_set_config_file (self, NULL);
 }
 
 static void
@@ -155,7 +175,7 @@ px_config_sysconfig_get_property (GObject    *object,
 
   switch (prop_id) {
     case PROP_CONFIG_OPTION:
-      g_value_set_string (value, config->config_option);
+      g_value_set_string (value, config->config_file);
       break;
 
     default:
@@ -165,10 +185,21 @@ px_config_sysconfig_get_property (GObject    *object,
 }
 
 static void
+px_config_sysconfig_dispose (GObject *object)
+{
+  PxConfigSysConfig *self = PX_CONFIG_SYSCONFIG (object);
+
+  g_clear_object (&self->monitor);
+
+  G_OBJECT_CLASS (px_config_sysconfig_parent_class)->dispose (object);
+}
+
+static void
 px_config_sysconfig_class_init (PxConfigSysConfigClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->dispose = px_config_sysconfig_dispose;
   object_class->set_property = px_config_sysconfig_set_property;
   object_class->get_property = px_config_sysconfig_get_property;
 
