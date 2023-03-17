@@ -61,6 +61,7 @@ file_format = "{filename}#L{line}"
 
 [extra]
 content_files = [
+  "architecture.md",
   "configuration-logic.md",
   "perl.md",
   "python.md",

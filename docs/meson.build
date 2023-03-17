@@ -1,6 +1,7 @@
 if get_option('docs')
 
 expand_content_md_files = [
+  'architecture.md',
   'configuration-logic.md',
   'perl.md',
   'python.md',
