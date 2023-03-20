@@ -71,7 +71,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
 
   result = px_manager_get_proxies_sync (self->manager, url, &error);
   if (error)
-    g_warning ("Could not query proxy: %s", error ? error->message : "");
+    g_warning ("Could not query proxy: %s", error->message);
 
   return g_steal_pointer (&result);
 }

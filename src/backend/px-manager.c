@@ -102,7 +102,8 @@ px_manager_constructed (GObject *object)
       g_autofree char *new_g_messages_debug = NULL;
 
       new_g_messages_debug = g_strconcat (g_messages_debug, " ", G_LOG_DOMAIN, NULL);
-      g_setenv ("G_MESSAGES_DEBUG", new_g_messages_debug, TRUE);
+      if (new_g_messages_debug)
+        g_setenv ("G_MESSAGES_DEBUG", new_g_messages_debug, TRUE);
     }
   }
 
@@ -587,7 +588,7 @@ px_strv_builder_add_proxy (GStrvBuilder *builder,
                            const char   *value)
 {
   for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++) {
-    if (strcmp ((char *)((GPtrArray *)builder)->pdata[idx], value) == 0)
+    if (g_strcmp0 ((char *)((GPtrArray *)builder)->pdata[idx], value) == 0)
       return;
   }
 

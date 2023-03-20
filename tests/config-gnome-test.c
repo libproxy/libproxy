@@ -169,7 +169,10 @@ test_config_gnome_fail (Fixture    *self,
   g_autoptr (GUri) uri = NULL;
 
   /* Disable GNOME support */
-  g_setenv ("XDG_CURRENT_DESKTOP", "unknown", TRUE);
+  if (!g_setenv ("XDG_CURRENT_DESKTOP", "unknown", TRUE)) {
+    g_warning ("Could not set XDG_CURRENT_DESKTOP environment, abort");
+    return;
+  }
 
   manager = px_test_manager_new ("config-gnome", NULL);
   g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
