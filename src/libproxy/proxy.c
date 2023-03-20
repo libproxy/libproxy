@@ -24,11 +24,6 @@
 #include "px-manager.h"
 #include "proxy.h"
 
-/**
- * SECTION:px-proxy
- * @short_description: A convient helper for using proxy servers
- */
-
 struct _pxProxyFactory {
   PxManager *manager;
 };
@@ -40,12 +35,6 @@ G_DEFINE_BOXED_TYPE (pxProxyFactory,
                      (GBoxedCopyFunc)px_proxy_factory_copy,
                      (GFreeFunc)px_proxy_factory_new);
 
-/**
- * px_proxy_factory_new:
- * Creates a new proxy factory.
- *
- * Returns: pointer to #px_proxy_factory
- */
 pxProxyFactory *
 px_proxy_factory_new (void)
 {
@@ -82,12 +71,6 @@ px_proxy_factory_free_proxies (char **proxies)
   g_clear_pointer (&proxies, g_strfreev);
 }
 
-/**
- * px_proxy_factory_free:
- * @self: a px_proxy_factory
- *
- * Free px_proxy_factory
- */
 void
 px_proxy_factory_free (pxProxyFactory *self)
 {
