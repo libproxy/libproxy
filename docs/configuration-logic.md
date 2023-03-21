@@ -2,7 +2,6 @@ Title: Configuration Logic
 Slug: Design
 
 # Configuration Logic
-Source: https://code.google.com/archive/p/libproxy/wikis/ConfigurationLogic.wiki
 
 ## Introduction
 As the proxy configuration predates libproxy, we need to consider previous
@@ -38,11 +37,11 @@ specific PAC file or to automatically discover one (WPAD) but those does not
 contain any special logic. Next is the logic represent as pseudo code:
 
 ```
-  IF not using same proxy for all protocols THEN
-      IF SOCKS is set THEN use it
-      ELSE IF protocol specific proxy is set THEN use it
-      ELSE IF using same proxy for all protocols THEN
-          IF SOCKS is set THEN use it
+ IF not using same proxy for all protocols THEN
+   IF SOCKS is set THEN use it
+   ELSE IF protocol specific proxy is set THEN use it
+   ELSE IF using same proxy for all protocols THEN
+    IF SOCKS is set THEN use it
  IF no proxy has been set THEN use direct connection
 ```
 
@@ -64,14 +63,14 @@ testing the order seems to be from most specific to most generic (starting with
 manual configuration). Next is the logic represented as pseudo code:
 
 ```
-    DEFINE proxy_list as list
-    IF protocol specific proxy is set THEN add it to proxy_list
-    IF SOCKS proxy is set THEN append it to proxy_list
-    IF PAC auto-configuration is set THEN append it to proxy_list
-    FOREACH proxy in proxy_list
-        connect to proxy
-        IF connection failed THEN continue
-        ELSE stop
+ DEFINE proxy_list as list
+ IF protocol specific proxy is set THEN add it to proxy_list
+ IF SOCKS proxy is set THEN append it to proxy_list
+ IF PAC auto-configuration is set THEN append it to proxy_list
+ FOREACH proxy in proxy_list
+   connect to proxy
+   IF connection failed THEN continue
+   ELSE stop
 ```
 
 ## Windows

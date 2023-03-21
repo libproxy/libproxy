@@ -1,7 +1,7 @@
-Title: How to compile libproxy
+Title: Build steps - How to compile libproxy
 Slug: building
 
-# How to compile libproxy
+# Build steps - How to compile libproxy
 
 ## Fedora
 
