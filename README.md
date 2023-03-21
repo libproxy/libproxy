@@ -31,8 +31,8 @@ It doesn't matter! Just ask libproxy what proxy to use: you get simple code and 
 ## libproxy offers the following features:
 - support for all major platforms: Windows, Mac and Linux/UNIX
 - extremely small core footprint
-- no external dependencies within libproxy core
-- only 3 functions in the stable-ish external API
+- minimal dependencies within libproxy core
+- only 4 functions in the stable-ish external API
 - dynamic adjustment to changing network topology
 - a standard way of dealing with proxy settings across all scenarios
 - a sublime sense of joy and accomplishment
