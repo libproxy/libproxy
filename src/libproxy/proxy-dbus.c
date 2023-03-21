@@ -94,7 +94,7 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
     return NULL;
 
   result = g_dbus_proxy_call_sync (self->proxy,
-                                   "query",
+                                   "GetProxiesFor",
                                    g_variant_new ("(s)", url),
                                    G_DBUS_CALL_FLAGS_NONE,
                                    -1,

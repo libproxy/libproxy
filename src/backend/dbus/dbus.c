@@ -53,7 +53,7 @@ handle_method_call (GDBusConnection       *connection,
   int idx;
 
   g_application_hold (app);
-  if (g_strcmp0 (method_name, "query") != 0) {
+  if (g_strcmp0 (method_name, "GetProxiesFor") != 0) {
     g_warning ("Invalid method name '%s', aborting.", method_name);
     g_dbus_method_invocation_return_error (invocation,
                                            PX_MANAGER_ERROR,
@@ -85,26 +85,8 @@ handle_method_call (GDBusConnection       *connection,
   g_application_release (app);
 }
 
-static GVariant *
-handle_get_property (GDBusConnection  *connection,
-                     const gchar      *sender,
-                     const gchar      *object_path,
-                     const gchar      *interface_name,
-                     const gchar      *property_name,
-                     GError          **error,
-                     gpointer          user_data)
-{
-  GVariant *ret = NULL;
-
-  if (g_strcmp0 (property_name, "APIVersion") == 0)
-    ret = g_variant_new_string ("1.0");
-
-  return ret;
-}
-
 static const GDBusInterfaceVTable interface_vtable = {
   handle_method_call,
-  handle_get_property
 };
 
 static void

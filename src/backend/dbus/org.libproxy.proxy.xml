@@ -1,13 +1,13 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" >
 <node>
   <interface name="org.libproxy.proxy">
-    <method name="query">
+    <method name="GetProxiesFor">
       <arg type='s' name='url' direction='in'/>
       <arg type='as' name='response' direction='out'/>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Ask for proxy server for given url.
+            Get proxy servers for given url.
           </doc:para>
         </doc:description>
       </doc:doc>
