@@ -54,4 +54,6 @@ char **px_manager_get_configuration (PxManager  *self,
 void px_strv_builder_add_proxy (GStrvBuilder *builder,
                                 const char   *value);
 
+gboolean px_manager_is_ignore (GUri *uri, GStrv ignores);
+
 G_END_DECLS

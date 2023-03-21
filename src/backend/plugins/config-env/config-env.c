@@ -143,9 +143,8 @@ px_config_env_get_config (PxConfig     *config,
   const char *proxy = NULL;
   const char *scheme = g_uri_get_scheme (uri);
 
-  if (self->no_proxy && (g_strv_contains ((const char * const *)self->no_proxy, g_uri_get_host (uri)) || g_strv_contains ((const char * const *)self->no_proxy, "*"))) {
+  if (px_manager_is_ignore (uri, self->no_proxy))
     return;
-  }
 
   if (g_strcmp0 (scheme, "ftp") == 0)
     proxy = self->ftp_proxy;

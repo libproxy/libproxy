@@ -159,9 +159,9 @@ px_config_windows_get_config (PxConfig     *self,
   guint32 enabled = 0;
 
   if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
-    const char *host = g_uri_get_host (uri);
+    g_auto (GStrv) no_proxy = g_strsplit (tmp, ",", -1);
 
-    if (g_strcmp0 (tmp, "<local>") == 0 && g_strcmp0 (host, "127.0.0.1") == 0)
+    if (px_manager_is_ignore (uri, no_proxy))
       return;
   }
 

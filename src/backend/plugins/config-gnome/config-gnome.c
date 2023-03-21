@@ -170,6 +170,9 @@ px_config_gnome_get_config (PxConfig     *config,
   g_autofree char *proxy = NULL;
   GnomeProxyMode mode;
 
+  if (px_manager_is_ignore (uri, g_settings_get_strv (self->proxy_settings, "ignore-hosts")))
+    return;
+
   mode = g_settings_get_enum (self->proxy_settings, "mode");
   if (mode == GNOME_PROXY_MODE_AUTO) {
     char *autoconfig_url = g_settings_get_string (self->proxy_settings, "autoconfig-url");

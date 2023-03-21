@@ -196,6 +196,92 @@ test_get_wpad (Fixture    *self,
   g_main_loop_run (self->loop);
 }
 
+static void
+test_ignore_domain (Fixture    *self,
+                    const void *user_data)
+{
+  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  char **ignore_list = g_malloc0 (sizeof (char *) * 2);
+  gboolean ret;
+
+  /* Invalid test */
+  ignore_list[0] = g_strdup ("10.10.1.13");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_assert_false (ret);
+
+  /* Valid test */
+  ignore_list[0] = g_strdup ("10.10.1.12");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_assert_true (ret);
+
+  g_free (ignore_list[0]);
+  g_free (ignore_list);
+}
+
+static void
+test_ignore_domain_port (Fixture    *self,
+                         const void *user_data)
+{
+  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12:22", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  char **ignore_list = g_malloc0 (sizeof (char *) * 2);
+  gboolean ret;
+
+  /* Invalid test */
+  ignore_list[0] = g_strdup ("10.10.1.13");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_free (ignore_list[0]);
+  g_assert_false (ret);
+
+  /* Invalid test */
+  ignore_list[0] = g_strdup ("10.10.1.12:24");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_free (ignore_list[0]);
+  g_assert_false (ret);
+
+  /* Valid test */
+  ignore_list[0] = g_strdup ("10.10.1.12:22");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_assert_true (ret);
+
+  g_free (ignore_list[0]);
+  g_free (ignore_list);
+}
+
+static void
+test_ignore_hostname (Fixture    *self,
+                      const void *user_data)
+{
+  g_autoptr (GUri) uri = g_uri_parse("http://18.10.1.12", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  char **ignore_list = g_malloc0 (sizeof (char *) * 2);
+  gboolean ret;
+
+  /* Invalid test */
+  ignore_list[0] = g_strdup ("<local>");
+  ignore_list[1] = NULL;
+
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_assert_false (ret);
+  g_uri_unref (uri);
+
+  /* Valid test */
+  uri = g_uri_parse("http://127.0.0.1", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  ret = px_manager_is_ignore (uri, ignore_list);
+  g_assert_false (ret);
+
+  g_free (ignore_list[0]);
+  g_free (ignore_list);
+}
+
 int
 main (int    argc,
       char **argv)
@@ -218,6 +304,10 @@ main (int    argc,
   g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac, fixture_teardown);
   g_test_add ("/pac/wpad", Fixture, "px-manager-wpad", fixture_setup, test_get_wpad, fixture_teardown);
+
+  g_test_add ("/ignore/domain", Fixture, "px-manager-ignore", fixture_setup, test_ignore_domain, fixture_teardown);
+  g_test_add ("/ignore/domain_port", Fixture, "px-manager-ignore", fixture_setup, test_ignore_domain_port, fixture_teardown);
+  g_test_add ("/ignore/hostname", Fixture, "px-manager-ignore", fixture_setup, test_ignore_hostname, fixture_teardown);
 
   return g_test_run ();
 }

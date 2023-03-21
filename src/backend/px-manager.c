@@ -594,3 +594,112 @@ px_strv_builder_add_proxy (GStrvBuilder *builder,
 
   g_strv_builder_add (builder, value);
 }
+
+static gboolean
+ignore_domain (GUri *uri,
+               char *ignore)
+{
+  g_auto (GStrv) ignore_split = g_strsplit (ignore, ":", -1);
+  const char *host = g_uri_get_host (uri);
+  char *ig_host;
+  int ig_port = -1;
+  int port = g_uri_get_port (uri);
+
+  /* Get our ignore pattern's hostname and port */
+  ig_host = ignore_split[0];
+  if  (g_strv_length (ignore_split) == 2)
+    ig_port = atoi (ignore_split[1]);
+
+  /* Hostname match (domain.com or domain.com:80) */
+  if (g_strcmp0 (host, ig_host) == 0)
+    return (ig_port == -1 || port == ig_port);
+
+  /* Endswith (.domain.com or .domain.com:80) */
+  if (ig_host[0] == '.' && g_str_has_suffix (host, ig_host))
+    return (ig_port == -1 || port == ig_port);
+
+  /* Glob (*.domain.com or *.domain.com:80) */
+  if (ig_host[0] == '*' && g_str_has_suffix (host, ig_host + 1))
+    return (ig_port == -1 || port == ig_port);
+
+  /* No match was found */
+  return FALSE;
+}
+
+static gboolean
+ignore_hostname (GUri *uri,
+                 char *ignore)
+{
+  const char *host = g_uri_get_host (uri);
+
+  g_print ("%s %s\n", ignore, host);
+
+  if (g_strcmp0 (ignore, "<local>") == 0 && strchr (host, ':') == NULL && strchr (host, '.') == NULL)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+ignore_ip (GUri *uri,
+           char *ignore)
+{
+  GInetAddress *inet_address1;
+  GInetAddress *inet_address2;
+  g_auto (GStrv) ignore_split = NULL;
+  gboolean is_ip1 = g_hostname_is_ip_address (g_uri_get_host (uri));
+  gboolean is_ip2 = g_hostname_is_ip_address (ignore);
+  int port = g_uri_get_port (uri);
+  int ig_port = -1;
+  gboolean result;
+
+  /*
+   * IPv4
+   * IPv6
+   */
+  if (!is_ip1 || !is_ip2)
+    return FALSE;
+
+  /*
+   * IPv4/CIDR
+   * IPv4/IPv4
+   * IPv6/CIDR
+   * IPv6/IPv6
+   */
+
+  /* MISSING */
+
+  /*
+   * IPv4:port
+   * [IPv6]:port
+   */
+  ignore_split = g_strsplit (ignore, ":", -1);
+  if  (g_strv_length (ignore_split) == 2)
+    ig_port = atoi (ignore_split[1]);
+
+  inet_address1 = g_inet_address_new_from_string (g_uri_get_host (uri));
+  inet_address2 = g_inet_address_new_from_string (ignore);
+  result = g_inet_address_equal (inet_address1, inet_address2);
+
+  return port != -1 ? ((port == ig_port) && result) : result;
+}
+gboolean
+px_manager_is_ignore (GUri  *uri,
+                      GStrv  ignores)
+{
+  if (!ignores)
+    return FALSE;
+
+  for (int idx = 0; idx < g_strv_length (ignores); idx++) {
+    if (ignore_hostname (uri, ignores[idx]))
+      return TRUE;
+
+    if (ignore_domain (uri, ignores[idx]))
+      return TRUE;
+
+    if (ignore_ip (uri, ignores[idx]))
+      return TRUE;
+  }
+
+  return FALSE;
+}

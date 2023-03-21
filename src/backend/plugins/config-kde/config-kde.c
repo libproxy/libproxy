@@ -44,7 +44,7 @@ struct _PxConfigKde {
   gboolean available;
   GFileMonitor *monitor;
 
-  char *no_proxy;
+  GStrv no_proxy;
   char *http_proxy;
   char *https_proxy;
   char *ftp_proxy;
@@ -142,7 +142,8 @@ px_config_kde_set_config_file (PxConfigKde *self,
       } else if (strcmp (kv[0], "socksProxy") == 0) {
         self->socks_proxy = g_strdup (value->str);
       } else if (strcmp (kv[0], "NoProxyFor") == 0) {
-        self->no_proxy = g_strdup (value->str);
+        g_autofree char *no_proxy_for = g_strdup (value->str);
+        self->no_proxy = g_strsplit (no_proxy_for, ",", -1);
       } else if (strcmp (kv[0], "Proxy Config Script") == 0) {
         self->pac_script = g_strdup (value->str);
       } else if (strcmp (kv[0], "ProxyType") == 0) {
@@ -166,7 +167,14 @@ px_config_kde_dispose (GObject *object)
 {
   PxConfigKde *self = PX_CONFIG_KDE (object);
 
+  g_clear_pointer (&self->config_file, g_free);
   g_clear_object (&self->monitor);
+  g_clear_pointer (&self->no_proxy, g_strfreev);
+  g_clear_pointer (&self->http_proxy, g_free);
+  g_clear_pointer (&self->https_proxy, g_free);
+  g_clear_pointer (&self->ftp_proxy, g_free);
+  g_clear_pointer (&self->socks_proxy, g_free);
+  g_clear_pointer (&self->pac_script, g_free);
 
   G_OBJECT_CLASS (px_config_kde_parent_class)->dispose (object);
 }
@@ -241,7 +249,7 @@ px_config_kde_get_config (PxConfig     *config,
   if (!self->proxy_type)
     return;
 
-  if (self->no_proxy && strstr (self->no_proxy, g_uri_get_host (uri)))
+  if (px_manager_is_ignore (uri, self->no_proxy))
     return;
 
   switch (self->proxy_type) {

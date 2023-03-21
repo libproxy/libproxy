@@ -254,7 +254,7 @@ px_config_osx_get_config (PxConfig     *self,
 
   ignore_list = get_ignore_list (proxies);
 
-  if (ignore_list && g_strv_contains ((const char * const *)ignore_list, g_uri_get_host (uri)))
+  if (px_manager_is_ignore (uri, ignore_list))
     return;
 
   if (getbool (proxies, "ProxyAutoDiscoveryEnable")) {

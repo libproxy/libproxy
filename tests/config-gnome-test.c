@@ -86,6 +86,7 @@ test_config_gnome_manual (Fixture    *self,
     g_auto (GStrv) config = NULL;
     ConfigGnomeTest test = config_gnome_test_set[idx];
 
+    g_settings_set_strv (self->proxy_settings, "ignore-hosts", NULL);
     g_settings_set_enum (self->proxy_settings, "mode", test.mode);
     g_settings_set_string (self->http_proxy_settings, "host", test.proxy);
     g_settings_set_int (self->http_proxy_settings, "port", test.proxy_port);

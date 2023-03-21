@@ -37,7 +37,7 @@ struct _PxConfigSysConfig {
   char *https_proxy;
   char *http_proxy;
   char *ftp_proxy;
-  char *no_proxy;
+  GStrv no_proxy;
 };
 
 static void px_config_iface_init (PxConfigInterface *iface);
@@ -133,7 +133,8 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
       } else if (strcmp (kv[0], "FTP_PROXY") == 0) {
         self->ftp_proxy = g_strdup (value->str);
       } else if (strcmp (kv[0], "NO_PROXY") == 0) {
-        self->no_proxy = g_strdup (value->str);
+        g_autofree char *tmp = g_strdup (value->str);
+        self->no_proxy = g_strsplit (tmp, ",", -1);
       }
     }
   } while (line);
@@ -190,6 +191,7 @@ px_config_sysconfig_dispose (GObject *object)
   PxConfigSysConfig *self = PX_CONFIG_SYSCONFIG (object);
 
   g_clear_object (&self->monitor);
+  g_clear_pointer (&self->no_proxy, g_strfreev);
 
   G_OBJECT_CLASS (px_config_sysconfig_parent_class)->dispose (object);
 }
@@ -226,7 +228,7 @@ px_config_sysconfig_get_config (PxConfig     *config,
   if (!self->proxy_enabled)
     return;
 
-  if (self->no_proxy && strstr (self->no_proxy, g_uri_get_host (uri)))
+  if (px_manager_is_ignore (uri, self->no_proxy))
     return;
 
   if (g_strcmp0 (scheme, "ftp") == 0) {
