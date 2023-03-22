@@ -226,17 +226,6 @@ px_config_gnome_get_config (PxConfig     *config,
                       username,
                       password);
     }
-
-    if ((((GPtrArray *)builder)->len == 0) && (g_strcmp0 (scheme, "http") != 0)) {
-      g_autofree char *host = g_settings_get_string (self->http_proxy_settings, "host");
-      store_response (builder,
-                      "http",
-                      host,
-                      g_settings_get_int (self->http_proxy_settings, "port"),
-                      auth,
-                      username,
-                      password);
-    }
   }
 }
 

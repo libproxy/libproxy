@@ -26,19 +26,7 @@
 
 #include "proxy.h"
 
-void *
-malloc0 (size_t s);
-void
-print_proxies (char **proxies);
-
-void *
-malloc0 (size_t s)
-{
-  void *tmp = malloc (s);
-  if (!tmp) return NULL;
-  memset (tmp, '\0', s);
-  return tmp;
-}
+void print_proxies (char **proxies);
 
 /**
  * Prints an array of proxies. Proxies are space separated.
@@ -72,6 +60,7 @@ main (int    argc,
     fprintf (stderr, "An unknown error occurred!\n");
     return 1;
   }
+
   /* User entered some arguments on startup. skip interactive */
   if (argc > 1) {
     for (i = 1; i < argc; i++) {

@@ -261,7 +261,7 @@ px_config_kde_get_config (PxConfig     *config,
         proxy = g_strdup (self->https_proxy);
       } else if (g_strcmp0 (scheme, "http") == 0) {
         proxy = g_strdup (self->http_proxy);
-      } else if (g_strcmp0 (scheme, "socks") == 0) {
+      } else if (self->socks_proxy && strlen (self->socks_proxy) > 0) {
         proxy = g_strdup (self->socks_proxy);
       }
       break;

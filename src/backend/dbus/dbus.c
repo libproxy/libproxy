@@ -31,7 +31,7 @@ static GApplication *app;
 
 const GOptionEntry options[] = {
   { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace old daemon.", NULL },
-  { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system session.", NULL },
+  { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system bus.", NULL },
   { NULL }
 };
 
@@ -182,6 +182,8 @@ main (int    argc,
                            );
 
   g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+
+  /* Set application timeout to 60 seconds */
   g_application_set_inactivity_timeout (app, 60000);
 
   return g_application_run (app, argc, argv);

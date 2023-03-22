@@ -233,12 +233,6 @@ px_config_windows_get_config (PxConfig     *self,
         return;
       }
 
-      ret = g_hash_table_lookup (table, "http");
-      if (ret) {
-        px_strv_builder_add_proxy (builder, ret);
-        return;
-      }
-
       ret = g_hash_table_lookup (table, "socks");
       if (ret) {
         px_strv_builder_add_proxy (builder, ret);

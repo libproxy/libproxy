@@ -320,9 +320,6 @@ px_config_osx_get_config (PxConfig     *self,
     proxy = protocol_url (proxies, capital_scheme);
 
     if (!proxy)
-      proxy = protocol_url (proxies, "HTTP");
-
-    if (!proxy)
       proxy = protocol_url (proxies, "SOCKS");
   }
 

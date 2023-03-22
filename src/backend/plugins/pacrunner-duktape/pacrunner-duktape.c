@@ -142,7 +142,6 @@ px_pacrunner_duktape_class_init (PxPacRunnerDuktapeClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  /* object_class->constructed = px_duktape_constructed; */
   object_class->dispose = px_pacrunner_duktape_dispose;
 }
 
