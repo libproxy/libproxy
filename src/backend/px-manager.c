@@ -632,8 +632,6 @@ ignore_hostname (GUri *uri,
 {
   const char *host = g_uri_get_host (uri);
 
-  g_print ("%s %s\n", ignore, host);
-
   if (g_strcmp0 (ignore, "<local>") == 0 && strchr (host, ':') == NULL && strchr (host, '.') == NULL)
     return TRUE;
 
