@@ -24,7 +24,7 @@
 #include "proxy.h"
 
 struct _pxProxyFactory {
-  GDBusProxy *proxy;
+  GDBusConnection *connection;
   GCancellable *cancellable;
 };
 
@@ -48,30 +48,15 @@ px_proxy_factory_new (void)
   pxProxyFactory *self = g_new0 (pxProxyFactory, 1);
 
   self->cancellable = g_cancellable_new ();
-  self->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
-                                               G_DBUS_PROXY_FLAGS_NONE,
-                                               NULL, /* GDBusInterfaceInfo */
-                                               "org.libproxy.proxy",
-                                               "/org/libproxy/proxy",
-                                               "org.libproxy.proxy",
-                                               self->cancellable, /* GCancellable */
-                                               &error);
 
-  if (!self->proxy) {
+  self->connection = g_bus_get_sync (G_BUS_TYPE_SESSION, self->cancellable, &error);
+  if (!self->connection) {
     g_clear_error (&error);
-
-    self->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-                                                 G_DBUS_PROXY_FLAGS_NONE,
-                                                 NULL, /* GDBusInterfaceInfo */
-                                                 "org.libproxy.proxy",
-                                                 "/org/libproxy/proxy",
-                                                 "org.libproxy.proxy",
-                                                 self->cancellable, /* GCancellable */
-                                                 &error);
+    self->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, self->cancellable, &error);
   }
 
-  if (!self->proxy)
-    g_warning ("Could not create libproxy dbus proxy: %s", error->message);
+  if (!self->connection)
+    g_warning ("Could not create dbus connection: %s", error->message);
 
   return self;
 }
@@ -80,31 +65,38 @@ char **
 px_proxy_factory_get_proxies (pxProxyFactory *self,
                               const char     *url)
 {
-  g_autoptr (GVariant) result = NULL;
   g_autoptr (GError) error = NULL;
   g_autoptr (GVariantIter) iter = NULL;
   g_autoptr (GList) list = NULL;
+  g_autoptr (GDBusMessage) msg = NULL;
+  g_autoptr (GDBusMessage) reply = NULL;
+  GVariant *result;
   GList *tmp;
   char *str;
   char **retval;
   gsize len;
   gsize idx;
 
-  if (!self->proxy)
+  if (!self->connection)
     return NULL;
 
-  result = g_dbus_proxy_call_sync (self->proxy,
-                                   "GetProxiesFor",
-                                   g_variant_new ("(s)", url),
-                                   G_DBUS_CALL_FLAGS_NONE,
-                                   -1,
-                                   self->cancellable,
-                                   &error);
-  if (!result) {
-    g_warning ("Could not query proxy dbus: %s", error->message);
+  msg = g_dbus_message_new_method_call ("org.libproxy.proxy",
+                                        "/org/libproxy/proxy",
+                                        "org.libproxy.proxy",
+                                        "GetProxiesFor");
+
+  g_dbus_message_set_body (msg, g_variant_new ("(s)", url));
+
+  reply = g_dbus_connection_send_message_with_reply_sync (self->connection, msg, G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, self->cancellable, &error);
+  if (!reply) {
+    g_warning ("Could not query proxy: %s", error->message);
     return NULL;
   }
 
+  if (g_dbus_message_get_message_type (reply) != G_DBUS_MESSAGE_TYPE_METHOD_RETURN)
+    return NULL;
+
+  result = g_dbus_message_get_body (reply);
   g_variant_get (result, "(as)", &iter);
 
   while (g_variant_iter_loop (iter, "&s", &str)) {
@@ -139,6 +131,6 @@ px_proxy_factory_free (pxProxyFactory *self)
 {
   g_cancellable_cancel (self->cancellable);
   g_clear_object (&self->cancellable);
-  g_clear_object (&self->proxy);
+  g_clear_object (&self->connection);
   g_clear_pointer (&self, g_free);
 }
