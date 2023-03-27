@@ -16,7 +16,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    if: github.repository == 'janbrummer/libproxy2'
+    if: github.repository == 'libproxy/libproxy'
     env:
       # Set in repo settings -> secrets -> actions
       COVERITY_SCAN_TOKEN:              "${{ secrets.COVERITY_SCAN_TOKEN }}"

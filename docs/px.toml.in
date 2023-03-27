@@ -3,9 +3,9 @@ version = "@VERSION@"
 description = "Simplifyed proxy handling"
 authors = "libproxy Team"
 license = "LGPL-2.1-or-later"
-browse_url = "https://github.com/janbrummer/libproxy2"
-repository_url = "https://github.com/janbrummer/libproxy2"
-website_url = "https://janbrummer.github.io/libproxy2/"
+browse_url = "https://github.com/libproxy/libproxy"
+repository_url = "https://github.com/libproxy/libproxy"
+website_url = "https://libproxy.github.io/libproxy/"
 # logo_url = "libproxy.svg"
 dependencies = [
   "GObject-2.0",

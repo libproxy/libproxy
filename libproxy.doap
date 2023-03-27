@@ -6,9 +6,9 @@
 
   <name xml:lang="en">libproxy</name>
   <shortdesc xml:lang="en">libproxy is a library that provides automatic proxy configuration management.</shortdesc>
-  <homepage rdf:resource="https://janbrummer.github.io/libproxy2/" />
-  <download-page rdf:resource="https://github.com/janbrummer/libproxy2/releases" />
-  <bug-database rdf:resource="https://github.com/janbrummer/libproxy2/issues" />
+  <homepage rdf:resource="https://github.com/libproxy/libproxy/" />
+  <download-page rdf:resource="https://github.com/libproxy/libproxy/releases" />
+  <bug-database rdf:resource="https://github.com/libproxy/libproxy/issues" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#productivity" />
   <programming-language>C</programming-language>
 

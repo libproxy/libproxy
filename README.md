@@ -1,6 +1,6 @@
-![build](https://github.com/janbrummer/libproxy2/actions/workflows/build.yml/badge.svg)
-[![codecov](https://codecov.io/github/janbrummer/libproxy2/branch/main/graph/badge.svg?token=LS7B1CZKMY)](https://app.codecov.io/github/janbrummer/libproxy2)
-[![Coverity](https://github.com/janbrummer/libproxy2/actions/workflows/coverity.yml/badge.svg)](https://scan.coverity.com/projects/libproxy)
+![build](https://github.com/libproxy/libproxy/actions/workflows/build.yml/badge.svg)
+[![codecov](https://github.com/libproxy/libproxy/libproxy2/branch/main/graph/badge.svg?token=LS7B1CZKMY)](https://app.codecov.io/github/libproxy/libproxy)
+[![Coverity](https://github.com/libproxy/libproxy/actions/workflows/coverity.yml/badge.svg)](https://scan.coverity.com/projects/libproxy)
 
 # Libproxy
 libproxy is a library that provides automatic proxy configuration management.
