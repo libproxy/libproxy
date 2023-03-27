@@ -6,7 +6,6 @@ if build_dbus
   dbus_interfaces_dir = join_paths(dbus_data_dir, 'interfaces')
   dbus_user_services_dir = join_paths(dbus_data_dir, 'services')
   dbus_system_services_dir = join_paths(dbus_data_dir, 'system-services')
-  dbus_user_conf_dir = join_paths(dbus_data_dir, 'session.d')
   dbus_system_conf_dir = join_paths(dbus_data_dir, 'system.d')
 
   px_interface = [
@@ -62,13 +61,13 @@ if build_dbus
   # D-Bus User Service
   user_service_data = configuration_data()
   user_service_data.set('LIBEXECDIR', join_paths(px_prefix, get_option('libexecdir')))
-  dbus_user_service = configure_file(
+  configure_file(
     input: 'org.libproxy.proxy.service.in',
     output: 'org.libproxy.proxy.service',
-    configuration: user_service_data
+    configuration: user_service_data,
+    install: true,
+    install_dir: dbus_user_services_dir
   )
-  install_data(dbus_user_service, install_dir : dbus_user_services_dir)
-  install_data('org.libproxy.proxy.conf', install_dir : dbus_user_conf_dir)
 
   # D-Bus System Service
   system_service_data = configuration_data()
@@ -80,5 +79,14 @@ if build_dbus
     configuration: system_service_data
   )
   install_data(dbus_system_service, rename : 'org.libproxy.proxy.service', install_dir : dbus_system_services_dir)
-  install_data('org.libproxy.proxy.conf', install_dir : dbus_system_conf_dir)
+
+  dbus_config_data = configuration_data()
+  dbus_config_data.set('daemon_user', get_option('dbus-system-user'))
+  configure_file(
+    input: 'org.libproxy.proxy.conf.in',
+    output: 'org.libproxy.proxy.conf',
+    configuration: dbus_config_data,
+    install: true,
+    install_dir: dbus_system_conf_dir
+  )
 endif

@@ -2,9 +2,20 @@
  "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
 <busconfig>
+
+  <!-- This configuration file specifies the required security policies
+       for the libproxy to work. -->
+
+  <!-- Only user root or user @daemon_user@ can own the libproxy service -->
   <policy user="root">
     <allow own="org.libproxy.proxy"/>
   </policy>
+
+  <policy user="@daemon_user@">
+    <allow own="org.libproxy.proxy"/>
+  </policy>
+
+  <!-- Allow anyone to call into the service - we'll reject callers using PolicyKit -->
   <policy context="default">
     <allow send_destination="org.libproxy.proxy"
            send_interface="org.freedesktop.DBus.Introspectable"/>
