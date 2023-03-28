@@ -30,7 +30,7 @@ static gboolean use_system;
 static GApplication *app;
 
 const GOptionEntry options[] = {
-  { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace old daemon.", NULL },
+  { "replace", 'r', 0, G_OPTION_ARG_NONE, &replace, "Replace running daemon.", NULL },
   { "system", 's', 0, G_OPTION_ARG_NONE, &use_system, "Use system bus.", NULL },
   { NULL }
 };
