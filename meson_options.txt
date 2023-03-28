@@ -22,7 +22,7 @@ option(
 option(
   'dbus-system-user',
   type: 'string',
-  value: 'root',
+  value: 'libproxy',
   description: 'Which user should be used on D-Bus system session'
 )
 

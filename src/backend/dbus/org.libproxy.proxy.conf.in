@@ -6,11 +6,7 @@
   <!-- This configuration file specifies the required security policies
        for the libproxy to work. -->
 
-  <!-- Only user root or user @daemon_user@ can own the libproxy service -->
-  <policy user="root">
-    <allow own="org.libproxy.proxy"/>
-  </policy>
-
+  <!-- Only user @daemon_user@ can own the libproxy service -->
   <policy user="@daemon_user@">
     <allow own="org.libproxy.proxy"/>
   </policy>
