@@ -186,13 +186,14 @@ test_config_kde_fail (void)
   g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-pac", NULL);
 
   /* Disable KDE support */
-  g_unsetenv ("KDE_FULL_SESSION");
+  g_setenv ("XDG_CURRENT_DESKTOP", "SOMETHING_ELSE", TRUE);
 
   manager = px_test_manager_new ("config-kde", path);
 
   uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
 
   config = px_manager_get_configuration (manager, uri, &error);
+  g_print ("%s", config[0]);
   g_assert_null (config[0]);
 }
 

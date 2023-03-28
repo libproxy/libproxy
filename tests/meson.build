@@ -73,7 +73,7 @@ if get_option('tests')
     )
     test('Config KDE test',
          config_kde_test,
-         env: [envs, 'KDE_FULL_SESSION=1'],
+         env: [envs, 'XDG_CURRENT_DESKTOP=KDE'],
     )
   endif
 endif

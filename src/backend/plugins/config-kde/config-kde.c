@@ -88,10 +88,20 @@ px_config_kde_set_config_file (PxConfigKde *self,
   g_autoptr (GFile) file = NULL;
   g_autoptr (GFileInputStream) istr = NULL;
   g_autoptr (GDataInputStream) dstr = NULL;
+  const char *desktops;
+
+  self->available = FALSE;
+
+  desktops = getenv ("XDG_CURRENT_DESKTOP");
+  if (!desktops)
+    return;
+
+  /* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
+  if (strstr (desktops, "KDE") == NULL)
+    return;
 
   g_clear_pointer (&self->config_file, g_free);
   self->config_file = proxy_file ? g_strdup (proxy_file) : g_build_filename (g_get_user_config_dir (), "kioslaverc", NULL);
-  self->available = FALSE;
 
   file = g_file_new_for_path (self->config_file);
   if (!file) {
@@ -234,7 +244,7 @@ px_config_kde_is_available (PxConfig *config)
 {
   PxConfigKde *self = PX_CONFIG_KDE (config);
 
-  return self->available && g_getenv ("KDE_FULL_SESSION") != NULL;
+  return self->available;
 }
 
 static void
