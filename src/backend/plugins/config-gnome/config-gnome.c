@@ -33,7 +33,7 @@ struct _PxConfigGnome {
   GSettings *https_proxy_settings;
   GSettings *ftp_proxy_settings;
   GSettings *socks_proxy_settings;
-  gboolean settings_found;
+  gboolean available;
 };
 
 typedef enum {
@@ -58,18 +58,30 @@ enum {
 static void
 px_config_gnome_init (PxConfigGnome *self)
 {
-  GSettingsSchemaSource *source = g_settings_schema_source_get_default ();
+  GSettingsSchemaSource *source;
   GSettingsSchema *proxy_schema;
+  const char *desktops;
 
+  self->available = FALSE;
+
+  desktops = getenv ("XDG_CURRENT_DESKTOP");
+  if (!desktops)
+    return;
+
+  /* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
+  if (strstr (desktops, "GNOME") == NULL)
+    return;
+
+  source = g_settings_schema_source_get_default ();
   if (!source)
     return;
 
   proxy_schema = g_settings_schema_source_lookup (source, "org.gnome.system.proxy", TRUE);
 
-  self->settings_found = proxy_schema != NULL;
+  self->available = proxy_schema != NULL;
   g_clear_pointer (&proxy_schema, g_settings_schema_unref);
 
-  if (!self->settings_found)
+  if (!self->available)
     return;
 
   self->proxy_settings = g_settings_new ("org.gnome.system.proxy");
@@ -126,17 +138,8 @@ static gboolean
 px_config_gnome_is_available (PxConfig *config)
 {
   PxConfigGnome *self = PX_CONFIG_GNOME (config);
-  const char *desktops;
 
-  if (!self->settings_found)
-    return FALSE;
-
-  desktops = getenv ("XDG_CURRENT_DESKTOP");
-  if (!desktops)
-    return FALSE;
-
-  /* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
-  return strstr (desktops, "GNOME") != NULL;
+  return self->available;
 }
 
 static void
