@@ -45,11 +45,6 @@ contain any special logic. Next is the logic represent as pseudo code:
  IF no proxy has been set THEN use direct connection
 ```
 
-### Konqueror
-
-This is the default browser in the KDE desktop environment. This browser only
-support protocol specific proxy (no SOCKS), thus logic is very basic.
-
 ## OS X
 OS X uses it's own way for proxy settings. It supports protocols including
 SOCKS, HTTP, HTTPS, FTP, Gopher, RTSP, and automatic configuration through PAC
