@@ -13,20 +13,6 @@ option(
 )
 
 option(
-  'dbus',
-  type: 'feature',
-  value: 'auto',
-  description: 'Whether to build D-Bus service'
-)
-
-option(
-  'dbus-system-user',
-  type: 'string',
-  value: 'libproxy',
-  description: 'Which user should be used on D-Bus system session'
-)
-
-option(
   'config-env',
   type: 'boolean',
   value: true,

@@ -2,19 +2,9 @@ libproxy_inc = include_directories('.')
 
 libproxy_sources = []
 
-libproxy_dbus_sources = [
-  'proxy-dbus.c',
-]
-
-libproxy_non_dbus_sources = [
+libproxy_sources = [
   'proxy.c',
 ]
-
-if build_dbus
-  libproxy_sources += libproxy_dbus_sources
-else
-  libproxy_sources += libproxy_non_dbus_sources
-endif
 
 libproxy_headers = [
   'proxy.h',
@@ -45,23 +35,6 @@ libproxy = shared_library(
 libproxy_dep = declare_dependency (
   include_directories: libproxy_inc,
   link_with: libproxy,
-  dependencies: libproxy_deps
-)
-
-libproxy_test = shared_library(
-  'proxy_test',
-  libproxy_non_dbus_sources,
-  include_directories: px_backend_inc,
-  dependencies: libproxy_deps,
-  link_args : vflag,
-  link_depends : mapfile,
-  soversion: '1',
-  install: false,
-)
-
-libproxy_test_dep = declare_dependency (
-  include_directories: libproxy_inc,
-  link_with: libproxy_test,
   dependencies: libproxy_deps
 )
 

@@ -10,7 +10,7 @@ if get_option('tests')
   libproxy_test = executable('test-libproxy',
     ['libproxy-test.c'],
     include_directories: libproxy_inc,
-    dependencies: [libproxy_test_dep],
+    dependencies: [libproxy_dep],
   )
   test('Libproxy test',
        libproxy_test,

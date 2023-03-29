@@ -23,7 +23,7 @@ jobs:
           libcurl4-openssl-dev \
           valac
     - name: Build setup
-      run: meson setup build -Db_coverage=true -Ddbus=disabled
+      run: meson setup build -Db_coverage=true
     - name: Build
       run: ninja -C build
     - name: Tests and Coverage
@@ -36,33 +36,6 @@ jobs:
         path: ./build/docs/libproxy-1.0/
     - name: CodeCov
       uses: codecov/codecov-action@v3
-
-  build-linux-dbus:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt install \
-          libglib2.0-dev \
-          libgirepository1.0-dev \
-          duktape-dev \
-          libsoup-3.0-dev \
-          meson \
-          gcovr \
-          gi-docgen \
-          libpeas-dev \
-          gsettings-desktop-schemas-dev \
-          libcurl4-openssl-dev \
-          valac
-    - name: Build setup
-      run: meson setup build -Db_coverage=true -Ddbus=enabled
-    - name: Build
-      run: ninja -C build
-    - name: Tests
-      run: |
-        ninja test -C build
 
   build-osx:
     runs-on: macos-latest

@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.libproxy.proxy
-Exec=@LIBEXECDIR@/proxyd
