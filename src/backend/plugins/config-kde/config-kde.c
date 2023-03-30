@@ -150,8 +150,7 @@ px_config_kde_set_config_file (PxConfigKde *self,
       } else if (strcmp (kv[0], "socksProxy") == 0) {
         self->socks_proxy = g_strdup (value->str);
       } else if (strcmp (kv[0], "NoProxyFor") == 0) {
-        g_autofree char *no_proxy_for = g_strdup (value->str);
-        self->no_proxy = g_strsplit (no_proxy_for, ",", -1);
+        self->no_proxy = g_strsplit (value->str, ",", -1);
       } else if (strcmp (kv[0], "Proxy Config Script") == 0) {
         self->pac_script = g_strdup (value->str);
       } else if (strcmp (kv[0], "ProxyType") == 0) {
