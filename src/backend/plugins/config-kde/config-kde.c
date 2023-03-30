@@ -139,7 +139,6 @@ px_config_kde_set_config_file (PxConfigKde *self,
 
       value = g_string_new (kv[1]);
       g_string_replace (value, "\"", "", 0);
-      g_string_replace (value, "\r", "", 0);
       g_string_replace (value, " ", ":", 0);
 
       if (strcmp (kv[0], "httpsProxy") == 0) {
