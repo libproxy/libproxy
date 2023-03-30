@@ -72,8 +72,10 @@ px_config_gnome_init (PxConfigGnome *self)
     return;
 
   source = g_settings_schema_source_get_default ();
-  if (!source)
+  if (!source) {
+    g_warning ("GNOME desktop detected but no schemes installed, aborting.");
     return;
+  }
 
   proxy_schema = g_settings_schema_source_lookup (source, "org.gnome.system.proxy", TRUE);
 
