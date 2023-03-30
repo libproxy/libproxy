@@ -265,6 +265,9 @@ px_config_kde_get_config (PxConfig     *config,
   switch (self->proxy_type) {
     case KDE_PROXY_TYPE_MANUAL:
     case KDE_PROXY_TYPE_SYSTEM:
+      /* System is the same as manual, except that a button for auto dection
+       * is shown. Based on this manual fields are set.
+       */
       if (g_strcmp0 (scheme, "ftp") == 0) {
         proxy = g_strdup (self->ftp_proxy);
       } else if (g_strcmp0 (scheme, "https") == 0) {
