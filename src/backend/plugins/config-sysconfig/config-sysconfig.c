@@ -19,7 +19,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <libpeas/peas.h>
+#include <gio/gio.h>
 
 #include "config-sysconfig.h"
 
@@ -41,7 +41,6 @@ struct _PxConfigSysConfig {
 };
 
 static void px_config_iface_init (PxConfigInterface *iface);
-G_MODULE_EXPORT void peas_register_types (PeasObjectModule *module);
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigSysConfig,
                                px_config_sysconfig,
@@ -246,14 +245,8 @@ px_config_sysconfig_get_config (PxConfig     *config,
 static void
 px_config_iface_init (PxConfigInterface *iface)
 {
+  iface->name = "config-sysconfig";
+  iface->priority = PX_CONFIG_PRIORITY_LAST;
   iface->is_available = px_config_sysconfig_is_available;
   iface->get_config = px_config_sysconfig_get_config;
-}
-
-G_MODULE_EXPORT void
-peas_register_types (PeasObjectModule *module)
-{
-  peas_object_module_register_extension_type (module,
-                                              PX_TYPE_CONFIG,
-                                              PX_CONFIG_TYPE_SYSCONFIG);
 }

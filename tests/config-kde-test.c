@@ -203,6 +203,8 @@ main (int    argc,
 {
   g_test_init (&argc, &argv, NULL);
 
+  g_setenv ("XDG_CURRENT_DESKTOP", "KDE", TRUE);
+
   g_test_add_func ("/config/kde/disabled", test_config_kde_disabled);
   g_test_add_func ("/config/kde/manual", test_config_kde_manual);
   g_test_add_func ("/config/kde/wpad", test_config_kde_wpad);

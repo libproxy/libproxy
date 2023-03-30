@@ -36,7 +36,6 @@ jobs:
           meson \
           gcovr \
           gi-docgen \
-          libpeas-dev \
           gsettings-desktop-schemas-dev \
           libcurl4-openssl-dev \
           valac

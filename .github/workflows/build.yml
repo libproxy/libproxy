@@ -18,7 +18,6 @@ jobs:
           meson \
           gcovr \
           gi-docgen \
-          libpeas-dev \
           gsettings-desktop-schemas-dev \
           libcurl4-openssl-dev \
           valac
@@ -48,7 +47,7 @@ jobs:
     - name: Setup
       run: |
         pip install meson ninja
-        brew install libsoup icu4c gobject-introspection duktape gcovr gi-docgen libpeas curl vala
+        brew install libsoup icu4c gobject-introspection duktape gcovr gi-docgen curl vala
         echo 'PKG_CONFIG_PATH=/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/gi-docgen/lib/pkgconfig' >> $GITHUB_ENV
     - name: Build and Test
       run: |
@@ -79,7 +78,6 @@ jobs:
             mingw-w64-x86_64-duktape
             mingw-w64-x86_64-gi-docgen
             mingw-w64-x86_64-libsoup3
-            mingw-w64-x86_64-libpeas
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-vala
       - uses: actions/checkout@v3

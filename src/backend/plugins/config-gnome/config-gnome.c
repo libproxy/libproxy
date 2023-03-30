@@ -19,7 +19,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <libpeas/peas.h>
+#include <gio/gio.h>
 
 #include "config-gnome.h"
 
@@ -43,7 +43,6 @@ typedef enum {
 } GnomeProxyMode;
 
 static void px_config_iface_init (PxConfigInterface *iface);
-void peas_register_types (PeasObjectModule *module);
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigGnome,
                                px_config_gnome,
@@ -173,6 +172,9 @@ px_config_gnome_get_config (PxConfig     *config,
   g_autofree char *proxy = NULL;
   GnomeProxyMode mode;
 
+  if (!self->available)
+    return;
+
   if (px_manager_is_ignore (uri, g_settings_get_strv (self->proxy_settings, "ignore-hosts")))
     return;
 
@@ -235,14 +237,8 @@ px_config_gnome_get_config (PxConfig     *config,
 static void
 px_config_iface_init (PxConfigInterface *iface)
 {
+  iface->name = "config-gnome";
+  iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
   iface->is_available = px_config_gnome_is_available;
   iface->get_config = px_config_gnome_get_config;
-}
-
-void
-peas_register_types (PeasObjectModule *module)
-{
-  peas_object_module_register_extension_type (module,
-                                              PX_TYPE_CONFIG,
-                                              PX_CONFIG_TYPE_GNOME);
 }

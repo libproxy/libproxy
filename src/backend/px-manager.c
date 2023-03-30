@@ -20,19 +20,50 @@
  */
 
 #include "config.h"
+#include "px-backend-config.h"
+
+#include <glib.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "px-manager.h"
 #include "px-plugin-config.h"
 #include "px-plugin-pacrunner.h"
 
+#ifdef HAVE_CONFIG_ENV
+#include <plugins/config-env/config-env.h>
+#endif
+
+#ifdef HAVE_CONFIG_GNOME
+#include <plugins/config-gnome/config-gnome.h>
+#endif
+
+#ifdef HAVE_CONFIG_KDE
+#include <plugins/config-kde/config-kde.h>
+#endif
+
+#ifdef HAVE_CONFIG_OSX
+#include <plugins/config-osx/config-osx.h>
+#endif
+
+#ifdef HAVE_CONFIG_SYSCONFIG
+#include <plugins/config-sysconfig/config-sysconfig.h>
+#endif
+
+#ifdef HAVE_CONFIG_WINDOWS
+#include <plugins/config-windows/config-windows.h>
+#endif
+
+#ifdef HAVE_PACRUNNER_DUKTAPE
+#include <plugins/pacrunner-duktape/pacrunner-duktape.h>
+#endif
+
 #ifdef HAVE_CURL
 #include <curl/curl.h>
 #endif
-#include <libpeas/peas.h>
 
 enum {
   PROP_0,
-  PROP_PLUGINS_DIR,
   PROP_CONFIG_PLUGIN,
   PROP_CONFIG_OPTION,
   LAST_PROP
@@ -48,14 +79,12 @@ static GParamSpec *obj_properties[LAST_PROP];
 
 struct _PxManager {
   GObject parent_instance;
-  PeasEngine *engine;
-  PeasExtensionSet *config_set;
-  PeasExtensionSet *pacrunner_set;
+  GList *config_plugins;
+  GList *pacrunner_plugins;
   GNetworkMonitor *network_monitor;
 #ifdef HAVE_CURL
   CURL *curl;
 #endif
-  char *plugins_dir;
 
   char *config_plugin;
   char *config_option;
@@ -85,11 +114,48 @@ px_manager_on_network_changed (GNetworkMonitor *monitor,
   g_clear_pointer (&self->pac_data, g_bytes_unref);
 }
 
+static gint
+config_order_compare (gconstpointer a,
+                      gconstpointer b)
+{
+  PxConfig *config_a = (PxConfig *)a;
+  PxConfig *config_b = (PxConfig *)b;
+  PxConfigInterface *ifc_a = PX_CONFIG_GET_IFACE (config_a);
+  PxConfigInterface *ifc_b = PX_CONFIG_GET_IFACE (config_b);
+
+  if (ifc_a->priority < ifc_b->priority)
+    return -1;
+
+  if (ifc_a->priority == ifc_b->priority)
+    return 0;
+
+  return 1;
+}
+
+static void
+px_manager_add_config_plugin (PxManager *self,
+                              GType      type)
+{
+  PxConfig *config = g_object_new (type, "config-option", self->config_option, NULL);
+  PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
+
+  if (!self->config_plugin || g_strcmp0 (ifc->name, self->config_plugin) == 0)
+    self->config_plugins = g_list_insert_sorted (self->config_plugins, config, config_order_compare);
+}
+
+static void
+px_manager_add_pacrunner_plugin (PxManager *self,
+                                 GType      type)
+{
+  PxPacRunner *pacrunner = g_object_new (type, NULL);
+
+  self->pacrunner_plugins = g_list_append (self->pacrunner_plugins, pacrunner);
+}
+
 static void
 px_manager_constructed (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
-  const GList *list;
 
   if (g_getenv ("PX_DEBUG")) {
     const gchar *g_messages_debug;
@@ -107,37 +173,36 @@ px_manager_constructed (GObject *object)
     }
   }
 
-  self->engine = peas_engine_get_default ();
+#ifdef HAVE_CONFIG_ENV
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_ENV);
+#endif
+#ifdef HAVE_CONFIG_GNOME
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_GNOME);
+#endif
+#ifdef HAVE_CONFIG_KDE
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_KDE);
+#endif
+#ifdef HAVE_CONFIG_OSX
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_OSX);
+#endif
+#ifdef HAVE_CONFIG_SYSCONFIG
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_SYSCONFIG);
+#endif
+#ifdef HAVE_CONFIG_WINDOWS
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_WINDOWS);
+#endif
 
-  peas_engine_add_search_path (self->engine, self->plugins_dir, NULL);
+  g_debug ("Active config plugins:\n");
+  for (GList *list = self->config_plugins; list && list->data; list = list->next) {
+    PxConfig *config = list->data;
+    PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
 
-  self->config_set = peas_extension_set_new (self->engine, PX_TYPE_CONFIG, "config-option", self->config_option, NULL);
-  self->pacrunner_set = peas_extension_set_new (self->engine, PX_TYPE_PACRUNNER, NULL);
-
-  list = peas_engine_get_plugin_list (self->engine);
-  for (; list && list->data; list = list->next) {
-    PeasPluginInfo *info = PEAS_PLUGIN_INFO (list->data);
-    PeasExtension *extension = peas_extension_set_get_extension (self->config_set, info);
-    gboolean available = TRUE;
-
-    /* In case user requested a specific module, just load that one */
-    if (self->config_plugin && g_str_has_prefix (peas_plugin_info_get_module_name (info), "config-")) {
-      if (g_strcmp0 (peas_plugin_info_get_module_name (info), self->config_plugin) == 0)
-        peas_engine_load_plugin (self->engine, info);
-    } else {
-      peas_engine_load_plugin (self->engine, info);
-    }
-
-    extension = peas_extension_set_get_extension (self->config_set, info);
-    if (extension) {
-      PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (extension);
-
-      available = ifc->is_available (PX_CONFIG (extension));
-    }
-
-    if (!available)
-      peas_engine_unload_plugin (self->engine, info);
+    g_debug (" - %s\n", ifc->name);
   }
+
+#ifdef HAVE_PACRUNNER_DUKTAPE
+  px_manager_add_pacrunner_plugin (self, PX_PACRUNNER_TYPE_DUKTAPE);
+#endif
 
   self->pac_data = NULL;
 
@@ -151,19 +216,14 @@ static void
 px_manager_dispose (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
-  const GList *list;
 
-  list = peas_engine_get_plugin_list (self->engine);
-  for (; list && list->data; list = list->next) {
-    PeasPluginInfo *info = PEAS_PLUGIN_INFO (list->data);
+  for (GList *list = self->config_plugins; list && list->data; list = list->next)
+    g_clear_object (&list->data);
 
-    if (peas_plugin_info_is_loaded (info))
-      peas_engine_unload_plugin (self->engine, info);
-  }
+  for (GList *list = self->pacrunner_plugins; list && list->data; list = list->next)
+    g_clear_object (&list->data);
 
   g_clear_pointer (&self->config_plugin, g_free);
-  g_clear_pointer (&self->plugins_dir, g_free);
-  g_clear_object (&self->engine);
 
   G_OBJECT_CLASS (px_manager_parent_class)->dispose (object);
 }
@@ -177,9 +237,6 @@ px_manager_set_property (GObject      *object,
   PxManager *self = PX_MANAGER (object);
 
   switch (prop_id) {
-    case PROP_PLUGINS_DIR:
-      self->plugins_dir = g_strdup (g_value_get_string (value));
-      break;
     case PROP_CONFIG_PLUGIN:
       self->config_plugin = g_strdup (g_value_get_string (value));
       break;
@@ -198,8 +255,6 @@ px_manager_get_property (GObject    *object,
                          GParamSpec *pspec)
 {
   switch (prop_id) {
-    case PROP_PLUGINS_DIR:
-      break;
     case PROP_CONFIG_PLUGIN:
       break;
     default:
@@ -217,12 +272,6 @@ px_manager_class_init (PxManagerClass *klass)
   object_class->dispose = px_manager_dispose;
   object_class->set_property = px_manager_set_property;
   object_class->get_property = px_manager_get_property;
-
-  obj_properties[PROP_PLUGINS_DIR] = g_param_spec_string ("plugins-dir",
-                                                          NULL,
-                                                          NULL,
-                                                          NULL,
-                                                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   obj_properties[PROP_CONFIG_PLUGIN] = g_param_spec_string ("config-plugin",
                                                             NULL,
@@ -277,7 +326,7 @@ px_manager_new_with_options (const char *optname1,
 PxManager *
 px_manager_new (void)
 {
-  return px_manager_new_with_options ("plugins-dir", PX_PLUGINS_DIR, NULL);
+  return px_manager_new_with_options (NULL);
 }
 
 #ifdef HAVE_CURL
@@ -345,29 +394,6 @@ px_manager_pac_download (PxManager  *self,
 #endif
 }
 
-struct ConfigData {
-  GStrvBuilder *builder;
-  GUri *uri;
-};
-
-/**
- * Strategy:
- *  - Traverse through all plugins in extension set and ask for configuration data.
- *  - A plugin can either return the proxy server for given uri OR nothing! for direc access.
- */
-static void
-get_config (PeasExtensionSet *set,
-            PeasPluginInfo   *info,
-            PeasExtension    *extension,
-            gpointer          data)
-{
-  PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (extension);
-  struct ConfigData *config_data = data;
-
-  g_debug ("%s: Asking plugin '%s' for configuration", __FUNCTION__, peas_plugin_info_get_module_name (info));
-  ifc->get_config (PX_CONFIG (extension), config_data->uri, config_data->builder);
-}
-
 /**
  * px_manager_get_configuration:
  * @self: a px manager
@@ -384,37 +410,31 @@ px_manager_get_configuration (PxManager  *self,
                               GError    **error)
 {
   g_autoptr (GStrvBuilder) builder = g_strv_builder_new ();
-  struct ConfigData config_data = {
-    .uri = uri,
-    .builder = builder,
-  };
 
-  peas_extension_set_foreach (self->config_set, get_config, &config_data);
+  for (GList *list = self->config_plugins; list && list->data; list = list->next) {
+    PxConfig *config = PX_CONFIG (list->data);
+    PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
+
+    ifc->get_config (config, uri, builder);
+  }
 
   return g_strv_builder_end (builder);
 }
 
-struct PacData {
-  GBytes *pac;
-  GUri *uri;
-  GStrvBuilder *builder;
-};
-
 static void
-px_manager_run_pac (PeasExtensionSet *set,
-                    PeasPluginInfo   *info,
-                    PeasExtension    *extension,
-                    gpointer          data)
+px_manager_run_pac (PxPacRunner  *pacrunner,
+                    GBytes       *pac,
+                    GUri         *uri,
+                    GStrvBuilder *builder)
 {
-  PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (extension);
-  struct PacData *pac_data = data;
+  PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (pacrunner);
   g_auto (GStrv) proxies_split = NULL;
   char *pac_response;
 
-  if (!ifc->set_pac (PX_PAC_RUNNER (extension), pac_data->pac))
+  if (!ifc->set_pac (PX_PAC_RUNNER (pacrunner), pac))
     return;
 
-  pac_response = ifc->run (PX_PAC_RUNNER (extension), pac_data->uri);
+  pac_response = ifc->run (PX_PAC_RUNNER (pacrunner), uri);
 
   /* Split line to handle multiple proxies */
   proxies_split = g_strsplit (pac_response, ";", -1);
@@ -422,7 +442,7 @@ px_manager_run_pac (PeasExtensionSet *set,
   for (int idx = 0; idx < g_strv_length (proxies_split); idx++) {
     char *line = g_strstrip (proxies_split[idx]);
     g_auto (GStrv) word_split = g_strsplit (line, " ", -1);
-    g_autoptr (GUri) uri = NULL;
+    g_autoptr (GUri) proxy_uri = NULL;
     char *method;
     char *server;
 
@@ -435,12 +455,12 @@ px_manager_run_pac (PeasExtensionSet *set,
       server = word_split[1];
 
       uri_string = g_strconcat ("http://", server, NULL);
-      uri = g_uri_parse (uri_string, G_URI_FLAGS_PARSE_RELAXED, NULL);
-      if (!uri)
+      proxy_uri = g_uri_parse (uri_string, G_URI_FLAGS_PARSE_RELAXED, NULL);
+      if (!proxy_uri)
         continue;
 
       if (g_ascii_strncasecmp (method, "proxy", 5) == 0) {
-        proxy_string = g_uri_to_string (uri);
+        proxy_string = g_uri_to_string (proxy_uri);
       } else if (g_ascii_strncasecmp (method, "socks4a", 7) == 0) {
         proxy_string = g_strconcat ("socks4a://", server, NULL);
       } else if (g_ascii_strncasecmp (method, "socks4", 6) == 0) {
@@ -451,10 +471,10 @@ px_manager_run_pac (PeasExtensionSet *set,
         proxy_string = g_strconcat ("socks://", server, NULL);
       }
 
-      px_strv_builder_add_proxy (pac_data->builder, proxy_string);
+      px_strv_builder_add_proxy (builder, proxy_string);
     } else {
       /* Syntax not found, returning direct */
-      px_strv_builder_add_proxy (pac_data->builder, "direct://");
+      px_strv_builder_add_proxy (builder, "direct://");
     }
   }
 }
@@ -562,12 +582,13 @@ px_manager_get_proxies_sync (PxManager   *self,
     g_debug ("%s: Config[%d] = %s", __FUNCTION__, idx, config[idx]);
 
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
-      struct PacData pac_data = {
-        .pac = self->pac_data,
-        .uri = uri,
-        .builder = builder,
-      };
-      peas_extension_set_foreach (self->pacrunner_set, px_manager_run_pac, &pac_data);
+      GList *list;
+
+      for (list = self->pacrunner_plugins; list && list->data; list = list->next) {
+        PxPacRunner *pacrunner = PX_PAC_RUNNER (list->data);
+
+        px_manager_run_pac (pacrunner, self->pac_data, uri, builder);
+      }
     } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
       px_strv_builder_add_proxy (builder, g_uri_to_string (conf_url));
     }

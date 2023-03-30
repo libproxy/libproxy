@@ -16,49 +16,49 @@ option(
   'config-env',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for environment configuration'
+  description: 'Whether to build support for environment configuration'
 )
 
 option(
   'config-gnome',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for GNOME configuration'
+  description: 'Whether to build support for GNOME configuration'
 )
 
 option(
   'config-windows',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for Windows configuration'
+  description: 'Whether to build support for Windows configuration'
 )
 
 option(
   'config-sysconfig',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for sysconfig configuration'
+  description: 'Whether to build support for sysconfig configuration'
 )
 
 option(
   'config-osx',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for OS X configuration'
+  description: 'Whether to build support for OS X configuration'
 )
 
 option(
   'config-kde',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for KDE System Settings'
+  description: 'Whether to build support for KDE System Settings'
 )
 
 option(
   'pacrunner-duktape',
   type: 'boolean',
   value: true,
-  description: 'Whether to build plugin for PAC Runner Duktape'
+  description: 'Whether to build support for PAC Runner Duktape'
 )
 
 option(

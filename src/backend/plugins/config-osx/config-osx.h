@@ -22,17 +22,12 @@
 #pragma once
 
 #include <glib.h>
-#include <libpeas/peas.h>
 
 G_BEGIN_DECLS
 
 #define PX_CONFIG_TYPE_OSX         (px_config_osx_get_type ())
 
 G_DECLARE_FINAL_TYPE (PxConfigOsX, px_config_osx, PX, CONFIG_OSX, GObject)
-
-struct _PxConfigOsX {
-  GObject parent_instance;
-};
 
 G_END_DECLS
 

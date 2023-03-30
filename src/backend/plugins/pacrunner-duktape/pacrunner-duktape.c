@@ -19,7 +19,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <libpeas/peas.h>
+#include <gio/gio.h>
 
 #include <unistd.h>
 #ifdef __WIN32__
@@ -40,7 +40,6 @@ struct _PxPacRunnerDuktape {
 };
 
 static void px_pacrunner_iface_init (PxPacRunnerInterface *iface);
-void peas_register_types (PeasObjectModule *module);
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxPacRunnerDuktape,
                                px_pacrunner_duktape,
@@ -199,12 +198,4 @@ px_pacrunner_iface_init (PxPacRunnerInterface *iface)
 {
   iface->set_pac = px_pacrunner_duktape_set_pac;
   iface->run = px_pacrunner_duktape_run;
-}
-
-void
-peas_register_types (PeasObjectModule *module)
-{
-  peas_object_module_register_extension_type (module,
-                                              PX_TYPE_PACRUNNER,
-                                              PX_PACRUNNER_TYPE_DUKTAPE);
 }

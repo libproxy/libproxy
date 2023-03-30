@@ -1,3 +1,13 @@
+backend_config_h = configuration_data()
+backend_config_h.set('HAVE_CONFIG_ENV', get_option('config-env'))
+backend_config_h.set('HAVE_CONFIG_GNOME', get_option('config-gnome'))
+backend_config_h.set('HAVE_CONFIG_KDE', get_option('config-kde'))
+backend_config_h.set('HAVE_CONFIG_OSX', get_option('config-osx') and with_platform_darwin)
+backend_config_h.set('HAVE_CONFIG_SYSCONFIG', get_option('config-sysconfig'))
+backend_config_h.set('HAVE_CONFIG_WINDOWS', get_option('config-windows') and with_platform_windows)
+backend_config_h.set('HAVE_PACRUNNER_DUKTAPE', get_option('pacrunner-duktape'))
+configure_file(output: 'px-backend-config.h', configuration: backend_config_h)
+
 px_backend_sources = [
   'px-manager.c',
   'px-manager.h',
@@ -11,7 +21,7 @@ px_backend_deps = [
   curl_dep,
   gio_dep,
   glib_dep,
-  peas_dep,
+  ws2_32_dep,
 ]
 
 px_backend_c_args = [
@@ -19,6 +29,8 @@ px_backend_c_args = [
 ]
 
 px_backend_inc = include_directories('.')
+
+subdir('plugins')
 
 px_backend = shared_library(
   'pxbackend-@0@'.format(api_version),
@@ -33,5 +45,3 @@ px_backend_dep = declare_dependency(
   link_with: px_backend,
   dependencies: px_backend_deps
 )
-
-subdir('plugins')

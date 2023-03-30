@@ -190,6 +190,8 @@ main (int    argc,
 {
   g_test_init (&argc, &argv, NULL);
 
+  g_setenv ("XDG_CURRENT_DESKTOP", "GNOME", TRUE);
+
   g_test_add ("/config/gnome/manual", Fixture, NULL, fixture_setup, test_config_gnome_manual, fixture_teardown);
   g_test_add ("/config/gnome/manual_auth", Fixture, NULL, fixture_setup, test_config_gnome_manual_auth, fixture_teardown);
   g_test_add ("/config/gnome/auto", Fixture, NULL, fixture_setup, test_config_gnome_auto, fixture_teardown);

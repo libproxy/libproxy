@@ -19,7 +19,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <libpeas/peas.h>
+#include <gio/gio.h>
 
 #include "config-kde.h"
 
@@ -27,7 +27,6 @@
 #include "px-manager.h"
 
 static void px_config_iface_init (PxConfigInterface *iface);
-G_MODULE_EXPORT void peas_register_types (PeasObjectModule *module);
 
 typedef enum {
   KDE_PROXY_TYPE_NONE = 0,
@@ -256,6 +255,9 @@ px_config_kde_get_config (PxConfig     *config,
   const char *scheme = g_uri_get_scheme (uri);
   g_autofree char *proxy = NULL;
 
+  if (!self->available)
+    return;
+
   if (!self->proxy_type)
     return;
 
@@ -293,14 +295,8 @@ px_config_kde_get_config (PxConfig     *config,
 static void
 px_config_iface_init (PxConfigInterface *iface)
 {
+  iface->name = "config-kde";
+  iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
   iface->is_available = px_config_kde_is_available;
   iface->get_config = px_config_kde_get_config;
-}
-
-G_MODULE_EXPORT void
-peas_register_types (PeasObjectModule *module)
-{
-  peas_object_module_register_extension_type (module,
-                                              PX_TYPE_CONFIG,
-                                              PX_CONFIG_TYPE_KDE);
 }

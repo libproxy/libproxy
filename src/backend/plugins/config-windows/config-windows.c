@@ -21,7 +21,8 @@
 
 #include <windows.h>
 #include <winreg.h>
-#include <libpeas/peas.h>
+
+#include <gio/gio.h>
 
 #include "config-windows.h"
 
@@ -38,7 +39,6 @@ struct _PxConfigWindows {
 };
 
 static void px_config_iface_init (PxConfigInterface *iface);
-void peas_register_types (PeasObjectModule *module);
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigWindows,
                                px_config_windows,
@@ -245,14 +245,8 @@ px_config_windows_get_config (PxConfig     *self,
 static void
 px_config_iface_init (PxConfigInterface *iface)
 {
+  iface->name = "config-windows";
+  iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
   iface->is_available = px_config_windows_is_available;
   iface->get_config = px_config_windows_get_config;
-}
-
-G_MODULE_EXPORT void
-peas_register_types (PeasObjectModule *module)
-{
-  peas_object_module_register_extension_type (module,
-                                              PX_TYPE_CONFIG,
-                                              PX_CONFIG_TYPE_WINDOWS);
 }

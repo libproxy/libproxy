@@ -76,4 +76,28 @@ if get_option('tests')
          env: [envs, 'XDG_CURRENT_DESKTOP=KDE'],
     )
   endif
+
+  if get_option('config-osx') and with_platform_darwin
+    config_osx_test = executable('test-config-osx',
+      ['config-osx-test.c', 'px-manager-helper.c'],
+      include_directories: px_backend_inc,
+      dependencies: [glib_dep, px_backend_dep],
+    )
+    test('Config OSX test',
+         config_osx_test,
+         env: [envs],
+    )
+  endif
+
+  if get_option('config-windows') and with_platform_windows
+    config_windows_test = executable('test-config-windows',
+      ['config-windows-test.c', 'px-manager-helper.c'],
+      include_directories: px_backend_inc,
+      dependencies: [glib_dep, px_backend_dep],
+    )
+    test('Config Windows test',
+         config_windows_test,
+         env: [envs],
+    )
+  endif
 endif
