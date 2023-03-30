@@ -132,7 +132,7 @@ px_config_kde_set_config_file (PxConfigKde *self,
     if (line) {
       g_auto (GStrv) kv = NULL;
       g_autoptr (GString) value = NULL;
-      kv = g_strsplit (line, "=", -1);
+      kv = g_strsplit (line, "=", 2);
 
       if (g_strv_length (kv) != 2)
         continue;
