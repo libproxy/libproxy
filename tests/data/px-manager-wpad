@@ -1,0 +1,5 @@
+PROXY_ENABLED="yes"
+HTTP_PROXY="wpad://"
+HTTPS_PROXY="wpad://"
+FTP_PROXY="wpad://"
+NO_PROXY="localhost, 127.0.0.1"

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. "$(dirname -- "$0")/canonicalize_filename.sh"
+
+
+# exit on error
+set -e
+
+# Absolute path to this script
+SCRIPT="$(canonicalize_filename "$0")"
+# Absolute path this script is in, e.g. /home/user/bin/
+SCRIPTPATH="$(dirname -- "$SCRIPT")"
+
+echo $SCRIPTPATH
+cd $SCRIPTPATH/../../
+data/check-code-style
+cd -

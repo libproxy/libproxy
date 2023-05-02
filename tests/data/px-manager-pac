@@ -1,0 +1,5 @@
+PROXY_ENABLED="yes"
+HTTP_PROXY="pac+http://127.0.0.1:1983/test.pac"
+HTTPS_PROXY="pac+http://127.0.0.1:1983/test.pac"
+FTP_PROXY="pac+http://127.0.0.1:1983/test.pac"
+NO_PROXY="localhost, 127.0.0.1"

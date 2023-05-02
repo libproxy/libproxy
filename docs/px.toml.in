@@ -1,0 +1,71 @@
+[library]
+version = "@VERSION@"
+description = "Simplifyed proxy handling"
+authors = "libproxy Team"
+license = "LGPL-2.1-or-later"
+browse_url = "https://github.com/libproxy/libproxy"
+repository_url = "https://github.com/libproxy/libproxy"
+website_url = "https://libproxy.github.io/libproxy/"
+# logo_url = "libproxy.svg"
+dependencies = [
+  "GObject-2.0",
+  "Gio-2.0",
+  "GLib-2.0",
+  "Soup-3.0",
+  "curl-1.0",
+]
+devhelp = true
+search_index = true
+
+[dependencies."GObject-2.0"]
+name = "GObject"
+description = "The base type system library"
+docs_url = "https://developer.gnome.org/gobject/stable"
+
+[dependencies."Gio-2.0"]
+name = "Gio"
+description = "Gio is a library providing useful classes for general purpose I/O, networking, IPC, settings, and other high level application functionality"
+docs_url = "https://developer.gnome.org/gio/stable"
+
+[dependencies."GLib-2.0"]
+name = "GLib"
+description = "The base utility library"
+docs_url = "https://developer.gnome.org/glib/stable"
+
+[dependencies."Soup-3.0"]
+name = "Soup"
+description = "HTTP client/server library for GNOME"
+docs_url = "https://libsoup.org/libsoup-3.0/index.html"
+
+[dependencies."curl-1.0"]
+name = "cURL"
+description = "Library for transferring data"
+docs_url = "https://github.com/curl/curl"
+
+[theme]
+name = "basic"
+show_index_summary = false
+show_class_hierarchy = false
+
+[source-location]
+# The base URL for the web UI
+base_url = "https://gitlab.gnome.org/jbrummer/libproxy/-/blob/main/"
+# The format for links, using "filename" and "line" for the format
+file_format = "{filename}#L{line}"
+
+[extra]
+content_files = [
+  "architecture.md",
+  "applications.md",
+  "build-steps.md",
+  "configuration-logic.md",
+  "proxy-authentication.md",
+  "perl.md",
+  "python.md",
+  "ruby.md",
+  "vala.md",
+]
+
+content_images = [
+  "libproxy.svg"
+]

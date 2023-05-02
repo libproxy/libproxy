@@ -1,6 +1,0 @@
-if (NOT WIN32 AND NOT APPLE)
-  px_check_modules(NM libnm dbus-1)
-  if (NOT NM_FOUND)
-    px_check_modules(NMold NetworkManager dbus-1)
-  endif (NOT NM_FOUND)
-endif()
