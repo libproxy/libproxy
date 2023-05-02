@@ -1,5 +1,5 @@
 ![build](https://github.com/libproxy/libproxy/actions/workflows/build.yml/badge.svg)
-[![codecov](https://github.com/libproxy/libproxy/libproxy2/branch/main/graph/badge.svg?token=LS7B1CZKMY)](https://app.codecov.io/github/libproxy/libproxy)
+[![codecov](https://codecov.io/github/libproxy/libproxy/branch/main/graph/badge.svg?token=UDbFtICyin)](https://codecov.io/github/libproxy/libproxy)
 [![Coverity](https://github.com/libproxy/libproxy/actions/workflows/coverity.yml/badge.svg)](https://scan.coverity.com/projects/libproxy)
 
 # Libproxy
