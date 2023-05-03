@@ -138,8 +138,10 @@ px_manager_add_config_plugin (PxManager *self,
 {
   PxConfig *config = g_object_new (type, "config-option", self->config_option, NULL);
   PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
+  const char *env = g_getenv ("PX_FORCE_CONFIG");
+  const char *force_config = self->config_plugin ? self->config_plugin : env;
 
-  if (!self->config_plugin || g_strcmp0 (ifc->name, self->config_plugin) == 0)
+  if (!force_config || g_strcmp0 (ifc->name, force_config) == 0)
     self->config_plugins = g_list_insert_sorted (self->config_plugins, config, config_order_compare);
 }
 
