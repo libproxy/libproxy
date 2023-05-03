@@ -104,12 +104,19 @@ my_ip_address (duk_context *ctx)
 }
 
 static duk_ret_t
-alert (duk_context *ctx) {
-  if(getenv ("_PX_DEBUG_PACALERT") == NULL)
+alert (duk_context *ctx)
+{
+  const char *str = NULL;
+
+  /* do nothing if PX_DEBUG_PACALERT environment is not set */
+  if (!getenv ("PX_DEBUG_PACALERT"))
     return 0;
-  const char *str = duk_get_string (ctx, 0);
+
+  /* only get first argument of alert() as string */
+  str = duk_get_string (ctx, 0);
   if (!str)
     return 0;
+
   fprintf (stderr, "PAC-alert: %s\n", str);
   return 0;
 }
