@@ -9,3 +9,5 @@ executable(
   install: true,
   include_directories: libproxy_inc
 )
+
+install_man('proxy.8')

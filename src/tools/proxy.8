@@ -1,0 +1,34 @@
+.TH PROXY 8
+
+.SH NAME
+
+proxy \- Libproxy test tool
+
+.SH SYNOPSIS
+.SY proxy
+.B [\fIscheme://host\fB][:\fIport\fB]
+
+.SH DESCRIPTION
+The program
+.B proxy
+displays the proxy server that should be used to reach a given network resource.
+You can provide a URL as a parameter or start the tool in interactive mode to enter multiple URLs.
+As a return value the required proxy will be displayed.
+
+libproxy is a library that provides automatic proxy configuration management using different backends.
+
+.SH EXAMPLE
+# proxy http://www.example.com
+
+# http://127.0.0.1:8080
+
+
+.SH DEBUG OUTPUT
+In order to show further debug output you can set the environment variable
+.B PX_DEBUG=1
+
+During execution the tool now shows internal library information like existing
+plugin modules, which configuration is used and the return values.
+
+.SH AUTHORS
+Jan-Michael Brummer <jan-michael.brummer1@volkswagen.de>
