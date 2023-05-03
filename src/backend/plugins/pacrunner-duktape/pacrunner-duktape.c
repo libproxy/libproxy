@@ -103,6 +103,24 @@ my_ip_address (duk_context *ctx)
   return duk_error (ctx, DUK_ERR_ERROR, "Unable to find hostname!");
 }
 
+static duk_ret_t
+alert (duk_context *ctx)
+{
+  const char *str = NULL;
+
+  /* do nothing if PX_DEBUG_PACALERT environment is not set */
+  if (!getenv ("PX_DEBUG_PACALERT"))
+    return 0;
+
+  /* only get first argument of alert() as string */
+  str = duk_get_string (ctx, 0);
+  if (!str)
+    return 0;
+
+  fprintf (stderr, "PAC-alert: %s\n", str);
+  return 0;
+}
+
 static void
 px_pacrunner_duktape_init (PxPacRunnerDuktape *self)
 {
@@ -115,6 +133,9 @@ px_pacrunner_duktape_init (PxPacRunnerDuktape *self)
 
   duk_push_c_function (self->ctx, my_ip_address, 1);
   duk_put_global_string (self->ctx, "myIpAddress");
+
+  duk_push_c_function (self->ctx, alert, 1);
+  duk_put_global_string (self->ctx, "alert");
 
   duk_push_string (self->ctx, JAVASCRIPT_ROUTINES);
   if (duk_peval_noresult (self->ctx))
