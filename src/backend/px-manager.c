@@ -668,11 +668,15 @@ ignore_ip (GUri *uri,
   GInetAddress *inet_address1;
   GInetAddress *inet_address2;
   g_auto (GStrv) ignore_split = NULL;
-  gboolean is_ip1 = g_hostname_is_ip_address (g_uri_get_host (uri));
+  const char *uri_host = g_uri_get_host (uri);
+  gboolean is_ip1 = FALSE;
   gboolean is_ip2 = g_hostname_is_ip_address (ignore);
   int port = g_uri_get_port (uri);
   int ig_port = -1;
   gboolean result;
+
+  if (uri_host)
+    is_ip1 = g_hostname_is_ip_address (uri_host);
 
   /*
    * IPv4
@@ -704,6 +708,7 @@ ignore_ip (GUri *uri,
 
   return port != -1 ? ((port == ig_port) && result) : result;
 }
+
 gboolean
 px_manager_is_ignore (GUri  *uri,
                       GStrv  ignores)
