@@ -251,17 +251,19 @@ px_config_kde_get_config (PxConfig     *config,
                           GStrvBuilder *builder)
 {
   PxConfigKde *self = PX_CONFIG_KDE (config);
-  const char *scheme = g_uri_get_scheme (uri);
+  const char *scheme;
   g_autofree char *proxy = NULL;
 
   if (!self->available)
     return;
 
-  if (!self->proxy_type)
+  if (self->proxy_type == KDE_PROXY_TYPE_NONE)
     return;
 
   if (px_manager_is_ignore (uri, self->no_proxy))
     return;
+
+  scheme = g_uri_get_scheme (uri);
 
   switch (self->proxy_type) {
     case KDE_PROXY_TYPE_MANUAL:
