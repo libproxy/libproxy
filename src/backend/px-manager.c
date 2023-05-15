@@ -194,12 +194,12 @@ px_manager_constructed (GObject *object)
   px_manager_add_config_plugin (self, PX_CONFIG_TYPE_WINDOWS);
 #endif
 
-  g_debug ("Active config plugins:\n");
+  g_debug ("Active config plugins:");
   for (GList *list = self->config_plugins; list && list->data; list = list->next) {
     PxConfig *config = list->data;
     PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
 
-    g_debug (" - %s\n", ifc->name);
+    g_debug (" - %s", ifc->name);
   }
 
 #ifdef HAVE_PACRUNNER_DUKTAPE
