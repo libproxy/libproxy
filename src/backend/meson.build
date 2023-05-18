@@ -37,7 +37,9 @@ px_backend = shared_library(
   px_backend_sources,
   dependencies: px_backend_deps,
   c_args: px_backend_c_args,
-  install: true
+  install: true,
+  install_dir: pkglibdir,
+  install_rpath: pkglibdir
 )
 
 px_backend_dep = declare_dependency(

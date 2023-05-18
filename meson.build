@@ -12,7 +12,7 @@ root_dir = include_directories('.')
 
 px_prefix = get_option('prefix')
 datadir = get_option('datadir')
-px_libdir = join_paths(px_prefix, get_option('libdir'))
+pkglibdir = join_paths(px_prefix, get_option('libdir'), 'libproxy')
 girdir     = get_option('datadir') / 'gir-1.0'
 typelibdir = get_option('libdir')  / 'girepository-1.0'
 vapidir = get_option('datadir') / 'vala' / 'vapi'
