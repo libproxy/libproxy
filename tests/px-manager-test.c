@@ -22,7 +22,7 @@
 #include "px-manager.h"
 #include "px-manager-helper.h"
 
-#include <libsoup/soup.h>
+#include <gio/gio.h>
 
 #define SERVER_PORT 1983
 
@@ -32,27 +32,120 @@ typedef struct {
 } Fixture;
 
 static void
-server_callback (SoupServer        *server,
-                 SoupServerMessage *msg,
-                 const char        *path,
-                 GHashTable        *query,
-                 gpointer           data)
+send_error (GOutputStream *out,
+            int            error_code,
+            const char    *reason)
 {
-  g_print ("%s: path %s\n", __FUNCTION__, path);
-  soup_server_message_set_status (SOUP_SERVER_MESSAGE (msg), SOUP_STATUS_OK, NULL);
+  char *res;
 
-  if (g_strcmp0 (path, "/test.pac") == 0) {
-    g_autofree char *pac = g_test_build_filename (G_TEST_DIST, "data", "px-manager-sample.pac", NULL);
-    g_autofree char *pac_data = NULL;
-    g_autoptr (GError) error = NULL;
-    gsize len;
+  res = g_strdup_printf ("HTTP/1.0 %d %s\r\n\r\n"
+			 "<html><head><title>%d %s</title></head>"
+			 "<body>%s</body></html>",
+			 error_code, reason,
+			 error_code, reason,
+			 reason);
+  g_output_stream_write_all (out, res, strlen (res), NULL, NULL, NULL);
+  g_free (res);
+}
 
-    if (!g_file_get_contents (pac, &pac_data, &len, &error)) {
-      g_warning ("Could not read pac file: %s", error ? error->message : "");
-      return;
-    }
-    soup_server_message_set_response (msg, "text/plain", SOUP_MEMORY_COPY, pac_data, len);
+static gboolean
+on_incoming (GSocketService    *service,
+             GSocketConnection *connection,
+             GObject           *source_object)
+{
+  GOutputStream *out = NULL;
+  GInputStream *in = NULL;
+  g_autoptr (GDataInputStream) data = NULL;
+  g_autoptr (GFile) f = NULL;
+  g_autoptr (GError) error = NULL;
+  g_autoptr (GFileInputStream) file_in = NULL;
+  g_autoptr (GString) s = NULL;
+  g_autoptr (GFileInfo) info = NULL;
+  g_autofree char *line = NULL;
+  g_autofree char *unescaped = NULL;
+  g_autofree char *path = NULL;
+  char *escaped;
+  char *version;
+  char *tmp;
+
+  in = g_io_stream_get_input_stream (G_IO_STREAM (connection));
+  out = g_io_stream_get_output_stream (G_IO_STREAM (connection));
+
+  data = g_data_input_stream_new (in);
+  /* Be tolerant of input */
+  g_data_input_stream_set_newline_type (data, G_DATA_STREAM_NEWLINE_TYPE_ANY);
+
+  line = g_data_input_stream_read_line (data, NULL, NULL, NULL);
+
+  if (line == NULL) {
+    send_error (out, 400, "Invalid request");
+    goto out;
   }
+
+  if (!g_str_has_prefix (line, "GET ")) {
+    send_error (out, 501, "Only GET implemented");
+    goto out;
+  }
+
+  escaped = line + 4; /* Skip "GET " */
+
+  version = NULL;
+  tmp = strchr (escaped, ' ');
+  if (tmp == NULL) {
+    send_error (out, 400, "Bad Request");
+    goto out;
+  }
+  *tmp = 0;
+
+  version = tmp + 1;
+  if (!g_str_has_prefix (version, "HTTP/1.")) {
+    send_error(out, 505, "HTTP Version Not Supported");
+    goto out;
+  }
+
+  unescaped = g_uri_unescape_string (escaped, NULL);
+  path = g_test_build_filename (G_TEST_DIST, "data", unescaped, NULL);
+  f = g_file_new_for_path (path);
+
+  error = NULL;
+  file_in = g_file_read (f, NULL, &error);
+  if (file_in == NULL) {
+    send_error (out, 404, error->message);
+    goto out;
+  }
+
+  s = g_string_new ("HTTP/1.0 200 OK\r\n");
+
+  info = g_file_input_stream_query_info (file_in,
+					 G_FILE_ATTRIBUTE_STANDARD_SIZE ","
+					 G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+					 NULL, NULL);
+  if (info) {
+    const char *content_type;
+    char *mime_type;
+
+    if (g_file_info_has_attribute (info, G_FILE_ATTRIBUTE_STANDARD_SIZE))
+      g_string_append_printf (s, "Content-Length: %"G_GINT64_FORMAT"\r\n", g_file_info_get_size (info));
+
+    if (g_file_info_has_attribute (info, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE)) {
+      content_type = g_file_info_get_content_type (info);
+      if (content_type) {
+        mime_type = g_content_type_get_mime_type (content_type);
+        if (mime_type) {
+          g_string_append_printf (s, "Content-Type: %s\r\n", mime_type);
+          g_free (mime_type);
+        }
+      }
+    }
+  }
+  g_string_append (s, "\r\n");
+
+  if (g_output_stream_write_all (out, s->str, s->len, NULL, NULL, NULL)) {
+    g_output_stream_splice (out, G_INPUT_STREAM (file_in), 0, NULL, NULL);
+  }
+
+out:
+  return TRUE;
 }
 
 static void
@@ -82,7 +175,7 @@ download_pac (gpointer data)
   Fixture *self = data;
   GBytes *pac;
 
-  pac = px_manager_pac_download (self->manager, "http://127.0.0.1:1983/test.pac");
+  pac = px_manager_pac_download (self->manager, "http://127.0.0.1:1983/px-manager-sample.pac");
   g_assert_nonnull (pac);
 
   g_main_loop_quit (self->loop);
@@ -286,18 +379,18 @@ int
 main (int    argc,
       char **argv)
 {
-  SoupServer *server = NULL;
+  g_autoptr (GSocketService) service = NULL;
   g_autoptr (GError) error = NULL;
 
   g_test_init (&argc, &argv, NULL);
 
-  server = soup_server_new (NULL, NULL);
-  if (!soup_server_listen_local (server, SERVER_PORT, SOUP_SERVER_LISTEN_IPV4_ONLY, &error)) {
-    g_warning ("Could not create local server: %s", error ? error->message : "");
+  service = g_socket_service_new ();
+  if (!g_socket_listener_add_inet_port (G_SOCKET_LISTENER (service), SERVER_PORT, NULL, &error)) {
+    g_error ("Could not create server socket: %s", error ? error->message : "?");
     return -1;
   }
 
-  soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
+  g_signal_connect (service, "incoming", G_CALLBACK (on_incoming), NULL);
 
   g_test_add ("/pac/download", Fixture, "px-manager-direct", fixture_setup, test_pac_download, fixture_teardown);
   g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
