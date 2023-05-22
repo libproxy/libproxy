@@ -22,11 +22,11 @@
 
 #pragma once
 
+#include <gio/gio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <gio/gio.h>
 
 /**
  * SECTION:px-proxy
