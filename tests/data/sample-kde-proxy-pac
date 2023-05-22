@@ -2,7 +2,7 @@ ProxyUrlDisplayFlags=15
 
 [Proxy Settings]
 NoProxyFor=localhost,127.0.0.1
-Proxy Config Script=http://127.0.0.1/test.pac
+Proxy Config Script=http://127.0.0.1/px-manager-sample.pac
 ProxyType=2
 ReversedException=false
 ftpProxy=ftp://127.0.0.1 8080

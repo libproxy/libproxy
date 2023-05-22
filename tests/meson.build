@@ -17,11 +17,11 @@ if get_option('tests')
        env: envs
   )
 
-  if soup_dep.found() and get_option('pacrunner-duktape')
+  if get_option('pacrunner-duktape')
     px_manager_test = executable('test-px-manager',
       ['px-manager-test.c', 'px-manager-helper.c'],
       include_directories: px_backend_inc,
-      dependencies: [soup_dep, glib_dep, px_backend_dep],
+      dependencies: [glib_dep, px_backend_dep],
     )
     test('PX Manager test',
          px_manager_test,

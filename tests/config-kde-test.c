@@ -168,9 +168,9 @@ test_config_kde_pac (void)
 
     config = px_manager_get_configuration (manager, uri, &error);
     if (test.success)
-      g_assert_cmpstr (config[0], ==, "pac+http://127.0.0.1/test.pac");
+      g_assert_cmpstr (config[0], ==, "pac+http://127.0.0.1/px-manager-sample.pac");
     else
-      g_assert_cmpstr (config[0], !=, "pac+http://127.0.0.1/test.pac");
+      g_assert_cmpstr (config[0], !=, "pac+http://127.0.0.1/px-manager-sample.pac");
 
     g_clear_object (&manager);
   }
