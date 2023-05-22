@@ -27,5 +27,6 @@ px_test_manager_new (const char *config_plugin, const char *config_option)
 {
   return px_manager_new_with_options ("config-plugin", config_plugin,
                                       "config-option", config_option,
+                                      "force-online", TRUE,
                                       NULL);
 }
