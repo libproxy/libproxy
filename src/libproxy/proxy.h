@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <glib-object.h>
 
 #ifdef __cplusplus
 extern "C" {
