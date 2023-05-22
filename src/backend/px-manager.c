@@ -66,6 +66,7 @@ enum {
   PROP_0,
   PROP_CONFIG_PLUGIN,
   PROP_CONFIG_OPTION,
+  PROP_FORCE_ONLINE,
   LAST_PROP
 };
 
@@ -89,6 +90,7 @@ struct _PxManager {
   char *config_plugin;
   char *config_option;
 
+  gboolean force_online;
   gboolean online;
   gboolean wpad;
   GBytes *pac_data;
@@ -208,9 +210,14 @@ px_manager_constructed (GObject *object)
 
   self->pac_data = NULL;
 
-  self->network_monitor = g_network_monitor_get_default ();
-  g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
-  px_manager_on_network_changed (self->network_monitor, g_network_monitor_get_network_available (self->network_monitor), self);
+  if (!self->force_online) {
+    self->network_monitor = g_network_monitor_get_default ();
+    g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
+    px_manager_on_network_changed (self->network_monitor, g_network_monitor_get_network_available (self->network_monitor), self);
+  } else {
+    px_manager_on_network_changed (NULL, TRUE, self);
+  }
+
   g_debug ("%s: Up and running", __FUNCTION__);
 }
 
@@ -244,6 +251,9 @@ px_manager_set_property (GObject      *object,
       break;
     case PROP_CONFIG_OPTION:
       self->config_option = g_strdup (g_value_get_string (value));
+      break;
+    case PROP_FORCE_ONLINE:
+      self->force_online = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -285,6 +295,12 @@ px_manager_class_init (PxManagerClass *klass)
                                                             NULL,
                                                             NULL,
                                                             NULL,
+                                                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_FORCE_ONLINE] = g_param_spec_boolean ("force-online",
+                                                            NULL,
+                                                            NULL,
+                                                            FALSE,
                                                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, LAST_PROP, obj_properties);
