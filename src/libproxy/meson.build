@@ -30,6 +30,7 @@ libproxy = shared_library(
   link_depends : mapfile,
   soversion: '1',
   install: true,
+  install_rpath: pkglibdir,
 )
 
 libproxy_dep = declare_dependency (
