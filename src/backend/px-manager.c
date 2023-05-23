@@ -638,28 +638,43 @@ static gboolean
 ignore_domain (GUri *uri,
                char *ignore)
 {
-  g_auto (GStrv) ignore_split = g_strsplit (ignore, ":", -1);
+  g_auto (GStrv) ignore_split = NULL;
   const char *host = g_uri_get_host (uri);
-  char *ig_host;
-  int ig_port = -1;
-  int port = g_uri_get_port (uri);
+  char *ignore_host;
+  int ignore_port = -1;
+  int port;
+
+  if (g_strcmp0 (ignore, "*") == 0)
+    return TRUE;
+
+  ignore_split = g_strsplit (ignore, ":", -1);
+  port = g_uri_get_port (uri);
 
   /* Get our ignore pattern's hostname and port */
-  ig_host = ignore_split[0];
+  ignore_host = ignore_split[0];
   if  (g_strv_length (ignore_split) == 2)
-    ig_port = atoi (ignore_split[1]);
+    ignore_port = atoi (ignore_split[1]);
 
   /* Hostname match (domain.com or domain.com:80) */
-  if (g_strcmp0 (host, ig_host) == 0)
-    return (ig_port == -1 || port == ig_port);
+  if (g_strcmp0 (host, ignore_host) == 0)
+    return (ignore_port == -1 || port == ignore_port);
 
-  /* Endswith (.domain.com or .domain.com:80) */
-  if (ig_host[0] == '.' && g_str_has_suffix (host, ig_host))
-    return (ig_port == -1 || port == ig_port);
+  /**
+   * Treat the following three options as a wildcard for a domain:
+   *  - .domain.com or .domain.com:80
+   *  - *.domain.com or *.domain.com:80
+   *  - domain.com or domain.com:80
+   */
+  if (strlen (ignore_host) > 2) {
+    if (ignore_host[0] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 1, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host)))
+      return (ignore_port == -1 || port == ignore_port);
 
-  /* Glob (*.domain.com or *.domain.com:80) */
-  if (ig_host[0] == '*' && g_str_has_suffix (host, ig_host + 1))
-    return (ig_port == -1 || port == ig_port);
+    if (ignore_host[0] == '*' && ignore_host[1] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 2, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host + 1)))
+      return (ignore_port == -1 || port == ignore_port);
+
+    if (strlen (host) > strlen (ignore_host) && host[strlen (host) - strlen (ignore_host) - 1] == '.' && g_str_has_suffix (host, ignore_host))
+      return (ignore_port == -1 || port == ignore_port);
+  }
 
   /* No match was found */
   return FALSE;
@@ -681,34 +696,46 @@ static gboolean
 ignore_ip (GUri *uri,
            char *ignore)
 {
-  GInetAddress *inet_address1;
-  GInetAddress *inet_address2;
+  GInetAddress *uri_address;
+  GInetAddress *ignore_address;
   g_auto (GStrv) ignore_split = NULL;
+  g_autoptr (GError) error = NULL;
   const char *uri_host = g_uri_get_host (uri);
-  gboolean is_ip1 = FALSE;
-  gboolean is_ip2 = g_hostname_is_ip_address (ignore);
   int port = g_uri_get_port (uri);
-  int ig_port = -1;
+  int ignore_port = 0;
   gboolean result;
 
-  if (uri_host)
-    is_ip1 = g_hostname_is_ip_address (uri_host);
-
-  /*
-   * IPv4
-   * IPv6
-   */
-  if (!is_ip1 || !is_ip2)
+  if (!uri_host)
     return FALSE;
+
+  uri_address = g_inet_address_new_from_string (uri_host);
 
   /*
    * IPv4/CIDR
    * IPv4/IPv4
    * IPv6/CIDR
    * IPv6/IPv6
+   *
+   * uri must be in ip string format, no host name resolution is done
    */
+  if (uri_address && strchr (ignore, '/')) {
+    GInetAddressMask *address_mask = g_inet_address_mask_new_from_string (ignore, &error);
 
-  /* MISSING */
+    if (!address_mask) {
+      g_warning ("Could not parse ignore mask: %s", error->message);
+      return FALSE;
+    }
+
+    if (g_inet_address_mask_matches (address_mask, uri_address))
+      return TRUE;
+  }
+
+  /*
+   * IPv4
+   * IPv6
+   */
+  if (!g_hostname_is_ip_address (uri_host) || !g_hostname_is_ip_address (ignore))
+    return FALSE;
 
   /*
    * IPv4:port
@@ -716,13 +743,12 @@ ignore_ip (GUri *uri,
    */
   ignore_split = g_strsplit (ignore, ":", -1);
   if  (g_strv_length (ignore_split) == 2)
-    ig_port = atoi (ignore_split[1]);
+    ignore_port = atoi (ignore_split[1]);
 
-  inet_address1 = g_inet_address_new_from_string (g_uri_get_host (uri));
-  inet_address2 = g_inet_address_new_from_string (ignore);
-  result = g_inet_address_equal (inet_address1, inet_address2);
+  ignore_address = g_inet_address_new_from_string (ignore);
+  result = g_inet_address_equal (uri_address, ignore_address);
 
-  return port != -1 ? ((port == ig_port) && result) : result;
+  return ignore_port != 0 ? ((port == ignore_port) && result) : result;
 }
 
 gboolean
