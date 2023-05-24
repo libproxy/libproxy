@@ -11,7 +11,6 @@ dependencies = [
   "GObject-2.0",
   "Gio-2.0",
   "GLib-2.0",
-  "Soup-3.0",
   "curl-1.0",
 ]
 devhelp = true
@@ -31,11 +30,6 @@ docs_url = "https://developer.gnome.org/gio/stable"
 name = "GLib"
 description = "The base utility library"
 docs_url = "https://developer.gnome.org/glib/stable"
-
-[dependencies."Soup-3.0"]
-name = "Soup"
-description = "HTTP client/server library for GNOME"
-docs_url = "https://libsoup.org/libsoup-3.0/index.html"
 
 [dependencies."curl-1.0"]
 name = "cURL"

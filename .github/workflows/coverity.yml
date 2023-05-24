@@ -32,7 +32,6 @@ jobs:
           libglib2.0-dev \
           libgirepository1.0-dev \
           duktape-dev \
-          libsoup-3.0-dev \
           meson \
           gcovr \
           gi-docgen \
