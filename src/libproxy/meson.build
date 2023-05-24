@@ -49,7 +49,8 @@ pkg.generate(
   name: 'libproxy',
   filebase: package_api_name,
   description: 'libproxy',
-  requires: 'gio-2.0',
+  # Needed due to #include <glib-object.h> in proxy.h
+  requires_private: 'gobject-2.0',
   install_dir: join_paths(get_option('libdir'), 'pkgconfig')
 )
 
