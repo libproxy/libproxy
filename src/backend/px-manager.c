@@ -390,15 +390,37 @@ px_manager_pac_download (PxManager  *self,
   if (g_str_has_prefix (url, "pac+"))
     url += 4;
 
-  curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, 1);
-  curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, 1);
-  curl_easy_setopt (self->curl, CURLOPT_NOPROXY, "*");
-  curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30);
-  curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy");
+  if (curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, 1) != CURLE_OK)
+    g_debug ("Could not set NOSIGNAL, continue");
 
-  curl_easy_setopt (self->curl, CURLOPT_URL, url);
-  curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, store_data);
-  curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, byte_array);
+  if (curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, 1) != CURLE_OK)
+    g_debug ("Could not set FOLLOWLOCATION, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_NOPROXY, "*") != CURLE_OK) {
+    g_warning ("Could not set NOPROXY, ABORT!");
+    return NULL;
+  }
+
+  if (curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30) != CURLE_OK)
+    g_debug ("Could not set CONENCTIONTIMEOUT, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy") != CURLE_OK)
+    g_debug ("Could not set USERAGENT, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_URL, url) != CURLE_OK) {
+    g_warning ("Could not set URL, ABORT!");
+    return NULL;
+  }
+
+  if (curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, store_data) != CURLE_OK) {
+    g_warning ("Could not set WRITEFUNCTION, ABORT!");
+    return NULL;
+  }
+
+  if (curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, byte_array) != CURLE_OK) {
+    g_warning ("Could not set WRITEDATA, ABORT!");
+    return NULL;
+  }
 
   res = curl_easy_perform (self->curl);
   if (res != CURLE_OK) {
@@ -696,8 +718,8 @@ static gboolean
 ignore_ip (GUri *uri,
            char *ignore)
 {
-  GInetAddress *uri_address;
-  GInetAddress *ignore_address;
+  g_autoptr (GInetAddress) uri_address = NULL;
+  g_autoptr (GInetAddress) ignore_address = NULL;
   g_auto (GStrv) ignore_split = NULL;
   g_autoptr (GError) error = NULL;
   const char *uri_host = g_uri_get_host (uri);
