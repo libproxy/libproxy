@@ -2,7 +2,7 @@ option(
   'docs',
   type: 'boolean',
   value: true,
-  description: 'Whether to generate the API reference for libproxy'
+  description: 'Whether to generate the API reference for libproxy (requires introspection)'
 )
 
 option(
