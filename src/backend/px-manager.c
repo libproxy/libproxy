@@ -471,9 +471,6 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
   g_auto (GStrv) proxies_split = NULL;
   char *pac_response;
 
-  if (!ifc->set_pac (PX_PAC_RUNNER (pacrunner), pac))
-    return;
-
   pac_response = ifc->run (PX_PAC_RUNNER (pacrunner), uri);
 
   /* Split line to handle multiple proxies */
@@ -552,6 +549,22 @@ px_manager_expand_wpad (PxManager *self,
 }
 
 static gboolean
+px_manager_set_pac (PxManager *self)
+{
+  GList *list;
+
+  for (list = self->pacrunner_plugins; list && list->data; list = list->next) {
+    PxPacRunner *pacrunner = PX_PAC_RUNNER (list->data);
+    PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (pacrunner);
+
+    if (!ifc->set_pac (PX_PAC_RUNNER (pacrunner), self->pac_data))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 px_manager_expand_pac (PxManager *self,
                        GUri      *uri)
 {
@@ -583,6 +596,12 @@ px_manager_expand_pac (PxManager *self,
         ret = FALSE;
       } else {
         g_debug ("%s: PAC recevied!", __FUNCTION__);
+        if (!px_manager_set_pac (self)) {
+          g_warning ("%s: Unable to set PAC from %s while online = %d!", __FUNCTION__, self->pac_url, self->online);
+          g_clear_pointer (&self->pac_url, g_free);
+          g_clear_pointer (&self->pac_data, g_bytes_unref);
+          ret = FALSE;
+        }
       }
     }
   }
