@@ -95,6 +95,8 @@ struct _PxManager {
   gboolean wpad;
   GBytes *pac_data;
   char *pac_url;
+
+  GMutex mutex;
 };
 
 G_DEFINE_TYPE (PxManager, px_manager, G_TYPE_OBJECT)
@@ -623,13 +625,19 @@ px_manager_get_proxies_sync (PxManager   *self,
                              const char  *url,
                              GError     **error)
 {
-  g_autoptr (GStrvBuilder) builder = g_strv_builder_new ();
-  g_autoptr (GUri) uri = g_uri_parse (url, G_URI_FLAGS_PARSE_RELAXED, error);
+  g_autoptr (GStrvBuilder) builder = NULL;
+  g_autoptr (GUri) uri = NULL;
   g_auto (GStrv) config = NULL;
+
+  g_mutex_lock (&self->mutex);
+
+  builder = g_strv_builder_new ();
+  uri = g_uri_parse (url, G_URI_FLAGS_PARSE_RELAXED, error);
 
   g_debug ("%s: url=%s online=%d", __FUNCTION__, url ? url : "?", self->online);
   if (!uri || !self->online) {
     px_strv_builder_add_proxy (builder, "direct://");
+    g_mutex_unlock (&self->mutex);
     return g_strv_builder_end (builder);
   }
 
@@ -660,6 +668,7 @@ px_manager_get_proxies_sync (PxManager   *self,
   for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++)
     g_debug ("%s: Proxy[%d] = %s", __FUNCTION__, idx, (char *)((GPtrArray *)builder)->pdata[idx]);
 
+  g_mutex_unlock (&self->mutex);
   return g_strv_builder_end (builder);
 }
 
