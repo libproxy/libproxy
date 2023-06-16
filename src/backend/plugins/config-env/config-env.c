@@ -30,11 +30,6 @@ static void px_config_iface_init (PxConfigInterface *iface);
 
 struct _PxConfigEnv {
   GObject parent_instance;
-
-  GStrv no_proxy;
-  const char *ftp_proxy;
-  const char *http_proxy;
-  const char *https_proxy;
 };
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigEnv,
@@ -50,37 +45,6 @@ enum {
 static void
 px_config_env_init (PxConfigEnv *self)
 {
-  const char *no_proxy;
-
-  /* Collect data in init() to speed up get_config() calls */
-  no_proxy = g_getenv ("no_proxy");
-  if (!no_proxy)
-    no_proxy = g_getenv ("NO_PROXY");
-
-  if (no_proxy)
-    self->no_proxy = g_strsplit (no_proxy, ",", -1);
-
-  self->ftp_proxy = g_getenv ("ftp_proxy");
-  if (!self->ftp_proxy)
-    self->ftp_proxy = g_getenv ("FTP_PROXY");
-
-  self->https_proxy = g_getenv ("https_proxy");
-  if (!self->https_proxy)
-    self->https_proxy = g_getenv ("HTTPS_PROXY");
-
-  self->http_proxy = g_getenv ("http_proxy");
-  if (!self->http_proxy)
-    self->http_proxy = g_getenv ("HTTP_PROXY");
-}
-
-static void
-px_config_env_dispose (GObject *object)
-{
-  PxConfigEnv *self = PX_CONFIG_ENV (object);
-
-  g_clear_pointer (&self->no_proxy, g_strfreev);
-
-  G_OBJECT_CLASS (px_config_env_parent_class)->dispose (object);
 }
 
 static void
@@ -120,7 +84,6 @@ px_config_env_class_init (PxConfigEnvClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->dispose = px_config_env_dispose;
   object_class->set_property = px_config_env_set_property;
   object_class->get_property = px_config_env_get_property;
 
@@ -138,20 +101,37 @@ px_config_env_get_config (PxConfig     *config,
                           GUri         *uri,
                           GStrvBuilder *builder)
 {
-  PxConfigEnv *self = PX_CONFIG_ENV (config);
   const char *proxy = NULL;
   const char *scheme = g_uri_get_scheme (uri);
 
-  if (px_manager_is_ignore (uri, self->no_proxy))
-    return;
+  proxy = g_getenv ("no_proxy");
+  if (!proxy)
+    proxy = g_getenv ("NO_PROXY");
 
-  if (g_strcmp0 (scheme, "ftp") == 0)
-    proxy = self->ftp_proxy;
-  else if (g_strcmp0 (scheme, "https") == 0)
-    proxy = self->https_proxy;
+  if (proxy) {
+    g_auto (GStrv) no_proxy = g_strsplit (proxy, ",", -1);
+
+    if (px_manager_is_ignore (uri, no_proxy))
+      return;
+
+    proxy = NULL;
+  }
+
+  if (g_strcmp0 (scheme, "ftp") == 0) {
+    proxy = g_getenv ("ftp_proxy");
+    if (!proxy)
+      proxy = g_getenv ("FTP_PROXY");
+  } else if (g_strcmp0 (scheme, "https") == 0) {
+    proxy = g_getenv ("https_proxy");
+    if (!proxy)
+      proxy = g_getenv ("HTTPS_PROXY");
+  }
 
   if (!proxy)
-    proxy = self->http_proxy;
+    proxy = g_getenv ("http_proxy");
+
+  if (!proxy)
+    proxy = g_getenv ("HTTP_PROXY");
 
   if (proxy)
     px_strv_builder_add_proxy (builder, proxy);
