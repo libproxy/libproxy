@@ -1,5 +1,5 @@
 project('libproxy', 'c',
-          version: '0.5.1',
+          version: '0.5.2',
     meson_version: '>= 0.59.0',
   default_options: [ 'warning_level=2', 'werror=false', 'c_std=gnu11', ],
 )
