@@ -6,8 +6,8 @@ Slug: ApplicationMatrix
 
 | Application | Upstream | Patches |
 | --- | -- | -- |
-| apt | NO | AVAILABLE |
-| cURL | NO | AVAILABLE |
+| apt | NO | AVAILABLE (Registration pending) |
+| cURL | NO | https://github.com/curl/curl/pull/11393 |
 | eid-viewer | YES | - |
 | glib-networking | YES | - |
 | libQt5Network | YES | - |
@@ -20,5 +20,5 @@ Slug: ApplicationMatrix
 | signond | YES | - |
 | signond_ui | YES | - |
 | vagalume | YES | - |
-| wget | NO | [Patch](https://build.opensuse.org/package/show/openSUSE:Factory/wget) |
+| wget | NO | [https://gitlab.com/gnuwget/wget/-/merge_requests/35](https://gitlab.com/gnuwget/wget/-/merge_requests/35) |
 
