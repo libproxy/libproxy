@@ -697,6 +697,9 @@ ignore_domain (GUri *uri,
   if (g_strcmp0 (ignore, "*") == 0)
     return TRUE;
 
+  if (!host)
+    return FALSE;
+
   ignore_split = g_strsplit (ignore, ":", -1);
   port = g_uri_get_port (uri);
 
@@ -735,6 +738,9 @@ ignore_hostname (GUri *uri,
                  char *ignore)
 {
   const char *host = g_uri_get_host (uri);
+
+  if (!host)
+    return FALSE;
 
   if (g_strcmp0 (ignore, "<local>") == 0 && strchr (host, ':') == NULL && strchr (host, '.') == NULL)
     return TRUE;
