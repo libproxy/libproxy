@@ -6,16 +6,17 @@ Slug: ApplicationMatrix
 
 | Application | Upstream | Patches |
 | --- | -- | -- |
-| apt | NO | https://salsa.debian.org/apt-team/apt/-/merge_requests/300 |
-| cURL | NO | https://github.com/curl/curl/pull/11393 |
+| apt | NO | [https://salsa.debian.org/apt-team/apt/-/merge_requests/300](https://salsa.debian.org/apt-team/apt/-/merge_requests/300) |
+| cURL | NO | [https://github.com/curl/curl/pull/11393](https://github.com/curl/curl/pull/11393) |
 | eid-viewer | YES | - |
 | glib-networking | YES | - |
+| golang | NO | [https://github.com/golang/go/issues/61065](https://github.com/golang/go/issues/61065) |
 | libQt5Network | YES | - |
 | libzypp | YES | - |
 | Mozilla Firefox | YES | - |
 | neon | YES | - |
 | openconnect | YES | - |
-| python-requests | NO | https://github.com/psf/requests/pull/6479 |
+| python-requests | NO | [https://github.com/psf/requests/pull/6479](https://github.com/psf/requests/pull/6479) |
 | seamonkey | YES | - |
 | signond | YES | - |
 | signond_ui | YES | - |
