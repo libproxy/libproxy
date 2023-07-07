@@ -6,7 +6,7 @@ Slug: ApplicationMatrix
 
 | Application | Upstream | Patches |
 | --- | -- | -- |
-| apt | NO | AVAILABLE (Registration pending) |
+| apt | NO | https://salsa.debian.org/apt-team/apt/-/merge_requests/300 |
 | cURL | NO | https://github.com/curl/curl/pull/11393 |
 | eid-viewer | YES | - |
 | glib-networking | YES | - |
@@ -15,7 +15,7 @@ Slug: ApplicationMatrix
 | Mozilla Firefox | YES | - |
 | neon | YES | - |
 | openconnect | YES | - |
-| python-requests | NO | AVAILABLE |
+| python-requests | NO | https://github.com/psf/requests/pull/6479 |
 | seamonkey | YES | - |
 | signond | YES | - |
 | signond_ui | YES | - |
