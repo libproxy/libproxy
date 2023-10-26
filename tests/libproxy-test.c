@@ -62,6 +62,22 @@ test_libproxy_setup (Fixture    *self,
   /* px_proxy_factory_free_proxies (proxies); */
 }
 
+static void
+test_libproxy_dup (Fixture    *self,
+                   const void *user_data)
+{
+  pxProxyFactory *dup = g_boxed_copy (PX_TYPE_PROXY_FACTORY, &self->pf);
+
+  g_assert_nonnull (dup);
+}
+
+static void
+test_libproxy_illegal_free (Fixture    *self,
+                            const void *user_data)
+{
+  px_proxy_factory_free_proxies (NULL);
+}
+
 int
 main (int    argc,
       char **argv)
@@ -69,6 +85,8 @@ main (int    argc,
   g_test_init (&argc, &argv, NULL);
 
   g_test_add ("/libproxy/setup", Fixture, NULL, fixture_setup, test_libproxy_setup, fixture_teardown);
+  g_test_add ("/libproxy/dup", Fixture, NULL, fixture_setup, test_libproxy_dup, fixture_teardown);
+  g_test_add ("/libproxy/illegal_free", Fixture, NULL, fixture_setup, test_libproxy_illegal_free, fixture_teardown);
 
   return g_test_run ();
 }

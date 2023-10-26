@@ -74,6 +74,34 @@ fixture_teardown (Fixture       *fixture,
 }
 
 static void
+test_config_gnome_none (Fixture    *self,
+                        const void *user_data)
+{
+  g_autoptr (PxManager) manager = NULL;
+  g_autoptr (GError) error = NULL;
+  g_autoptr (GUri) uri = NULL;
+  g_auto (GStrv) config = NULL;
+
+  g_settings_set_strv (self->proxy_settings, "ignore-hosts", NULL);
+  g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_NONE);
+
+  manager = px_test_manager_new ("config-gnome", NULL);
+  g_clear_error (&error);
+
+  uri = g_uri_parse ("https://127.0.0.1", G_URI_FLAGS_NONE, &error);
+  if (!uri) {
+    g_warning ("Could not parse url: %s", error ? error->message : "");
+    g_assert_not_reached ();
+  }
+
+  config = px_manager_get_configuration (manager, uri);
+  g_assert_nonnull (config);
+  g_assert_null (config[0]);
+
+  g_clear_object (&manager);
+}
+
+static void
 test_config_gnome_manual (Fixture    *self,
                           const void *user_data)
 {
@@ -100,13 +128,13 @@ test_config_gnome_manual (Fixture    *self,
     manager = px_test_manager_new ("config-gnome", NULL);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
     g_assert_cmpstr (config[0], ==, test.expected_return);
 
     g_clear_object (&manager);
@@ -132,9 +160,9 @@ test_config_gnome_manual_auth (Fixture    *self,
   manager = px_test_manager_new ("config-gnome", NULL);
   g_clear_error (&error);
 
-  uri = g_uri_parse ("http://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
+  uri = g_uri_parse ("http://www.example.com", G_URI_FLAGS_NONE, &error);
 
-  config = px_manager_get_configuration (manager, uri, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_assert_cmpstr (config[0], ==, "http://test:pwd@127.0.0.1:9876");
 }
 
@@ -151,12 +179,12 @@ test_config_gnome_auto (Fixture    *self,
   g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
   g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
 
-  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
-  config = px_manager_get_configuration (manager, uri, &error);
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_assert_cmpstr (config[0], ==, "wpad://");
 
   g_settings_set_string (self->proxy_settings, "autoconfig-url", "http://127.0.0.1:3435");
-  config = px_manager_get_configuration (manager, uri, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_assert_cmpstr (config[0], ==, "pac+http://127.0.0.1:3435");
 }
 
@@ -179,8 +207,8 @@ test_config_gnome_fail (Fixture    *self,
   g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
   g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
 
-  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
-  config = px_manager_get_configuration (manager, uri, &error);
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_assert_null (config[0]);
 }
 
@@ -192,6 +220,7 @@ main (int    argc,
 
   g_setenv ("XDG_CURRENT_DESKTOP", "GNOME", TRUE);
 
+  g_test_add ("/config/gnome/none", Fixture, NULL, fixture_setup, test_config_gnome_none, fixture_teardown);
   g_test_add ("/config/gnome/manual", Fixture, NULL, fixture_setup, test_config_gnome_manual, fixture_teardown);
   g_test_add ("/config/gnome/manual_auth", Fixture, NULL, fixture_setup, test_config_gnome_manual_auth, fixture_teardown);
   g_test_add ("/config/gnome/auto", Fixture, NULL, fixture_setup, test_config_gnome_auto, fixture_teardown);

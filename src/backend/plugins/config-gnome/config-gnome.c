@@ -58,7 +58,7 @@ static void
 px_config_gnome_init (PxConfigGnome *self)
 {
   GSettingsSchemaSource *source;
-  GSettingsSchema *proxy_schema;
+  g_autoptr (GSettingsSchema) proxy_schema = NULL;
   const char *desktops;
 
   self->available = FALSE;
@@ -80,8 +80,6 @@ px_config_gnome_init (PxConfigGnome *self)
   proxy_schema = g_settings_schema_source_lookup (source, "org.gnome.system.proxy", TRUE);
 
   self->available = proxy_schema != NULL;
-  g_clear_pointer (&proxy_schema, g_settings_schema_unref);
-
   if (!self->available)
     return;
 
@@ -133,14 +131,6 @@ px_config_gnome_class_init (PxConfigGnomeClass *klass)
   object_class->get_property = px_config_gnome_get_property;
 
   g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
-}
-
-static gboolean
-px_config_gnome_is_available (PxConfig *config)
-{
-  PxConfigGnome *self = PX_CONFIG_GNOME (config);
-
-  return self->available;
 }
 
 static void
@@ -244,6 +234,5 @@ px_config_iface_init (PxConfigInterface *iface)
 {
   iface->name = "config-gnome";
   iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
-  iface->is_available = px_config_gnome_is_available;
   iface->get_config = px_config_gnome_get_config;
 }

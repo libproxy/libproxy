@@ -67,13 +67,13 @@ test_config_kde_disabled (void)
     manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
     g_assert_cmpstr (config[0], !=, test.proxy);
 
     g_clear_object (&manager);
@@ -96,13 +96,13 @@ test_config_kde_manual (void)
     manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
     if (test.success)
       g_assert_cmpstr (config[0], ==, test.proxy);
     else
@@ -128,13 +128,13 @@ test_config_kde_wpad (void)
     manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
     if (test.success)
       g_assert_cmpstr (config[0], ==, "wpad://");
     else
@@ -160,13 +160,13 @@ test_config_kde_pac (void)
     manager = px_test_manager_new ("config-kde", path);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
     if (test.success)
       g_assert_cmpstr (config[0], ==, "pac+http://127.0.0.1/px-manager-sample.pac");
     else
@@ -190,9 +190,9 @@ test_config_kde_fail (void)
 
   manager = px_test_manager_new ("config-kde", path);
 
-  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
 
-  config = px_manager_get_configuration (manager, uri, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_print ("%s", config[0]);
   g_assert_null (config[0]);
 }

@@ -95,12 +95,6 @@ px_config_windows_class_init (PxConfigWindowsClass *klass)
 }
 
 static gboolean
-px_config_windows_is_available (PxConfig *self)
-{
-  return TRUE;
-}
-
-static gboolean
 get_registry (const char  *key,
               const char  *name,
               char       **sval,
@@ -213,7 +207,7 @@ px_config_windows_get_config (PxConfig     *self,
   /* PAC */
   if (is_enabled (W32REG_OFFSET_PAC) && get_registry (W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL)) {
     g_autofree char *pac_uri = g_strconcat ("pac+", tmp, NULL);
-    GUri *ac_uri = g_uri_parse (tmp, G_URI_FLAGS_PARSE_RELAXED, NULL);
+    GUri *ac_uri = g_uri_parse (tmp, G_URI_FLAGS_NONE, NULL);
 
     if (ac_uri) {
       px_strv_builder_add_proxy (builder, pac_uri);
@@ -247,6 +241,5 @@ px_config_iface_init (PxConfigInterface *iface)
 {
   iface->name = "config-windows";
   iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
-  iface->is_available = px_config_windows_is_available;
   iface->get_config = px_config_windows_get_config;
 }

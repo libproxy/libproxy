@@ -41,15 +41,13 @@ PxManager *px_manager_new (void);
 PxManager *px_manager_new_with_options (const char *optname1, ...);
 
 char **px_manager_get_proxies_sync (PxManager   *self,
-                                    const char  *url,
-                                    GError     **error);
+                                    const char  *url);
 
 GBytes *px_manager_pac_download (PxManager  *self,
                                  const char *uri);
 
 char **px_manager_get_configuration (PxManager  *self,
-                                     GUri       *uri,
-                                     GError    **error);
+                                     GUri       *uri);
 
 void px_strv_builder_add_proxy (GStrvBuilder *builder,
                                 const char   *value);

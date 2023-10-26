@@ -34,6 +34,11 @@ static const ConfigSysConfigTest config_sysconfig_test_set[] = {
   { "http://www.example.com", "http://127.0.0.1:8080", TRUE},
   { "ftp://www.example.com", "http://127.0.0.1:8080", TRUE},
   { "http://localhost:1234", "http://127.0.0.1:8080", FALSE},
+  { "tcp://localhost:1234", "http://127.0.0.1:8080", FALSE},
+};
+
+static const ConfigSysConfigTest config_sysconfig_test_invalid_set[] = {
+  { "https://www.example.com", "http://127.0.0.1:8080", FALSE},
 };
 
 static void
@@ -52,13 +57,45 @@ test_config_sysconfig (void)
     manager = px_test_manager_new ("config-sysconfig", path);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
     if (!uri) {
       g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
       g_assert_not_reached ();
     }
 
-    config = px_manager_get_configuration (manager, uri, &error);
+    config = px_manager_get_configuration (manager, uri);
+    if (test.success)
+      g_assert_cmpstr (config[0], ==, test.proxy);
+    else
+      g_assert_cmpstr (config[0], !=, test.proxy);
+
+    g_clear_object (&manager);
+  }
+}
+
+static void
+test_config_sysconfig_invalid (void)
+{
+  int idx;
+
+  for (idx = 0; idx < G_N_ELEMENTS (config_sysconfig_test_invalid_set); idx++) {
+    g_autoptr (PxManager) manager = NULL;
+    g_autoptr (GError) error = NULL;
+    g_autoptr (GUri) uri = NULL;
+    g_auto (GStrv) config = NULL;
+    ConfigSysConfigTest test = config_sysconfig_test_invalid_set[idx];
+    g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-sysconfig-proxy-invalid", NULL);
+
+    manager = px_test_manager_new ("config-sysconfig", path);
+    g_clear_error (&error);
+
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
+    if (!uri) {
+      g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
+      g_assert_not_reached ();
+    }
+
+    config = px_manager_get_configuration (manager, uri);
     if (test.success)
       g_assert_cmpstr (config[0], ==, test.proxy);
     else
@@ -75,6 +112,7 @@ main (int    argc,
   g_test_init (&argc, &argv, NULL);
 
   g_test_add_func ("/config/sysconfig", test_config_sysconfig);
+  g_test_add_func ("/config/sysconfig/invalid", test_config_sysconfig_invalid);
 
   return g_test_run ();
 }

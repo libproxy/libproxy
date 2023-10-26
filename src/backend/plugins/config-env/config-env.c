@@ -90,12 +90,6 @@ px_config_env_class_init (PxConfigEnvClass *klass)
   g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
-static gboolean
-px_config_env_is_available (PxConfig *self)
-{
-  return TRUE;
-}
-
 static void
 px_config_env_get_config (PxConfig     *config,
                           GUri         *uri,
@@ -142,6 +136,5 @@ px_config_iface_init (PxConfigInterface *iface)
 {
   iface->name = "config-env";
   iface->priority = PX_CONFIG_PRIORITY_FIRST;
-  iface->is_available = px_config_env_is_available;
   iface->get_config = px_config_env_get_config;
 }
