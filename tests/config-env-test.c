@@ -54,6 +54,7 @@ static const ConfigEnvTest config_env_test_set[] = {
   { "HTTPS_PROXY", "http://127.0.0.1:8080", NULL, "http://www.example.com", FALSE},
   { "HTTPS_PROXY", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", FALSE},
   { "https_proxy", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", FALSE},
+  { "https_proxy", "http://127.0.0.1:8080", NULL, "https://www.example.com", TRUE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "https://www.example.com", FALSE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "http://www.example.com", FALSE},
   { "FTP_PROXY", "http://127.0.0.1:8080", NULL, "ftp://www.example.com", TRUE},
@@ -88,8 +89,8 @@ test_config_env (void)
     manager = px_test_manager_new ("config-env", NULL);
     g_clear_error (&error);
 
-    uri = g_uri_parse (test.url, G_URI_FLAGS_PARSE_RELAXED, &error);
-    config = px_manager_get_configuration (manager, uri, &error);
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
+    config = px_manager_get_configuration (manager, uri);
     if (test.config_is_proxy)
       g_assert_cmpstr (config[0], ==, test.proxy);
     else

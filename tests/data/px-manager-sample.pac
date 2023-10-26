@@ -23,5 +23,9 @@ function FindProxyForURL(url, host)
   if (dnsDomainIs(host, "www.example.com"))
     return "PROXY 127.0.0.1:1983"
 
+  /* Invalid return */
+  if (dnsDomainIs(host, "192.168.10.8"))
+    return "PROXY !"
+
   return "PROXY 127.0.0.1:1981"
 }

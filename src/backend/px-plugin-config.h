@@ -41,7 +41,6 @@ struct _PxConfigInterface
   const char *name;
   gint priority;
 
-  gboolean (*is_available) (PxConfig *self);
   void (*get_config) (PxConfig *self, GUri *uri, GStrvBuilder *builder);
 };
 

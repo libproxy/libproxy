@@ -34,8 +34,8 @@ test_config_windows (void)
   manager = px_test_manager_new ("config-windows", NULL);
   g_clear_error (&error);
 
-  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_PARSE_RELAXED, &error);
-  config = px_manager_get_configuration (manager, uri, &error);
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
+  config = px_manager_get_configuration (manager, uri);
   g_assert_nonnull (config);
   g_assert_nonnull (config[0]);
 }

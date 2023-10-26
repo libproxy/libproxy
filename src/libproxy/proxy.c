@@ -56,12 +56,8 @@ px_proxy_factory_get_proxies (pxProxyFactory *self,
                               const char     *url)
 {
   g_auto (GStrv) result = NULL;
-  g_autoptr (GError) error = NULL;
 
-  result = px_manager_get_proxies_sync (self->manager, url, &error);
-  if (error)
-    g_warning ("Could not query proxy: %s", error->message);
-
+  result = px_manager_get_proxies_sync (self->manager, url);
   return g_steal_pointer (&result);
 }
 

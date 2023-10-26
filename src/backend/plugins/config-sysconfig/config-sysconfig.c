@@ -85,11 +85,6 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
   self->available = FALSE;
 
   file = g_file_new_for_path (self->config_file);
-  if (!file) {
-    g_debug ("%s: Could not create file for %s", __FUNCTION__, self->config_file);
-    return;
-  }
-
   istr = g_file_read (file, NULL, NULL);
   if (!istr) {
     g_debug ("%s: Could not read file %s", __FUNCTION__, self->config_file);
@@ -97,8 +92,6 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
   }
 
   dstr = g_data_input_stream_new (G_INPUT_STREAM (istr));
-  if (!dstr)
-    return;
 
   g_clear_object (&self->monitor);
   self->monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, &error);
@@ -207,14 +200,6 @@ px_config_sysconfig_class_init (PxConfigSysConfigClass *klass)
   g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
-static gboolean
-px_config_sysconfig_is_available (PxConfig *config)
-{
-  PxConfigSysConfig *self = PX_CONFIG_SYSCONFIG (config);
-
-  return self->available;
-}
-
 static void
 px_config_sysconfig_get_config (PxConfig     *config,
                                 GUri         *uri,
@@ -247,6 +232,5 @@ px_config_iface_init (PxConfigInterface *iface)
 {
   iface->name = "config-sysconfig";
   iface->priority = PX_CONFIG_PRIORITY_LAST;
-  iface->is_available = px_config_sysconfig_is_available;
   iface->get_config = px_config_sysconfig_get_config;
 }

@@ -199,15 +199,15 @@ test_get_proxies_direct (Fixture    *self,
 {
   g_auto (GStrv) config = NULL;
 
-  config = px_manager_get_proxies_sync (self->manager, "", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
 
-  config = px_manager_get_proxies_sync (self->manager, "nonsense", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "nonsense");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
 
-  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
 }
@@ -218,7 +218,7 @@ test_get_proxies_nonpac (Fixture    *self,
 {
   g_auto (GStrv) config = NULL;
 
-  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1983");
 }
@@ -229,25 +229,35 @@ get_proxies_pac (gpointer data)
   Fixture *self = data;
   g_auto (GStrv) config = NULL;
 
-  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1983");
 
-  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.4", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.4");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "socks://127.0.0.1:1983");
 
-  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.5", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.5");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "socks4://127.0.0.1:1983");
 
-  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.6", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.6");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "socks4a://127.0.0.1:1983");
 
-  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.7", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.7");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "socks5://127.0.0.1:1983");
+
+  /* Invalid return URI */
+  config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.8");
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "direct://");
+
+  /* Invalid input url */
+  config = px_manager_get_proxies_sync (self->manager, "invalid");
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "direct://");
 
   g_main_loop_quit (self->loop);
 
@@ -270,7 +280,7 @@ get_wpad (gpointer data)
   Fixture *self = data;
   g_auto (GStrv) config = NULL;
 
-  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com", NULL);
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "direct://");
 
@@ -293,7 +303,7 @@ static void
 test_ignore_domain (Fixture    *self,
                     const void *user_data)
 {
-  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12", G_URI_FLAGS_NONE, NULL);
   char **ignore_list = g_malloc0 (sizeof (char *) * 2);
   gboolean ret;
 
@@ -319,7 +329,7 @@ static void
 test_ignore_domain_port (Fixture    *self,
                          const void *user_data)
 {
-  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12:22", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  g_autoptr (GUri) uri = g_uri_parse("http://10.10.1.12:22", G_URI_FLAGS_NONE, NULL);
   char **ignore_list = g_malloc0 (sizeof (char *) * 2);
   gboolean ret;
 
@@ -354,7 +364,7 @@ static void
 test_ignore_hostname (Fixture    *self,
                       const void *user_data)
 {
-  g_autoptr (GUri) uri = g_uri_parse("http://18.10.1.12", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  g_autoptr (GUri) uri = g_uri_parse("http://18.10.1.12", G_URI_FLAGS_NONE, NULL);
   char **ignore_list = g_malloc0 (sizeof (char *) * 2);
   gboolean ret;
 
@@ -367,7 +377,7 @@ test_ignore_hostname (Fixture    *self,
   g_uri_unref (uri);
 
   /* Valid test */
-  uri = g_uri_parse("http://127.0.0.1", G_URI_FLAGS_PARSE_RELAXED, NULL);
+  uri = g_uri_parse("http://127.0.0.1", G_URI_FLAGS_NONE, NULL);
   ret = px_manager_is_ignore (uri, ignore_list);
   g_assert_false (ret);
 

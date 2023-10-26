@@ -88,12 +88,6 @@ px_config_osx_class_init (PxConfigOsXClass *klass)
   g_object_class_override_property (object_class, PROP_CONFIG_OPTION, "config-option");
 }
 
-static gboolean
-px_config_osx_is_available (PxConfig *self)
-{
-  return TRUE;
-}
-
 static CFNumberRef
 getobj (CFDictionaryRef  settings,
         char            *key)
@@ -309,7 +303,7 @@ px_config_osx_get_config (PxConfig     *self,
   if (getbool (proxies, "ProxyAutoConfigEnable")) {
     CFStringRef ref = getobj_str (proxies, "ProxyAutoConfigURLString");
     g_autofree char *tmp = str (ref);
-    GUri *tmp_uri = g_uri_parse (tmp, G_URI_FLAGS_PARSE_RELAXED, NULL);
+    GUri *tmp_uri = g_uri_parse (tmp, G_URI_FLAGS_NONE, NULL);
 
     if (tmp_uri) {
       g_autofree char *ret = g_strdup_printf ("pac+%s", g_uri_to_string (tmp_uri));
@@ -336,6 +330,5 @@ px_config_iface_init (PxConfigInterface *iface)
 {
   iface->name = "config-osx";
   iface->priority = PX_CONFIG_PRIORITY_DEFAULT;
-  iface->is_available = px_config_osx_is_available;
   iface->get_config = px_config_osx_get_config;
 }
