@@ -101,8 +101,6 @@ struct _PxManager {
 
 G_DEFINE_TYPE (PxManager, px_manager, G_TYPE_OBJECT)
 
-G_DEFINE_QUARK (px - manager - error - quark, px_manager_error)
-
 static void
 px_manager_on_network_changed (GNetworkMonitor *monitor,
                                gboolean         network_available,
@@ -479,14 +477,15 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
   for (int idx = 0; idx < g_strv_length (proxies_split); idx++) {
     char *line = g_strstrip (proxies_split[idx]);
     g_auto (GStrv) word_split = g_strsplit (line, " ", -1);
-    g_autoptr (GUri) proxy_uri = NULL;
-    char *method;
-    char *server;
 
     /* Check for syntax "METHOD SERVER" */
     if (g_strv_length (word_split) == 2) {
+      g_autoptr (GUri) proxy_uri = NULL;
       g_autofree char *uri_string = NULL;
       g_autofree char *proxy_string = NULL;
+      g_autoptr (GUri) test_uri = NULL;
+      char *method;
+      char *server;
 
       method = word_split[0];
       server = word_split[1];
@@ -508,10 +507,12 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
         proxy_string = g_strconcat ("socks://", server, NULL);
       }
 
-      px_strv_builder_add_proxy (builder, proxy_string);
-    } else {
-      /* Syntax not found, returning direct */
-      px_strv_builder_add_proxy (builder, "direct://");
+      if (proxy_string) {
+        test_uri = g_uri_parse (proxy_string, G_URI_FLAGS_NONE, NULL);
+
+        if (test_uri)
+          px_strv_builder_add_proxy (builder, proxy_string);
+      }
     }
   }
 }
