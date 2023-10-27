@@ -24,8 +24,6 @@ function FindProxyForURL(url, host)
   if (dnsDomainIs(host, "192.168.10.9"))
     return "INVALID"
 
-  alert("DEFAULT")
-
   /* Don't send non-FQDN or private IP auths to us */
   if (isPlainHostName(host) || isInNet(resolved_ip, "192.0.2.0","255.255.255.0") || privateIP.test(resolved_ip))
     return "DIRECT";
@@ -34,4 +32,5 @@ function FindProxyForURL(url, host)
     return "PROXY 127.0.0.1:1984"
 
   /* Return nothing to check wrong output */
+   alert("DEFAULT")
 }

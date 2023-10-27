@@ -410,6 +410,26 @@ test_ignore_hostname (Fixture    *self,
   g_free (ignore_list);
 }
 
+static void
+test_misc_properties (Fixture    *self,
+                      const void *user_data)
+{
+  GValue val = G_VALUE_INIT;
+
+  /* config-plugin */
+  g_object_get_property (G_OBJECT (self->manager), "config-plugin", &val);
+  g_assert_cmpstr (g_value_get_string (&val), ==, "config-sysconfig");
+
+  /* config-option */
+  g_object_get_property (G_OBJECT (self->manager), "config-option", &val);
+  g_assert_nonnull (g_value_get_string (&val));
+
+  /* Invalid option */
+  g_test_expect_message ("GLib-GObject", G_LOG_LEVEL_CRITICAL, "*object class*has no property named*");
+  g_object_get_property (G_OBJECT (self->manager), "invalid", &val);
+  g_test_assert_expected_messages ();
+}
+
 int
 main (int    argc,
       char **argv)
@@ -434,9 +454,11 @@ main (int    argc,
   g_test_add ("/pac/wpad", Fixture, "px-manager-wpad", fixture_setup, test_get_wpad, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac_debug", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac_debug, fixture_teardown);
 
-  g_test_add ("/ignore/domain", Fixture, "px-manager-ignore", fixture_setup, test_ignore_domain, fixture_teardown);
-  g_test_add ("/ignore/domain_port", Fixture, "px-manager-ignore", fixture_setup, test_ignore_domain_port, fixture_teardown);
-  g_test_add ("/ignore/hostname", Fixture, "px-manager-ignore", fixture_setup, test_ignore_hostname, fixture_teardown);
+  g_test_add ("/ignore/domain", Fixture, "px-manager-direct", fixture_setup, test_ignore_domain, fixture_teardown);
+  g_test_add ("/ignore/domain_port", Fixture, "px-manager-direct", fixture_setup, test_ignore_domain_port, fixture_teardown);
+  g_test_add ("/ignore/hostname", Fixture, "px-manager-direct", fixture_setup, test_ignore_hostname, fixture_teardown);
+
+  g_test_add ("/misc/properties", Fixture, "px-manager-direct", fixture_setup, test_misc_properties, fixture_teardown);
 
   return g_test_run ();
 }

@@ -266,8 +266,14 @@ px_manager_get_property (GObject    *object,
                          GValue     *value,
                          GParamSpec *pspec)
 {
+  PxManager *self = PX_MANAGER (object);
+
   switch (prop_id) {
     case PROP_CONFIG_PLUGIN:
+      g_value_set_string (value, g_strdup (self->config_plugin));
+      break;
+    case PROP_CONFIG_OPTION:
+      g_value_set_string (value, g_strdup (self->config_option));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
