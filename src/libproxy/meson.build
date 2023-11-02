@@ -29,6 +29,7 @@ libproxy = shared_library(
   link_args : vflag,
   link_depends : mapfile,
   soversion: '1',
+  version: meson.project_version(),
   install: true,
   install_rpath: pkglibdir,
 )
