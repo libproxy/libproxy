@@ -140,26 +140,46 @@ get_registry (const char  *key,
   return FALSE;
 }
 
+static char *
+build_proxy_uri (const char *uri)
+{
+  g_autofree char *scheme = g_uri_parse_scheme (uri);
+  char *proxy_server = NULL;
+  if (!scheme) {
+    proxy_server = g_strdup_printf ("http://%s", uri);
+  } else {
+    proxy_server = g_strdup (uri);
+  }
+
+  return proxy_server;
+}
+
 static GHashTable *
 parse_manual (char *manual)
 {
   g_auto (GStrv) split = NULL;
-  GHashTable *ret = g_hash_table_new (g_str_hash, g_str_equal);
+  GHashTable *ret = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
   /* We have to check for two formats:
-   * - 1.2.3.4:8080
-   * - ftp=1.2.4.5:8080;https=1.2.3.4:8080
+   * - [scheme://]1.2.3.4:8080
+   * - ftp=[scheme://]1.2.4.5:8080;https=[scheme://]1.2.3.4:8080
+   * where each entry may or may not contain a scheme to use for the proxy host.
+   * No scheme implies http://
    */
 
   split = g_strsplit (manual, ";", -1);
   for (int idx = 0; idx < g_strv_length (split); idx++) {
     if (!strchr (split[idx], '=')) {
-      g_hash_table_insert (ret, (char *)"http", g_strdup_printf ("http://%s", split[idx]));
+      char *proxy_uri = build_proxy_uri (split[idx]);
+      /* When a proxy server is provided without any scheme specifier, */
+      /* it should be used for all schemes that do not have an explicit entry */
+      g_hash_table_insert (ret, g_strdup ("default"), proxy_uri);
     } else {
       g_auto (GStrv) split_kv = g_strsplit (split[idx], "=", -1);
 
       if (g_strv_length (split_kv) == 2) {
-        g_hash_table_insert (ret, g_strdup (split_kv[0]), g_strdup_printf ("%s://%s", split_kv[0], split_kv[1]));
+        char *proxy_uri = build_proxy_uri (split_kv[1]);
+        g_hash_table_insert (ret, g_strdup (split_kv[0]), proxy_uri);
       }
     }
   }
@@ -228,6 +248,12 @@ px_config_windows_get_config (PxConfig     *self,
       }
 
       ret = g_hash_table_lookup (table, "socks");
+      if (ret) {
+        px_strv_builder_add_proxy (builder, ret);
+        return;
+      }
+
+      ret = g_hash_table_lookup (table, "default");
       if (ret) {
         px_strv_builder_add_proxy (builder, ret);
         return;
