@@ -192,7 +192,7 @@ px_config_windows_get_config (PxConfig     *self,
   guint32 enabled = 0;
 
   if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
-    g_auto (GStrv) no_proxy = g_strsplit (tmp, ",", -1);
+    g_auto (GStrv) no_proxy = g_strsplit (tmp, ";", -1);
 
     if (px_manager_is_ignore (uri, no_proxy))
       return;
