@@ -6,6 +6,7 @@ backend_config_h.set('HAVE_CONFIG_OSX', get_option('config-osx') and with_platfo
 backend_config_h.set('HAVE_CONFIG_SYSCONFIG', get_option('config-sysconfig'))
 backend_config_h.set('HAVE_CONFIG_WINDOWS', get_option('config-windows') and with_platform_windows)
 backend_config_h.set('HAVE_PACRUNNER_DUKTAPE', get_option('pacrunner-duktape'))
+backend_config_h.set('HAVE_CURL', get_option('curl'))
 configure_file(output: 'px-backend-config.h', configuration: backend_config_h)
 
 px_backend_sources = [

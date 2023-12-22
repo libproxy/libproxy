@@ -19,7 +19,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include "config.h"
 #include "px-backend-config.h"
 
 #include <glib.h>
