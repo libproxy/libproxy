@@ -110,11 +110,6 @@ curl_dep = dependency('libcurl', required: get_option('curl'))
 ws2_32_dep = cc.find_library('ws2_32', required : with_platform_windows)
 gsettings_desktop_schema = dependency('gsettings-desktop-schemas', required: get_option('config-gnome'))
 
-config_h = configuration_data()
-config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
-config_h.set('HAVE_CURL', get_option('curl'))
-configure_file(output: 'config.h', configuration: config_h)
-
 subdir('src')
 subdir('tests')
 subdir('docs')
