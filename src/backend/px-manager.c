@@ -212,7 +212,10 @@ px_manager_constructed (GObject *object)
   if (!self->force_online) {
     self->network_monitor = g_network_monitor_get_default ();
     g_signal_connect_object (G_OBJECT (self->network_monitor), "network-changed", G_CALLBACK (px_manager_on_network_changed), self, 0);
-    px_manager_on_network_changed (self->network_monitor, g_network_monitor_get_network_available (self->network_monitor), self);
+
+    /* Expect to be online until network-changed is emitted */
+    self->wpad = FALSE;
+    self->online = TRUE;
   } else {
     px_manager_on_network_changed (NULL, TRUE, self);
   }
