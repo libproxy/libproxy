@@ -143,9 +143,8 @@ get_registry (const char  *key,
 static char *
 build_proxy_uri (const char *uri)
 {
-  g_autofree char *scheme = g_uri_parse_scheme (uri);
   char *proxy_server = NULL;
-  if (!scheme) {
+  if (!g_strstr_len (uri, -1, "://")) {
     proxy_server = g_strdup_printf ("http://%s", uri);
   } else {
     proxy_server = g_strdup (uri);
