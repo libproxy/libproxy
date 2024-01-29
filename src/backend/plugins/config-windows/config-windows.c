@@ -220,7 +220,6 @@ px_config_windows_get_config (PxConfig     *self,
   /* WPAD */
   if (is_enabled (W32REG_OFFSET_WPAD)) {
     px_strv_builder_add_proxy (builder, "wpad://");
-    return;
   }
 
   /* PAC */
@@ -230,7 +229,6 @@ px_config_windows_get_config (PxConfig     *self,
 
     if (ac_uri) {
       px_strv_builder_add_proxy (builder, pac_uri);
-      return;
     }
   }
 
