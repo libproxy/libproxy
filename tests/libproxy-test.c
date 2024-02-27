@@ -69,6 +69,7 @@ test_libproxy_dup (Fixture    *self,
   pxProxyFactory *dup = g_boxed_copy (PX_TYPE_PROXY_FACTORY, self->pf);
 
   g_assert_nonnull (dup);
+  px_proxy_factory_free (dup);
 }
 
 static void
