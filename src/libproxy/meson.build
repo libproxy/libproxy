@@ -31,7 +31,6 @@ libproxy = shared_library(
   soversion: '1',
   version: meson.project_version(),
   install: true,
-  install_rpath: pkglibdir,
 )
 
 libproxy_dep = declare_dependency (

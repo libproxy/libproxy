@@ -33,14 +33,12 @@ px_backend_inc = include_directories('.')
 
 subdir('plugins')
 
-px_backend = shared_library(
+px_backend = static_library(
   'pxbackend-@0@'.format(api_version),
   px_backend_sources,
   dependencies: px_backend_deps,
   c_args: px_backend_c_args,
-  install: true,
-  install_dir: pkglibdir,
-  install_rpath: pkglibdir
+  gnu_symbol_visibility : 'hidden',
 )
 
 px_backend_dep = declare_dependency(
