@@ -66,7 +66,7 @@ static void
 test_libproxy_dup (Fixture    *self,
                    const void *user_data)
 {
-  pxProxyFactory *dup = g_boxed_copy (PX_TYPE_PROXY_FACTORY, &self->pf);
+  pxProxyFactory *dup = g_boxed_copy (PX_TYPE_PROXY_FACTORY, self->pf);
 
   g_assert_nonnull (dup);
 }
