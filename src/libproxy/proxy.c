@@ -48,6 +48,7 @@ px_proxy_factory_new (void)
 pxProxyFactory *
 px_proxy_factory_copy (pxProxyFactory *self)
 {
+  g_object_ref (self->manager);
   return g_memdup2 (self, sizeof (pxProxyFactory));
 }
 
