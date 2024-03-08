@@ -91,7 +91,7 @@ add_project_arguments(project_c_args, language: 'c')
 
 host_system = host_machine.system()
 with_platform_windows = host_system == 'windows'
-with_platform_darwin = ['darwin', 'ios'].contains(host_system)
+with_platform_darwin = host_system == 'darwin'
 
 module_suffix = []
 # Keep the autotools convention for shared module suffix because GModule
