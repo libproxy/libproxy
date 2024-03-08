@@ -100,7 +100,11 @@ add_project_link_arguments (project_link_args, language: 'c')
 
 host_system = host_machine.system()
 with_platform_windows = host_system == 'windows'
-with_platform_darwin = ['darwin', 'ios'].contains(host_system)
+with_platform_darwin = cc.compiles('''#include <Availability.h>
+#include <TargetConditionals.h>
+#if !TARGET_OS_OSX || __MAC_OS_X_VERSION_MIN_REQUIRED <= 100100L
+#error "Not building for macOS"
+#endif''')
 
 module_suffix = []
 # Keep the autotools convention for shared module suffix because GModule
