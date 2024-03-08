@@ -89,12 +89,8 @@ foreach arg: test_c_args
 endforeach
 add_project_arguments(project_c_args, language: 'c')
 
-_platforms = []
 host_system = host_machine.system()
-if host_machine.system() == 'windows'
-    _platforms = ['windows']
-endif
-with_platform_windows = _platforms.contains('windows')
+with_platform_windows = host_system == 'windows'
 with_platform_darwin = ['darwin', 'ios'].contains(host_system)
 
 module_suffix = []
