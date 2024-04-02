@@ -235,6 +235,9 @@ px_manager_dispose (GObject *object)
     g_clear_object (&list->data);
 
   g_clear_pointer (&self->config_plugin, g_free);
+#ifdef HAVE_CURL
+  g_clear_pointer (&self->curl, curl_easy_cleanup);
+#endif
 
   G_OBJECT_CLASS (px_manager_parent_class)->dispose (object);
 }
