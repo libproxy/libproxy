@@ -81,3 +81,10 @@ option(
   value: true,
   description: 'Whether to build introspection support'
 )
+
+option(
+  'release',
+  type: 'boolean',
+  value: false,
+  description: 'Whether to compile for release'
+)

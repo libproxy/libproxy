@@ -119,14 +119,17 @@ summary({
   'host endian' : host_machine.endian(),
   'host system' : host_system,
   'C Compiler' : cc.get_id(),
+  'Release' : get_option('release'),
 }, section: 'Build environment')
 
 summary({
   'Vapi' : get_option('vapi'),
 }, section: 'Options')
 
-# Install pre-commit hook
-hook = run_command(join_paths(meson.project_source_root(), 'data/install-git-hook.sh'), check: false)
-if hook.returncode() == 0
-  message(hook.stdout().strip())
+if not get_option('release')
+	# Install pre-commit hook
+	hook = run_command(join_paths(meson.project_source_root(), 'data/install-git-hook.sh'), check: false)
+	if hook.returncode() == 0
+	  message(hook.stdout().strip())
+	endif
 endif
