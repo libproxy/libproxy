@@ -33,7 +33,7 @@ pxProxyFactory *px_proxy_factory_copy (pxProxyFactory *self);
 G_DEFINE_BOXED_TYPE (pxProxyFactory,
                      px_proxy_factory,
                      (GBoxedCopyFunc)px_proxy_factory_copy,
-                     (GFreeFunc)px_proxy_factory_new);
+                     (GFreeFunc)px_proxy_factory_free);
 
 pxProxyFactory *
 px_proxy_factory_new (void)
