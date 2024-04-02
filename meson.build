@@ -89,6 +89,15 @@ foreach arg: test_c_args
 endforeach
 add_project_arguments(project_c_args, language: 'c')
 
+if cc.get_id() == 'gcc' or cc.get_id() == 'clang'
+warning_link_args = ['-Wl,-z,nodelete']
+else
+warning_link_args = []
+endif
+
+project_link_args = cc.get_supported_link_arguments(warning_link_args)
+add_project_link_arguments (project_link_args, language: 'c')
+
 _platforms = []
 host_system = host_machine.system()
 if host_machine.system() == 'windows'
