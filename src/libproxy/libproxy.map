@@ -1,3 +1,9 @@
+LIBPROXY_0.5.5 {
+  global:
+    px_proxy_factory_get_type;
+    px_proxy_factory_copy;
+};
+
 LIBPROXY_0.4.16 {
   global:
     px_proxy_factory_new;
