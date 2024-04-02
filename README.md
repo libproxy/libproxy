@@ -1,6 +1,7 @@
 ![build](https://github.com/libproxy/libproxy/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/github/libproxy/libproxy/branch/main/graph/badge.svg?token=UDbFtICyin)](https://codecov.io/github/libproxy/libproxy)
 [![Coverity](https://github.com/libproxy/libproxy/actions/workflows/coverity.yml/badge.svg)](https://scan.coverity.com/projects/libproxy)
+[![CodeQL](https://github.com/libproxy/libproxy/workflows/CodeQL/badge.svg)](https://github.com/libproxy/libproxy/actions?query=workflow%3ACodeQL)
 
 # Libproxy
 libproxy is a library that provides automatic proxy configuration management.
@@ -41,7 +42,7 @@ It doesn't matter! Just ask libproxy what proxy to use: you get simple code and 
 
 [![Arch package](https://repology.org/badge/version-for-repo/arch/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![Debian 12 package](https://repology.org/badge/version-for-repo/debian_12/libproxy.svg)](https://repology.org/project/libproxy/versions)
-[![Fedora 37 package](https://repology.org/badge/version-for-repo/fedora_37/libproxy.svg)](https://repology.org/project/libproxy/versions)
+[![Fedora 39 package](https://repology.org/badge/version-for-repo/fedora_39/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![Fedora Rawhide package](https://repology.org/badge/version-for-repo/fedora_rawhide/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![FreeBSD port](https://repology.org/badge/version-for-repo/freebsd/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![Gentoo package](https://repology.org/badge/version-for-repo/gentoo/libproxy.svg)](https://repology.org/project/libproxy/versions)
@@ -50,5 +51,5 @@ It doesn't matter! Just ask libproxy what proxy to use: you get simple code and 
 [![MSYS2 mingw package](https://repology.org/badge/version-for-repo/msys2_mingw/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![openSUSE Leap 15.5 package](https://repology.org/badge/version-for-repo/opensuse_leap_15_5/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![openSUSE Tumbleweed package](https://repology.org/badge/version-for-repo/opensuse_tumbleweed/libproxy.svg)](https://repology.org/project/libproxy/versions)
-[![Ubuntu 23.04 package](https://repology.org/badge/version-for-repo/ubuntu_23_04/libproxy.svg)](https://repology.org/project/libproxy/versions)
+[![Ubuntu 23.10 package](https://repology.org/badge/version-for-repo/ubuntu_23_10/libproxy.svg)](https://repology.org/project/libproxy/versions)
 
