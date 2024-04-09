@@ -53,6 +53,10 @@
 #include <plugins/config-windows/config-windows.h>
 #endif
 
+#ifdef HAVE_CONFIG_XDP
+#include <plugins/config-xdp/config-xdp.h>
+#endif
+
 #ifdef HAVE_PACRUNNER_DUKTAPE
 #include <plugins/pacrunner-duktape/pacrunner-duktape.h>
 #endif
@@ -193,6 +197,9 @@ px_manager_constructed (GObject *object)
 #endif
 #ifdef HAVE_CONFIG_WINDOWS
   px_manager_add_config_plugin (self, PX_CONFIG_TYPE_WINDOWS);
+#endif
+#ifdef HAVE_CONFIG_XDP
+  px_manager_add_config_plugin (self, PX_CONFIG_TYPE_XDP);
 #endif
 
   g_debug ("Active config plugins:");

@@ -55,6 +55,13 @@ option(
 )
 
 option(
+  'config-xdp',
+  type: 'boolean',
+  value: true,
+  description: 'Whether to build support for XDG Desktop Portal (Flatpak)'
+)
+
+option(
   'pacrunner-duktape',
   type: 'boolean',
   value: true,
