@@ -6,7 +6,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Dependencies
       run: |
         sudo apt-get update
@@ -29,25 +29,26 @@ jobs:
         ninja test -C build
         ninja coverage -C build
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v3
       with:
         path: ./build/docs/libproxy-1.0/
     - name: CodeCov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # required
 
   build-osx:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: |
-          3.10
+          3.12
     - name: Setup
       run: |
         pip install meson ninja
-        brew install icu4c gobject-introspection duktape gcovr gi-docgen curl vala gsettings-desktop-schemas
-        echo 'PKG_CONFIG_PATH=/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/gi-docgen/lib/pkgconfig' >> $GITHUB_ENV
+        brew install gobject-introspection duktape gcovr gi-docgen vala gsettings-desktop-schemas
     - name: Build and Test
       run: |
         meson setup build
@@ -79,8 +80,8 @@ jobs:
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-vala
             mingw-w64-x86_64-gsettings-desktop-schemas
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.9'
       - name: Build and Test
