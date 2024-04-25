@@ -23,7 +23,7 @@ jobs:
       COVERITY_SCAN_NOTIFICATION_EMAIL: "${{ secrets.COVERITY_SCAN_NOTIFICATION_EMAIL }}"
     steps:
       - name: Repository checkout
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@4
       - name: Ubuntu Setup
         if: runner.os == 'Linux'
         run: |
