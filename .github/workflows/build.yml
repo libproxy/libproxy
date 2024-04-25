@@ -51,7 +51,7 @@ jobs:
         brew install gobject-introspection duktape gcovr gi-docgen vala gsettings-desktop-schemas
     - name: Build and Test
       run: |
-        meson setup build
+        meson setup build -Ddocs=false
         ninja -C build
         ninja -C build test
 
