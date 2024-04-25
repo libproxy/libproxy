@@ -73,7 +73,6 @@ void
 px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
                                      const char        *config_file)
 {
-  g_autofree char *config = NULL;
   g_autoptr (GFile) file = NULL;
   g_autoptr (GError) error = NULL;
   g_autoptr (GFileInputStream) istr = NULL;
