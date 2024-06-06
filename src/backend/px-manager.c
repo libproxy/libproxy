@@ -716,7 +716,7 @@ ignore_domain (GUri *uri,
   if (g_strcmp0 (ignore, "*") == 0)
     return TRUE;
 
-  if (!host)
+  if (!host || !ignore)
     return FALSE;
 
   ignore_split = g_strsplit (ignore, ":", -1);
