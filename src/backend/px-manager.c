@@ -525,6 +525,8 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
         if (test_uri)
           px_strv_builder_add_proxy (builder, proxy_string);
       }
+    } else if (g_strv_length (word_split) == 1 && g_ascii_strncasecmp (word_split[0], "direct", 6) == 0) {
+      px_strv_builder_add_proxy (builder, "direct://");
     }
   }
 }
