@@ -234,6 +234,7 @@ get_proxies_pac (gpointer data)
   config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
   g_assert_nonnull (config);
   g_assert_cmpstr (config[0], ==, "http://127.0.0.1:1984");
+  g_assert_cmpstr (config[1], ==, "direct://");
 
   config = px_manager_get_proxies_sync (self->manager, "https://192.168.10.4");
   g_assert_nonnull (config);

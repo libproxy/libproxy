@@ -26,12 +26,12 @@ function FindProxyForURL(url, host)
 
   alert("DEFAULT")
 
+  if (dnsDomainIs(host, "www.example.com"))
+    return "PROXY 127.0.0.1:1984; DIRECT"
+
   /* Don't send non-FQDN or private IP auths to us */
   if (isPlainHostName(host) || isInNet(resolved_ip, "192.0.2.0","255.255.255.0") || privateIP.test(resolved_ip))
     return "DIRECT";
-
-  if (dnsDomainIs(host, "www.example.com"))
-    return "PROXY 127.0.0.1:1984"
 
   /* Return nothing to check wrong output */
 }
