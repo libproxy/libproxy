@@ -669,6 +669,10 @@ px_manager_get_proxies_sync (PxManager  *self,
 
     g_debug ("%s: Config[%d] = %s", __FUNCTION__, idx, config[idx]);
 
+    /* Ignore invalid proxy URL, so we won't call GUri API on NULL. */
+    if (!conf_url)
+      continue;
+
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
       GList *list;
 
