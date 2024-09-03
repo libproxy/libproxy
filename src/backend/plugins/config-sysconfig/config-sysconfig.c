@@ -114,6 +114,7 @@ px_config_sysconfig_set_config_file (PxConfigSysConfig *self,
       value = g_string_new (kv[1]);
       g_string_replace (value, "\"", "", 0);
       g_string_replace (value, "\r", "", 0);
+      g_string_replace (value, " ", "", 0);
 
       if (strcmp (kv[0], "PROXY_ENABLED") == 0) {
         self->proxy_enabled = g_ascii_strncasecmp (value->str, "yes", 3) == 0;
