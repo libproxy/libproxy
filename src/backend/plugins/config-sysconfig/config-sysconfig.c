@@ -183,6 +183,7 @@ px_config_sysconfig_dispose (GObject *object)
 
   g_clear_object (&self->monitor);
   g_clear_pointer (&self->no_proxy, g_strfreev);
+  g_clear_pointer (&self->config_file, g_free);
 
   G_OBJECT_CLASS (px_config_sysconfig_parent_class)->dispose (object);
 }
