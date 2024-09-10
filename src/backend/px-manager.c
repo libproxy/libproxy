@@ -235,11 +235,8 @@ px_manager_dispose (GObject *object)
 {
   PxManager *self = PX_MANAGER (object);
 
-  for (GList *list = self->config_plugins; list && list->data; list = list->next)
-    g_clear_object (&list->data);
-
-  for (GList *list = self->pacrunner_plugins; list && list->data; list = list->next)
-    g_clear_object (&list->data);
+  g_clear_list (&self->config_plugins, g_object_unref);
+  g_clear_list (&self->pacrunner_plugins, g_object_unref);
 
   g_clear_pointer (&self->config_plugin, g_free);
 #ifdef HAVE_CURL
