@@ -50,6 +50,7 @@ struct _PxConfigKde {
   char *socks_proxy;
   KdeProxyType proxy_type;
   char *pac_script;
+  gboolean reversed_exception;
 };
 
 G_DEFINE_FINAL_TYPE_WITH_CODE (PxConfigKde,
@@ -149,6 +150,8 @@ px_config_kde_set_config_file (PxConfigKde *self,
         self->pac_script = g_strdup (value->str);
       } else if (strcmp (kv[0], "ProxyType") == 0) {
         self->proxy_type = atoi (value->str);
+      } else if (strcmp (kv[0], "ReversedException") == 0) {
+        self->reversed_exception = !!atoi (value->str);
       }
     }
   } while (line);
@@ -245,8 +248,14 @@ px_config_kde_get_config (PxConfig     *config,
   if (self->proxy_type == KDE_PROXY_TYPE_NONE)
     return;
 
-  if (px_manager_is_ignore (uri, self->no_proxy))
-    return;
+  if (self->reversed_exception) {
+    /* ReversedException flips the meaning of the ignore list */
+    if (!px_manager_is_ignore (uri, self->no_proxy))
+      return;
+  } else {
+    if (px_manager_is_ignore (uri, self->no_proxy))
+      return;
+  }
 
   scheme = g_uri_get_scheme (uri);
 
