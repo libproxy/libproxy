@@ -61,7 +61,7 @@ ninja -C build install
 ### Dependencies
 
 ```
-pacman -S base-devel git mingw-w64-x86_64-toolchain mingw-w64-x86_64-ccache mingw-w64-x86_64-pkg-config mingw-w64-x86_64-gobject-introspection mingw-w64-x86_64-python-gobject mingw-w64-x86_64-meson mingw-w64-x86_64-glib mingw-w64-x86_64-duktape mingw-w64-x86_64-gi-docgen mingw-w64-x86_64-curl mingw-w64-x86_64-vala
+pacman -S base-devel git mingw-w64-x86_64-toolchain mingw-w64-x86_64-ccache mingw-w64-x86_64-pkg-config mingw-w64-x86_64-gobject-introspection mingw-w64-x86_64-python-gobject mingw-w64-x86_64-meson mingw-w64-x86_64-glib2 mingw-w64-x86_64-duktape mingw-w64-x86_64-gi-docgen mingw-w64-x86_64-curl mingw-w64-x86_64-vala mingw-w64-x86_64-gsettings-desktop-schemas
 ```
 
 ### Build Setup
