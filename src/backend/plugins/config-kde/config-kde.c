@@ -147,7 +147,10 @@ px_config_kde_set_config_file (PxConfigKde *self,
       } else if (strcmp (kv[0], "NoProxyFor") == 0) {
         self->no_proxy = g_strsplit (value->str, ",", -1);
       } else if (strcmp (kv[0], "Proxy Config Script") == 0) {
-        self->pac_script = g_strdup (value->str);
+        if (!g_str_has_prefix (value->str, "/"))
+          self->pac_script = g_strdup (value->str);
+        else
+          self->pac_script = g_strconcat ("file://", value->str, NULL);
       } else if (strcmp (kv[0], "ProxyType") == 0) {
         self->proxy_type = atoi (value->str);
       } else if (strcmp (kv[0], "ReversedException") == 0) {
