@@ -177,6 +177,38 @@ test_config_kde_pac (void)
 }
 
 static void
+test_config_kde_pac_without_scheme (void)
+{
+  int idx;
+
+  for (idx = 0; idx < G_N_ELEMENTS (config_kde_pac_test_set); idx++) {
+    g_autoptr (PxManager) manager = NULL;
+    g_autoptr (GError) error = NULL;
+    g_autoptr (GUri) uri = NULL;
+    g_auto (GStrv) config = NULL;
+    ConfigKdeTest test = config_kde_pac_test_set[idx];
+    g_autofree char *path = g_test_build_filename (G_TEST_DIST, "data", "sample-kde-proxy-pac-without-scheme", NULL);
+
+    manager = px_test_manager_new ("config-kde", path);
+    g_clear_error (&error);
+
+    uri = g_uri_parse (test.url, G_URI_FLAGS_NONE, &error);
+    if (!uri) {
+      g_warning ("Could not parse url '%s': %s", test.url, error ? error->message : "");
+      g_assert_not_reached ();
+    }
+
+    config = px_manager_get_configuration (manager, uri);
+    if (test.success)
+      g_assert_cmpstr (config[0], ==, "pac+file:///px-manager-sample.pac");
+    else
+      g_assert_cmpstr (config[0], !=, "pac+file:///px-manager-sample.pac");
+
+    g_clear_object (&manager);
+  }
+}
+
+static void
 test_config_kde_fail (void)
 {
   g_autoptr (PxManager) manager = NULL;
@@ -209,6 +241,7 @@ main (int    argc,
   g_test_add_func ("/config/kde/manual", test_config_kde_manual);
   g_test_add_func ("/config/kde/wpad", test_config_kde_wpad);
   g_test_add_func ("/config/kde/pac", test_config_kde_pac);
+  g_test_add_func ("/config/kde/pac_without_schee", test_config_kde_pac_without_scheme);
   g_test_add_func ("/config/kde/fail", test_config_kde_fail);
 
   return g_test_run ();
