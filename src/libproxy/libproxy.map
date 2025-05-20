@@ -4,6 +4,8 @@ LIBPROXY_0.4.16 {
     px_proxy_factory_get_proxies;
     px_proxy_factory_free_proxies;
     px_proxy_factory_free;
+  local:
+    *;
 };
 
 LIBPROXY_0.5.5 {
