@@ -17,6 +17,17 @@ libproxy_deps = [
 mapfile = 'libproxy.map'
 vscript = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
 vflag = []
+
+test_link_args = [
+  '-Wl,--undefined-version'
+]
+
+foreach arg: test_link_args
+  if cc.has_multi_link_arguments(arg)
+    project_c_args += arg
+  endif
+endforeach
+
 if cc.has_multi_link_arguments(vscript)
   vflag += vscript
 endif
