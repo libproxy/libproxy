@@ -68,7 +68,9 @@ px_config_gnome_init (PxConfigGnome *self)
     return;
 
   /* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
-  if (strstr (desktops, "GNOME") == NULL)
+  if (strstr (desktops, "GNOME") == NULL &&
+      strstr (desktops, "MATE") == NULL &&
+      strstr (desktops, "Cinnamon") == NULL)
     return;
 
   source = g_settings_schema_source_get_default ();
