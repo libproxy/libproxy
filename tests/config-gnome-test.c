@@ -212,6 +212,52 @@ test_config_gnome_fail (Fixture    *self,
   g_assert_null (config[0]);
 }
 
+static void
+test_config_gnome_mate (Fixture    *self,
+                        const void *user_data)
+{
+  g_autoptr (PxManager) manager = NULL;
+  g_autoptr (GError) error = NULL;
+  g_auto (GStrv) config = NULL;
+  g_autoptr (GUri) uri = NULL;
+
+  if (!g_setenv ("XDG_CURRENT_DESKTOP", "MATE", TRUE)) {
+    g_warning ("Could not set XDG_CURRENT_DESKTOP environment, abort");
+    return;
+  }
+
+  manager = px_test_manager_new ("config-gnome", NULL);
+  g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
+  g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
+
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
+  config = px_manager_get_configuration (manager, uri);
+  g_assert_cmpstr (config[0], ==, "wpad://");
+}
+
+static void
+test_config_gnome_cinnamon (Fixture    *self,
+                            const void *user_data)
+{
+  g_autoptr (PxManager) manager = NULL;
+  g_autoptr (GError) error = NULL;
+  g_auto (GStrv) config = NULL;
+  g_autoptr (GUri) uri = NULL;
+
+  if (!g_setenv ("XDG_CURRENT_DESKTOP", "X-Cinnamon", TRUE)) {
+    g_warning ("Could not set XDG_CURRENT_DESKTOP environment, abort");
+    return;
+  }
+
+  manager = px_test_manager_new ("config-gnome", NULL);
+  g_settings_set_enum (self->proxy_settings, "mode", GNOME_PROXY_MODE_AUTO);
+  g_settings_set_string (self->proxy_settings, "autoconfig-url", "");
+
+  uri = g_uri_parse ("https://www.example.com", G_URI_FLAGS_NONE, &error);
+  config = px_manager_get_configuration (manager, uri);
+  g_assert_cmpstr (config[0], ==, "wpad://");
+}
+
 int
 main (int    argc,
       char **argv)
@@ -225,6 +271,8 @@ main (int    argc,
   g_test_add ("/config/gnome/manual_auth", Fixture, NULL, fixture_setup, test_config_gnome_manual_auth, fixture_teardown);
   g_test_add ("/config/gnome/auto", Fixture, NULL, fixture_setup, test_config_gnome_auto, fixture_teardown);
   g_test_add ("/config/gnome/fail", Fixture, NULL, fixture_setup, test_config_gnome_fail, fixture_teardown);
+  g_test_add ("/config/gnome/mate", Fixture, NULL, fixture_setup, test_config_gnome_mate, fixture_teardown);
+  g_test_add ("/config/gnome/cinnamon", Fixture, NULL, fixture_setup, test_config_gnome_cinnamon, fixture_teardown);
 
   return g_test_run ();
 }
