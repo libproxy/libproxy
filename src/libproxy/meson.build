@@ -15,10 +15,16 @@ libproxy_deps = [
 ]
 
 mapfile = 'libproxy.map'
-vscript = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
+vscript = '-Wl,--version-script=' + meson.current_source_dir()
 vflag = []
-if cc.has_multi_link_arguments(vscript)
-  vflag += vscript
+if cc.has_multi_link_arguments(vscript / 'test.map')
+  vflag += vscript / mapfile
+elif build_machine.system() == 'sunos'
+  # mapfile option for Solaris/illumos ld
+  mapopt = '-Wl,-M' + meson.current_source_dir()
+  if cc.has_multi_link_arguments(mapopt / 'test.map')
+    vflag += mapopt / mapfile
+  endif
 endif
 
 libproxy = shared_library(
