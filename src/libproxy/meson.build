@@ -15,14 +15,19 @@ libproxy_deps = [
 ]
 
 mapfile = 'libproxy.map'
+mapfile_test = 'test.map'
 vscript = '-Wl,--version-script=' + meson.current_source_dir()
+
+vscript_test = join_paths(vscript, mapfile_test)
+vscript_mapfile = join_paths(vscript, mapfile)
+
 vflag = []
-if cc.has_multi_link_arguments(vscript / 'test.map')
-  vflag += vscript / mapfile
+if cc.has_link_argument(vscript_test)
+  vflag += vscript_mapfile
 elif build_machine.system() == 'sunos'
   # mapfile option for Solaris/illumos ld
   mapopt = '-Wl,-M' + meson.current_source_dir()
-  if cc.has_multi_link_arguments(mapopt / 'test.map')
+  if cc.has_multi_link_arguments(mapopt / mapfile_test)
     vflag += mapopt / mapfile
   endif
 endif
