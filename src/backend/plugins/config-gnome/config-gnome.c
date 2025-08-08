@@ -70,6 +70,7 @@ px_config_gnome_init (PxConfigGnome *self)
   /* Remember that XDG_CURRENT_DESKTOP is a list of strings. */
   if (strstr (desktops, "GNOME") == NULL &&
       strstr (desktops, "MATE") == NULL &&
+      strstr (desktops, "Pantheon") == NULL &&
       strstr (desktops, "Cinnamon") == NULL)
     return;
 
