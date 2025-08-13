@@ -207,11 +207,13 @@ px_config_windows_get_config (PxConfig     *self,
                               GUri         *uri,
                               GStrvBuilder *builder)
 {
-  char *tmp = NULL;
+  g_autofree char *tmp1 = NULL;
+  g_autofree char *tmp2 = NULL;
+  g_autofree char *tmp3 = NULL;
   guint32 enabled = 0;
 
-  if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp, NULL, NULL)) {
-    g_auto (GStrv) no_proxy = g_strsplit (tmp, ";", -1);
+  if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp1, NULL, NULL)) {
+    g_auto (GStrv) no_proxy = g_strsplit (tmp1, ";", -1);
 
     if (px_manager_is_ignore (uri, no_proxy))
       return;
@@ -223,9 +225,9 @@ px_config_windows_get_config (PxConfig     *self,
   }
 
   /* PAC */
-  if (is_enabled (W32REG_OFFSET_PAC) && get_registry (W32REG_BASEKEY, "AutoConfigURL", &tmp, NULL, NULL)) {
-    g_autofree char *pac_uri = g_strconcat ("pac+", tmp, NULL);
-    GUri *ac_uri = g_uri_parse (tmp, G_URI_FLAGS_NONE, NULL);
+  if (is_enabled (W32REG_OFFSET_PAC) && get_registry (W32REG_BASEKEY, "AutoConfigURL", &tmp2, NULL, NULL)) {
+    g_autofree char *pac_uri = g_strconcat ("pac+", tmp2, NULL);
+    GUri *ac_uri = g_uri_parse (tmp2, G_URI_FLAGS_NONE, NULL);
 
     if (ac_uri) {
       px_strv_builder_add_proxy (builder, pac_uri);
@@ -233,8 +235,8 @@ px_config_windows_get_config (PxConfig     *self,
   }
 
   /* Manual proxy */
-  if (get_registry (W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled && get_registry (W32REG_BASEKEY, "ProxyServer", &tmp, NULL, NULL)) {
-    g_autoptr (GHashTable) table = parse_manual (tmp);
+  if (get_registry (W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled && get_registry (W32REG_BASEKEY, "ProxyServer", &tmp3, NULL, NULL)) {
+    g_autoptr (GHashTable) table = parse_manual (tmp3);
     const char *scheme = g_uri_get_scheme (uri);
 
     if (table) {
