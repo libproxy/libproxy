@@ -45,6 +45,17 @@ libproxy = shared_library(
   install_rpath: pkglibdir,
 )
 
+libproxy_static = static_library(
+  'proxy',
+  libproxy_sources,
+  include_directories: px_backend_inc,
+  dependencies: libproxy_deps,
+  link_args : vflag,
+  link_depends : mapfile,
+  install: true,
+  install_rpath: pkglibdir,
+)
+
 libproxy_dep = declare_dependency (
   include_directories: libproxy_inc,
   link_with: libproxy,
