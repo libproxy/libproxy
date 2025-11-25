@@ -78,6 +78,8 @@ px_config_xdp_dispose (GObject *object)
   PxConfigXdp *self = PX_CONFIG_XDP (object);
 
   g_clear_object (&self->proxy_resolver);
+
+  G_OBJECT_CLASS (px_config_xdp_parent_class)->dispose (object);
 }
 
 static void
