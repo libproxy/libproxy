@@ -59,7 +59,7 @@ px_config_xdp_init (PxConfigXdp *self)
 
   connection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &error);
   if (error) {
-    g_warning ("Could not access dbus session: %s", error->message);
+    g_debug ("Could not access dbus session: %s", error->message);
     return;
   }
 
