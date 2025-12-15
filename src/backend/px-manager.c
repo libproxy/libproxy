@@ -399,10 +399,10 @@ px_manager_pac_download (PxManager  *self,
   if (g_str_has_prefix (url, "pac+"))
     url += 4;
 
-  if (curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, 1) != CURLE_OK)
+  if (curl_easy_setopt (self->curl, CURLOPT_NOSIGNAL, (long)1) != CURLE_OK)
     g_debug ("Could not set NOSIGNAL, continue");
 
-  if (curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, 1) != CURLE_OK)
+  if (curl_easy_setopt (self->curl, CURLOPT_FOLLOWLOCATION, (long)1) != CURLE_OK)
     g_debug ("Could not set FOLLOWLOCATION, continue");
 
   if (curl_easy_setopt (self->curl, CURLOPT_NOPROXY, "*") != CURLE_OK) {
@@ -410,7 +410,7 @@ px_manager_pac_download (PxManager  *self,
     return NULL;
   }
 
-  if (curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30) != CURLE_OK)
+  if (curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, (long)30) != CURLE_OK)
     g_debug ("Could not set CONENCTIONTIMEOUT, continue");
 
   if (curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy") != CURLE_OK)
