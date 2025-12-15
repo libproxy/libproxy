@@ -32,7 +32,7 @@ elif build_machine.system() == 'sunos'
   endif
 endif
 
-libproxy = shared_library(
+libproxy = library(
   'proxy',
   libproxy_sources,
   include_directories: px_backend_inc,
@@ -41,17 +41,6 @@ libproxy = shared_library(
   link_depends : mapfile,
   soversion: '1',
   version: meson.project_version(),
-  install: true,
-  install_rpath: pkglibdir,
-)
-
-libproxy_static = static_library(
-  'proxy',
-  libproxy_sources,
-  include_directories: px_backend_inc,
-  dependencies: libproxy_deps,
-  link_args : vflag,
-  link_depends : mapfile,
   install: true,
   install_rpath: pkglibdir,
 )
