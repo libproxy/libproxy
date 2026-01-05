@@ -66,7 +66,7 @@ install_headers(libproxy_headers, subdir: 'libproxy')
 
 pkg = import('pkgconfig')
 pkg.generate(
-  libraries: [libproxy],
+  libraries: [libproxy, px_backend],
   subdirs: 'libproxy',
   version: meson.project_version(),
   name: 'libproxy',
