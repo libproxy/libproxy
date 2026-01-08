@@ -6,7 +6,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Dependencies
       run: |
         sudo apt-get update
@@ -29,7 +29,7 @@ jobs:
         ninja test -C build
         ninja coverage -C build
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         path: ./build/docs/libproxy-1.0/
         if-no-files-found: error
@@ -41,11 +41,11 @@ jobs:
   build-osx:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
       with:
         python-version: |
-          3.12
+          3.13
     - name: Setup
       run: |
         pip install meson ninja
@@ -84,8 +84,8 @@ jobs:
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-vala
             mingw-w64-x86_64-gsettings-desktop-schemas
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.9'
       - name: Build and Test
