@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: github.repository == 'libproxy/libproxy'
     env:
       # Set in repo settings -> secrets -> actions
@@ -23,7 +23,7 @@ jobs:
       COVERITY_SCAN_NOTIFICATION_EMAIL: "${{ secrets.COVERITY_SCAN_NOTIFICATION_EMAIL }}"
     steps:
       - name: Repository checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Ubuntu Setup
         if: runner.os == 'Linux'
         run: |
