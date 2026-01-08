@@ -59,6 +59,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     continue-on-error: true
+    env:
+      CC: gcc
+      CXX: g++
     defaults:
       run:
         shell: msys2 {0}
