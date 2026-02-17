@@ -1,7 +1,7 @@
 ![build](https://github.com/libproxy/libproxy/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/github/libproxy/libproxy/branch/main/graph/badge.svg?token=UDbFtICyin)](https://codecov.io/github/libproxy/libproxy)
 [![Coverity](https://github.com/libproxy/libproxy/actions/workflows/coverity.yml/badge.svg)](https://scan.coverity.com/projects/libproxy)
-[![CodeQL](https://github.com/libproxy/libproxy/workflows/CodeQL/badge.svg)](https://github.com/libproxy/libproxy/actions?query=workflow%3ACodeQL)
+[![CodeQL Advanced](https://github.com/libproxy/libproxy/actions/workflows/codeql.yml/badge.svg)](https://github.com/libproxy/libproxy/actions/workflows/codeql.yml)
 
 # Libproxy
 libproxy is a library that provides automatic proxy configuration management.
