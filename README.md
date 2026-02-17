@@ -41,8 +41,8 @@ It doesn't matter! Just ask libproxy what proxy to use: you get simple code and 
 ## Repology
 
 [![Arch package](https://repology.org/badge/version-for-repo/arch/libproxy.svg)](https://repology.org/project/libproxy/versions)
-[![Debian 13 package](https://repology.org/badge/version-for-repo/debian_13/libproxy.svg)](https://repology.org/project/libproxy/versions)
-[![Fedora 40 package](https://repology.org/badge/version-for-repo/fedora_40/libproxy.svg)](https://repology.org/project/libproxy/versions)
+[![Debian 14 package](https://repology.org/badge/version-for-repo/debian_14/libproxy.svg)](https://repology.org/project/libproxy/versions)
+[![Fedora 43 package](https://repology.org/badge/version-for-repo/fedora_43/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![Fedora Rawhide package](https://repology.org/badge/version-for-repo/fedora_rawhide/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![FreeBSD port](https://repology.org/badge/version-for-repo/freebsd/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![Gentoo package](https://repology.org/badge/version-for-repo/gentoo/libproxy.svg)](https://repology.org/project/libproxy/versions)
@@ -51,5 +51,5 @@ It doesn't matter! Just ask libproxy what proxy to use: you get simple code and 
 [![MSYS2 mingw package](https://repology.org/badge/version-for-repo/msys2_mingw/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![openSUSE Leap 15.6 package](https://repology.org/badge/version-for-repo/opensuse_leap_15_6/libproxy.svg)](https://repology.org/project/libproxy/versions)
 [![openSUSE Tumbleweed package](https://repology.org/badge/version-for-repo/opensuse_tumbleweed/libproxy.svg)](https://repology.org/project/libproxy/versions)
-[![Ubuntu 24.04 package](https://repology.org/badge/version-for-repo/ubuntu_24_04/libproxy.svg)](https://repology.org/project/libproxy/versions)
+[![Ubuntu 26.04 package](https://repology.org/badge/version-for-repo/ubuntu_26_04/libproxy.svg)](https://repology.org/project/libproxy/versions)
 
