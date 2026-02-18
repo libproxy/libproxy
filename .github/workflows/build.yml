@@ -21,7 +21,7 @@ jobs:
           libcurl4-openssl-dev \
           valac
     - name: Build setup
-      run: meson setup build -Db_coverage=true
+      run: meson setup build -Db_coverage=true --wrap-mode=nodownload
     - name: Build
       run: ninja -C build
     - name: Tests and Coverage
@@ -52,11 +52,29 @@ jobs:
         brew install gobject-introspection duktape gcovr gi-docgen vala gsettings-desktop-schemas
     - name: Build and Test
       run: |
-        meson setup build -Ddocs=false
+        meson setup build -Ddocs=false --wrap-mode=nodownload
         ninja -C build
         ninja -C build test
 
-  build-windows:
+  build-msvc:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.9'
+    - name: Setup
+      run: |
+        pip install meson ninja
+    - name: Build and test
+      run: |
+        meson setup --vsenv build -Ddocs=false -Dcurl=false -Dconfig-gnome=false -Dconfig-osx=false -Dconfig-kde=false -Dconfig-xdp=false -Dpacrunner-duktape=false -Dintrospection=false
+        meson compile -C build
+        meson test -C build
+
+  build-msys2:
     runs-on: windows-latest
     continue-on-error: true
     env:
@@ -91,7 +109,7 @@ jobs:
       - name: Build and Test
        # Disable docs for the moment until msys2 gi-docgen update has landed
         run: |
-          meson setup build -Ddocs=false
+          meson setup build -Ddocs=false --wrap-mode=nodownload
           ninja -C build
           ninja -C build test
 
