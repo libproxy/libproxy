@@ -662,7 +662,7 @@ px_manager_get_proxies_sync (PxManager  *self,
   config = px_manager_get_configuration (self, uri);
 
   for (int idx = 0; idx < g_strv_length (config); idx++) {
-    GUri *conf_url = g_uri_parse (config[idx], G_URI_FLAGS_NONE, NULL);
+    g_autoptr (GUri) conf_url = g_uri_parse (config[idx], G_URI_FLAGS_NONE, NULL);
 
     g_debug ("%s: Config[%d] = %s", __FUNCTION__, idx, config[idx]);
 
@@ -679,7 +679,9 @@ px_manager_get_proxies_sync (PxManager  *self,
         px_manager_run_pac (pacrunner, self->pac_data, uri, builder);
       }
     } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
-      px_strv_builder_add_proxy (builder, g_uri_to_string (conf_url));
+      g_autofree char *conf_url_string = g_uri_to_string (conf_url);
+
+      px_strv_builder_add_proxy (builder, conf_url_string);
     }
   }
 
@@ -797,7 +799,7 @@ ignore_ip (GUri *uri,
    * uri must be in ip string format, no host name resolution is done
    */
   if (uri_address && strchr (ignore, '/')) {
-    GInetAddressMask *address_mask = g_inet_address_mask_new_from_string (ignore, &error);
+    g_autoptr (GInetAddressMask) address_mask = g_inet_address_mask_new_from_string (ignore, &error);
 
     if (!address_mask) {
       g_warning ("Could not parse ignore mask: %s", error->message);
