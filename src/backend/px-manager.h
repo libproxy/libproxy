@@ -22,6 +22,7 @@
 #pragma once
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -37,21 +38,21 @@ typedef enum {
 } PxManagerErrorCode;
 
 
-PxManager *px_manager_new (void);
-PxManager *px_manager_new_with_options (const char *optname1, ...);
+G_MODULE_EXPORT PxManager *px_manager_new (void);
+G_MODULE_EXPORT PxManager *px_manager_new_with_options (const char *optname1, ...);
 
-char **px_manager_get_proxies_sync (PxManager   *self,
+G_MODULE_EXPORT char **px_manager_get_proxies_sync (PxManager   *self,
                                     const char  *url);
 
-GBytes *px_manager_pac_download (PxManager  *self,
+G_MODULE_EXPORT GBytes *px_manager_pac_download (PxManager  *self,
                                  const char *uri);
 
-char **px_manager_get_configuration (PxManager  *self,
+G_MODULE_EXPORT char **px_manager_get_configuration (PxManager  *self,
                                      GUri       *uri);
 
-void px_strv_builder_add_proxy (GStrvBuilder *builder,
+G_MODULE_EXPORT void px_strv_builder_add_proxy (GStrvBuilder *builder,
                                 const char   *value);
 
-gboolean px_manager_is_ignore (GUri *uri, GStrv ignores);
+G_MODULE_EXPORT gboolean px_manager_is_ignore (GUri *uri, GStrv ignores);
 
 G_END_DECLS

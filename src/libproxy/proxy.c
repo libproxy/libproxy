@@ -56,10 +56,7 @@ char **
 px_proxy_factory_get_proxies (pxProxyFactory *self,
                               const char     *url)
 {
-  g_auto (GStrv) result = NULL;
-
-  result = px_manager_get_proxies_sync (self->manager, url);
-  return g_steal_pointer (&result);
+  return px_manager_get_proxies_sync (self->manager, url);
 }
 
 void

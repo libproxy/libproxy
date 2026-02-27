@@ -156,7 +156,7 @@ build_proxy_uri (const char *uri)
 static GHashTable *
 parse_manual (char *manual)
 {
-  g_auto (GStrv) split = NULL;
+  char **split = NULL;
   GHashTable *ret = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
   /* We have to check for two formats:
@@ -174,14 +174,18 @@ parse_manual (char *manual)
       /* it should be used for all schemes that do not have an explicit entry */
       g_hash_table_insert (ret, g_strdup ("default"), proxy_uri);
     } else {
-      g_auto (GStrv) split_kv = g_strsplit (split[idx], "=", -1);
+      char **split_kv = g_strsplit (split[idx], "=", -1);
 
       if (g_strv_length (split_kv) == 2) {
         char *proxy_uri = build_proxy_uri (split_kv[1]);
         g_hash_table_insert (ret, g_strdup (split_kv[0]), proxy_uri);
       }
+
+      g_clear_pointer (&split_kv, g_strfreev);
     }
   }
+
+  g_clear_pointer (&split, g_strfreev);
 
   return ret;
 }
@@ -189,7 +193,7 @@ parse_manual (char *manual)
 static gboolean
 is_enabled (char type)
 {
-  g_autofree char *data = NULL;
+  char *data = NULL;
   guint32 dlen = 0;
   gboolean result = FALSE;
 
@@ -199,6 +203,7 @@ is_enabled (char type)
   if (dlen >= 9)
     result = (data[8] & type) == type;
 
+  g_clear_pointer (&data, g_free);
   return result;
 }
 
@@ -207,15 +212,20 @@ px_config_windows_get_config (PxConfig     *self,
                               GUri         *uri,
                               GStrvBuilder *builder)
 {
-  g_autofree char *tmp1 = NULL;
-  g_autofree char *tmp2 = NULL;
-  g_autofree char *tmp3 = NULL;
+  char *tmp1 = NULL;
+  char *tmp2 = NULL;
+  char *tmp3 = NULL;
   guint32 enabled = 0;
 
   if (get_registry (W32REG_BASEKEY, "ProxyOverride", &tmp1, NULL, NULL)) {
-    g_auto (GStrv) no_proxy = g_strsplit (tmp1, ";", -1);
+    char **no_proxy = g_strsplit (tmp1, ";", -1);
+    gboolean is_ignore;
 
-    if (px_manager_is_ignore (uri, no_proxy))
+    g_clear_pointer (&tmp1, g_free);
+    is_ignore = px_manager_is_ignore (uri, no_proxy);
+    g_clear_pointer (&no_proxy, g_strfreev);
+
+    if (is_ignore)
       return;
   }
 
@@ -226,18 +236,24 @@ px_config_windows_get_config (PxConfig     *self,
 
   /* PAC */
   if (is_enabled (W32REG_OFFSET_PAC) && get_registry (W32REG_BASEKEY, "AutoConfigURL", &tmp2, NULL, NULL)) {
-    g_autofree char *pac_uri = g_strconcat ("pac+", tmp2, NULL);
+    char *pac_uri = g_strconcat ("pac+", tmp2, NULL);
     GUri *ac_uri = g_uri_parse (tmp2, G_URI_FLAGS_NONE, NULL);
+
+    g_clear_pointer (&tmp2, g_free);
 
     if (ac_uri) {
       px_strv_builder_add_proxy (builder, pac_uri);
+      g_clear_object (&ac_uri);
     }
+    g_clear_pointer (&pac_uri, g_free);
   }
 
   /* Manual proxy */
   if (get_registry (W32REG_BASEKEY, "ProxyEnable", NULL, NULL, &enabled) && enabled && get_registry (W32REG_BASEKEY, "ProxyServer", &tmp3, NULL, NULL)) {
-    g_autoptr (GHashTable) table = parse_manual (tmp3);
+    GHashTable *table = parse_manual (tmp3);
     const char *scheme = g_uri_get_scheme (uri);
+
+    g_clear_pointer (&tmp3, g_free);
 
     if (table) {
       char *ret = g_hash_table_lookup (table, scheme);
@@ -257,6 +273,8 @@ px_config_windows_get_config (PxConfig     *self,
         px_strv_builder_add_proxy (builder, ret);
         return;
       }
+
+      g_clear_pointer (&table, g_hash_table_unref);
     }
   }
 }

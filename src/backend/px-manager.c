@@ -141,13 +141,15 @@ static void
 px_manager_add_config_plugin (PxManager *self,
                               GType      type)
 {
-  g_autoptr (PxConfig) config = g_object_new (type, "config-option", self->config_option, NULL);
+  PxConfig *config = g_object_new (type, "config-option", self->config_option, NULL);
   PxConfigInterface *ifc = PX_CONFIG_GET_IFACE (config);
   const char *env = g_getenv ("PX_FORCE_CONFIG");
   const char *force_config = self->config_plugin ? self->config_plugin : env;
 
   if (!force_config || g_strcmp0 (ifc->name, force_config) == 0)
-    self->config_plugins = g_list_insert_sorted (self->config_plugins, g_steal_pointer (&config), config_order_compare);
+    self->config_plugins = g_list_insert_sorted (self->config_plugins, config, config_order_compare);
+  else
+    g_clear_object (&config);
 }
 
 static void
@@ -172,11 +174,12 @@ px_manager_constructed (GObject *object)
     if (!g_messages_debug) {
       g_setenv ("G_MESSAGES_DEBUG", G_LOG_DOMAIN, TRUE);
     } else {
-      g_autofree char *new_g_messages_debug = NULL;
+      char *new_g_messages_debug = NULL;
 
       new_g_messages_debug = g_strconcat (g_messages_debug, " ", G_LOG_DOMAIN, NULL);
       if (new_g_messages_debug)
         g_setenv ("G_MESSAGES_DEBUG", new_g_messages_debug, TRUE);
+      g_clear_pointer (&new_g_messages_debug, g_free);
     }
   }
 
@@ -329,7 +332,7 @@ px_manager_init (PxManager *self)
  *
  * Returns: the newly created `PxManager`
  */
-PxManager *
+G_MODULE_EXPORT PxManager *
 px_manager_new_with_options (const char *optname1,
                              ...)
 {
@@ -350,7 +353,7 @@ px_manager_new_with_options (const char *optname1,
  *
  * Returns: the newly created `PxManager`
  */
-PxManager *
+G_MODULE_EXPORT PxManager *
 px_manager_new (void)
 {
   return px_manager_new_with_options (NULL);
@@ -381,7 +384,7 @@ store_data (void   *contents,
  *
  * Returns: (nullable): a newly created `GBytes` containing PAC data, or %NULL on error.
  */
-GBytes *
+G_MODULE_EXPORT GBytes *
 px_manager_pac_download (PxManager  *self,
                          const char *uri)
 {
@@ -452,11 +455,12 @@ px_manager_pac_download (PxManager  *self,
  *
  * Returns: (transfer full) (nullable): a newly created `GStrv` containing configuration data for @uri.
  */
-char **
+G_MODULE_EXPORT char **
 px_manager_get_configuration (PxManager *self,
                               GUri      *uri)
 {
-  g_autoptr (GStrvBuilder) builder = g_strv_builder_new ();
+  GStrvBuilder *builder = g_strv_builder_new ();
+  GStrv ret;
 
   for (GList *list = self->config_plugins; list && list->data; list = list->next) {
     PxConfig *config = PX_CONFIG (list->data);
@@ -465,7 +469,10 @@ px_manager_get_configuration (PxManager *self,
     ifc->get_config (config, uri, builder);
   }
 
-  return g_strv_builder_end (builder);
+  ret = g_strv_builder_end (builder);
+  g_strv_builder_unref (builder);
+
+  return ret;
 }
 
 static void
@@ -475,7 +482,7 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
                     GStrvBuilder *builder)
 {
   PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (pacrunner);
-  g_auto (GStrv) proxies_split = NULL;
+  GStrv proxies_split = NULL;
   char *pac_response;
 
   pac_response = ifc->run (PX_PAC_RUNNER (pacrunner), uri);
@@ -485,14 +492,13 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
 
   for (int idx = 0; idx < g_strv_length (proxies_split); idx++) {
     char *line = g_strstrip (proxies_split[idx]);
-    g_auto (GStrv) word_split = g_strsplit (line, " ", -1);
+    GStrv word_split = g_strsplit (line, " ", -1);
 
     /* Check for syntax "METHOD SERVER" */
     if (g_strv_length (word_split) == 2) {
-      g_autoptr (GUri) proxy_uri = NULL;
-      g_autofree char *uri_string = NULL;
-      g_autofree char *proxy_string = NULL;
-      g_autoptr (GUri) test_uri = NULL;
+      GUri *proxy_uri = NULL;
+      char *uri_string = NULL;
+      char *proxy_string = NULL;
       char *method;
       char *server;
 
@@ -501,6 +507,7 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
 
       uri_string = g_strconcat ("http://", server, NULL);
       proxy_uri = g_uri_parse (uri_string, G_URI_FLAGS_NONE, NULL);
+      g_clear_pointer (&uri_string, g_free);
       if (!proxy_uri)
         continue;
 
@@ -515,17 +522,26 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
       } else if (g_ascii_strncasecmp (method, "socks", 5) == 0) {
         proxy_string = g_strconcat ("socks://", server, NULL);
       }
+      g_clear_pointer (&proxy_uri, g_uri_unref);
 
       if (proxy_string) {
-        test_uri = g_uri_parse (proxy_string, G_URI_FLAGS_NONE, NULL);
+        GUri *test_uri = g_uri_parse (proxy_string, G_URI_FLAGS_NONE, NULL);
 
-        if (test_uri)
+        if (test_uri) {
           px_strv_builder_add_proxy (builder, proxy_string);
+          g_clear_pointer (&test_uri, g_uri_unref);
+        }
+
+        g_clear_pointer (&proxy_string, g_free);
       }
     } else if (g_strv_length (word_split) == 1 && g_ascii_strncasecmp (word_split[0], "direct", 6) == 0) {
       px_strv_builder_add_proxy (builder, "direct://");
     }
+
+    g_clear_pointer (&word_split, g_strfreev);
   }
+
+  g_clear_pointer (&proxies_split, g_strfreev);
 }
 
 static gboolean
@@ -598,12 +614,14 @@ px_manager_expand_pac (PxManager *self,
       self->wpad = FALSE;
 
     if (self->pac_data) {
-      g_autofree char *uri_str = g_uri_to_string (uri);
+      char *uri_str = g_uri_to_string (uri);
 
       if (g_strcmp0 (self->pac_url, uri_str) != 0) {
         g_clear_pointer (&self->pac_url, g_free);
         g_clear_pointer (&self->pac_data, g_bytes_unref);
       }
+
+      g_clear_pointer (&uri_str, g_free);
     }
 
     if (!self->pac_data) {
@@ -638,31 +656,33 @@ px_manager_expand_pac (PxManager *self,
  *
  * Returns: (transfer full) (nullable): a newly created `GStrv` containing proxy related information.
  */
-char **
+G_MODULE_EXPORT char **
 px_manager_get_proxies_sync (PxManager  *self,
                              const char *url)
 {
-  g_autoptr (GStrvBuilder) builder = NULL;
-  g_autoptr (GUri) uri = NULL;
-  g_auto (GStrv) config = NULL;
-  g_autoptr (GError) error = NULL;
+  GStrvBuilder *builder = NULL;
+  GUri *uri = NULL;
+  char **config = NULL;
+  char **ret = NULL;
 
   g_mutex_lock (&self->mutex);
 
   builder = g_strv_builder_new ();
-  uri = g_uri_parse (url, G_URI_FLAGS_NONE, &error);
+  uri = g_uri_parse (url, G_URI_FLAGS_NONE, NULL);
 
   g_debug ("%s: url=%s online=%d", __FUNCTION__, url ? url : "?", self->online);
   if (!uri || !self->online) {
     px_strv_builder_add_proxy (builder, "direct://");
     g_mutex_unlock (&self->mutex);
-    return g_strv_builder_end (builder);
+    ret = g_strv_builder_end (builder);
+    g_clear_pointer (&builder, g_strv_builder_unref);
+    return ret;
   }
 
   config = px_manager_get_configuration (self, uri);
 
   for (int idx = 0; idx < g_strv_length (config); idx++) {
-    g_autoptr (GUri) conf_url = g_uri_parse (config[idx], G_URI_FLAGS_NONE, NULL);
+    GUri *conf_url = g_uri_parse (config[idx], G_URI_FLAGS_NONE, NULL);
 
     g_debug ("%s: Config[%d] = %s", __FUNCTION__, idx, config[idx]);
 
@@ -679,11 +699,16 @@ px_manager_get_proxies_sync (PxManager  *self,
         px_manager_run_pac (pacrunner, self->pac_data, uri, builder);
       }
     } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
-      g_autofree char *conf_url_string = g_uri_to_string (conf_url);
+      char *conf_url_string = g_uri_to_string (conf_url);
 
       px_strv_builder_add_proxy (builder, conf_url_string);
+      g_clear_pointer (&conf_url_string, g_free);
     }
+
+    g_clear_pointer (&conf_url, g_uri_unref);
   }
+
+  g_clear_pointer (&config, g_strfreev);
 
   /* In case no proxy could be found, assume direct connection */
   if (((GPtrArray *)builder)->len == 0)
@@ -692,11 +717,16 @@ px_manager_get_proxies_sync (PxManager  *self,
   for (int idx = 0; idx < ((GPtrArray *)builder)->len; idx++)
     g_debug ("%s: Proxy[%d] = %s", __FUNCTION__, idx, (char *)((GPtrArray *)builder)->pdata[idx]);
 
+  g_clear_pointer (&uri, g_uri_unref);
+
   g_mutex_unlock (&self->mutex);
-  return g_strv_builder_end (builder);
+
+  ret = g_strv_builder_end (builder);
+  g_clear_pointer (&builder, g_strv_builder_unref);
+  return ret;
 }
 
-void
+G_MODULE_EXPORT void
 px_strv_builder_add_proxy (GStrvBuilder *builder,
                            const char   *value)
 {
@@ -712,7 +742,7 @@ static gboolean
 ignore_domain (GUri *uri,
                char *ignore)
 {
-  g_auto (GStrv) ignore_split = NULL;
+  char **ignore_split = NULL;
   const char *host = g_uri_get_host (uri);
   char *ignore_host;
   int ignore_port = -1;
@@ -743,15 +773,23 @@ ignore_domain (GUri *uri,
    *  - domain.com or domain.com:80
    */
   if (strlen (ignore_host) > 2) {
-    if (ignore_host[0] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 1, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host)))
+    if (ignore_host[0] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 1, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host))) {
+      g_clear_pointer (&ignore_split, g_strfreev);
       return (ignore_port == -1 || port == ignore_port);
+    }
 
-    if (ignore_host[0] == '*' && ignore_host[1] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 2, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host + 1)))
+    if (ignore_host[0] == '*' && ignore_host[1] == '.' && ((g_ascii_strncasecmp (host, ignore_host + 2, strlen (host)) == 0) || g_str_has_suffix (host, ignore_host + 1))) {
+      g_clear_pointer (&ignore_split, g_strfreev);
       return (ignore_port == -1 || port == ignore_port);
+    }
 
-    if (strlen (host) > strlen (ignore_host) && host[strlen (host) - strlen (ignore_host) - 1] == '.' && g_str_has_suffix (host, ignore_host))
+    if (strlen (host) > strlen (ignore_host) && host[strlen (host) - strlen (ignore_host) - 1] == '.' && g_str_has_suffix (host, ignore_host)) {
+      g_clear_pointer (&ignore_split, g_strfreev);
       return (ignore_port == -1 || port == ignore_port);
+    }
   }
+
+  g_clear_pointer (&ignore_split, g_strfreev);
 
   /* No match was found */
   return FALSE;
@@ -773,17 +811,39 @@ ignore_hostname (GUri *uri,
 }
 
 static gboolean
+parse_address (const char  *input,
+               char       **host,
+               guint16     *port)
+{
+  GError *error = NULL;
+  GSocketConnectable *conn = g_network_address_parse (input, 0, &error);
+  GNetworkAddress *addr = NULL;
+
+  if (!conn) {
+    g_clear_error (&error);
+    return FALSE;
+  }
+
+  addr = G_NETWORK_ADDRESS (conn);
+  *host = g_strdup (g_network_address_get_hostname (addr));
+  *port = g_network_address_get_port (addr);
+  g_clear_object (&conn);
+
+  return TRUE;
+}
+
+static gboolean
 ignore_ip (GUri *uri,
            char *ignore)
 {
-  g_autoptr (GInetAddress) uri_address = NULL;
-  g_autoptr (GInetAddress) ignore_address = NULL;
-  g_auto (GStrv) ignore_split = NULL;
-  g_autoptr (GError) error = NULL;
+  GInetAddress *uri_address = NULL;
+  GInetAddress *ignore_address = NULL;
+  GError *error = NULL;
   const char *uri_host = g_uri_get_host (uri);
   int port = g_uri_get_port (uri);
-  int ignore_port = 0;
   gboolean result;
+  char *ignore_host = NULL;
+  guint16 ignore_port = 0;
 
   if (!uri_host)
     return FALSE;
@@ -799,39 +859,50 @@ ignore_ip (GUri *uri,
    * uri must be in ip string format, no host name resolution is done
    */
   if (uri_address && strchr (ignore, '/')) {
-    g_autoptr (GInetAddressMask) address_mask = g_inet_address_mask_new_from_string (ignore, &error);
+    GInetAddressMask *address_mask = g_inet_address_mask_new_from_string (ignore, &error);
+    gboolean ret;
 
-    if (!address_mask) {
+    if (error) {
       g_warning ("Could not parse ignore mask: %s", error->message);
+      g_clear_error (&error);
+      g_clear_object (&uri_address);
       return FALSE;
     }
 
-    if (g_inet_address_mask_matches (address_mask, uri_address))
+    ret = g_inet_address_mask_matches (address_mask, uri_address);
+    g_clear_object (&address_mask);
+    if (ret) {
+      g_clear_object (&uri_address);
       return TRUE;
+    }
   }
+
+  parse_address (ignore, &ignore_host, &ignore_port);
 
   /*
    * IPv4
    * IPv6
    */
-  if (!g_hostname_is_ip_address (uri_host) || !g_hostname_is_ip_address (ignore))
+  if (!g_hostname_is_ip_address (uri_host) || !g_hostname_is_ip_address (ignore_host)) {
+    g_clear_object (&uri_address);
+    g_clear_pointer (&ignore_host, g_free);
     return FALSE;
+  }
 
   /*
    * IPv4:port
    * [IPv6]:port
    */
-  ignore_split = g_strsplit (ignore, ":", -1);
-  if  (g_strv_length (ignore_split) == 2)
-    ignore_port = atoi (ignore_split[1]);
+  result = g_ascii_strcasecmp (uri_host, ignore_host) == 0;
 
-  ignore_address = g_inet_address_new_from_string (ignore);
-  result = g_inet_address_equal (uri_address, ignore_address);
+  g_clear_object (&uri_address);
+  g_clear_object (&ignore_address);
+  g_clear_pointer (&ignore_host, g_free);
 
   return ignore_port != 0 ? ((port == ignore_port) && result) : result;
 }
 
-gboolean
+G_MODULE_EXPORT gboolean
 px_manager_is_ignore (GUri  *uri,
                       GStrv  ignores)
 {
