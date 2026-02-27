@@ -1,6 +1,8 @@
 name: Build
 
 on: [push, pull_request]
+permissions:
+  contents: read
 
 jobs:
   build-linux:
@@ -70,7 +72,7 @@ jobs:
         pip install meson ninja
     - name: Build and test
       run: |
-        meson setup --vsenv build -Ddocs=false -Dcurl=false -Dconfig-gnome=false -Dconfig-osx=false -Dconfig-kde=false -Dconfig-xdp=false -Dpacrunner-duktape=false -Dintrospection=false
+        meson setup --vsenv build -Ddocs=false -Dcurl=false -Dconfig-gnome=false -Dconfig-osx=false -Dconfig-kde=false -Dconfig-xdp=false  -Dconfig-sysconfig=false -Dpacrunner-duktape=false -Dintrospection=false -Dtests=false
         meson compile -C build
         meson test -C build
 

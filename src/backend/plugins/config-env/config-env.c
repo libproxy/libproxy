@@ -103,9 +103,13 @@ px_config_env_get_config (PxConfig     *config,
     proxy = g_getenv ("NO_PROXY");
 
   if (proxy) {
-    g_auto (GStrv) no_proxy = g_strsplit (proxy, ",", -1);
+    GStrv no_proxy = g_strsplit (proxy, ",", -1);
+    gboolean ret;
 
-    if (px_manager_is_ignore (uri, no_proxy))
+    ret = px_manager_is_ignore (uri, no_proxy);
+    g_strfreev (no_proxy);
+
+    if (ret)
       return;
 
     proxy = NULL;

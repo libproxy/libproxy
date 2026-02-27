@@ -164,7 +164,6 @@ px_config_gnome_get_config (PxConfig     *config,
                             GStrvBuilder *builder)
 {
   PxConfigGnome *self = PX_CONFIG_GNOME (config);
-  g_autofree char *proxy = NULL;
   GnomeProxyMode mode;
 
   if (!self->available)
@@ -179,6 +178,7 @@ px_config_gnome_get_config (PxConfig     *config,
 
   if (mode == GNOME_PROXY_MODE_AUTO) {
     char *autoconfig_url = g_settings_get_string (self->proxy_settings, "autoconfig-url");
+    char *proxy = NULL;
 
     if (strlen (autoconfig_url) != 0)
       proxy = g_strdup_printf ("pac+%s", autoconfig_url);
@@ -186,14 +186,16 @@ px_config_gnome_get_config (PxConfig     *config,
       proxy = g_strdup ("wpad://");
 
     px_strv_builder_add_proxy (builder, proxy);
+    g_clear_pointer (&proxy, g_free);
   } else if (mode == GNOME_PROXY_MODE_MANUAL) {
-    g_autofree char *username = g_settings_get_string (self->http_proxy_settings, "authentication-user");
-    g_autofree char *password = g_settings_get_string (self->http_proxy_settings, "authentication-password");
+    char *username = g_settings_get_string (self->http_proxy_settings, "authentication-user");
+    char *password = g_settings_get_string (self->http_proxy_settings, "authentication-password");
     const char *scheme = g_uri_get_scheme (uri);
     gboolean auth = g_settings_get_boolean (self->http_proxy_settings, "use-authentication");
+    char *host = NULL;
 
     if (g_strcmp0 (scheme, "http") == 0) {
-      g_autofree char *host = g_settings_get_string (self->http_proxy_settings, "host");
+      host = g_settings_get_string (self->http_proxy_settings, "host");
       store_response (builder,
                       "http",
                       host,
@@ -202,7 +204,7 @@ px_config_gnome_get_config (PxConfig     *config,
                       username,
                       password);
     } else if (g_strcmp0 (scheme, "https") == 0) {
-      g_autofree char *host = g_settings_get_string (self->https_proxy_settings, "host");
+      host = g_settings_get_string (self->https_proxy_settings, "host");
       store_response (builder,
                       "http",
                       host,
@@ -211,7 +213,7 @@ px_config_gnome_get_config (PxConfig     *config,
                       username,
                       password);
     } else if (g_strcmp0 (scheme, "ftp") == 0) {
-      g_autofree char *host = g_settings_get_string (self->ftp_proxy_settings, "host");
+      host = g_settings_get_string (self->ftp_proxy_settings, "host");
       store_response (builder,
                       "http",
                       host,
@@ -220,7 +222,7 @@ px_config_gnome_get_config (PxConfig     *config,
                       username,
                       password);
     } else {
-      g_autofree char *host = g_settings_get_string (self->socks_proxy_settings, "host");
+      host = g_settings_get_string (self->socks_proxy_settings, "host");
       store_response (builder,
                       "socks",
                       host,
@@ -229,6 +231,10 @@ px_config_gnome_get_config (PxConfig     *config,
                       username,
                       password);
     }
+
+    g_clear_pointer (&username, g_free);
+    g_clear_pointer (&password, g_free);
+    g_clear_pointer (&host, g_free);
   }
 }
 
