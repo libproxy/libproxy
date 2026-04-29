@@ -506,6 +506,8 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
 
       if (g_ascii_strncasecmp (method, "proxy", 5) == 0) {
         proxy_string = g_uri_to_string (proxy_uri);
+      } else if (g_ascii_strncasecmp (method, "https", 5) == 0) {
+        proxy_string = g_strconcat ("https://", server, NULL);
       } else if (g_ascii_strncasecmp (method, "socks4a", 7) == 0) {
         proxy_string = g_strconcat ("socks4a://", server, NULL);
       } else if (g_ascii_strncasecmp (method, "socks4", 6) == 0) {
