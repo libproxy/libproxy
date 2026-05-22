@@ -188,10 +188,11 @@ px_pacrunner_duktape_run (PxPacRunner *pacrunner,
                           GUri        *uri)
 {
   PxPacRunnerDuktape *self = PX_PACRUNNER_DUKTAPE (pacrunner);
+  g_autofree char *uri_string = g_uri_to_string (uri);
   duk_int_t result;
 
   duk_get_global_string (self->ctx, "FindProxyForURL");
-  duk_push_string (self->ctx, g_uri_to_string (uri));
+  duk_push_string (self->ctx, uri_string);
   duk_push_string (self->ctx, g_uri_get_host (uri));
   result = duk_pcall (self->ctx, 2);
 
