@@ -176,10 +176,13 @@ px_pacrunner_duktape_set_pac (PxPacRunner *pacrunner,
 
   duk_push_lstring (self->ctx, content, len);
 
-  if (duk_peval_noresult (self->ctx)) {
+  if (duk_peval (self->ctx)) {
+    g_debug ("%s: Duktape failed to evaluate PAC: %s", G_STRFUNC, duk_safe_to_string (self->ctx, -1));
+    duk_pop (self->ctx);
     return FALSE;
   }
 
+  duk_pop (self->ctx);
   return TRUE;
 }
 
