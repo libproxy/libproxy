@@ -1,0 +1,5 @@
+PROXY_ENABLED="yes"
+HTTP_PROXY="pac+http://127.0.0.1:1983/px-manager-invalid.pac"
+HTTPS_PROXY="pac+http://127.0.0.1:1983/px-manager-invalid.pac"
+FTP_PROXY="pac+http://127.0.0.1:1983/px-manager-invalid.pac"
+NO_PROXY="localhost, 127.0.0.1"
