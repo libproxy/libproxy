@@ -288,6 +288,32 @@ test_get_proxies_pac (Fixture    *self,
   g_main_loop_run (self->loop);
 }
 
+static gpointer
+get_proxies_invalid_pac (gpointer data)
+{
+  Fixture *self = data;
+  g_auto (GStrv) config = NULL;
+
+  g_test_expect_message ("pxbackend", G_LOG_LEVEL_WARNING, "*Unable to set PAC*");
+  config = px_manager_get_proxies_sync (self->manager, "https://www.example.com");
+  g_test_assert_expected_messages ();
+  g_assert_null (config);
+
+  g_main_loop_quit (self->loop);
+
+  return NULL;
+}
+
+static void
+test_get_proxies_invalid_pac (Fixture    *self,
+                              const void *user_data)
+{
+  g_autoptr (GThread) thread = NULL;
+
+  thread = g_thread_new ("test", (GThreadFunc)get_proxies_invalid_pac, self);
+  g_main_loop_run (self->loop);
+}
+
 static void
 test_get_proxies_pac_debug (Fixture    *self,
                             const void *user_data)
@@ -432,6 +458,7 @@ main (int    argc,
   g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
   g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac, fixture_teardown);
+  g_test_add ("/pac/get_proxies_invalid_pac", Fixture, "px-manager-invalid-pac", fixture_setup, test_get_proxies_invalid_pac, fixture_teardown);
   g_test_add ("/pac/wpad", Fixture, "px-manager-wpad", fixture_setup, test_get_wpad, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac_debug", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac_debug, fixture_teardown);
 
