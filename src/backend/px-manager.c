@@ -357,16 +357,32 @@ px_manager_new (void)
 }
 
 #ifdef HAVE_CURL
+#define PX_PAC_MAX_SIZE (1024 * 1024)
+
+typedef struct {
+  GByteArray *byte_array;
+  gsize max_size;
+} PxPacDownloadCtx;
+
 static size_t
 store_data (void   *contents,
             size_t  size,
             size_t  nmemb,
             void   *user_pointer)
 {
-  GByteArray *byte_array = user_pointer;
-  size_t real_size = size * nmemb;
+  PxPacDownloadCtx *ctx = user_pointer;
+  size_t real_size;
 
-  g_byte_array_append (byte_array, contents, real_size);
+  if (nmemb != 0 && size > G_MAXSIZE / nmemb)
+    return 0;
+
+  real_size = size * nmemb;
+
+  if (real_size > ctx->max_size - MIN (ctx->max_size,
+                                       ctx->byte_array->len))
+    return 0;
+
+  g_byte_array_append (ctx->byte_array, contents, real_size);
 
   return real_size;
 }
@@ -387,6 +403,10 @@ px_manager_pac_download (PxManager  *self,
 {
 #ifdef HAVE_CURL
   GByteArray *byte_array = g_byte_array_new ();
+  PxPacDownloadCtx dl_ctx = {
+    .byte_array = byte_array,
+    .max_size = PX_PAC_MAX_SIZE
+  };
   CURLcode res;
   const char *url = uri;
 
@@ -426,7 +446,7 @@ px_manager_pac_download (PxManager  *self,
     return NULL;
   }
 
-  if (curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, byte_array) != CURLE_OK) {
+  if (curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, &dl_ctx) != CURLE_OK) {
     g_warning ("Could not set WRITEDATA, ABORT!");
     return NULL;
   }
