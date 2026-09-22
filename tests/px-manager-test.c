@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #define SERVER_PORT 1983
+#define OVERSIZED_PAC_SIZE ((1024 * 1024) + 1)
 
 typedef struct {
   GMainLoop *loop;
@@ -104,6 +105,30 @@ on_incoming (GSocketService    *service,
   }
 
   unescaped = g_uri_unescape_string (escaped, NULL);
+  if (g_str_equal (unescaped, "/oversized.pac")) {
+    g_autofree char *contents = NULL;
+
+    contents = g_malloc0 (OVERSIZED_PAC_SIZE);
+
+    memset (contents, 'A', OVERSIZED_PAC_SIZE);
+
+    g_output_stream_write_all (out,
+                              "HTTP/1.0 200 OK\r\n"
+                              "Content-Type: application/x-ns-proxy-autoconfig\r\n"
+                              "\r\n",
+                              strlen ("HTTP/1.0 200 OK\r\n"
+                                      "Content-Type: application/x-ns-proxy-autoconfig\r\n"
+                                      "\r\n"),
+                              NULL, NULL, NULL);
+
+    g_output_stream_write_all (out,
+                              contents,
+                              OVERSIZED_PAC_SIZE,
+                              NULL, NULL, NULL);
+
+    goto out;
+  }
+
   path = g_test_build_filename (G_TEST_DIST, "data", unescaped, NULL);
   f = g_file_new_for_path (path);
 
@@ -181,6 +206,35 @@ download_pac (gpointer data)
   g_main_loop_quit (self->loop);
 
   return NULL;
+}
+
+static gpointer
+download_oversized_pac (gpointer data)
+{
+  Fixture *self = data;
+  GBytes *pac;
+
+  pac = px_manager_pac_download (self->manager,
+                                 "http://127.0.0.1:1983/oversized.pac");
+
+  g_assert_null (pac);
+
+  g_main_loop_quit (self->loop);
+
+  return NULL;
+}
+
+static void
+test_pac_download_oversized (Fixture    *self,
+                             const void *user_data)
+{
+  g_autoptr (GThread) thread = NULL;
+
+  thread = g_thread_new ("test",
+                         (GThreadFunc) download_oversized_pac,
+                         self);
+
+  g_main_loop_run (self->loop);
 }
 
 static void
@@ -455,6 +509,7 @@ main (int    argc,
   g_signal_connect (service, "incoming", G_CALLBACK (on_incoming), NULL);
 
   g_test_add ("/pac/download", Fixture, "px-manager-direct", fixture_setup, test_pac_download, fixture_teardown);
+  g_test_add ("/pac/download_oversized", Fixture, "px-manager-direct", fixture_setup, test_pac_download_oversized, fixture_teardown);
   g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
   g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
   g_test_add ("/pac/get_proxies_pac", Fixture, "px-manager-pac", fixture_setup, test_get_proxies_pac, fixture_teardown);
