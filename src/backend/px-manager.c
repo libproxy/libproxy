@@ -100,6 +100,7 @@ struct _PxManager {
   char *pac_url;
 
   GMutex mutex;
+  GMutex pacrunner_mutex;
 };
 
 G_DEFINE_TYPE (PxManager, px_manager, G_TYPE_OBJECT)
@@ -411,7 +412,16 @@ px_manager_pac_download (PxManager  *self,
   }
 
   if (curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 30) != CURLE_OK)
-    g_debug ("Could not set CONENCTIONTIMEOUT, continue");
+    g_debug ("Could not set CONNECTIONTIMEOUT, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_TIMEOUT, 30) != CURLE_OK)
+    g_debug ("Could not set TIMEOUT, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_LOW_SPEED_TIME, 15) != CURLE_OK)
+    g_debug ("Could not set LOW_SPEED_TIME, continue");
+
+  if (curl_easy_setopt (self->curl, CURLOPT_LOW_SPEED_LIMIT, 1) != CURLE_OK)
+    g_debug ("Could not set LOW_SPEED_LIMIT, continue");
 
   if (curl_easy_setopt (self->curl, CURLOPT_USERAGENT, "libproxy") != CURLE_OK)
     g_debug ("Could not set USERAGENT, continue");
@@ -529,7 +539,8 @@ px_manager_run_pac (PxPacRunner  *pacrunner,
 }
 
 static gboolean
-px_manager_set_pac (PxManager *self)
+px_manager_set_pac (PxManager *self,
+                    GBytes    *pac_data)
 {
   GList *list;
 
@@ -537,7 +548,7 @@ px_manager_set_pac (PxManager *self)
     PxPacRunner *pacrunner = PX_PAC_RUNNER (list->data);
     PxPacRunnerInterface *ifc = PX_PAC_RUNNER_GET_IFACE (pacrunner);
 
-    if (!ifc->set_pac (PX_PAC_RUNNER (pacrunner), self->pac_data))
+    if (!ifc->set_pac (PX_PAC_RUNNER (pacrunner), pac_data))
       return FALSE;
   }
 
@@ -571,12 +582,6 @@ px_manager_expand_wpad (PxManager *self,
         ret = FALSE;
       } else {
         g_debug ("%s: PAC recevied!", __FUNCTION__);
-        if (!px_manager_set_pac (self)) {
-          g_debug ("%s: Unable to set PAC from %s while online = %d!", __FUNCTION__, self->pac_url, self->online);
-          g_clear_pointer (&self->pac_url, g_free);
-          g_clear_pointer (&self->pac_data, g_bytes_unref);
-          ret = FALSE;
-        }
       }
     }
   }
@@ -616,12 +621,6 @@ px_manager_expand_pac (PxManager *self,
         ret = FALSE;
       } else {
         g_debug ("%s: PAC recevied!", __FUNCTION__);
-        if (!px_manager_set_pac (self)) {
-          g_warning ("%s: Unable to set PAC from %s while online = %d!", __FUNCTION__, self->pac_url, self->online);
-          g_clear_pointer (&self->pac_url, g_free);
-          g_clear_pointer (&self->pac_data, g_bytes_unref);
-          ret = FALSE;
-        }
       }
     }
   }
@@ -671,12 +670,47 @@ px_manager_get_proxies_sync (PxManager  *self,
       continue;
 
     if (px_manager_expand_wpad (self, conf_url) || px_manager_expand_pac (self, conf_url)) {
+      g_autoptr (GBytes) pac_data = NULL;
+      gboolean pac_set;
       GList *list;
 
-      for (list = self->pacrunner_plugins; list && list->data; list = list->next) {
-        PxPacRunner *pacrunner = PX_PAC_RUNNER (list->data);
+      pac_data = g_bytes_ref (self->pac_data);
 
-        px_manager_run_pac (pacrunner, self->pac_data, uri, builder);
+      /*
+       * PAC evaluation and execution may block. Avoid holding the manager
+       * mutex while running PAC JavaScript.
+       */
+      g_mutex_unlock (&self->mutex);
+
+      g_mutex_lock (&self->pacrunner_mutex);
+
+      pac_set = px_manager_set_pac (self, pac_data);
+
+      if (pac_set) {
+        for (list = self->pacrunner_plugins; list && list->data; list = list->next) {
+          PxPacRunner *pacrunner = PX_PAC_RUNNER (list->data);
+
+          px_manager_run_pac (pacrunner, pac_data, uri, builder);
+        }
+      }
+
+      g_mutex_unlock (&self->pacrunner_mutex);
+
+      g_mutex_lock (&self->mutex);
+
+      if (!pac_set && self->pac_data == pac_data) {
+        g_warning ("%s: Unable to set PAC from %s while online = %d!",
+                   __FUNCTION__,
+                   self->pac_url,
+                   self->online);
+
+        g_clear_pointer (&self->pac_url, g_free);
+        g_clear_pointer (&self->pac_data, g_bytes_unref);
+      }
+
+      if (!pac_set) {
+        g_mutex_unlock (&self->mutex);
+        return NULL;
       }
     } else if (!g_str_has_prefix (g_uri_get_scheme (conf_url), "wpad") && !g_str_has_prefix (g_uri_get_scheme (conf_url), "pac+")) {
       g_autofree char *conf_url_string = g_uri_to_string (conf_url);
