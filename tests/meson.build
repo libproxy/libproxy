@@ -27,6 +27,16 @@ if get_option('tests')
          px_manager_test,
          env: envs
     )
+
+    pacrunner_duktape_test = executable('test-pacrunner-duktape',
+      ['pacrunner-duktape-test.c'],
+      include_directories: px_backend_inc,
+      dependencies: [glib_dep, px_backend_dep],
+    )
+    test('Pacrunner Duktape test',
+         pacrunner_duktape_test,
+         env: envs
+    )
   endif
 
   if get_option('config-env')
