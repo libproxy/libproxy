@@ -402,7 +402,7 @@ px_manager_pac_download (PxManager  *self,
                          const char *uri)
 {
 #ifdef HAVE_CURL
-  GByteArray *byte_array = g_byte_array_new ();
+  g_autoptr (GByteArray) byte_array = g_byte_array_new ();
   PxPacDownloadCtx dl_ctx = {
     .byte_array = byte_array,
     .max_size = PX_PAC_MAX_SIZE
