@@ -65,9 +65,12 @@ GType           px_proxy_factory_get_type (void) G_GNUC_CONST;
  * If an unrecoverable error occurs, this function returns %NULL.
  *
  * Regarding performance: this method always blocks and may be called
- * in a separate thread (is thread-safe).  In most cases, the time
+ * in a separate thread (is thread-safe). In most cases, the time
  * required to complete this function call is simply the time required
  * to read the configuration (i.e. from gconf, kconfig, etc).
+ * Bindings and consumers should use appropriate asynchronous primitives
+ * when non-blocking behavior is required, as proxy resolution may take
+ * non-trivial time depending on network behavior and PAC file complexity.
  *
  * In the case of PAC, if no valid PAC is found in the cache (i.e.
  * configuration has changed, cache is invalid, etc), the PAC file is
