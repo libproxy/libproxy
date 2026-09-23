@@ -122,12 +122,14 @@ alert (duk_context *ctx)
   return 0;
 }
 
-static void
-px_pacrunner_duktape_init (PxPacRunnerDuktape *self)
+static gboolean
+px_pacrunner_duktape_reset_ctx (PxPacRunnerDuktape *self)
 {
+  g_clear_pointer (&self->ctx, duk_destroy_heap);
+
   self->ctx = duk_create_heap_default ();
   if (!self->ctx)
-    return;
+    return FALSE;
 
   duk_push_c_function (self->ctx, dns_resolve, 1);
   duk_put_global_string (self->ctx, "dnsResolve");
@@ -139,13 +141,18 @@ px_pacrunner_duktape_init (PxPacRunnerDuktape *self)
   duk_put_global_string (self->ctx, "alert");
 
   duk_push_string (self->ctx, JAVASCRIPT_ROUTINES);
-  if (duk_peval_noresult (self->ctx))
-    goto error;
+  if (duk_peval_noresult (self->ctx)) {
+    g_clear_pointer (&self->ctx, duk_destroy_heap);
+    return FALSE;
+  }
 
-  return;
+  return TRUE;
+}
 
-error:
-  duk_destroy_heap (self->ctx);
+static void
+px_pacrunner_duktape_init (PxPacRunnerDuktape *self)
+{
+  px_pacrunner_duktape_reset_ctx (self);
 }
 
 static void
@@ -173,6 +180,9 @@ px_pacrunner_duktape_set_pac (PxPacRunner *pacrunner,
   PxPacRunnerDuktape *self = PX_PACRUNNER_DUKTAPE (pacrunner);
   gsize len;
   gconstpointer content = g_bytes_get_data (pac_data, &len);
+
+  if (!px_pacrunner_duktape_reset_ctx (self))
+    return FALSE;
 
   duk_push_lstring (self->ctx, content, len);
 
