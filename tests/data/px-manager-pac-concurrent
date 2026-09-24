@@ -1,0 +1,4 @@
+PROXY_ENABLED="yes"
+HTTP_PROXY="pac+http://127.0.0.1:1983/px-manager-slow.pac"
+HTTPS_PROXY="http://127.0.0.1:1985"
+NO_PROXY="localhost, 127.0.0.1"

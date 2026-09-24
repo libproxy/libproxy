@@ -27,10 +27,18 @@
 #define SERVER_PORT 1983
 #define OVERSIZED_PAC_SIZE ((1024 * 1024) + 1)
 
+static gint slow_pac_served;
+
 typedef struct {
   GMainLoop *loop;
   PxManager *manager;
 } Fixture;
+
+typedef struct {
+  Fixture *fixture;
+  gint64 elapsed;
+  char **proxies;
+} ConcurrentLookup;
 
 static void
 send_error (GOutputStream *out,
@@ -167,6 +175,9 @@ on_incoming (GSocketService    *service,
 
   if (g_output_stream_write_all (out, s->str, s->len, NULL, NULL, NULL)) {
     g_output_stream_splice (out, G_INPUT_STREAM (file_in), 0, NULL, NULL);
+
+    if (g_str_has_suffix (unescaped, "px-manager-slow.pac"))
+      g_atomic_int_set (&slow_pac_served, TRUE);
   }
 
 out:
@@ -332,6 +343,38 @@ get_proxies_pac (gpointer data)
   return NULL;
 }
 
+static gpointer
+get_proxies_slow_pac (gpointer data)
+{
+  Fixture *fixture = data;
+  g_auto (GStrv) config = NULL;
+
+  config = px_manager_get_proxies_sync (fixture->manager,
+                                        "http://www.example.com");
+
+  g_assert_nonnull (config);
+  g_assert_cmpstr (config[0], ==, "direct://");
+
+  return NULL;
+}
+
+static gpointer
+get_proxies_while_pac_running (gpointer data)
+{
+  ConcurrentLookup *lookup = data;
+  gint64 start;
+
+  start = g_get_monotonic_time ();
+
+  lookup->proxies =
+    px_manager_get_proxies_sync (lookup->fixture->manager,
+                                 "https://www.example.com");
+
+  lookup->elapsed = g_get_monotonic_time () - start;
+
+  return NULL;
+}
+
 static void
 test_get_proxies_pac (Fixture    *self,
                       const void *user_data)
@@ -366,6 +409,60 @@ test_get_proxies_invalid_pac (Fixture    *self,
 
   thread = g_thread_new ("test", (GThreadFunc)get_proxies_invalid_pac, self);
   g_main_loop_run (self->loop);
+}
+
+static void
+test_get_proxies_concurrent_pac (Fixture    *fixture,
+                                 const void *user_data)
+{
+  g_autoptr (GThread) pac_thread = NULL;
+  g_autoptr (GThread) lookup_thread = NULL;
+  ConcurrentLookup lookup = {
+    .fixture = fixture,
+    .elapsed = 0,
+    .proxies = NULL,
+  };
+
+  g_atomic_int_set (&slow_pac_served, FALSE);
+
+  /*
+   * Start a PAC lookup whose JavaScript deliberately runs for
+   * approximately two seconds.
+   */
+  pac_thread = g_thread_new ("slow-pac",
+                             get_proxies_slow_pac,
+                             fixture);
+
+  /*
+   * Process the local HTTP server until the PAC has been delivered.
+   * At this point the first lookup is about to evaluate the PAC.
+   */
+  while (!g_atomic_int_get (&slow_pac_served))
+    g_main_context_iteration (NULL, TRUE);
+
+  /*
+   * Perform another lookup through the same PxManager. This URL uses
+   * a static proxy, so PAC execution must not prevent it from completing.
+   */
+  lookup_thread = g_thread_new ("concurrent-lookup",
+                                get_proxies_while_pac_running,
+                                &lookup);
+
+  g_thread_join (g_steal_pointer (&lookup_thread));
+
+  g_assert_nonnull (lookup.proxies);
+  g_assert_cmpstr (lookup.proxies[0], ==, "http://127.0.0.1:1985");
+
+  /*
+   * The PAC runs for about two seconds. If the manager mutex were held
+   * during PAC execution, this lookup would take roughly the same amount
+   * of time.
+   */
+  g_assert_cmpint (lookup.elapsed, <, G_USEC_PER_SEC);
+
+  g_strfreev (lookup.proxies);
+
+  g_thread_join (g_steal_pointer (&pac_thread));
 }
 
 static void
@@ -509,6 +606,7 @@ main (int    argc,
   g_signal_connect (service, "incoming", G_CALLBACK (on_incoming), NULL);
 
   g_test_add ("/pac/download", Fixture, "px-manager-direct", fixture_setup, test_pac_download, fixture_teardown);
+  g_test_add ("/pac/get_proxies_concurrent", Fixture, "px-manager-pac-concurrent", fixture_setup, test_get_proxies_concurrent_pac, fixture_teardown);
   g_test_add ("/pac/download_oversized", Fixture, "px-manager-direct", fixture_setup, test_pac_download_oversized, fixture_teardown);
   g_test_add ("/pac/get_proxies_direct", Fixture, "px-manager-direct", fixture_setup, test_get_proxies_direct, fixture_teardown);
   g_test_add ("/pac/get_proxies_nonpac", Fixture, "px-manager-nonpac", fixture_setup, test_get_proxies_nonpac, fixture_teardown);
